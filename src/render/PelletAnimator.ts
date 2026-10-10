@@ -7,6 +7,9 @@ import type { PathPoint } from "./pathPoints";
 import { COLORS } from "./theme";
 
 const SPEED_CELLS_PER_SECOND = 9;
+/** The comet tail behind the moving front: its length in cells and dots. */
+const TAIL_CELLS = 0.75;
+const TAIL_DOTS = 12;
 
 export interface ShotCallbacks {
   /**
@@ -39,6 +42,11 @@ export class PelletAnimator extends Container {
   private readonly toPixels: (x: number, y: number) => { x: number; y: number };
   private readonly trail = new Graphics();
   private readonly pellet = new Graphics();
+  /**
+   * Faint light on the panel under the beam, brightest around the moving
+   * front. Not a child: the board view places it under the cells.
+   */
+  readonly light = new Graphics();
 
   private points: PixelPoint[] = [];
   private outcome: ShotOutcome = "exit";
@@ -95,6 +103,7 @@ export class PelletAnimator extends Container {
     this.callbacks = undefined;
     this.pellet.visible = false;
     this.trail.clear();
+    this.light.clear();
   }
 
   update(deltaMs: number): void {
@@ -146,11 +155,79 @@ export class PelletAnimator extends Container {
 
   private draw(): void {
     const head = this.currentPosition();
-    this.drawBeam([...this.points.slice(0, this.segment + 1), head], {
-      color: COLORS.beam,
-      dimmed: false,
-    });
+    const path = [...this.points.slice(0, this.segment + 1), head];
+    this.drawBeam(path, { color: COLORS.beam, dimmed: false });
+    this.drawTail();
+    this.drawLight(path, COLORS.beam, 1, head);
     this.pellet.position.set(head.x, head.y);
+  }
+
+  /** A short fading comet tail behind the front, drawn over the beam. */
+  private drawTail(): void {
+    const g = this.trail;
+    for (let i = TAIL_DOTS; i >= 1; i--) {
+      const t = i / TAIL_DOTS;
+      const p = this.pointBehind(t * this.cellSize * TAIL_CELLS);
+      g.circle(p.x, p.y, this.cellSize * (0.16 - 0.1 * t)).fill({
+        color: COLORS.beam,
+        alpha: 0.32 * (1 - t),
+      });
+    }
+  }
+
+  /** The point `distance` pixels back along the path from the front. */
+  private pointBehind(distance: number): { x: number; y: number } {
+    let { x, y } = this.currentPosition();
+    let remaining = distance;
+    for (let i = this.segment; i >= 0; i--) {
+      const p = this.points[i];
+      const length = Math.hypot(x - p.x, y - p.y);
+      if (length >= remaining && length > 0) {
+        const t = remaining / length;
+        return { x: x + (p.x - x) * t, y: y + (p.y - y) * t };
+      }
+      remaining -= length;
+      x = p.x;
+      y = p.y;
+    }
+    return { x, y };
+  }
+
+  /**
+   * Faint light on the panel along `allPoints`, at `strength` (0–1), with
+   * a soft glow around `head` while the beam is still moving.
+   */
+  private drawLight(
+    allPoints: { x: number; y: number }[],
+    color: number,
+    strength: number,
+    head?: { x: number; y: number },
+  ): void {
+    const g = this.light.clear();
+    const points = distinctPoints(allPoints);
+    if (points.length >= 2) {
+      for (const width of [0.95, 0.5]) {
+        g.moveTo(points[0].x, points[0].y);
+        for (const p of points.slice(1)) {
+          g.lineTo(p.x, p.y);
+        }
+        g.stroke({
+          width: this.cellSize * width,
+          color,
+          alpha: 0.05 * strength,
+          cap: "round",
+          join: "round",
+        });
+      }
+    }
+    if (head) {
+      for (const radius of [1, 0.75, 0.5, 0.3]) {
+        g.circle(head.x, head.y, this.cellSize * radius).fill({
+          color,
+          alpha: 0.05,
+        });
+      }
+    }
   }
 
   private finish(): void {
@@ -158,11 +235,14 @@ export class PelletAnimator extends Container {
     this.pellet.visible = false;
     if (this.outcome === "goal") {
       this.drawBeam(this.points, { color: COLORS.success, dimmed: false });
+      this.drawLight(this.points, COLORS.success, 1);
     } else if (this.outcome === "bonus") {
       this.drawBeam(this.points, { color: COLORS.star, dimmed: false });
+      this.drawLight(this.points, COLORS.star, 1);
     } else {
       this.drawBeam(this.points, { color: COLORS.beam, dimmed: true });
       this.drawEndMarker();
+      this.drawLight(this.points, COLORS.beam, 0.4);
     }
     this.callbacks?.onFinish();
   }

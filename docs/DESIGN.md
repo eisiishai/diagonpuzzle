@@ -328,6 +328,7 @@ Colours and fonts are defined once in `src/render/theme.ts`.
 | Wall | `#18233a`, edge `#34466b` | Walls |
 | Stone | `#323846`, edge `#5d6680`, cracks `#0d111b` | Breakable walls |
 | Idle emitter | `#3b5a86` | Launchers not selected |
+| Marking | `#2f4670`, labels `#6482b0` | Corner ticks and labels around the board |
 
 Text colours keep at least 4.5:1 contrast on the background.
 
@@ -358,7 +359,19 @@ Text colours keep at least 4.5:1 contrast on the background.
   fading in (220 ms), and then looks like any other mirror.
 - **Bonus target**: a prism gem: a hexagon of six facets, one in each
   bonus colour, with a white rim and a bright core.
-- **Beam**: a glowing coloured band with a thin white core.
+- **Beam**: a glowing coloured band with a thin white core. While it
+  travels, its front is a glowing dot with a short fading comet tail
+  (about ¾ of a cell), and the panel under its path is faintly lit in the
+  beam's colour, brightest in a soft glow around the front. The light
+  stays after the shot: green for the goal, gold for a bonus target,
+  dimmer for a miss.
+- **Surroundings**: a soft vignette darkens the background towards the
+  screen's corners (under every screen, never over its text); on level
+  screens a faint blue light sits behind the board, and small corner
+  ticks outside the panel carry quiet labels: grid size (top left), goal
+  hits needed (top right), par (bottom left) and level number (bottom
+  right, `L07`). They don't glow, and fade in with the panel at level
+  start.
 - **Buttons**: rounded rectangles with a thin outline; the primary action
   (*Next level*) is filled with the success colour.
 

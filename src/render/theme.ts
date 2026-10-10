@@ -26,6 +26,9 @@ export const COLORS = {
   stoneCrack: 0x0d111b,
   emitterIdle: 0x3b5a86,
   emitterSelected: 0x11223a,
+  /** Corner ticks around the board, and their labels (4.9:1 contrast). */
+  marking: 0x2f4670,
+  markingText: 0x6482b0,
 } as const;
 
 /**

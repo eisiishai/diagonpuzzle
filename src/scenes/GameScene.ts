@@ -7,6 +7,7 @@ import type { ShotOutcome, ShotResult } from "../game/simulate";
 import { earnsStar } from "../save/progress";
 import type { Board, MirrorType, Position } from "../game/types";
 import type { GameAction } from "../input/keyboard";
+import { BoardSurround } from "../render/BoardSurround";
 import { BoardView } from "../render/BoardView";
 import { Celebration } from "../render/Celebration";
 import { fitToScreen } from "../render/fitToScreen";
@@ -118,6 +119,7 @@ export interface GameSceneOptions {
 export class GameScene extends Container implements Scene {
   private readonly options: GameSceneOptions;
   private readonly boardView: BoardView;
+  private readonly surround: BoardSurround;
   private readonly shotsText: Text;
   private readonly audioControls: AudioControls;
   private readonly messageText: Text;
@@ -169,6 +171,13 @@ export class GameScene extends Container implements Scene {
     const width = Math.max(this.boardView.contentWidth, MIN_SCENE_WIDTH);
     this.sceneWidth = width;
     this.boardView.x = Math.round((width - this.boardView.contentWidth) / 2);
+    this.surround = new BoardSurround(this.boardView.panelBounds, {
+      topLeft: `${board.width} × ${board.height}`,
+      topRight: `GOAL ×${options.goalHits}`,
+      bottomLeft: `PAR ${options.par}`,
+      bottomRight: `L${String(levelNumber).padStart(2, "0")}`,
+    });
+    this.surround.position.copyFrom(this.boardView.position);
 
     // Header: level name and menu on the first row, shots and restart on the
     // second, so the rows fit even on narrow boards.
@@ -224,6 +233,7 @@ export class GameScene extends Container implements Scene {
       this.shotsText,
       restartButton,
       this.audioControls,
+      this.surround,
       this.boardView,
       this.messageText,
       this.nextButton,
@@ -302,6 +312,7 @@ export class GameScene extends Container implements Scene {
       }
     }
     this.boardView.update(deltaMs);
+    this.surround.alpha = this.boardView.panelAlpha;
     this.celebration.update(deltaMs);
   }
 

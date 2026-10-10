@@ -1,7 +1,7 @@
 import "@fontsource/chakra-petch/latin-500.css";
 import "@fontsource/chakra-petch/latin-700.css";
 import "@fontsource/jetbrains-mono/latin-500.css";
-import { Application } from "pixi.js";
+import { Application, Sprite } from "pixi.js";
 import { GameAudio } from "./audio/GameAudio";
 import { TITLE_MUSIC } from "./audio/music";
 import { bonusPositions, withBonuses } from "./game/bonus";
@@ -29,6 +29,7 @@ import {
 } from "./save/progress";
 import type { LevelSummary } from "./save/progress";
 import { BackgroundGrid } from "./render/BackgroundGrid";
+import { vignetteTexture } from "./render/glow";
 import { SceneTransition } from "./render/SceneTransition";
 import type { WipeDirection } from "./render/SceneTransition";
 import { BACKGROUND_CSS, FONT_FACES } from "./render/theme";
@@ -79,11 +80,16 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
   // The drifting grid stays at the back; scenes are added on top of it.
   const background = new BackgroundGrid(app.renderer.resolution);
   app.stage.addChild(background);
+  // A soft vignette over the background grid, under every scene.
+  const vignette = new Sprite(vignetteTexture());
+  app.stage.addChild(vignette);
   // The beam wipe between scenes, kept above them.
   const transition = new SceneTransition();
   app.stage.addChild(transition);
   const layout = () => {
     background.resize(window.innerWidth, window.innerHeight);
+    vignette.width = window.innerWidth;
+    vignette.height = window.innerHeight;
     transition.resize(window.innerWidth, window.innerHeight);
     scene?.layout(window.innerWidth, window.innerHeight);
   };

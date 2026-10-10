@@ -173,7 +173,10 @@ export class BoardView extends Container {
       .fill({ color: COLORS.beam, alpha: 0.06 });
     this.rowHighlight.visible = false;
     this.panel = this.drawGrid();
-    this.addChild(this.panel, this.rowHighlight);
+    this.animator = new PelletAnimator(cellSize, (x, y) =>
+      this.cellCenter(x, y),
+    );
+    this.addChild(this.panel, this.rowHighlight, this.animator.light);
 
     for (let y = 0; y < board.height; y++) {
       const row: Graphics[] = [];
@@ -201,9 +204,6 @@ export class BoardView extends Container {
       this.addChild(launcher);
     }
 
-    this.animator = new PelletAnimator(cellSize, (x, y) =>
-      this.cellCenter(x, y),
-    );
     this.addChild(this.animator);
   }
 
@@ -214,6 +214,21 @@ export class BoardView extends Container {
 
   get contentHeight(): number {
     return this.boardHeight * this.cellSize;
+  }
+
+  /** The panel under the cells, in this view's coordinates. */
+  get panelBounds(): { x: number; y: number; width: number; height: number } {
+    return {
+      x: this.cellSize,
+      y: 0,
+      width: this.boardWidth * this.cellSize,
+      height: this.boardHeight * this.cellSize,
+    };
+  }
+
+  /** How far the panel has faded in: below 1 only during the intro. */
+  get panelAlpha(): number {
+    return this.panel.alpha;
   }
 
   /**

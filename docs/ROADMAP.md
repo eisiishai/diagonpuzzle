@@ -158,10 +158,10 @@ the polyline rule and is checked on a phone. In suggested order:
   their mechanic's track
 - [x] Effects in tune with the music. Chosen: bounce pings climb the
   current track's scale; the goal chime uses the chord playing at the time
-- [ ] Beam head and light. Chosen: a short comet tail behind the moving
+- [x] Beam head and light. Chosen: a short comet tail behind the moving
   front (about ¾ of a cell), and faint light on the panel under the
   beam's path, brightest around the front
-- [ ] Atmosphere around the board. Chosen: soft vignette, faint light
+- [x] Atmosphere around the board. Chosen: soft vignette, faint light
   behind the board, corner ticks with small labels (grid size, goal hits,
   par, level number); no glow
 - [ ] Title screen. Chosen: the title beam fires every few seconds (shoots
