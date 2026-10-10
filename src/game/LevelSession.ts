@@ -29,6 +29,7 @@ export class LevelSession {
   /** The mirror the level lets the player place, if any. */
   readonly playerMirror?: MirrorType;
   private _mirrorInHand: boolean;
+  private _placedMirror: Position | null = null;
 
   constructor(startBoard: Board, goalHits = 1, playerMirror?: MirrorType) {
     this.startBoard = startBoard;
@@ -42,6 +43,11 @@ export class LevelSession {
   /** True while the player's mirror has not been placed yet. */
   get mirrorInHand(): boolean {
     return this._mirrorInHand;
+  }
+
+  /** Where the player's mirror was placed; null until it is. */
+  get placedMirror(): Position | null {
+    return this._placedMirror;
   }
 
   /** Goal hits so far. */
@@ -120,6 +126,7 @@ export class LevelSession {
     }
     this._board = placeMirror(this._board, position, this.playerMirror);
     this._mirrorInHand = false;
+    this._placedMirror = { ...position };
     return true;
   }
 
@@ -151,6 +158,7 @@ export class LevelSession {
     this._shots = 0;
     this._hits = 0;
     this._mirrorInHand = this.playerMirror !== undefined;
+    this._placedMirror = null;
     this._phase = "aiming";
     this.pendingOutcome = undefined;
   }

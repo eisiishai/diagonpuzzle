@@ -44,7 +44,8 @@ src/
   main.ts       PixiJS bootstrap, starts the first scene
   game/         game rules: types, board, cell behaviors, pellet simulation,
                 solver (fewest shots for a level), LevelSession (state of a
-                level being played)
+                level being played), MirrorPlacement (choosing the player
+                mirror's cell by mouse, touch or keyboard)
   levels/       level list (levels.ts, text grids) and the parser
   render/       PixiJS views and animations
   input/        mouse/keyboard → game actions

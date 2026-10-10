@@ -249,7 +249,7 @@ the polyline rule and is checked on a phone. In suggested order:
     `audio/effects.ts`, `pathPoints.ts`, and `docs/DESIGN.md`
   - Optional: separate the particles' motion from their drawing and
     test it, as `ambient.ts` and `intro.ts` are
-- [ ] Move choosing the player mirror's cell out of `GameScene` into a
+- [x] Move choosing the player mirror's cell out of `GameScene` into a
   pure class in `src/game/` with tests, before the mirror can be rotated
   (that mechanic extends this code). Today these rules sit untested in
   the scene: a mouse click places at once; on touch a first tap previews

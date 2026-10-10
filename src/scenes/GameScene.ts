@@ -2,11 +2,12 @@ import { Container, Text } from "pixi.js";
 import { columnPan } from "../audio/effects";
 import type { GameAudio } from "../audio/GameAudio";
 import { LevelSession } from "../game/LevelSession";
-import { canPlaceAt, placementPositions } from "../game/placement";
+import { MirrorPlacement } from "../game/MirrorPlacement";
+import type { PlacementKey, PlacementResult } from "../game/MirrorPlacement";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
 import type { BonusReport, CompletionReport } from "../save/GameProgress";
 import { earnsStar } from "../save/progress";
-import type { Board, MirrorType, Position } from "../game/types";
+import type { Board, MirrorType } from "../game/types";
 import type { GameAction } from "../input/keyboard";
 import { BoardSurround } from "../render/BoardSurround";
 import { BoardView } from "../render/BoardView";
@@ -15,7 +16,7 @@ import { fitToScreen } from "../render/fitToScreen";
 import { COLORS, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
 import type { Scene } from "./Scene";
-import { STAR, completionMessage } from "./scoreText";
+import { STAR, completionMessage, introMessage } from "./scoreText";
 
 const CELL_SIZE = 64;
 /** Height of a row of buttons. */
@@ -25,19 +26,24 @@ const HEADER_HEIGHT = 2 * ROW_HEIGHT + ROW_GAP + 20;
 const MESSAGE_HEIGHT = 64;
 /** Narrowest the screen's content gets, whatever the board size. */
 const MIN_SCENE_WIDTH = 600;
-const INTRO_MESSAGE =
-  "Aim with ↑/↓ and fire with Enter, or click an emitter. Mirrors turn when hit.";
 
 /** How long the Skip button waits for its confirming second press. */
 const SKIP_CONFIRM_MS = 3000;
-const BREAKABLE_INTRO_MESSAGE =
-  "Cracked walls stop the pellet and break: the next shot passes through.";
 const PLACED_MESSAGE = "Mirror placed. It flips when hit, like the others.";
 const TAP_AGAIN_MESSAGE = "Tap the cell again to place your mirror there.";
 const KEYBOARD_PLACE_MESSAGE =
   "Choose a cell with the arrow keys, then press P or Enter to place your mirror. Esc cancels.";
-const BONUS_INTRO_MESSAGE =
-  "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
+
+/** Game actions while choosing the mirror's cell with the keyboard. */
+const PLACEMENT_KEYS: Partial<Record<GameAction, PlacementKey>> = {
+  selectUp: "up",
+  selectDown: "down",
+  selectLeft: "left",
+  selectRight: "right",
+  place: "place",
+  fire: "place",
+  back: "cancel",
+};
 
 const OUTCOME_MESSAGES: Record<
   Exclude<ShotOutcome, "goal" | "bonus">,
@@ -119,12 +125,8 @@ export class GameScene extends Container implements Scene {
   private readonly celebration = new Celebration();
   /** The level's bonus targets collected, in this visit or before. */
   private bonusesCollected: number;
-  /**
-   * The cell chosen for the player's mirror, while choosing: with the
-   * keyboard (arrow keys move it), or by a first tap on a touch screen.
-   */
-  private placeCursor: { position: Position; by: "keyboard" | "touch" } | null =
-    null;
+  /** Choosing the cell for the player's mirror. */
+  private readonly placement: MirrorPlacement;
 
   constructor(options: GameSceneOptions) {
     super();
@@ -138,13 +140,17 @@ export class GameScene extends Container implements Scene {
       options.goalHits,
       options.playerMirror,
     );
+    this.placement = new MirrorPlacement(this.session);
 
     this.boardView = new BoardView(board, CELL_SIZE, {
       onLaunch: (row) => this.fireFrom(row),
       onHover: (row) => this.select(row),
-      onCellHover: (position, pointerType) =>
-        this.hoverCell(position, pointerType),
-      onCellTap: (position, pointerType) => this.tapCell(position, pointerType),
+      onCellHover: (position, pointerType) => {
+        this.placement.hover(position, pointerType);
+        this.showPreview();
+      },
+      onCellTap: (position, pointerType) =>
+        this.showPlacement(this.placement.tap(position, pointerType)),
     });
     this.boardView.y = HEADER_HEIGHT;
     // Narrow boards are centred in a minimum width, so the header and the
@@ -247,7 +253,9 @@ export class GameScene extends Container implements Scene {
   }
 
   handleAction(action: GameAction): void {
-    if (this.placeCursor?.by === "keyboard" && this.handlePlaceKey(action)) {
+    const placementKey = PLACEMENT_KEYS[action];
+    if (this.placement.choosingByKeyboard && placementKey) {
+      this.showPlacement(this.placement.key(placementKey));
       return;
     }
     switch (action) {
@@ -266,7 +274,10 @@ export class GameScene extends Container implements Scene {
         }
         break;
       case "place":
-        this.startKeyboardPlacing();
+        if (this.placement.start()) {
+          this.showPreview();
+          this.showMessage(KEYBOARD_PLACE_MESSAGE);
+        }
         break;
       case "back":
         this.options.onMenu();
@@ -320,7 +331,8 @@ export class GameScene extends Container implements Scene {
       return;
     }
 
-    this.setPlaceCursor(null);
+    this.placement.clear();
+    this.showPreview();
     this.boardView.setSelectedRow(this.session.selectedRow);
     this.updateShots();
     this.showMessage("");
@@ -335,124 +347,40 @@ export class GameScene extends Container implements Scene {
     });
   }
 
-  /** Places the player's mirror at `position`, if allowed now. */
-  private place(position: Position): void {
-    if (!this.session.place(position)) {
-      return;
+  /** Shows what a placement input did. */
+  private showPlacement(result: PlacementResult): void {
+    this.showPreview();
+    switch (result) {
+      case "placed": {
+        const { x, y } = this.session.placedMirror!;
+        this.boardView.setPlacing(false);
+        this.boardView.placeMirror(x, y, this.session.board.cells[y][x]);
+        this.options.audio.play("place");
+        this.showMessage(PLACED_MESSAGE);
+        this.updateShots();
+        break;
+      }
+      case "previewed":
+        this.showMessage(TAP_AGAIN_MESSAGE);
+        break;
+      case "cancelled":
+        this.showMessage(this.introMessage());
+        break;
     }
-    const { x, y } = position;
-    this.setPlaceCursor(null);
-    this.boardView.setPlacing(false);
-    this.boardView.placeMirror(x, y, this.session.board.cells[y][x]);
-    this.options.audio.play("place");
-    this.showMessage(PLACED_MESSAGE);
-    this.updateShots();
   }
 
-  /** Moves the cell chosen for the mirror and shows it, or hides it (null). */
-  private setPlaceCursor(cursor: GameScene["placeCursor"]): void {
-    this.placeCursor = cursor;
-    this.showPreview(cursor?.position ?? null);
-  }
-
-  private showPreview(position: Position | null): void {
+  /** Marks where the player's mirror would go, or hides the mark. */
+  private showPreview(): void {
     const { playerMirror } = this.session;
     if (playerMirror === undefined) {
       return;
     }
+    const preview = this.placement.preview;
     this.boardView.showPlacePreview(
-      position,
+      preview?.position ?? null,
       playerMirror,
-      position !== null && this.session.canPlace(position),
+      preview?.placeable ?? false,
     );
-  }
-
-  /**
-   * A mouse over the board previews the mirror on empty cells; on touch
-   * screens there is no hover, and a first tap previews instead.
-   */
-  private hoverCell(position: Position | null, pointerType: string): void {
-    if (pointerType !== "mouse" || this.placeCursor) {
-      return;
-    }
-    this.showPreview(
-      position && canPlaceAt(this.session.board, position) ? position : null,
-    );
-  }
-
-  /**
-   * A click places the mirror at once (the hover showed where). A tap on a
-   * touch screen first previews it, and a second tap on the same cell
-   * places it, so a stray tap doesn't use up the mirror.
-   */
-  private tapCell(position: Position, pointerType: string): void {
-    if (!this.session.canPlace(position)) {
-      return;
-    }
-    const cursor = this.placeCursor?.position;
-    const confirmed = cursor?.x === position.x && cursor?.y === position.y;
-    if (pointerType === "mouse" || confirmed) {
-      this.place(position);
-      return;
-    }
-    this.setPlaceCursor({ position, by: "touch" });
-    this.showMessage(TAP_AGAIN_MESSAGE);
-  }
-
-  /**
-   * P starts choosing a cell with the keyboard, starting from an empty cell
-   * in the selected row if there is one.
-   */
-  private startKeyboardPlacing(): void {
-    if (!this.session.mirrorInHand || !this.session.canFire) {
-      return;
-    }
-    const empty = placementPositions(this.session.board);
-    const start = empty.find((p) => p.y === this.session.selectedRow) ??
-      empty[0] ?? { x: 0, y: this.session.selectedRow };
-    this.setPlaceCursor({ position: start, by: "keyboard" });
-    this.showMessage(KEYBOARD_PLACE_MESSAGE);
-  }
-
-  /**
-   * Keys while choosing a cell with the keyboard: arrows move, P or Enter
-   * places, Esc cancels. Returns false for keys left to the usual actions.
-   */
-  private handlePlaceKey(action: GameAction): boolean {
-    const cursor = this.placeCursor!.position;
-    const { width, height } = this.session.board;
-    const move = (dx: number, dy: number) =>
-      this.setPlaceCursor({
-        position: {
-          x: Math.max(0, Math.min(width - 1, cursor.x + dx)),
-          y: Math.max(0, Math.min(height - 1, cursor.y + dy)),
-        },
-        by: "keyboard",
-      });
-    switch (action) {
-      case "selectUp":
-        move(0, -1);
-        return true;
-      case "selectDown":
-        move(0, 1);
-        return true;
-      case "selectLeft":
-        move(-1, 0);
-        return true;
-      case "selectRight":
-        move(1, 0);
-        return true;
-      case "place":
-      case "fire":
-        this.place(cursor);
-        return true;
-      case "back":
-        this.setPlaceCursor(null);
-        this.showMessage(this.introMessage());
-        return true;
-      default:
-        return false;
-    }
   }
 
   private finishShot(result: ShotResult): void {
@@ -610,7 +538,8 @@ export class GameScene extends Container implements Scene {
   /** Puts the level back to its starting board, with no shots fired. */
   private restart(): void {
     this.session.restart();
-    this.setPlaceCursor(null);
+    this.placement.clear();
+    this.showPreview();
     this.boardView.showBoard(this.session.board);
     this.boardView.setPlacing(this.session.mirrorInHand);
     this.boardView.setGoalHits(0, this.session.goalHits);
@@ -699,20 +628,12 @@ export class GameScene extends Container implements Scene {
 
   /** The message shown when a level starts or restarts. */
   private introMessage(): string {
-    const { goalHits, bonus } = this.options;
-    if (bonus.shown && this.bonusesCollected < bonus.total) {
-      return BONUS_INTRO_MESSAGE;
-    }
-    if (this.options.playerMirror) {
-      const symbol = this.options.playerMirror === "mirrorSlash" ? "/" : "\\";
-      return `Place your ${symbol} mirror on any empty cell: click it, tap it twice, or press P. It takes no shot; only Restart takes it back.`;
-    }
-    if (goalHits > 1) {
-      return `This goal needs ${goalHits} hits, each from a separate shot. Mirrors stay flipped between shots.`;
-    }
-    const hasBreakable = this.options.board.cells.some((row) =>
-      row.includes("breakable"),
-    );
-    return hasBreakable ? BREAKABLE_INTRO_MESSAGE : INTRO_MESSAGE;
+    const { goalHits, bonus, playerMirror, board } = this.options;
+    return introMessage({
+      bonusToFind: bonus.shown && this.bonusesCollected < bonus.total,
+      playerMirror,
+      goalHits,
+      hasBreakable: board.cells.some((row) => row.includes("breakable")),
+    });
   }
 }

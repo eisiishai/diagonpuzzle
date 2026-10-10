@@ -1,5 +1,6 @@
 // Player-facing text about shots, par and stars. Pure, so it can be tested.
 
+import type { MirrorType } from "../game/types";
 import { earnsStar } from "../save/progress";
 
 export const STAR = "★";
@@ -59,4 +60,39 @@ export function levelListRow(
   }
   const state = golden ? "golden" : earnsStar(best, par) ? "star" : "done";
   return { state, title, detail: `best ${best} / par ${par}` };
+}
+
+/** What decides a level's opening message. */
+export interface IntroFacts {
+  /** A bonus target is shown and not yet collected. */
+  bonusToFind: boolean;
+  /** The mirror the player may place, if the level gives one. */
+  playerMirror?: MirrorType;
+  /** Goal hits needed to complete the level. */
+  goalHits: number;
+  /** The level has breakable walls. */
+  hasBreakable: boolean;
+}
+
+/**
+ * The message shown when a level starts or restarts: about the newest thing
+ * in it, in this order: a bonus target to find, the player's mirror, a goal
+ * needing several hits, breakable walls; else how to play.
+ */
+export function introMessage(facts: IntroFacts): string {
+  const { bonusToFind, playerMirror, goalHits, hasBreakable } = facts;
+  if (bonusToFind) {
+    return "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
+  }
+  if (playerMirror) {
+    const symbol = playerMirror === "mirrorSlash" ? "/" : "\\";
+    return `Place your ${symbol} mirror on any empty cell: click it, tap it twice, or press P. It takes no shot; only Restart takes it back.`;
+  }
+  if (goalHits > 1) {
+    return `This goal needs ${goalHits} hits, each from a separate shot. Mirrors stay flipped between shots.`;
+  }
+  if (hasBreakable) {
+    return "Cracked walls stop the pellet and break: the next shot passes through.";
+  }
+  return "Aim with ↑/↓ and fire with Enter, or click an emitter. Mirrors turn when hit.";
 }

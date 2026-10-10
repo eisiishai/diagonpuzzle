@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completionMessage, levelListRow } from "./scoreText";
+import { completionMessage, introMessage, levelListRow } from "./scoreText";
 
 describe("completionMessage", () => {
   it("awards a star at par", () => {
@@ -48,5 +48,44 @@ describe("levelListRow", () => {
     });
     expect(row(3, "Second try", 2, true, 2).state).toBe("star");
     expect(row(3, "Second try", 2, true, 2, false, true).state).toBe("golden");
+  });
+});
+
+describe("introMessage", () => {
+  const plain = { bonusToFind: false, goalHits: 1, hasBreakable: false };
+
+  it("explains how to play on a plain level", () => {
+    expect(introMessage(plain)).toContain("Aim with ↑/↓");
+  });
+
+  it("names the newest thing in the level, in order of priority", () => {
+    expect(
+      introMessage({
+        bonusToFind: true,
+        playerMirror: "mirrorSlash",
+        goalHits: 2,
+        hasBreakable: true,
+      }),
+    ).toContain("bonus target");
+    expect(
+      introMessage({
+        ...plain,
+        playerMirror: "mirrorSlash",
+        goalHits: 2,
+        hasBreakable: true,
+      }),
+    ).toContain("Place your / mirror");
+    expect(
+      introMessage({ ...plain, goalHits: 3, hasBreakable: true }),
+    ).toContain("needs 3 hits");
+    expect(introMessage({ ...plain, hasBreakable: true })).toContain(
+      "Cracked walls",
+    );
+  });
+
+  it("shows the backslash mirror's symbol", () => {
+    expect(
+      introMessage({ ...plain, playerMirror: "mirrorBackslash" }),
+    ).toContain("Place your \\ mirror");
   });
 });

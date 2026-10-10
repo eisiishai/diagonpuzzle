@@ -156,10 +156,12 @@ describe("LevelSession player-placed mirror", () => {
   it("places the mirror on an empty cell without taking a shot, once", () => {
     const session = newMirrorSession();
     expect(session.mirrorInHand).toBe(true);
+    expect(session.placedMirror).toBeNull();
     expect(session.canPlace({ x: 0, y: 1 })).toBe(false);
     expect(session.place({ x: 1, y: 0 })).toBe(true);
     expect(session.board.cells[0][1]).toBe("mirrorBackslash");
     expect(session.mirrorInHand).toBe(false);
+    expect(session.placedMirror).toEqual({ x: 1, y: 0 });
     expect(session.shots).toBe(0);
     expect(session.place({ x: 2, y: 0 })).toBe(false);
     session.fire(0);
@@ -193,5 +195,6 @@ describe("LevelSession player-placed mirror", () => {
     session.restart();
     expect(session.board.cells[0][1]).toBe("empty");
     expect(session.mirrorInHand).toBe(true);
+    expect(session.placedMirror).toBeNull();
   });
 });
