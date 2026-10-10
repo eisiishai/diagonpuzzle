@@ -99,7 +99,10 @@ variety of solutions.
 
 - **Mouse:** hovering over a launch position selects its row; clicking fires.
 - **Keyboard:** ↑/↓ (or W/S) select a row, Enter/Space fires.
-- **M** or clicking the sound label toggles all sound; the choice is remembered.
+- Music and sound effects are switched on and off separately: **M** or the
+  *Music* label for music, **F** or the *Sounds* label for sound effects.
+  Both choices are remembered. (Players who had muted all sound before the
+  split start with both off.)
 - After completing a level, Enter/Space or the *Next level* button continues.
   After the last level, it returns to the title screen.
 - **Esc** or the *Menu* label returns to the title screen at any time.

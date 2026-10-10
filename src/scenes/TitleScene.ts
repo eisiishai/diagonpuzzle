@@ -4,7 +4,7 @@ import type { GameAction } from "../input/keyboard";
 import type { LevelDefinition } from "../levels/levels";
 import { fitToScreen } from "../render/fitToScreen";
 import {
-  SoundToggle,
+  AudioControls,
   TEXT_STYLE,
   UI_COLORS,
   makeClickable,
@@ -36,7 +36,7 @@ interface MenuItem {
 export class TitleScene extends Container implements Scene {
   private readonly items: MenuItem[] = [];
   private readonly resetItem: MenuItem;
-  private readonly soundToggle: SoundToggle;
+  private readonly audioControls: AudioControls;
   private readonly contentHeight: number;
   private selected = 0;
   private resetArmed = false;
@@ -122,8 +122,10 @@ export class TitleScene extends Container implements Scene {
     });
     y += reset.height + 28;
 
-    this.soundToggle = this.addCentered(new SoundToggle(audio), y);
-    y += this.soundToggle.height + 24;
+    this.audioControls = new AudioControls(audio, "center");
+    this.audioControls.y = y;
+    this.addChild(this.audioControls);
+    y += this.audioControls.height + 24;
 
     const version = this.addCentered(
       new Text({
@@ -161,8 +163,11 @@ export class TitleScene extends Container implements Scene {
       case "fire":
         this.items[this.selected].activate();
         break;
-      case "toggleMute":
-        this.soundToggle.toggle();
+      case "toggleMusic":
+        this.audioControls.toggle("music");
+        break;
+      case "toggleEffects":
+        this.audioControls.toggle("effects");
         break;
       case "back":
         break;

@@ -18,6 +18,9 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm test` — Vitest unit tests
 - `npm run levels` — level design report: shortest solution, setup routes and
   first-shot outcomes for every level (`scripts/levels.ts`, runs with tsx)
+- `npm run solutions` — writes `docs/solutions.local.md` (git-ignored, also
+  run by `npm run build`): every level's grid and solution, for the user to
+  look up. Don't commit or publish it.
 - `npm run version:major` — make the next commit on main start a new major
   version (only when the user asks for a major version bump)
 - Deploy: commit, then `npm run build` from a clean working tree, then copy

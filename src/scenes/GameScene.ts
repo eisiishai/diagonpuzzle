@@ -7,7 +7,7 @@ import type { GameAction } from "../input/keyboard";
 import { BoardView } from "../render/BoardView";
 import { fitToScreen } from "../render/fitToScreen";
 import {
-  SoundToggle,
+  AudioControls,
   TEXT_STYLE,
   UI_COLORS,
   makeClickable,
@@ -54,7 +54,7 @@ export class GameScene extends Container implements Scene {
   private readonly options: GameSceneOptions;
   private readonly boardView: BoardView;
   private readonly shotsText: Text;
-  private readonly soundToggle: SoundToggle;
+  private readonly audioControls: AudioControls;
   private readonly messageText: Text;
   private readonly nextButton: Text;
   private readonly session: LevelSession;
@@ -109,16 +109,15 @@ export class GameScene extends Container implements Scene {
     this.nextButton.y = this.messageText.y + MESSAGE_HEIGHT;
     makeClickable(this.nextButton, () => options.onNext());
     this.nextButton.visible = false;
-    this.soundToggle = new SoundToggle(options.audio);
-    this.soundToggle.anchor.set(1, 0);
-    this.soundToggle.position.set(width, this.nextButton.y);
+    this.audioControls = new AudioControls(options.audio, "right");
+    this.audioControls.position.set(width, this.nextButton.y);
 
     this.addChild(
       levelText,
       menuButton,
       this.shotsText,
       restartButton,
-      this.soundToggle,
+      this.audioControls,
       this.boardView,
       this.messageText,
       this.nextButton,
@@ -164,8 +163,11 @@ export class GameScene extends Container implements Scene {
       case "restart":
         this.restart();
         break;
-      case "toggleMute":
-        this.soundToggle.toggle();
+      case "toggleMusic":
+        this.audioControls.toggle("music");
+        break;
+      case "toggleEffects":
+        this.audioControls.toggle("effects");
         break;
     }
   }

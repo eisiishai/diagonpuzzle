@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "start": "npm run dev",
-    "build": "npm run lint && tsc && npm test && vite build",
+    "build": "npm run lint && tsc && npm test && npm run solutions && vite build",
     "lint": "eslint .",
     "dev": "vite",
     "test": "vitest run",
     "levels": "tsx scripts/levels.ts",
+    "solutions": "tsx scripts/solutions.ts > docs/solutions.local.md",
     "version:major": "git config diagonpuzzle.nextMajor true && echo 'The next commit on main starts a new major version.'",
     "prepare": "git config core.hooksPath .githooks && git config push.followTags true"
   },

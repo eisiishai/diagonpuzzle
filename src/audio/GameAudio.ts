@@ -2,10 +2,20 @@ import { readStorage, writeStorage } from "../save/storage";
 
 export type SoundEffect = "fire" | "wall" | "exit" | "loop" | "goal";
 
-const MUTED_STORAGE_KEY = "muted";
+/** Music and sound effects are switched on and off separately. */
+export type AudioChannel = "music" | "effects";
+
 const MASTER_VOLUME = 0.8;
-const EFFECTS_VOLUME = 0.35;
-const MUSIC_VOLUME = 0.1;
+const CHANNEL_VOLUMES: Record<AudioChannel, number> = {
+  music: 0.1,
+  effects: 0.35,
+};
+const CHANNEL_STORAGE_KEYS: Record<AudioChannel, string> = {
+  music: "musicOn",
+  effects: "effectsOn",
+};
+/** Before music and effects were separate, one setting muted both. */
+const LEGACY_MUTED_STORAGE_KEY = "muted";
 
 // Placeholder music: an arpeggiated Am–F–C–G loop in eighth notes.
 const MUSIC_BPM = 96;
@@ -31,23 +41,26 @@ function midiToFrequency(note: number): number {
  */
 export class GameAudio {
   private context?: AudioContext;
-  private master?: GainNode;
-  private effects?: GainNode;
-  private music?: GainNode;
+  private channels?: Record<AudioChannel, GainNode>;
   private musicStep = 0;
   private nextMusicTime = 0;
-  private _muted = readStorage(MUTED_STORAGE_KEY) === "true";
+  private readonly enabled: Record<AudioChannel, boolean> = {
+    music: loadEnabled("music"),
+    effects: loadEnabled("effects"),
+  };
 
-  get muted(): boolean {
-    return this._muted;
+  isOn(channel: AudioChannel): boolean {
+    return this.enabled[channel];
   }
 
-  toggleMuted(): void {
-    this._muted = !this._muted;
-    writeStorage(MUTED_STORAGE_KEY, String(this._muted));
-    if (this.context && this.master) {
-      this.master.gain.setTargetAtTime(
-        this._muted ? 0 : MASTER_VOLUME,
+  /** Switches music or sound effects on or off; the choice is remembered. */
+  toggle(channel: AudioChannel): void {
+    const on = !this.enabled[channel];
+    this.enabled[channel] = on;
+    writeStorage(CHANNEL_STORAGE_KEYS[channel], String(on));
+    if (this.context && this.channels) {
+      this.channels[channel].gain.setTargetAtTime(
+        on ? CHANNEL_VOLUMES[channel] : 0,
         this.context.currentTime,
         0.02,
       );
@@ -65,15 +78,16 @@ export class GameAudio {
 
     const context = new AudioContext();
     this.context = context;
-    this.master = context.createGain();
-    this.master.gain.value = this._muted ? 0 : MASTER_VOLUME;
-    this.master.connect(context.destination);
-    this.effects = context.createGain();
-    this.effects.gain.value = EFFECTS_VOLUME;
-    this.effects.connect(this.master);
-    this.music = context.createGain();
-    this.music.gain.value = MUSIC_VOLUME;
-    this.music.connect(this.master);
+    const master = context.createGain();
+    master.gain.value = MASTER_VOLUME;
+    master.connect(context.destination);
+    const channel = (name: AudioChannel) => {
+      const gain = context.createGain();
+      gain.gain.value = this.enabled[name] ? CHANNEL_VOLUMES[name] : 0;
+      gain.connect(master);
+      return gain;
+    };
+    this.channels = { music: channel("music"), effects: channel("effects") };
 
     // Pause audio while the tab is hidden; timers are throttled there anyway.
     document.addEventListener("visibilitychange", () => {
@@ -129,7 +143,7 @@ export class GameAudio {
     type: OscillatorType,
     startTime: number,
     volume: number,
-    destination = this.effects,
+    destination = this.channels?.effects,
   ): void {
     if (!this.context || !destination) {
       return;
@@ -173,7 +187,7 @@ export class GameAudio {
         "triangle",
         t,
         0.6,
-        this.music,
+        this.channels?.music,
       );
       if (step % 4 === 0) {
         const bass = midiToFrequency(chord[0] - 12);
@@ -184,7 +198,7 @@ export class GameAudio {
           "sine",
           t,
           1,
-          this.music,
+          this.channels?.music,
         );
       }
 
@@ -192,4 +206,12 @@ export class GameAudio {
       this.nextMusicTime += MUSIC_STEP_SECONDS;
     }
   }
+}
+
+function loadEnabled(channel: AudioChannel): boolean {
+  const stored = readStorage(CHANNEL_STORAGE_KEYS[channel]);
+  if (stored !== null) {
+    return stored === "true";
+  }
+  return readStorage(LEGACY_MUTED_STORAGE_KEY) !== "true";
 }

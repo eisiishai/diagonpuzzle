@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated level solutions (npm run solutions); local only
+docs/solutions.local.md
