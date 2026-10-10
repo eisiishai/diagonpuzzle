@@ -89,6 +89,9 @@ with flipping mirrors, before it is built.
 - [x] Version tags: each commit on `main` is tagged automatically
   (`.githooks/`, details in `docs/WORKFLOW.md`)
 - [x] Full check (`npm run build`) runs automatically before each commit
-- [ ] Upgrade ESLint 9 → 10 (9 shows a deprecation notice)
+- [x] Upgrade ESLint 9 → 10 (9 shows a deprecation notice)
+- [ ] Upgrade Vite 6 → 8 (test the game in the browser afterwards)
+- [ ] Upgrade TypeScript 5.7 → 7, once typescript-eslint supports it
+  (currently TypeScript < 6.1)
 - [ ] Automated browser smoke tests (e.g. Playwright), if the UI grows enough
   that manual checks become a burden
