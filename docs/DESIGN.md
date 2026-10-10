@@ -308,7 +308,8 @@ difficulty doesn't dip at the end.
 The game looks like a dark laboratory where a laser is steered with glass
 mirrors. The board and its pieces glow; the interface around them is quiet
 and technical. Mock-ups: the "A · Laser lab" artboard of the art-directions
-canvas. Colours and fonts are defined once in `src/render/theme.ts`.
+canvas; the second pass of effects was chosen on the visual lab page.
+Colours and fonts are defined once in `src/render/theme.ts`.
 
 ### Palette
 
@@ -365,6 +366,18 @@ Text colours keep at least 4.5:1 contrast on the background.
   (beam, mirrors, goal, selected emitter); the panel and grid stay dark.
 - Mirrors turn 90° in 150 ms when hit; the beam travels about 9 cells a
   second.
+- **Scene transitions** are a beam wipe: a laser line (beam colour, white
+  core) sweeps across the screen in 0.5 s, revealing the new screen behind
+  it while the old one still shows ahead of it. Into a level it sweeps
+  left to right; back to the title screen, right to left. The new screen
+  takes input at once.
+- **Level start**: the board builds in, sweeping left to right like the
+  beam. The panel fades in, the emitters slide in from the left one row
+  after another, the cells pop in column by column (slightly overshooting
+  their size), and the goal ignites last: it shrinks into place from
+  larger with a flash and a diamond ring spreading from it. It takes
+  about 0.7 s on a 7-column board; firing or placing the mirror ends it at
+  once. Restarting a level doesn't play it again.
 - Celebrations use star-shaped particles in the star and success colours.
 - Ambient motion, kept slow and subtle so it never distracts from puzzling:
   the goal crystal breathes (grows about 7 % and brightens, every 2.4 s), the
@@ -379,7 +392,8 @@ Text colours keep at least 4.5:1 contrast on the background.
   faster and deeper (grows 16 % every 1.5 s) and gives off small
   four-pointed sparkles in its colours.
 - When the player's system asks for reduced motion, all ambient motion stops;
-  the pieces stay at rest.
+  the pieces stay at rest. Screens then change with a plain cut, and the
+  board appears without building in.
 
 ### Readability
 
@@ -396,7 +410,8 @@ Text colours keep at least 4.5:1 contrast on the background.
 
 All sound is synthesized in code with the Web Audio API: no audio files.
 Effects and music were chosen by ear on the sound lab page (an artifact with
-every variant), so the names below are its variant names.
+every variant), so the names below are its variant names; later choices
+came from sound lab 2.
 
 ### Effects
 
@@ -407,6 +422,7 @@ every variant), so the names below are its variant names.
 | Wall | *Soft knock* |
 | Breakable wall | A crunch over a low thud, with small pieces clattering after it (not from the sound lab) |
 | Mirror placed | A glassy click, then two short bells (not from the sound lab) |
+| Level start | A soft, quiet swoosh of air with the beam wipe, without a tone, so it doesn't wear on the ear over many levels (sound lab 2's *Rising sweep* was too noticeable) |
 | Off the board | *Two-tone drop*: two notes stepping down |
 | Loop | *Question chime*: two bells rising |
 | Goal (above par) | *Crystal chime*: glassy notes rising |
@@ -435,8 +451,8 @@ track crossfades in over about a second.
   (ducking), so they stand out.
 - At most six effects play at once; extra ones are skipped (goal, par and
   final-star sounds always play).
-- Fire, wall, breaking and off-the-board sounds vary in pitch by up to a
-  quarter of a semitone, so repeats don't sound mechanical.
+- Fire, wall, breaking, off-the-board and level-start sounds vary in pitch
+  by up to a quarter of a semitone, so repeats don't sound mechanical.
 - Music and effects can each be switched off; their reverb and echo tails go
   silent with them.
 

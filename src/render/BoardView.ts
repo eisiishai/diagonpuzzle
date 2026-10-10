@@ -5,6 +5,15 @@ import type { Board, CellType, MirrorType, Position } from "../game/types";
 import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
 import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
+import { easeOutCubic } from "./easing";
+import {
+  introCell,
+  introGoal,
+  introGoalStartMs,
+  introLauncher,
+  introLengthMs,
+  introPanelAlpha,
+} from "./intro";
 import { BONUS_COLORS, COLORS, createBloom } from "./theme";
 
 const MIRROR_TURN_MS = 150;
@@ -52,6 +61,15 @@ interface Debris {
 
 const DEBRIS_LIFE_MS = 600;
 
+/** A goal crystal flashing, with a diamond ring spreading from it. */
+interface GoalFlash {
+  x: number;
+  y: number;
+  ageMs: number;
+}
+
+const GOAL_FLASH_MS = 450;
+
 /** A small twinkle near a bonus target. */
 interface Sparkle {
   view: Graphics;
@@ -72,6 +90,7 @@ export class BoardView extends Container {
   private readonly boardWidth: number;
   private readonly boardHeight: number;
   private readonly cellSize: number;
+  private readonly panel: Graphics;
   private readonly rowHighlight = new Graphics();
   private readonly cellViews: Graphics[][] = [];
   private readonly cells: CellType[][];
@@ -92,9 +111,15 @@ export class BoardView extends Container {
   /** Pieces of broken walls, above the cells. */
   private readonly debrisLayer = new Container();
   private debris: Debris[] = [];
+  /** Goal flashes, above the cells; see flashGoal(). */
+  private readonly flashLayer = new Graphics();
+  private goalFlashes: GoalFlash[] = [];
   private selectedRow: number | null = null;
   /** Time for the ambient pulses of the goal and the selected emitter. */
   private ambientMs = 0;
+  /** Time into the level-start intro while it plays; see playIntro(). */
+  private introMs: number | null = null;
+  private introIgnited = false;
 
   constructor(board: Board, cellSize: number, handlers: BoardViewHandlers) {
     super();
@@ -108,7 +133,8 @@ export class BoardView extends Container {
       .rect(cellSize, 0, board.width * cellSize, cellSize)
       .fill({ color: COLORS.beam, alpha: 0.06 });
     this.rowHighlight.visible = false;
-    this.addChild(this.drawGrid(), this.rowHighlight);
+    this.panel = this.drawGrid();
+    this.addChild(this.panel, this.rowHighlight);
 
     for (let y = 0; y < board.height; y++) {
       const row: Graphics[] = [];
@@ -124,6 +150,7 @@ export class BoardView extends Container {
     this.redrawCells();
     this.addChild(
       this.goalMarkers,
+      this.flashLayer,
       this.placePreview,
       this.sparkleLayer,
       this.debrisLayer,
@@ -151,8 +178,32 @@ export class BoardView extends Container {
     return this.boardHeight * this.cellSize;
   }
 
+  /**
+   * Builds the board in as a level starts: the panel fades in, emitters
+   * slide in, cells pop in column by column and the goal ignites last.
+   * Anything the player does ends it at once. Nothing when the player
+   * prefers reduced motion.
+   */
+  playIntro(): void {
+    if (prefersReducedMotion()) {
+      return;
+    }
+    this.introMs = 0;
+    this.introIgnited = false;
+    this.updateIntro(0);
+  }
+
+  /** A goal crystal at (x, y) flashes and sends out a diamond ring. */
+  flashGoal(x: number, y: number): void {
+    if (prefersReducedMotion()) {
+      return;
+    }
+    this.goalFlashes.push({ x, y, ageMs: 0 });
+  }
+
   /** Shows `board` immediately, stopping any shot and animation in progress. */
   showBoard(board: Board): void {
+    this.finishIntro();
     this.animator.clear();
     this.turns = [];
     this.placings = [];
@@ -221,6 +272,7 @@ export class BoardView extends Container {
     result: ShotResult,
     callbacks: Omit<ShotCallbacks, "onCellChange">,
   ): void {
+    this.finishIntro();
     this.animator.play(result, {
       ...callbacks,
       onCellChange: (x, y, cell) => this.changeCell(x, y, cell),
@@ -232,6 +284,7 @@ export class BoardView extends Container {
    * drops in from slightly larger, fading in.
    */
   placeMirror(x: number, y: number, cell: CellType): void {
+    this.finishIntro();
     const view = this.cellViews[y][x];
     this.cells[y][x] = cell;
     this.drawCell(view, cell);
@@ -309,6 +362,90 @@ export class BoardView extends Container {
     this.updatePlacings(deltaMs);
     this.updateDebris(deltaMs);
     this.updateAmbient(deltaMs);
+    this.updateIntro(deltaMs);
+    this.updateGoalFlashes(deltaMs);
+  }
+
+  /** Applies the intro's look for this moment, over the ambient motion. */
+  private updateIntro(deltaMs: number): void {
+    if (this.introMs === null) {
+      return;
+    }
+    this.introMs += deltaMs;
+    const t = this.introMs;
+    if (t >= introLengthMs(this.boardWidth)) {
+      this.finishIntro();
+      return;
+    }
+    const panelAlpha = introPanelAlpha(t);
+    this.panel.alpha = panelAlpha;
+    this.rowHighlight.alpha = panelAlpha;
+    this.launchers.forEach((launcher, row) => {
+      const { alpha, offset } = introLauncher(t, row);
+      launcher.alpha = alpha;
+      launcher.x = this.cellSize * (0.5 + offset);
+    });
+    const ignite = !this.introIgnited && t >= introGoalStartMs(this.boardWidth);
+    this.introIgnited ||= ignite;
+    const goal = introGoal(t, this.boardWidth);
+    this.goalMarkers.alpha = goal.alpha;
+    this.cells.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        const look = cell === "goal" ? goal : introCell(t, x);
+        const view = this.cellViews[y][x];
+        view.alpha = look.alpha;
+        view.scale.set(look.scale);
+        if (cell === "goal" && ignite) {
+          this.flashGoal(x, y);
+        }
+      }),
+    );
+  }
+
+  /** Ends the intro, leaving every piece at rest. */
+  private finishIntro(): void {
+    if (this.introMs === null) {
+      return;
+    }
+    this.introMs = null;
+    this.panel.alpha = 1;
+    this.rowHighlight.alpha = 1;
+    this.goalMarkers.alpha = 1;
+    this.launchers.forEach((launcher) => {
+      launcher.alpha = 1;
+      launcher.x = this.cellSize / 2;
+    });
+    this.cellViews.forEach((row) =>
+      row.forEach((view) => {
+        view.alpha = 1;
+        view.scale.set(1);
+      }),
+    );
+  }
+
+  private updateGoalFlashes(deltaMs: number): void {
+    const g = this.flashLayer.clear();
+    const size = this.cellSize;
+    this.goalFlashes = this.goalFlashes.filter((flash) => {
+      flash.ageMs += deltaMs;
+      const t = flash.ageMs / GOAL_FLASH_MS;
+      if (t >= 1) {
+        return false;
+      }
+      const { x, y } = this.cellCenter(flash.x, flash.y);
+      g.circle(x, y, size * (0.4 + 0.3 * t)).fill({
+        color: COLORS.success,
+        alpha: 0.45 * (1 - t) ** 2,
+      });
+      const r = size * (0.3 + 0.75 * easeOutCubic(t));
+      g.poly([x, y - r, x + r, y, x, y + r, x - r, y]).stroke({
+        width: 2.5 * (1 - 0.6 * t),
+        color: COLORS.success,
+        alpha: 0.9 * (1 - t),
+        join: "miter",
+      });
+      return true;
+    });
   }
 
   /**

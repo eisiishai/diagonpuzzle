@@ -29,6 +29,8 @@ import {
 } from "./save/progress";
 import type { LevelSummary } from "./save/progress";
 import { BackgroundGrid } from "./render/BackgroundGrid";
+import { SceneTransition } from "./render/SceneTransition";
+import type { WipeDirection } from "./render/SceneTransition";
 import { BACKGROUND_CSS, FONT_FACES } from "./render/theme";
 import { readStorage, removeStorage, writeStorage } from "./save/storage";
 import { GameScene } from "./scenes/GameScene";
@@ -77,19 +79,31 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
   // The drifting grid stays at the back; scenes are added on top of it.
   const background = new BackgroundGrid(app.renderer.resolution);
   app.stage.addChild(background);
+  // The beam wipe between scenes, kept above them.
+  const transition = new SceneTransition();
+  app.stage.addChild(transition);
   const layout = () => {
     background.resize(window.innerWidth, window.innerHeight);
+    transition.resize(window.innerWidth, window.innerHeight);
     scene?.layout(window.innerWidth, window.innerHeight);
   };
 
   // Deferred: a switch is usually requested from the old scene's own pointer
-  // or key event, which should finish before that scene is destroyed.
-  const switchTo = (createScene: () => Scene) =>
+  // or key event, which should finish before that scene is destroyed. The
+  // new scene takes input at once; the old one stays on screen until the
+  // wipe has passed it.
+  const switchTo = (
+    createScene: () => Scene,
+    direction: WipeDirection = "right",
+  ) =>
     queueMicrotask(() => {
-      scene?.destroy({ children: true });
+      const old = scene;
       scene = createScene();
-      app.stage.addChild(scene);
+      app.stage.addChildAt(scene, app.stage.getChildIndex(transition));
       layout();
+      if (old) {
+        transition.start(old, scene, direction);
+      }
     });
 
   const showTitle = () =>
@@ -107,7 +121,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
           showTitle();
         },
       });
-    });
+    }, "left");
 
   /**
    * Gives back a used skip, if any were used; returns the skips left then,
@@ -225,6 +239,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
   bindKeyboard((action) => scene?.handleAction(action));
   app.ticker.add((ticker) => {
     background.update(ticker.deltaMS);
+    transition.update(ticker.deltaMS);
     scene?.update(ticker.deltaMS);
     if (scene instanceof GameScene) {
       countLevelTime(scene, ticker.deltaMS);

@@ -9,6 +9,7 @@ export type SoundEffect =
   | "wall"
   | "break"
   | "place"
+  | "levelStart"
   | "exit"
   | "loop"
   | "goal"
@@ -114,6 +115,25 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
       s.notes([81, 88], t + 0.04, 0.07, (f, tt) =>
         s.bell({ f: f * pitch, t: tt, d: 0.4, vol: 0.07, dest, wet: 0.35 }),
       );
+    },
+  },
+  // Level start: a soft, airy swoosh that follows the beam wipe. Kept
+  // quiet and toneless so it doesn't wear on the ear when moving through
+  // many levels (sound lab 2's "Rising sweep" was too noticeable).
+  levelStart: {
+    seconds: 0.5,
+    play: (s, dest, t, pitch) => {
+      s.noise({
+        t,
+        a: 0.22,
+        d: 0.22,
+        vol: 0.028,
+        f: 500 * pitch,
+        f2: 1600 * pitch,
+        q: 0.8,
+        dest,
+        wet: 0.2,
+      });
     },
   },
   // Off the board (C, "Two-tone drop"): a polite "missed".

@@ -234,6 +234,8 @@ export class GameScene extends Container implements Scene {
     this.boardView.setSelectedRow(this.session.selectedRow);
     this.boardView.setGoalHits(0, this.session.goalHits);
     this.boardView.setPlacing(this.session.mirrorInHand);
+    this.boardView.playIntro();
+    options.audio.play("levelStart");
   }
 
   /** Centres the scene in a screen of the given size, shrinking it to fit. */

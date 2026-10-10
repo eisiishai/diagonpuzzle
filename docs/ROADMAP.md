@@ -130,11 +130,11 @@ lab page and a sound lab page (artifacts), all chosen on 2026-10-11, then
 written into `docs/DESIGN.md` as each item is built. Every new effect is still under reduced motion, follows
 the polyline rule and is checked on a phone. In suggested order:
 
-- [ ] Scene transitions between the title screen and levels (now an
+- [x] Scene transitions between the title screen and levels (now an
   instant cut), with the level-start sound. Chosen: beam wipe, a laser
   line sweeping across to reveal the new screen (about 0.5 s; back to the
   title it sweeps the other way)
-- [ ] Level start: the board builds in. Chosen: column sweep, where
+- [x] Level start: the board builds in. Chosen: column sweep, where
   emitters slide in, cells pop in column by column from the left and the
   goal ignites last with a flash (about 0.7 s)
 - [ ] Hit feedback on the beam. Chosen: a short flash where it reflects
@@ -168,9 +168,17 @@ the polyline rule and is checked on a phone. In suggested order:
   a level list with an icon column (★, ✓, play, skip, lock) and scores
   aligned right; buttons ease in a soft glow on hover and squeeze slightly
   when pressed
-- [ ] Small sounds. Chosen: a soft tick for row changes and menu moves, a
-  glass tap for button clicks, a rising sweep as a level starts, a glass
-  swish with the mirror flip, no beam hum
+- [ ] Small sounds (no beam hum). Keep them quieter than on the sound lab
+  page: in play, frequent sounds must not wear on the ear over many levels
+  - [x] A sound as a level starts: a soft swoosh (the chosen rising sweep
+    was too noticeable over many levels)
+  - [ ] A soft tick for row changes and menu moves
+  - [ ] A glass tap for button clicks
+  - [ ] A glass swish with the mirror flip
+- [ ] Review the older effects (fire, bounces, wall, off the board, goal,
+  par) in long play: the softened level-start sound showed that sounds
+  heard on every shot or level can wear on the ear. Make them quieter or
+  softer where needed
 - [ ] Ghost of the previous shot: when the next shot fires, the previous
   path stays until the shot after. Wanted, although it changes how puzzles
   play (shows what flipped). Chosen: a very dim band with small chevrons
