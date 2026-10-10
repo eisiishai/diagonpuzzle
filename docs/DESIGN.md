@@ -299,6 +299,10 @@ difficulty doesn't dip at the end.
 - Progress is saved in the browser (localStorage), keyed by each level's
   stable id, so levels can be reordered or added without breaking saves.
   *Reset progress* erases it after a second confirming click or Enter.
+- Changing a released level does affect saves: stars compare the saved
+  best shots with the level's current par, so lowering its par removes
+  stars, and moving its bonus target moves collected ones (they are
+  saved by index).
 - The game's version (e.g. `v0.9`) is shown in small text at the bottom of the
   title screen.
 

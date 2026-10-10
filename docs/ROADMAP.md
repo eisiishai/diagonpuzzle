@@ -74,7 +74,11 @@ with flipping mirrors, before it is built.
   - [x] One player-placed mirror of a fixed direction, on any empty cell,
     placed between shots without taking one; levels 15–16 use it. Design
     in `docs/DESIGN.md`, *Player-placed mirror*
-  - [ ] Option to rotate the placed mirror (choose `\` or `/`)
+  - [ ] Option to rotate the placed mirror (choose `\` or `/`). The
+    design should say whether released levels 15–17 get it: if it
+    lowers their par, their `minShots` must stay as released (or the
+    levels be replaced by new ones), since changing par changes saved
+    stars
   - [ ] More mirrors per level, or other placeable blocks
 - [ ] New block types
   - [x] Breakable walls (`%`): stop the pellet once and break; levels
@@ -111,9 +115,11 @@ to see) and overstate levels that repeat a row (8, 11).
   times harder than 14: add a par-3 level between them (player mirror with
   a two-hit goal or breakable walls; `npm run generate` with
   `--player-mirror slash --breakable 2 --goal-hits 2 --shots 3` found
-  several), or make 17 par 3. The step is measured by random-play odds
-  only; whether it feels too steep is a subjective call, best made after
-  playing it (or seeing testers play it) rather than from the numbers
+  several), or make 17 par 3 (as a new level with a new id: lowering a
+  released level's par removes stars players already have). The step is
+  measured by random-play odds only; whether it feels too steep is a
+  subjective call, best made after playing it (or seeing testers play it)
+  rather than from the numbers
 - [ ] Optional: level 7 is a slight dip after levels 5–6 (as hard as 4)
 
 ### Presentation
@@ -309,6 +315,10 @@ the polyline rule and is checked on a phone. In suggested order:
     whose key move is easy to see (15) and those repeating a row (8, 11).
     Compare it with how testers actually do, then refine it (e.g. weight
     moves a player would try first) or add a second measure
+- [ ] Watch the solver's and `npm run generate`'s run times as placeable
+  blocks grow: each placement option multiplies the choices before every
+  shot, and the tests check every level with the solver. All tests take
+  under 1 s at v1.0, so not a problem yet
 - [ ] Automated browser smoke tests (e.g. Playwright), if the UI grows enough
   that manual checks become a burden. They would catch crashes and broken
   flows, not how things look or sound, so the desktop and phone checks

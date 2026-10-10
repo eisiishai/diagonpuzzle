@@ -86,7 +86,15 @@ scripts/        development tools run with tsx (not part of the game)
   Refer to files in `public/` with relative paths (`assets/x.png`), never
   root paths (`/assets/x.png`).
 - Level `id`s are used as keys in saved progress: never change or reuse one
-  once released.
+  once released. Since v1.0 players have real saves, so released levels'
+  `minShots` and boards are best left alone too: stars are worked out
+  from the saved best shots against the current `minShots`, and bonus
+  targets are saved by their index in reading order. Add a new level
+  rather than change a released one.
+- Saved progress must keep loading: `parseProgress` gives empty progress
+  for any other `FORMAT_VERSION`, so add new fields as optional with a
+  default (as `skipped`, `bonuses` and `skipsLeft` were) instead of
+  bumping the version, or convert old saves first.
 - Access localStorage only through `src/save/storage.ts`, which tolerates
   storage being unavailable.
 - Shots change the board (mirrors flip when hit): `fire()` returns the new
