@@ -26,7 +26,8 @@ src/
   render/       PixiJS views and animations
   input/        mouse/keyboard → game actions
   audio/        sound effects and music (synthesized placeholders, Web Audio)
-  scenes/       title / game / level-complete screens
+  save/         saved progress (pure rules) and localStorage helpers
+  scenes/       TitleScene and GameScene; main.ts switches between them
 ```
 
 ## Conventions
@@ -42,6 +43,10 @@ src/
 - The game may be hosted in a subfolder (`base: "./"` in `vite.config.ts`).
   Refer to files in `public/` with relative paths (`assets/x.png`), never
   root paths (`/assets/x.png`).
+- Level `id`s are used as keys in saved progress: never change or reuse one
+  once released.
+- Access localStorage only through `src/save/storage.ts`, which tolerates
+  storage being unavailable.
 - Every level must be solvable; `src/levels/levels.test.ts` checks this for
   all levels in `LEVELS`.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and

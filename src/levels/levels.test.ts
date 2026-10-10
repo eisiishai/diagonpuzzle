@@ -3,6 +3,11 @@ import { fire } from "../game/simulate";
 import { LEVELS } from "./levels";
 import { parseLevel } from "./parse";
 
+it("has unique level ids", () => {
+  const ids = LEVELS.map((level) => level.id);
+  expect(new Set(ids).size).toBe(ids.length);
+});
+
 describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
   "level $number ($name)",
   ({ grid }) => {

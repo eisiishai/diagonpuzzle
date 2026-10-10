@@ -1,6 +1,8 @@
+import { readStorage, writeStorage } from "../save/storage";
+
 export type SoundEffect = "fire" | "wall" | "exit" | "loop" | "goal";
 
-const MUTED_STORAGE_KEY = "diagonpuzzle.muted";
+const MUTED_STORAGE_KEY = "muted";
 const MASTER_VOLUME = 0.8;
 const EFFECTS_VOLUME = 0.35;
 const MUSIC_VOLUME = 0.1;
@@ -34,7 +36,7 @@ export class GameAudio {
   private music?: GainNode;
   private musicStep = 0;
   private nextMusicTime = 0;
-  private _muted = loadMuted();
+  private _muted = readStorage(MUTED_STORAGE_KEY) === "true";
 
   get muted(): boolean {
     return this._muted;
@@ -42,7 +44,7 @@ export class GameAudio {
 
   toggleMuted(): void {
     this._muted = !this._muted;
-    saveMuted(this._muted);
+    writeStorage(MUTED_STORAGE_KEY, String(this._muted));
     if (this.context && this.master) {
       this.master.gain.setTargetAtTime(
         this._muted ? 0 : MASTER_VOLUME,
@@ -189,23 +191,5 @@ export class GameAudio {
       this.musicStep++;
       this.nextMusicTime += MUSIC_STEP_SECONDS;
     }
-  }
-}
-
-// Storage can be unavailable (private windows, blocked site data); default to
-// sound on.
-function loadMuted(): boolean {
-  try {
-    return localStorage.getItem(MUTED_STORAGE_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-function saveMuted(muted: boolean): void {
-  try {
-    localStorage.setItem(MUTED_STORAGE_KEY, String(muted));
-  } catch {
-    // Not remembered between visits; nothing else to do.
   }
 }

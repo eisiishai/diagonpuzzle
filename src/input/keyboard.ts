@@ -1,4 +1,5 @@
-export type GameAction = "selectUp" | "selectDown" | "fire" | "toggleMute";
+export type GameAction =
+  "selectUp" | "selectDown" | "fire" | "back" | "toggleMute";
 
 const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   ArrowUp: "selectUp",
@@ -7,11 +8,16 @@ const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   s: "selectDown",
   Enter: "fire",
   " ": "fire",
+  Escape: "back",
   m: "toggleMute",
 };
 
 /** Actions that should not repeat while the key is held down. */
-const NO_REPEAT: ReadonlySet<GameAction> = new Set(["fire", "toggleMute"]);
+const NO_REPEAT: ReadonlySet<GameAction> = new Set([
+  "fire",
+  "back",
+  "toggleMute",
+]);
 
 /**
  * Translates key presses into game actions. Returns a function that removes

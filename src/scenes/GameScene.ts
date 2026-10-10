@@ -1,11 +1,17 @@
 import { Container, Text } from "pixi.js";
-import type { TextStyleOptions } from "pixi.js";
 import type { GameAudio } from "../audio/GameAudio";
 import { fire } from "../game/simulate";
 import type { ShotOutcome } from "../game/simulate";
 import type { Board } from "../game/types";
 import type { GameAction } from "../input/keyboard";
 import { BoardView } from "../render/BoardView";
+import {
+  SoundToggle,
+  TEXT_STYLE,
+  UI_COLORS,
+  makeClickable,
+} from "../render/ui";
+import type { Scene } from "./Scene";
 
 const CELL_SIZE = 64;
 const TEXT_HEIGHT = 40;
@@ -17,31 +23,29 @@ const OUTCOME_MESSAGES: Record<Exclude<ShotOutcome, "goal">, string> = {
   loop: "The pellet got stuck in a loop.",
 };
 
-const TEXT_STYLE: TextStyleOptions = {
-  fill: 0xe8ecf4,
-  fontSize: 20,
-  fontFamily: "sans-serif",
-};
-
 export interface GameSceneOptions {
   board: Board;
   levelNumber: number;
   levelCount: number;
   levelName: string;
   audio: GameAudio;
+  /** Records a completion; returns the level's best shot count before it, if any. */
+  onComplete: (shots: number) => { previousBest?: number };
   /** Called when the player continues after completing the level. */
   onNext: () => void;
+  /** Called when the player leaves for the title screen. */
+  onMenu: () => void;
 }
 
 /** Aiming: waiting for a shot. Firing: pellet in flight. Complete: goal reached. */
 type Phase = "aiming" | "firing" | "complete";
 
 /** One level: the board, the shot counter, status messages and sound. */
-export class GameScene extends Container {
+export class GameScene extends Container implements Scene {
   private readonly options: GameSceneOptions;
   private readonly boardView: BoardView;
   private readonly statusText: Text;
-  private readonly soundText: Text;
+  private readonly soundToggle: SoundToggle;
   private readonly messageText: Text;
   private readonly nextButton: Text;
   private phase: Phase = "aiming";
@@ -62,10 +66,12 @@ export class GameScene extends Container {
     const width = this.boardView.contentWidth;
 
     this.statusText = new Text({ style: TEXT_STYLE });
-    this.soundText = new Text({ style: TEXT_STYLE });
-    this.soundText.eventMode = "static";
-    this.soundText.cursor = "pointer";
-    this.soundText.on("pointertap", () => this.toggleMute());
+    const menuButton = makeClickable(
+      new Text({ text: "Menu (Esc)", style: TEXT_STYLE }),
+      () => options.onMenu(),
+    );
+    menuButton.anchor.set(1, 0);
+    menuButton.x = width;
 
     this.messageText = new Text({
       text: "Aim with ↑/↓ and fire with Enter, or click an arrow.",
@@ -75,27 +81,27 @@ export class GameScene extends Container {
 
     const isLastLevel = options.levelNumber === options.levelCount;
     this.nextButton = new Text({
-      text: isLastLevel ? "Play again from level 1 ▶" : "Next level ▶",
-      style: { ...TEXT_STYLE, fill: 0x4ade80, fontWeight: "bold" },
+      text: isLastLevel ? "Back to title ▶" : "Next level ▶",
+      style: { ...TEXT_STYLE, fill: UI_COLORS.success, fontWeight: "bold" },
     });
     // Bottom row, below room for a two-line message: next button on the
     // left, sound toggle on the right.
     this.nextButton.y = this.messageText.y + MESSAGE_HEIGHT;
-    this.soundText.y = this.nextButton.y;
-    this.nextButton.eventMode = "static";
-    this.nextButton.cursor = "pointer";
+    makeClickable(this.nextButton, () => options.onNext());
     this.nextButton.visible = false;
-    this.nextButton.on("pointertap", () => this.options.onNext());
+    this.soundToggle = new SoundToggle(options.audio);
+    this.soundToggle.anchor.set(1, 0);
+    this.soundToggle.position.set(width, this.nextButton.y);
 
     this.addChild(
       this.statusText,
-      this.soundText,
+      menuButton,
+      this.soundToggle,
       this.boardView,
       this.messageText,
       this.nextButton,
     );
     this.updateStatus();
-    this.updateSoundText();
     this.boardView.setSelectedRow(this.selectedRow);
   }
 
@@ -124,8 +130,11 @@ export class GameScene extends Container {
           this.fireFrom(this.selectedRow);
         }
         break;
+      case "back":
+        this.options.onMenu();
+        break;
       case "toggleMute":
-        this.toggleMute();
+        this.soundToggle.toggle();
         break;
     }
   }
@@ -168,7 +177,8 @@ export class GameScene extends Container {
       this.phase = "complete";
       audio.play("goal");
       this.boardView.setSelectedRow(null);
-      this.messageText.text = `Level complete in ${this.shotCountText()}! Press Enter to continue.`;
+      const { previousBest } = this.options.onComplete(this.shots);
+      this.messageText.text = `Level complete in ${shotCount(this.shots)}!${bestText(this.shots, previousBest)} Press Enter to continue.`;
       this.nextButton.visible = true;
       return;
     }
@@ -178,24 +188,22 @@ export class GameScene extends Container {
     this.messageText.text = OUTCOME_MESSAGES[outcome];
   }
 
-  private toggleMute(): void {
-    this.options.audio.toggleMuted();
-    this.updateSoundText();
-  }
-
   private updateStatus(): void {
     const { levelNumber, levelCount, levelName } = this.options;
-    this.statusText.text = `Level ${levelNumber}/${levelCount}: ${levelName}   ·   Shots: ${this.shots}`;
+    this.statusText.text = `Level ${levelNumber}/${levelCount}: ${levelName}  ·  Shots: ${this.shots}`;
   }
+}
 
-  private updateSoundText(): void {
-    this.soundText.text = this.options.audio.muted
-      ? "🔇 Sound off (M)"
-      : "🔊 Sound on (M)";
-    this.soundText.x = this.boardView.contentWidth - this.soundText.width;
-  }
+function shotCount(shots: number): string {
+  return shots === 1 ? "1 shot" : `${shots} shots`;
+}
 
-  private shotCountText(): string {
-    return this.shots === 1 ? "1 shot" : `${this.shots} shots`;
+function bestText(shots: number, previousBest: number | undefined): string {
+  if (previousBest === undefined) {
+    return "";
   }
+  if (shots < previousBest) {
+    return ` New best! (was ${previousBest})`;
+  }
+  return ` Best: ${shotCount(previousBest)}.`;
 }

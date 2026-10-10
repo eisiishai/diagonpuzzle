@@ -29,8 +29,8 @@ One level, playable with the mouse, plain graphics.
 
 ## M3 — Game structure
 
-- [ ] Title screen and level select
-- [ ] Save progress and best shot counts (localStorage)
+- [x] Title screen and level select
+- [x] Save progress and best shot counts (localStorage)
 - [ ] Decide on and design the next mechanic (see *Open questions* in DESIGN.md)
 
 ## Later

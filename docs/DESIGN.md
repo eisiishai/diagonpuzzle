@@ -60,8 +60,23 @@ launch edge.
 - **Keyboard:** ↑/↓ (or W/S) select a row, Enter/Space fires.
 - **M** or clicking the sound label toggles all sound; the choice is remembered.
 - After completing a level, Enter/Space or the *Next level* button continues.
-  After the last level, play starts again from level 1.
+  After the last level, it returns to the title screen.
+- **Esc** or the *Menu* label returns to the title screen at any time.
 - A new shot can't be fired while the pellet is still moving.
+
+## Title screen and progress
+
+- The title screen shows the game's name ("Diagon Puzzle", a working title),
+  a *Play* button and the level list. Navigate with ↑/↓ and Enter, or the mouse.
+- *Play* starts the first uncompleted level and reads *Continue: level N* once
+  some levels are completed, or *Play again from level 1* when all are.
+- Level 1 is always unlocked; each further level unlocks when the previous one
+  is completed. Locked levels are shown but can't be selected.
+- Completed levels show the best (lowest) shot count. Completing a level again
+  reports a new best or the existing one.
+- Progress is saved in the browser (localStorage), keyed by each level's
+  stable id, so levels can be reordered or added without breaking saves.
+  *Reset progress* erases it after a second confirming click or Enter.
 
 ## Presentation
 
