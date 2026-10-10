@@ -228,7 +228,7 @@ the polyline rule and is checked on a phone. In suggested order:
   - The class defines the completion and bonus result types, replacing
     `GameScene`'s `CompletionResult`, whose name clashes with the one in
     `progress.ts`
-- [ ] Split `src/render/BoardView.ts` (over 1000 lines) before adding
+- [x] Split `src/render/BoardView.ts` (over 1000 lines) before adding
   block types: cell drawing into its own module, one draw function per
   cell type (mirroring `src/game/cells.ts`), and the particle effects
   (sparks, debris, sparkles) into another. No visible change; check it

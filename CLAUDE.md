@@ -70,7 +70,8 @@ scripts/        development tools run with tsx (not part of the game)
   `main.ts` builds scenes and saves.
 - Each cell type defines its behavior as "pellet enters moving in direction D →
   result". New block types are added there, not as special cases in the
-  simulation loop.
+  simulation loop; `docs/WORKFLOW.md` lists everything else a block type
+  touches.
 - Formatting follows Prettier via ESLint; keep `npm run lint` clean.
 - Visual style follows the "Laser lab" art direction in `docs/DESIGN.md`.
   Colours, fonts, text styles and glow filters come only from

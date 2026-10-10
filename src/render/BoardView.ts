@@ -6,8 +6,9 @@ import type { Board, CellType, MirrorType, Position } from "../game/types";
 import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
 import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
-import { easeInOutCubic, easeOutCubic } from "./easing";
-import { diamondFill } from "./goalFill";
+import { BoardEffects } from "./BoardEffects";
+import { drawCell, isMirror } from "./cellGraphics";
+import type { GoalHits } from "./cellGraphics";
 import {
   introCell,
   introGoal,
@@ -16,14 +17,13 @@ import {
   introLengthMs,
   introPanelAlpha,
 } from "./intro";
-import { BONUS_COLORS, COLORS, createBloom } from "./theme";
+import { COLORS, createBloom } from "./theme";
 
 const MIRROR_TURN_MS = 150;
 /** How long a placed mirror takes to drop into place. */
 const MIRROR_PLACE_MS = 220;
-/** How often each bonus target gives off a sparkle, and how long it lasts. */
+/** How often each bonus target gives off a sparkle. */
 const SPARKLE_INTERVAL_MS = 170;
-const SPARKLE_LIFE_MS = 750;
 /** Turning speed of the bonus gem, in radians per millisecond. */
 const BONUS_SPIN = (2 * Math.PI) / 9000;
 
@@ -52,64 +52,9 @@ interface MirrorTurn {
   elapsedMs: number;
 }
 
-/** A piece of a breakable wall flying off as it breaks. */
-interface Debris {
-  view: Graphics;
-  vx: number;
-  vy: number;
-  spin: number;
-  ageMs: number;
-}
-
-const DEBRIS_LIFE_MS = 600;
-
-/**
- * A short flash of light at a point in pixels: where the beam reflects, or
- * a goal crystal hit (which also sends out a diamond ring).
- */
-interface Flash {
-  x: number;
-  y: number;
-  kind: "mirror" | "goal";
-  ageMs: number;
-}
-
-const MIRROR_FLASH_MS = 170;
-const GOAL_FLASH_MS = 450;
-
-/** A bright spot running along a mirror's glass as it turns. */
-interface Glint {
-  view: Graphics;
-  ageMs: number;
-}
-
-const GLINT_MS = 260;
-
-/** A spark bouncing back from a wall; position and speed in pixels. */
-interface Spark {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  color: number;
-  lifeMs: number;
-  ageMs: number;
-}
-
-/** Sparks from a wall hit: how many, and their speed in cells a second. */
-const SPARK_COUNT = 5;
-const SPARK_SPEED = 4.5;
-const SPARK_LIFE_MS = 240;
-
 /** The board shakes this many pixels, fading out, when stone breaks. */
 const SHAKE_PIXELS = 2;
 const SHAKE_MS = 220;
-
-/** A small twinkle near a bonus target. */
-interface Sparkle {
-  view: Graphics;
-  ageMs: number;
-}
 
 /**
  * Draws the board with a column of launchers on its left. Board cell (x, y)
@@ -130,7 +75,7 @@ export class BoardView extends Container {
   private readonly cellViews: Graphics[][] = [];
   private readonly cells: CellType[][];
   /** Goal hits so far and needed; see setGoalHits(). */
-  private goalHits = { hits: 0, required: 1 };
+  private goalHits: GoalHits = { hits: 0, required: 1 };
   private readonly launchers: Graphics[] = [];
   private readonly animator: PelletAnimator;
   private turns: MirrorTurn[] = [];
@@ -139,18 +84,8 @@ export class BoardView extends Container {
   private readonly placePreview = new Graphics();
   /** Pointer events over the board's cells, while placing; see setPlacing(). */
   private cellPointer!: Container;
-  /** Sparkles around bonus targets, above the cells and under the beam. */
-  private readonly sparkleLayer = new Container();
-  private sparkles: Sparkle[] = [];
+  private readonly boardEffects: BoardEffects;
   private sparkleTimerMs = 0;
-  /** Pieces of broken walls, above the cells. */
-  private readonly debrisLayer = new Container();
-  private debris: Debris[] = [];
-  /** Flashes, glints and sparks, redrawn each frame above the cells. */
-  private readonly effectLayer = new Graphics();
-  private flashes: Flash[] = [];
-  private glints: Glint[] = [];
-  private sparks: Spark[] = [];
   /** Time into a shake of the board, while it shakes. */
   private shakeMs: number | null = null;
   private selectedRow: number | null = null;
@@ -166,6 +101,7 @@ export class BoardView extends Container {
     this.boardHeight = board.height;
     this.cellSize = cellSize;
     this.cells = board.cells.map((row) => [...row]);
+    this.boardEffects = new BoardEffects(cellSize);
     this.filters = [createBloom()];
 
     this.rowHighlight
@@ -196,10 +132,10 @@ export class BoardView extends Container {
     }
     this.redrawCells();
     this.addChild(
-      this.effectLayer,
+      this.boardEffects.lightLayer,
       this.placePreview,
-      this.sparkleLayer,
-      this.debrisLayer,
+      this.boardEffects.sparkleLayer,
+      this.boardEffects.debrisLayer,
       this.createCellPointer(handlers),
     );
 
@@ -256,7 +192,8 @@ export class BoardView extends Container {
    * ring (just the flash when the player prefers reduced motion).
    */
   flashGoal(x: number, y: number): void {
-    this.flashes.push({ ...this.cellCenter(x, y), kind: "goal", ageMs: 0 });
+    const center = this.cellCenter(x, y);
+    this.boardEffects.addFlash(center.x, center.y, "goal");
   }
 
   /** Shows `board` immediately, stopping any shot and animation in progress. */
@@ -265,9 +202,7 @@ export class BoardView extends Container {
     this.animator.clear();
     this.turns = [];
     this.placings = [];
-    this.flashes = [];
-    this.glints = [];
-    this.sparks = [];
+    this.boardEffects.clearLight();
     this.shakeMs = null;
     this.pivot.set(0, 0);
     board.cells.forEach((row, y) =>
@@ -285,7 +220,7 @@ export class BoardView extends Container {
     this.cells.forEach((row, y) =>
       row.forEach((cell, x) => {
         if (cell === "goal") {
-          this.drawCell(this.cellViews[y][x], cell);
+          this.drawCell(x, y);
         }
       }),
     );
@@ -313,11 +248,8 @@ export class BoardView extends Container {
     this.animator.play(result, {
       ...callbacks,
       onBounce: (bounceNumber, at) => {
-        this.flashes.push({
-          ...this.cellCenter(at.x, at.y),
-          kind: "mirror",
-          ageMs: 0,
-        });
+        const center = this.cellCenter(at.x, at.y);
+        this.boardEffects.addFlash(center.x, center.y, "mirror");
         callbacks.onBounce(bounceNumber, at);
       },
       onCellChange: (x, y, cell) => this.changeCell(x, y, cell),
@@ -336,7 +268,7 @@ export class BoardView extends Container {
     this.finishIntro();
     const view = this.cellViews[y][x];
     this.cells[y][x] = cell;
-    this.drawCell(view, cell);
+    this.drawCell(x, y);
     if (!prefersReducedMotion()) {
       this.placings.push({ view, elapsedMs: 0 });
       this.updatePlacings(0);
@@ -409,10 +341,10 @@ export class BoardView extends Container {
     this.animator.update(deltaMs);
     this.updateTurns(deltaMs);
     this.updatePlacings(deltaMs);
-    this.updateDebris(deltaMs);
     this.updateAmbient(deltaMs);
     this.updateIntro(deltaMs);
-    this.updateEffects(deltaMs);
+    this.boardEffects.update(deltaMs);
+    this.updateShake(deltaMs);
   }
 
   /**
@@ -432,31 +364,10 @@ export class BoardView extends Container {
         last.x - delta.x / 2,
         last.y - delta.y / 2,
       );
-      this.addSparks(impact.x, impact.y, -delta.x, -delta.y);
+      this.boardEffects.addSparks(impact.x, impact.y, -delta.x, -delta.y);
       if (last.becomes && !prefersReducedMotion()) {
         this.shakeMs = 0;
       }
-    }
-  }
-
-  /** Sparks fanning out from (x, y) in pixels, heading roughly (dx, dy). */
-  private addSparks(x: number, y: number, dx: number, dy: number): void {
-    if (prefersReducedMotion()) {
-      return;
-    }
-    const base = Math.atan2(dy, dx);
-    for (let i = 0; i < SPARK_COUNT; i++) {
-      const angle = base + (Math.random() - 0.5) * 2.2;
-      const speed = this.cellSize * SPARK_SPEED * (0.5 + Math.random() * 0.5);
-      this.sparks.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        color: Math.random() < 0.4 ? COLORS.beamCore : COLORS.beam,
-        lifeMs: SPARK_LIFE_MS * (0.6 + Math.random() * 0.4),
-        ageMs: 0,
-      });
     }
   }
 
@@ -515,98 +426,8 @@ export class BoardView extends Container {
     );
   }
 
-  /** Moves and redraws flashes, glints and sparks, and shakes the board. */
-  private updateEffects(deltaMs: number): void {
-    const g = this.effectLayer.clear();
-    const size = this.cellSize;
-    const reduced = prefersReducedMotion();
-
-    this.flashes = this.flashes.filter((flash) => {
-      flash.ageMs += deltaMs;
-      const goal = flash.kind === "goal";
-      const t = flash.ageMs / (goal ? GOAL_FLASH_MS : MIRROR_FLASH_MS);
-      if (t >= 1) {
-        return false;
-      }
-      const { x, y } = flash;
-      const fade = (1 - t) ** 2;
-      const color = goal ? COLORS.success : COLORS.glass;
-      const radius = size * (goal ? 0.4 + 0.3 * t : 0.38 + 0.17 * t);
-      g.circle(x, y, radius).fill({ color, alpha: (goal ? 0.45 : 0.5) * fade });
-      if (!goal) {
-        g.circle(x, y, radius * 0.4).fill({
-          color: COLORS.glassHighlight,
-          alpha: 0.8 * fade,
-        });
-      } else if (!reduced) {
-        const r = size * (0.3 + 0.75 * easeOutCubic(t));
-        g.poly([x, y - r, x + r, y, x, y + r, x - r, y]).stroke({
-          width: 2.5 * (1 - 0.6 * t),
-          color: COLORS.success,
-          alpha: 0.9 * (1 - t),
-          join: "miter",
-        });
-      }
-      return true;
-    });
-
-    // The glint runs from one end of the glass to the other, following the
-    // mirror's rotation as it turns.
-    const reach = (size / 2) * 0.7;
-    this.glints = this.glints.filter((glint) => {
-      glint.ageMs += deltaMs;
-      const t = glint.ageMs / GLINT_MS;
-      if (t >= 1 || glint.view.destroyed) {
-        return false;
-      }
-      const k = -reach + 2 * reach * easeInOutCubic(t);
-      const cos = Math.cos(glint.view.rotation);
-      const sin = Math.sin(glint.view.rotation);
-      const x = glint.view.x + k * cos - k * sin;
-      const y = glint.view.y + k * sin + k * cos;
-      const strength = Math.sin(Math.PI * t);
-      g.circle(x, y, size * 0.11).fill({
-        color: COLORS.glassHighlight,
-        alpha: 0.35 * strength,
-      });
-      g.circle(x, y, size * 0.05).fill({
-        color: 0xffffff,
-        alpha: 0.95 * strength,
-      });
-      return true;
-    });
-
-    const seconds = deltaMs / 1000;
-    this.sparks = this.sparks.filter((spark) => {
-      spark.ageMs += deltaMs;
-      const t = spark.ageMs / spark.lifeMs;
-      if (t >= 1) {
-        return false;
-      }
-      const drag = Math.max(0, 1 - 2.5 * seconds);
-      spark.vx *= drag;
-      spark.vy = spark.vy * drag + size * 6 * seconds;
-      spark.x += spark.vx * seconds;
-      spark.y += spark.vy * seconds;
-      // A short streak behind the spark; skipped once too short to draw.
-      const speed = Math.hypot(spark.vx, spark.vy);
-      const length = size * 0.2 * (1 - t);
-      if (speed > 1 && length > 0.5) {
-        g.moveTo(spark.x, spark.y)
-          .lineTo(
-            spark.x - (spark.vx / speed) * length,
-            spark.y - (spark.vy / speed) * length,
-          )
-          .stroke({
-            width: 2,
-            color: spark.color,
-            alpha: 1 - t,
-            cap: "round",
-          });
-      }
-      return true;
-    });
-
+  /** Shakes the board for a moment after stone breaks. */
+  private updateShake(deltaMs: number): void {
     if (this.shakeMs !== null) {
       this.shakeMs += deltaMs;
       const t = this.shakeMs / SHAKE_MS;
@@ -651,51 +472,16 @@ export class BoardView extends Container {
           view.alpha = 0.85 + 0.15 * bonusBreath;
           view.rotation = this.ambientMs * BONUS_SPIN;
           if (sparkle) {
-            this.addSparkle(x, y);
+            const center = this.cellCenter(x, y);
+            this.boardEffects.addSparkle(center.x, center.y);
           }
         }
       }),
     );
-    this.updateSparkles(deltaMs);
     this.placePreview.alpha = 0.65 + 0.35 * breath;
     if (this.selectedRow !== null) {
       this.launchers[this.selectedRow].alpha = 0.75 + 0.25 * breath;
     }
-  }
-
-  /** A four-pointed twinkle at a random spot around bonus target (x, y). */
-  private addSparkle(x: number, y: number): void {
-    const center = this.cellCenter(x, y);
-    const angle = Math.random() * Math.PI * 2;
-    const distance = this.cellSize * (0.25 + Math.random() * 0.3);
-    const r = this.cellSize * (0.05 + Math.random() * 0.05);
-    const w = r * 0.25;
-    const colors = [...BONUS_COLORS, COLORS.beamCore];
-    const view = new Graphics()
-      .poly([0, -r, w, -w, r, 0, w, w, 0, r, -w, w, -r, 0, -w, -w])
-      .fill(colors[Math.floor(Math.random() * colors.length)]);
-    view.position.set(
-      center.x + Math.cos(angle) * distance,
-      center.y + Math.sin(angle) * distance,
-    );
-    view.scale.set(0);
-    this.sparkleLayer.addChild(view);
-    this.sparkles.push({ view, ageMs: 0 });
-  }
-
-  /** Sparkles grow and shrink once, turning a little, then disappear. */
-  private updateSparkles(deltaMs: number): void {
-    this.sparkles = this.sparkles.filter((sparkle) => {
-      sparkle.ageMs += deltaMs;
-      const t = sparkle.ageMs / SPARKLE_LIFE_MS;
-      if (t >= 1) {
-        sparkle.view.destroy();
-        return false;
-      }
-      sparkle.view.scale.set(Math.sin(Math.PI * t));
-      sparkle.view.rotation = t * 0.8;
-      return true;
-    });
   }
 
   /** Changes a cell; a mirror flipping to the other mirror rotates into place. */
@@ -704,9 +490,10 @@ export class BoardView extends Container {
     const previous = this.cells[y][x];
     this.cells[y][x] = cell;
     if (!(isMirror(previous) && isMirror(cell))) {
-      this.drawCell(view, cell);
+      this.drawCell(x, y);
       if (previous === "breakable") {
-        this.addDebris(x, y);
+        const center = this.cellCenter(x, y);
+        this.boardEffects.addDebris(center.x, center.y);
       }
       return;
     }
@@ -717,55 +504,7 @@ export class BoardView extends Container {
     const target = (existing ? existing.to : view.rotation) + Math.PI / 2;
     this.turns = this.turns.filter((turn) => turn !== existing);
     this.turns.push({ view, from: view.rotation, to: target, elapsedMs: 0 });
-    if (!prefersReducedMotion()) {
-      this.glints = this.glints.filter((glint) => glint.view !== view);
-      this.glints.push({ view, ageMs: 0 });
-    }
-  }
-
-  /** A breakable wall at (x, y) bursts into stone pieces that fall away. */
-  private addDebris(x: number, y: number): void {
-    const center = this.cellCenter(x, y);
-    const size = this.cellSize;
-    for (let i = 0; i < 10; i++) {
-      const r = size * (0.06 + Math.random() * 0.07);
-      const view = new Graphics()
-        .poly([-r, -r * 0.6, r * 0.8, -r, r, r * 0.7, -r * 0.5, r])
-        .fill(i % 3 === 0 ? COLORS.stoneEdge : COLORS.stone);
-      view.position.set(
-        center.x + (Math.random() - 0.5) * size * 0.6,
-        center.y + (Math.random() - 0.5) * size * 0.6,
-      );
-      view.rotation = Math.random() * Math.PI;
-      const angle = Math.random() * Math.PI * 2;
-      const speed = size * (1.5 + Math.random() * 2.5);
-      this.debrisLayer.addChild(view);
-      this.debris.push({
-        view,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - size * 1.5,
-        spin: (Math.random() - 0.5) * 10,
-        ageMs: 0,
-      });
-    }
-  }
-
-  private updateDebris(deltaMs: number): void {
-    const seconds = deltaMs / 1000;
-    const gravity = this.cellSize * 9;
-    this.debris = this.debris.filter((piece) => {
-      piece.ageMs += deltaMs;
-      if (piece.ageMs >= DEBRIS_LIFE_MS) {
-        piece.view.destroy();
-        return false;
-      }
-      piece.vy += gravity * seconds;
-      piece.view.x += piece.vx * seconds;
-      piece.view.y += piece.vy * seconds;
-      piece.view.rotation += piece.spin * seconds;
-      piece.view.alpha = 1 - piece.ageMs / DEBRIS_LIFE_MS;
-      return true;
-    });
+    this.boardEffects.addGlint(view);
   }
 
   private updatePlacings(deltaMs: number): void {
@@ -797,9 +536,7 @@ export class BoardView extends Container {
   }
 
   private redrawCells(): void {
-    this.cells.forEach((row, y) =>
-      row.forEach((cell, x) => this.drawCell(this.cellViews[y][x], cell)),
-    );
+    this.cells.forEach((row, y) => row.forEach((_, x) => this.drawCell(x, y)));
   }
 
   /** Pixel centre of board cell (x, y); x = -1 is the launcher column. */
@@ -832,128 +569,14 @@ export class BoardView extends Container {
     return g;
   }
 
-  /** Draws `cell` into `g`, centred on g's origin. */
-  private drawCell(g: Graphics, cell: CellType): void {
-    const half = this.cellSize / 2;
-    g.clear();
-    g.rotation = 0;
-    g.scale.set(1);
-    g.alpha = 1;
-
-    switch (cell) {
-      case "empty":
-        break;
-      case "mirrorBackslash":
-      case "mirrorSlash": {
-        // A glass bar with a bright centre line.
-        const reach = half * 0.7;
-        g.moveTo(-reach, -reach)
-          .lineTo(reach, reach)
-          .stroke({ width: 7, color: COLORS.glass, cap: "round" })
-          .moveTo(-reach + 2, -reach + 2)
-          .lineTo(reach - 2, reach - 2)
-          .stroke({ width: 1.5, color: COLORS.glassHighlight, cap: "round" });
-        g.rotation = cell === "mirrorSlash" ? Math.PI / 2 : 0;
-        break;
-      }
-      case "wall": {
-        // A dark block with diagonal hatching.
-        const edge = half * 0.87;
-        g.roundRect(-edge, -edge, edge * 2, edge * 2, 6)
-          .fill(COLORS.wall)
-          .stroke({ width: 1.5, color: COLORS.wallEdge });
-        const h = edge * 0.75;
-        g.moveTo(-h, h)
-          .lineTo(h, -h)
-          .moveTo(-h, h * 0.1)
-          .lineTo(h * 0.1, -h)
-          .moveTo(-h * 0.1, h)
-          .lineTo(h, h * 0.1)
-          .stroke({ width: 4, color: COLORS.wallHatch, cap: "round" });
-        break;
-      }
-      case "breakable": {
-        // A stone block with cracks running through it: it breaks when hit.
-        const edge = half * 0.87;
-        g.roundRect(-edge, -edge, edge * 2, edge * 2, 6)
-          .fill(COLORS.stone)
-          .stroke({ width: 1.5, color: COLORS.stoneEdge });
-        const crack = (points: number[]) => {
-          g.moveTo(points[0] * edge, points[1] * edge);
-          for (let i = 2; i < points.length; i += 2) {
-            g.lineTo(points[i] * edge, points[i + 1] * edge);
-          }
-        };
-        crack([-0.2, -0.98, -0.05, -0.55, -0.28, -0.2, 0.05, 0.15]);
-        crack([0.05, 0.15, -0.12, 0.55, 0.08, 0.98]);
-        crack([0.05, 0.15, 0.45, 0.3, 0.6, 0.72]);
-        crack([0.98, -0.45, 0.55, -0.35, 0.38, -0.65]);
-        crack([-0.98, 0.35, -0.6, 0.45, -0.5, 0.75]);
-        g.stroke({
-          width: 2.5,
-          color: COLORS.stoneCrack,
-          cap: "round",
-          join: "round",
-        });
-        break;
-      }
-      case "bonus": {
-        // A prism gem: a hexagon cut into facets of every bonus colour
-        // around a bright core. It turns slowly, so the colours swirl.
-        const outer = half * 0.62;
-        const inner = half * 0.2;
-        const corner = (i: number, radius: number) => {
-          const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
-          return [Math.cos(angle) * radius, Math.sin(angle) * radius];
-        };
-        for (let i = 0; i < 6; i++) {
-          g.poly([0, 0, ...corner(i, outer), ...corner(i + 1, outer)]).fill(
-            BONUS_COLORS[i],
-          );
-        }
-        for (let i = 0; i < 6; i++) {
-          const [cx, cy] = corner(i, outer);
-          g.moveTo(0, 0).lineTo(cx, cy);
-        }
-        g.stroke({ width: 1, color: COLORS.panel, alpha: 0.6 });
-        const hexagon = (radius: number) =>
-          Array.from({ length: 6 }, (_, i) => corner(i, radius)).flat();
-        g.poly(hexagon(outer))
-          .stroke({ width: 2, color: COLORS.glassHighlight, join: "miter" })
-          .poly(hexagon(inner))
-          .fill(COLORS.beamCore);
-        break;
-      }
-      case "goal": {
-        // A crystal: a diamond outline around a solid diamond. When the
-        // goal needs several hits, the core fills from the bottom per hit.
-        const outer = half * 0.85;
-        const inner = half * 0.4;
-        g.poly([0, -outer, outer, 0, 0, outer, -outer, 0]).stroke({
-          width: 3,
-          color: COLORS.success,
-          join: "miter",
-        });
-        const { hits, required } = this.goalHits;
-        if (required <= 1) {
-          g.poly([0, -inner, inner, 0, 0, inner, -inner, 0]).fill(
-            COLORS.success,
-          );
-          break;
-        }
-        g.poly([0, -inner, inner, 0, 0, inner, -inner, 0]).stroke({
-          width: 1.5,
-          color: COLORS.success,
-          alpha: 0.5,
-          join: "miter",
-        });
-        const filled = diamondFill(inner, hits / required);
-        if (filled.length > 0) {
-          g.poly(filled).fill(COLORS.success);
-        }
-        break;
-      }
-    }
+  /** Draws board cell (x, y) as it is now into its view. */
+  private drawCell(x: number, y: number): void {
+    drawCell(
+      this.cellViews[y][x],
+      this.cells[y][x],
+      this.cellSize,
+      this.goalHits,
+    );
   }
 
   /**
@@ -1025,8 +648,4 @@ export class BoardView extends Container {
       .poly([-r * 0.6, -r, r * 1.1, 0, -r * 0.6, r])
       .fill(selected ? COLORS.beam : COLORS.emitterIdle);
   }
-}
-
-function isMirror(cell: CellType): boolean {
-  return cell === "mirrorBackslash" || cell === "mirrorSlash";
 }
