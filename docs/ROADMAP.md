@@ -123,6 +123,59 @@ to see) and overstate levels that repeat a row (8, 11).
 - [x] Small ambient animations (e.g. a gently pulsing goal crystal, a faint
   moving background grid)
 
+### Presentation, second pass
+
+Planned 2026-10-11. Subjective choices are made from variants on a visual
+lab page and a sound lab page (artifacts), all chosen on 2026-10-11, then
+written into `docs/DESIGN.md` as each item is built. Every new effect is still under reduced motion, follows
+the polyline rule and is checked on a phone. In suggested order:
+
+- [ ] Scene transitions between the title screen and levels (now an
+  instant cut), with the level-start sound. Chosen: beam wipe, a laser
+  line sweeping across to reveal the new screen (about 0.5 s; back to the
+  title it sweeps the other way)
+- [ ] Level start: the board builds in. Chosen: column sweep, where
+  emitters slide in, cells pop in column by column from the left and the
+  goal ignites last with a flash (about 0.7 s)
+- [ ] Hit feedback on the beam. Chosen: a short flash where it reflects
+  and a glint running along the mirror as it turns; a few sparks bouncing
+  back from a wall; a small (2 px) board shake when a breakable wall
+  breaks
+- [ ] Goal hits. Chosen: a crystal flash and one diamond-shaped ring on
+  every goal hit, not only at par (stars stay for par); on multi-hit goals
+  the crystal's core fills from the bottom, a part per hit
+- [ ] Stereo position: bounces, wall hits and breaks panned by column.
+  Chosen: light panning, up to 40 % to either side
+- [ ] Calmer level music: ambient tracks that don't distract from puzzling
+  (no drums or tune to follow, slow chord changes, sparse random details),
+  keeping the laser lab feel. First drafts with beats and tunes
+  (2026-10-11) were too distracting. Chosen from the sound lab: title
+  screen keeps *Night lab*; levels 1–4 *Afterglow* (warm pads with a
+  slowly moving filter, occasional plucks); 5–10 *Glass garden* with
+  sparse bells; 11–14 *Prism drift* (two swaying chords, shimmer, glassy
+  bells); 15–17 *Photon* (dark pads crossed by soft gliding tones).
+  *Pulse* is no longer used
+- [ ] Effects in tune with the music. Chosen: bounce pings climb the
+  current track's scale; the goal chime uses the chord playing at the time
+- [ ] Beam head and light. Chosen: a short comet tail behind the moving
+  front (about ¾ of a cell), and faint light on the panel under the
+  beam's path, brightest around the front
+- [ ] Atmosphere around the board. Chosen: soft vignette, faint light
+  behind the board, corner ticks with small labels (grid size, goal hits,
+  par, level number); no glow
+- [ ] Title screen. Chosen: the title beam fires every few seconds (shoots
+  from the left, the title brightens as it passes, the crystal flashes);
+  a level list with an icon column (★, ✓, play, skip, lock) and scores
+  aligned right; buttons ease in a soft glow on hover and squeeze slightly
+  when pressed
+- [ ] Small sounds. Chosen: a soft tick for row changes and menu moves, a
+  glass tap for button clicks, a rising sweep as a level starts, a glass
+  swish with the mirror flip, no beam hum
+- [ ] Ghost of the previous shot: when the next shot fires, the previous
+  path stays until the shot after. Wanted, although it changes how puzzles
+  play (shows what flipped). Chosen: a very dim band with small chevrons
+  showing which way it went
+
 ## Engineering track
 
 ### Next
