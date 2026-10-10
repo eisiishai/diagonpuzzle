@@ -69,7 +69,6 @@ with flipping mirrors, before it is built.
     in `docs/DESIGN.md`, *Player-placed mirror*
   - [ ] Option to rotate the placed mirror (choose `\` or `/`)
   - [ ] More mirrors per level, or other placeable blocks
-- [ ] Firing from other edges
 - [ ] New block types
   - [x] Breakable walls (`%`): stop the pellet once and break; levels
     11–14 use them (13–14 with two-hit goals)
@@ -160,9 +159,9 @@ to see) and overstate levels that repeat a row (8, 11).
 
 ## Discarded ideas
 
-Ideas that were tried or designed and then dropped, with the reason, so
-they aren't proposed again without new arguments. Each could come back if
-the reason no longer holds.
+Ideas that were tried, designed or just considered and then dropped, with
+the reason, so they aren't proposed again without new arguments. Each
+could come back if the reason no longer holds.
 
 - **Fixed mirror slots** (2026-10-10): a level marked a cell (`n` for `\`,
   `z` for `/`) where the player could place a mirror once; the player
@@ -170,3 +169,8 @@ the reason no longer holds.
   replaced by the player-placed mirror on any empty cell before it was
   committed. Reason: no use was seen for a fixed position once the mirror can go
   on any empty cell, which was the intended mechanic.
+- **Firing from other edges** (2026-10-10): launch positions on the top,
+  right or bottom edge as well as the left. Never designed or built.
+  Reason: the left edge already offers enough options; more edges would
+  add complexity and difficulty in ways that aren't seen as useful, at
+  least for now.

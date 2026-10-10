@@ -442,7 +442,6 @@ track crossfades in over about a second.
 
 ## Future ideas (not yet designed)
 
-- Firing from other edges of the grid.
 - More block types (e.g. one-way blocks, splitters, rotating or breakable
   mirrors).
 - More player-placed blocks: several mirrors, choosing or rotating the
