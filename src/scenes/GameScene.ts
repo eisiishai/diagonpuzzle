@@ -271,13 +271,14 @@ export class GameScene extends Container implements Scene {
     }
     switch (action) {
       case "selectUp":
-        this.select(this.session.selectedRow - 1);
+        this.selectWithTick(this.session.selectedRow - 1);
         break;
       case "selectDown":
-        this.select(this.session.selectedRow + 1);
+        this.selectWithTick(this.session.selectedRow + 1);
         break;
       case "fire":
         if (this.session.phase === "complete") {
+          this.options.audio.play("click");
           this.options.onNext();
         } else {
           this.fireFrom(this.session.selectedRow);
@@ -314,6 +315,15 @@ export class GameScene extends Container implements Scene {
     this.boardView.update(deltaMs);
     this.surround.alpha = this.boardView.panelAlpha;
     this.celebration.update(deltaMs);
+  }
+
+  /** Keyboard selection: a soft tick when the selected row changes. */
+  private selectWithTick(row: number): void {
+    const before = this.session.selectedRow;
+    this.select(row);
+    if (this.session.selectedRow !== before) {
+      this.options.audio.play("tick");
+    }
   }
 
   private select(row: number): void {

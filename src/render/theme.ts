@@ -126,7 +126,7 @@ export function createBloom(): Filter {
 }
 
 /** A coloured halo around a single object, such as the title. */
-export function createGlow(color: number, strength = 2): Filter {
+export function createGlow(color: number, strength = 2): GlowFilter {
   return crisp(
     new GlowFilter({
       color,

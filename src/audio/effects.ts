@@ -11,6 +11,8 @@ export type SoundEffect =
   | "break"
   | "place"
   | "levelStart"
+  | "tick"
+  | "click"
   | "exit"
   | "loop"
   | "goal"
@@ -139,6 +141,32 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         f: 500 * pitch,
         f2: 1600 * pitch,
         q: 0.8,
+        dest,
+        wet: 0.2,
+      });
+    },
+  },
+  // Selection moved (sound lab 2, "Soft tick"): a tiny filtered click,
+  // quieter than on the lab page since it repeats often.
+  tick: {
+    seconds: 0.05,
+    play: (s, dest, t, pitch) => {
+      s.noise({ t, d: 0.015, vol: 0.04, f: 3500 * pitch, q: 4, dest });
+      s.tone({ f: 1800 * pitch, t, d: 0.02, vol: 0.02, dest });
+    },
+  },
+  // Button pressed (sound lab 2, "Glass tap"): a click with a small bell,
+  // quieter than on the lab page.
+  click: {
+    seconds: 0.25,
+    play: (s, dest, t, pitch) => {
+      s.noise({ t, d: 0.015, vol: 0.035, f: 4200 * pitch, q: 2, dest });
+      s.bell({
+        f: midi(91) * pitch,
+        t,
+        d: 0.22,
+        vol: 0.035,
+        index: 1,
         dest,
         wet: 0.2,
       });
@@ -303,7 +331,7 @@ export const BOUNCE_SECONDS = 0.5;
 /**
  * Mirror bounce (B, "Crystal ping"): a small bell, one note higher on the
  * music's scale for each further bounce in the same shot (capped), so long
- * shots stay in key.
+ * shots stay in key, with a soft glassy swish as the mirror turns.
  */
 export function playBounce(
   s: Synth,
@@ -322,6 +350,8 @@ export function playBounce(
     dest,
     wet: 0.3,
   });
+  // The mirror turning (sound lab 2, "Glass swish"), kept quiet.
+  s.noise({ t, d: 0.1, vol: 0.03, f: 6000, f2: 3000, q: 2, dest });
 }
 
 /** Lowest note of the bounce ladder (E5). */

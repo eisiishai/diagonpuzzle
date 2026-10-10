@@ -1,11 +1,15 @@
 import { Container, Graphics, Text } from "pixi.js";
+import type { GlowFilter } from "pixi-filters";
 import type { GameAudio } from "../audio/GameAudio";
 import type { GameAction } from "../input/keyboard";
 import type { LevelDefinition } from "../levels/levels";
 import { prefersReducedMotion, pulse } from "../render/ambient";
+import { easeInOutCubic } from "../render/easing";
+import { arcPoints } from "../render/polyline";
 import { fitToScreen } from "../render/fitToScreen";
 import { COLORS, createBloom, createGlow, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
+import type { IconDrawer } from "../render/ui";
 import {
   bonusLevelCount,
   goldenStarCount,
@@ -19,11 +23,20 @@ import {
 import type { LevelSummary, Progress } from "../save/progress";
 import { GAME_VERSION } from "../version";
 import type { Scene } from "./Scene";
-import { STAR, levelListLabel } from "./scoreText";
+import { STAR, levelListRow } from "./scoreText";
+import type { LevelRowState } from "./scoreText";
 
 const GAME_TITLE = "DIAGON PUZZLE";
 const LIST_WIDTH = 440;
 const LEVEL_ROW_HEIGHT = 50;
+/** The title beam fires once, a moment after the title screen appears. */
+const BEAM_FIRE_MS = 400;
+/** Time for the beam to cross, and for the crystal's flash on arrival. */
+const BEAM_TRAVEL_MS = 420;
+const CRYSTAL_FLASH_MS = 500;
+/** The title's glow brightens for this long as the beam passes under it. */
+const TITLE_FLARE_MS = 700;
+const TITLE_GLOW = 1.5;
 
 export interface TitleSceneOptions {
   levels: readonly LevelDefinition[];
@@ -46,7 +59,9 @@ export class TitleScene extends Container implements Scene {
   private readonly resetItem: MenuItem;
   private readonly audioControls: AudioControls;
   private readonly contentHeight: number;
-  private readonly titleCrystal: Graphics;
+  private readonly titleBeam: TitleBeam;
+  private readonly titleGlow: GlowFilter;
+  private readonly audio: GameAudio;
   private ambientMs = 0;
   private selected = 0;
   private resetArmed = false;
@@ -57,14 +72,16 @@ export class TitleScene extends Container implements Scene {
     const levelIds = levels.map((level) => level.id);
     let y = 0;
 
+    this.audio = audio;
     const title = new Text({ text: GAME_TITLE, style: textStyle("title") });
     title.anchor.set(0.5, 0);
-    title.filters = [createGlow(COLORS.beam, 1.5)];
+    this.titleGlow = createGlow(COLORS.beam, TITLE_GLOW);
+    title.filters = [this.titleGlow];
     this.addChild(title);
     y += title.height + 10;
-    const beam = titleBeam(title.width, y);
-    this.titleCrystal = beam.crystal;
-    this.addChild(beam.view);
+    this.titleBeam = new TitleBeam(title.width, y);
+    this.titleBeam.draw(prefersReducedMotion() ? 1 : 0);
+    this.addChild(this.titleBeam);
     y += 40;
 
     const next = nextLevelIndex(progress, levelIds);
@@ -97,21 +114,20 @@ export class TitleScene extends Container implements Scene {
     y += header.height + 12;
 
     levels.forEach((level, index) => {
-      const golden = hasAllBonuses(progress, summaries[index]);
-      const label = levelListLabel(
+      const row = levelListRow(
         index + 1,
         level.name,
         level.minShots,
         isUnlocked(progress, levelIds, index),
         progress.levels[level.id]?.bestShots,
         isSkipped(progress, level.id),
-        golden,
+        hasAllBonuses(progress, summaries[index]),
       );
       const itemIndex = this.items.length;
       const item = this.addItem(
         new Button({
-          label,
-          badge: golden ? { text: STAR, color: COLORS.star } : undefined,
+          label: row.title,
+          row: { leading: levelStateIcon(row.state), detail: row.detail },
           width: LIST_WIDTH,
           onTap: () => options.onStartLevel(index),
           onHover: () => this.select(itemIndex),
@@ -186,6 +202,7 @@ export class TitleScene extends Container implements Scene {
         break;
       case "fire":
         if (!this.items[this.selected].button.disabled) {
+          this.audio.play("click");
           this.items[this.selected].activate();
         }
         break;
@@ -201,15 +218,37 @@ export class TitleScene extends Container implements Scene {
     }
   }
 
-  /** The title crystal pulses like the goal in the game. */
+  /**
+   * The title crystal pulses like the goal in the game. As the screen
+   * appears, the title beam fires once: it shoots across from the left,
+   * the title flares as it passes and the crystal flashes when it arrives;
+   * then it stays still. Still from the start (the beam drawn in full) when
+   * the player prefers reduced motion.
+   */
   update(deltaMs: number): void {
     if (prefersReducedMotion()) {
       return;
     }
     this.ambientMs += deltaMs;
     const breath = pulse(this.ambientMs);
-    this.titleCrystal.scale.set(1 + 0.1 * breath);
-    this.titleCrystal.alpha = 0.8 + 0.2 * breath;
+    let flash = 0;
+    const cycle = this.ambientMs - BEAM_FIRE_MS;
+    // The shot is over once the crystal's flash and the title's flare are.
+    const shotMs = Math.max(TITLE_FLARE_MS, BEAM_TRAVEL_MS + CRYSTAL_FLASH_MS);
+    if (cycle >= 0 && cycle < shotMs + deltaMs) {
+      this.titleBeam.draw(easeInOutCubic(cycle / BEAM_TRAVEL_MS));
+      const arrived = cycle - BEAM_TRAVEL_MS;
+      if (arrived >= 0 && arrived < CRYSTAL_FLASH_MS) {
+        flash = 1 - arrived / CRYSTAL_FLASH_MS;
+      }
+      const flare =
+        cycle < TITLE_FLARE_MS
+          ? Math.sin((Math.PI * cycle) / TITLE_FLARE_MS)
+          : 0;
+      this.titleGlow.outerStrength = TITLE_GLOW * (1 + 1.2 * flare);
+    }
+    this.titleBeam.crystal.scale.set(1 + 0.1 * breath + 0.35 * flash);
+    this.titleBeam.crystal.alpha = Math.min(1, 0.8 + 0.2 * breath + flash);
   }
 
   /** Adds a centred menu button at `y`; keyboard selection follows the list. */
@@ -221,7 +260,10 @@ export class TitleScene extends Container implements Scene {
     return item;
   }
 
-  /** Moves to the next enabled item in `step` direction, if there is one. */
+  /**
+   * Moves to the next enabled item in `step` direction, if there is one,
+   * with a soft tick.
+   */
   private moveSelection(step: number): void {
     for (
       let index = this.selected + step;
@@ -230,6 +272,7 @@ export class TitleScene extends Container implements Scene {
     ) {
       if (!this.items[index].button.disabled) {
         this.select(index);
+        this.audio.play("tick");
         return;
       }
     }
@@ -292,29 +335,93 @@ function levelListHeader(
 
 /**
  * A short laser beam under the title, ending in a goal crystal: the game's
- * idea in one line. Centred on x = 0 at height `y`. The crystal is returned
- * separately so it can pulse like the goal in the game.
+ * idea in one line. Centred on x = 0 at height `y`. The beam can be drawn
+ * part of the way, so it can fire across; the crystal pulses and flashes.
  */
-function titleBeam(
-  width: number,
-  y: number,
-): { view: Container; crystal: Graphics } {
-  const half = width / 2;
-  const size = 11;
-  const end = half - size * 2;
-  const beam = new Graphics()
-    .moveTo(-half, y)
-    .lineTo(end, y)
-    .stroke({ width: 10, color: COLORS.beam, alpha: 0.4, cap: "round" })
-    .moveTo(-half, y)
-    .lineTo(end, y)
-    .stroke({ width: 2, color: COLORS.beamCore, cap: "round" });
-  const crystal = new Graphics()
-    .poly([0, -size, size, 0, 0, size, -size, 0])
-    .fill(COLORS.success);
-  crystal.position.set(half - size, y);
-  const view = new Container();
-  view.addChild(beam, crystal);
-  view.filters = [createBloom()];
-  return { view, crystal };
+class TitleBeam extends Container {
+  readonly crystal: Graphics;
+  private readonly beam = new Graphics();
+  private readonly start: number;
+  private readonly end: number;
+  private readonly y0: number;
+
+  constructor(width: number, y: number) {
+    super();
+    const half = width / 2;
+    const size = 11;
+    this.start = -half;
+    this.end = half - size * 2;
+    this.y0 = y;
+    this.crystal = new Graphics()
+      .poly([0, -size, size, 0, 0, size, -size, 0])
+      .fill(COLORS.success);
+    this.crystal.position.set(half - size, y);
+    this.addChild(this.beam, this.crystal);
+    this.filters = [createBloom()];
+  }
+
+  /** Draws the beam from the left up to `fraction` (0–1) of its length. */
+  draw(fraction: number): void {
+    const g = this.beam.clear();
+    const x = this.start + (this.end - this.start) * fraction;
+    // Nothing until it has length: a line needs two distinct points.
+    if (x - this.start < 0.5) {
+      return;
+    }
+    g.moveTo(this.start, this.y0)
+      .lineTo(x, this.y0)
+      .stroke({ width: 10, color: COLORS.beam, alpha: 0.4, cap: "round" })
+      .moveTo(this.start, this.y0)
+      .lineTo(x, this.y0)
+      .stroke({ width: 2, color: COLORS.beamCore, cap: "round" });
+  }
+}
+
+/** The level list's icon for a level's state. */
+function levelStateIcon(state: LevelRowState): IconDrawer {
+  return (g, color) => {
+    switch (state) {
+      case "star":
+      case "golden": {
+        const points: number[] = [];
+        for (let i = 0; i < 10; i++) {
+          const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+          const r = i % 2 ? 3.6 : 8.5;
+          points.push(Math.cos(angle) * r, Math.sin(angle) * r);
+        }
+        g.poly(points).fill(state === "golden" ? COLORS.star : COLORS.text);
+        break;
+      }
+      case "done":
+        g.moveTo(-6, 0).lineTo(-2, 4.5).lineTo(6.5, -5).stroke({
+          width: 2.2,
+          color: COLORS.success,
+          cap: "round",
+          join: "round",
+        });
+        break;
+      case "open":
+        g.poly([-4, -6, 6, 0, -4, 6]).fill(COLORS.beam);
+        break;
+      case "skipped":
+        g.moveTo(-6, -5)
+          .lineTo(-1, 0)
+          .lineTo(-6, 5)
+          .moveTo(1, -5)
+          .lineTo(6, 0)
+          .lineTo(1, 5)
+          .stroke({ width: 2, color: COLORS.dim, cap: "round", join: "round" });
+        break;
+      case "locked": {
+        g.roundRect(-6, -1, 12, 9, 2).fill(color);
+        const [first, ...rest] = arcPoints(0, -2, 3.6, Math.PI, 2 * Math.PI, 6);
+        g.moveTo(first.x, 1).lineTo(first.x, first.y);
+        for (const p of rest) {
+          g.lineTo(p.x, p.y);
+        }
+        g.lineTo(rest[rest.length - 1].x, 1).stroke({ width: 2, color });
+        break;
+      }
+    }
+  };
 }

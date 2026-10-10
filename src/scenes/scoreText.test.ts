@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completionMessage, levelListLabel } from "./scoreText";
+import { completionMessage, levelListRow } from "./scoreText";
 
 describe("completionMessage", () => {
   it("awards a star at par", () => {
@@ -20,25 +20,33 @@ describe("completionMessage", () => {
   });
 });
 
-describe("levelListLabel", () => {
-  it("shows locked, unplayed, completed and starred levels", () => {
-    expect(levelListLabel(3, "Second try", 2, false, undefined)).toBe(
-      "🔒 3. Second try",
+describe("levelListRow", () => {
+  const row = (...args: Parameters<typeof levelListRow>) =>
+    levelListRow(...args);
+
+  it("shows locked, unplayed and skipped levels", () => {
+    expect(row(3, "Second try", 2, false, undefined)).toEqual({
+      state: "locked",
+      title: "3. Second try",
+      detail: "",
+    });
+    expect(row(3, "Second try", 2, true, undefined)).toEqual({
+      state: "open",
+      title: "3. Second try",
+      detail: "par 2",
+    });
+    expect(row(3, "Second try", 2, true, undefined, true).detail).toBe(
+      "skipped · par 2",
     );
-    expect(levelListLabel(3, "Second try", 2, true, undefined)).toBe(
-      "3. Second try  ·  par 2",
-    );
-    expect(levelListLabel(3, "Second try", 2, true, 4)).toBe(
-      "✓ 3. Second try  ·  best 4 / par 2",
-    );
-    expect(levelListLabel(3, "Second try", 2, true, 2)).toBe(
-      "✓ 3. Second try  ·  best 2 / par 2  ★",
-    );
-    expect(levelListLabel(3, "Second try", 2, true, 2, false, true)).toBe(
-      "✓ 3. Second try  ·  best 2 / par 2",
-    );
-    expect(levelListLabel(3, "Second try", 2, true, undefined, true)).toBe(
-      "3. Second try  ·  skipped  ·  par 2",
-    );
+  });
+
+  it("tells completed, starred and golden levels apart", () => {
+    expect(row(3, "Second try", 2, true, 4)).toEqual({
+      state: "done",
+      title: "3. Second try",
+      detail: "best 4 / par 2",
+    });
+    expect(row(3, "Second try", 2, true, 2).state).toBe("star");
+    expect(row(3, "Second try", 2, true, 2, false, true).state).toBe("golden");
   });
 });

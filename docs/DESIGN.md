@@ -275,6 +275,13 @@ difficulty doesn't dip at the end.
   is completed. Locked levels are shown but can't be selected.
 - Completed levels show the best (lowest) shot count. Completing a level again
   reports a new best or the existing one.
+- Each row of the level list has an icon column on the left showing the
+  level's state by shape and colour, its numbered name, and its score
+  aligned on the right in the number font (`best 4 / par 3`, `par 3`, or
+  `skipped · par 4`): a white ★ for a level completed at par, a gold ★
+  once its bonus targets are all collected (golden), a green ✓ for
+  completed above par, a beam-coloured ▶ for unlocked and not yet played,
+  a double chevron for skipped, and a lock for locked.
 - **Par** is a level's minimum shot count (`minShots`). It is shown in the
   game header and in the level list. Completing a level in par earns a star
   (★), shown in the level list; the list header shows stars earned out of the
@@ -373,7 +380,10 @@ Text colours keep at least 4.5:1 contrast on the background.
   right, `L07`). They don't glow, and fade in with the panel at level
   start.
 - **Buttons**: rounded rectangles with a thin outline; the primary action
-  (*Next level*) is filled with the success colour.
+  (*Next level*) is filled with the success colour. The selected or hovered
+  button eases in a soft halo (0.12 s) in its accent colour (beam colour,
+  or the success colour for the primary button); pressing one squeezes it
+  slightly (97 %).
 
 ### Light and motion
 
@@ -413,6 +423,11 @@ Text colours keep at least 4.5:1 contrast on the background.
   about half a minute). Its lines are one screen pixel wide, on the screen's
   pixel grid, and it moves in whole screen pixels, so it stays crisp without
   shimmering.
+- **Title beam**: as the title screen appears, the beam under the title
+  fires once: it shoots across from the left (0.42 s), the title's glow
+  flares as it passes under it, and the crystal at its end flashes on
+  arrival; then it stays still. (Firing every few seconds was too
+  distracting.) With reduced motion the beam is simply drawn in full.
 - The bonus target is livelier than the goal, so it is noticed when it
   appears: it turns slowly (once every 9 s, so its colours swirl), pulses
   faster and deeper (grows 16 % every 1.5 s) and gives off small
@@ -445,10 +460,12 @@ came from sound lab 2.
 | Event | Sound |
 |---|---|
 | Fire | *Soft pulse*: a gentle falling tone with a breath of air |
-| Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is one note higher on the music's scale, from E5 (capped after ten), so long shots stay in key |
+| Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is one note higher on the music's scale, from E5 (capped after ten), so long shots stay in key. With a quiet glassy swish as the mirror turns (sound lab 2) |
 | Wall | *Soft knock* |
 | Breakable wall | A crunch over a low thud, with small pieces clattering after it (not from the sound lab) |
 | Mirror placed | A glassy click, then two short bells (not from the sound lab) |
+| Selection moved | *Soft tick* (sound lab 2), quieter: when the arrow keys change the selected row or menu item |
+| Button pressed | *Glass tap* (sound lab 2), quieter: a click with a small bell, for every button and for Enter on the title screen or after completing a level |
 | Level start | A soft, quiet swoosh of air with the beam wipe, without a tone, so it doesn't wear on the ear over many levels (sound lab 2's *Rising sweep* was too noticeable) |
 | Off the board | *Two-tone drop*: two notes stepping down |
 | Loop | *Question chime*: two bells rising |

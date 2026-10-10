@@ -164,18 +164,20 @@ the polyline rule and is checked on a phone. In suggested order:
 - [x] Atmosphere around the board. Chosen: soft vignette, faint light
   behind the board, corner ticks with small labels (grid size, goal hits,
   par, level number); no glow
-- [ ] Title screen. Chosen: the title beam fires every few seconds (shoots
-  from the left, the title brightens as it passes, the crystal flashes);
+- [x] Title screen. Chosen: the title beam fires (shoots from the left,
+  the title brightens as it passes, the crystal flashes), once as the
+  screen appears (every few seconds was too distracting);
   a level list with an icon column (★, ✓, play, skip, lock) and scores
   aligned right; buttons ease in a soft glow on hover and squeeze slightly
   when pressed
-- [ ] Small sounds (no beam hum). Keep them quieter than on the sound lab
+- [x] Small sounds (no beam hum). Keep them quieter than on the sound lab
   page: in play, frequent sounds must not wear on the ear over many levels
   - [x] A sound as a level starts: a soft swoosh (the chosen rising sweep
     was too noticeable over many levels)
-  - [ ] A soft tick for row changes and menu moves
-  - [ ] A glass tap for button clicks
-  - [ ] A glass swish with the mirror flip
+  - [x] A soft tick for row changes and menu moves (arrow keys only;
+    pointer hover stays silent)
+  - [x] A glass tap for button clicks
+  - [x] A glass swish with the mirror flip
 - [ ] Review the older effects (fire, bounces, wall, off the board, goal,
   par) in long play: the softened level-start sound showed that sounds
   heard on every shot or level can wear on the ear. Make them quieter or

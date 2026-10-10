@@ -30,12 +30,16 @@ function bestText(shots: number, previousBest: number | undefined): string {
   return ` Best: ${shotCount(previousBest)}.`;
 }
 
+/** A level's state in the title screen's level list, shown as an icon. */
+export type LevelRowState =
+  "locked" | "open" | "skipped" | "done" | "star" | "golden";
+
 /**
- * A level's line in the title screen's level list. A golden star (all bonus
- * targets collected) replaces the par star and is shown separately, in its
- * own colour, so it is left out here.
+ * A level's row in the title screen's level list: its state (for the icon
+ * column), its numbered name and the score text aligned on the right.
+ * Golden: all its bonus targets collected (which needs a star first).
  */
-export function levelListLabel(
+export function levelListRow(
   number: number,
   name: string,
   par: number,
@@ -43,16 +47,16 @@ export function levelListLabel(
   best: number | undefined,
   skipped = false,
   golden = false,
-): string {
+): { state: LevelRowState; title: string; detail: string } {
   const title = `${number}. ${name}`;
   if (!unlocked) {
-    return `🔒 ${title}`;
+    return { state: "locked", title, detail: "" };
   }
   if (best === undefined) {
     return skipped
-      ? `${title}  ·  skipped  ·  par ${par}`
-      : `${title}  ·  par ${par}`;
+      ? { state: "skipped", title, detail: `skipped · par ${par}` }
+      : { state: "open", title, detail: `par ${par}` };
   }
-  const star = earnsStar(best, par) && !golden ? `  ${STAR}` : "";
-  return `✓ ${title}  ·  best ${best} / par ${par}${star}`;
+  const state = golden ? "golden" : earnsStar(best, par) ? "star" : "done";
+  return { state, title, detail: `best ${best} / par ${par}` };
 }

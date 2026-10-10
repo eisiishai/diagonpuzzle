@@ -31,6 +31,7 @@ import type { LevelSummary } from "./save/progress";
 import { BackgroundGrid } from "./render/BackgroundGrid";
 import { vignetteTexture } from "./render/glow";
 import { SceneTransition } from "./render/SceneTransition";
+import { setButtonTapSound } from "./render/ui";
 import type { WipeDirection } from "./render/SceneTransition";
 import { BACKGROUND_CSS, FONT_FACES } from "./render/theme";
 import { readStorage, removeStorage, writeStorage } from "./save/storage";
@@ -74,6 +75,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
   const audio = new GameAudio();
   window.addEventListener("pointerdown", () => audio.unlock());
   window.addEventListener("keydown", () => audio.unlock());
+  setButtonTapSound(() => audio.play("click"));
 
   let progress = parseProgress(readStorage(PROGRESS_STORAGE_KEY));
   let scene: Scene | undefined;
