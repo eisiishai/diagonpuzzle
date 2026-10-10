@@ -21,6 +21,9 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run generate -- [options]` — searches random boards for new levels
   with a given par, best (unique shortest solution) first, printed ready to
   paste into `levels.ts`; `--help` lists the options
+- `npm run bonus -- --level N [options]` — finds cells for a level's bonus
+  target `*` that take the wanted number of shots, optionally after small
+  board changes that keep par; `--help` lists the options
 - `npm run solutions` — writes `docs/solutions.local.md` (git-ignored, also
   run by `npm run build`): every level's grid and solution, for the user to
   look up. Don't commit or publish it.
@@ -83,6 +86,11 @@ scripts/        development tools run with tsx (not part of the game)
   `src/levels/levels.test.ts` checks them with the solver.
   Design new levels with `npm run generate`, then hand-tune the board and
   confirm it with `npm run levels`.
+- Level design scripts (searches, generators, placement helpers) go in
+  `scripts/` and are committed with the work that uses them, as an npm
+  script with `--help` and tests for the search logic. Don't leave them as
+  throwaway files in a scratch folder; they are needed again in later
+  sessions.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
 - Every commit runs `npm run build` first (pre-commit hook) and is stopped if
