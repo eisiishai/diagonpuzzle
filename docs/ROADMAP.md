@@ -137,11 +137,11 @@ the polyline rule and is checked on a phone. In suggested order:
 - [x] Level start: the board builds in. Chosen: column sweep, where
   emitters slide in, cells pop in column by column from the left and the
   goal ignites last with a flash (about 0.7 s)
-- [ ] Hit feedback on the beam. Chosen: a short flash where it reflects
+- [x] Hit feedback on the beam. Chosen: a short flash where it reflects
   and a glint running along the mirror as it turns; a few sparks bouncing
   back from a wall; a small (2 px) board shake when a breakable wall
   breaks
-- [ ] Goal hits. Chosen: a crystal flash and one diamond-shaped ring on
+- [x] Goal hits. Chosen: a crystal flash and one diamond-shaped ring on
   every goal hit, not only at par (stars stay for par); on multi-hit goals
   the crystal's core fills from the bottom, a part per hit
 - [ ] Stereo position: bounces, wall hits and breaks panned by column.

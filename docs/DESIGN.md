@@ -47,8 +47,8 @@ Some levels' goal needs several hits (`goalHits` in the level list; default
   board keeps every mirror flipped so far, and play continues.
 - The level is complete on the last hit; par and stars count the shots for
   the whole level as usual.
-- Small diamonds under the goal crystal show the hits needed, filled for each
-  hit so far; the header shows `GOAL 1/2`. A non-final hit says "Goal hit!
+- The crystal's core starts as an outline and fills from the bottom, a
+  part per hit (half per hit for two hits); the header shows `GOAL 1/2`. A non-final hit says "Goal hit!
   Hit it once more to finish."
 - Restarting resets the hits along with the board.
 
@@ -348,7 +348,9 @@ Text colours keep at least 4.5:1 contrast on the background.
 - **Breakable walls**: lighter stone blocks with dark jagged cracks
   running through them instead of hatching, no glow. When hit, they burst
   into stone pieces that fall away and fade.
-- **Goal**: a crystal (diamond within a diamond) glowing green.
+- **Goal**: a crystal (diamond within a diamond) glowing green. A goal
+  needing several hits has an outlined core that fills from the bottom,
+  a part per hit.
 - **Mirror preview** (where the player's mirror would go): four corner
   brackets around the cell and the mirror's outline in glass-coloured
   dashes, pulsing gently with the goal's breath; on a cell where it can't
@@ -379,6 +381,17 @@ Text colours keep at least 4.5:1 contrast on the background.
   about 0.7 s on a 7-column board; firing or placing the mirror ends it at
   once. Restarting a level doesn't play it again.
 - Celebrations use star-shaped particles in the star and success colours.
+- **Hit feedback** along the beam:
+  - Where it reflects, a short pale-blue flash with a white centre
+    (0.17 s), and a bright spot runs along the glass as the mirror turns
+    (0.26 s).
+  - At a wall, five short sparks bounce back the way the beam came and
+    fall away (about 0.25 s), next to the × marker.
+  - A breaking wall also shakes the board by up to 2 px, fading out over
+    0.22 s.
+  - Every goal hit, not only one at par, flashes the crystal and sends out
+    a diamond-shaped ring (0.45 s); par still adds its stars on top. A hit
+    on a bonus target only turns the beam gold, as before.
 - Ambient motion, kept slow and subtle so it never distracts from puzzling:
   the goal crystal breathes (grows about 7 % and brightens, every 2.4 s), the
   selected emitter's glow pulses at the same pace, the crystal under the
@@ -393,7 +406,8 @@ Text colours keep at least 4.5:1 contrast on the background.
   four-pointed sparkles in its colours.
 - When the player's system asks for reduced motion, all ambient motion stops;
   the pieces stay at rest. Screens then change with a plain cut, and the
-  board appears without building in.
+  board appears without building in. Hits keep their flashes but lose the
+  glint, sparks, shake and the goal's ring.
 
 ### Readability
 

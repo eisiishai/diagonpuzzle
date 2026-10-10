@@ -9,8 +9,11 @@ import { COLORS } from "./theme";
 const SPEED_CELLS_PER_SECOND = 9;
 
 export interface ShotCallbacks {
-  /** Called as the pellet reaches each mirror; numbered from 1 per shot. */
-  onBounce: (bounceNumber: number) => void;
+  /**
+   * Called as the pellet reaches each mirror, at board cell `at`; bounces
+   * are numbered from 1 per shot.
+   */
+  onBounce: (bounceNumber: number, at: { x: number; y: number }) => void;
   /** Called as the pellet changes a cell, at the moment it hits it. */
   onCellChange: (x: number, y: number, cell: CellType) => void;
   /** Called once when the pellet reaches the end of its path. */
@@ -119,7 +122,7 @@ export class PelletAnimator extends Container {
         this.callbacks?.onCellChange(changedCell.x, changedCell.y, becomes);
       }
       if (bounce) {
-        this.callbacks?.onBounce(++this.bounces);
+        this.callbacks?.onBounce(++this.bounces, to.cell);
       }
     }
 
