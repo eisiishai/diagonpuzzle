@@ -123,6 +123,15 @@ describe("skipping", () => {
     expect(isCompleted(completed, "a")).toBe(true);
   });
 
+  it("keeps completed and skipped levels unlocked whatever comes before", () => {
+    // E.g. after reordering: "c" was played, but "b" before it was not.
+    let progress = recordCompletion(EMPTY_PROGRESS, "c", 1).progress;
+    expect(isUnlocked(progress, IDS, 2)).toBe(true);
+    progress = recordSkip(EMPTY_PROGRESS, "c");
+    expect(isUnlocked(progress, IDS, 2)).toBe(true);
+    expect(isUnlocked(progress, IDS, 1)).toBe(false);
+  });
+
   it("unlocks the level after a skipped one", () => {
     const progress = recordSkip(EMPTY_PROGRESS, "a");
     expect(isUnlocked(progress, IDS, 1)).toBe(true);

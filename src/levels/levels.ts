@@ -77,6 +77,32 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "double-take",
+    name: "Double take",
+    minShots: 2,
+    goalHits: 2,
+    music: "glassGarden",
+    grid: String.raw`
+      . . \ . .
+      . . / . G
+      . . / # .
+      . . . . .
+    `,
+  },
+  {
+    id: "encore",
+    name: "Warm-up",
+    minShots: 3,
+    goalHits: 2,
+    music: "glassGarden",
+    grid: String.raw`
+      . . . . \ .
+      . . . . / G
+      . . . . \ .
+      \ . . . # .
+    `,
+  },
+  {
     id: "down-and-around",
     name: "Down and around",
     minShots: 2,
@@ -109,7 +135,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     id: "back-and-forth",
     name: "Back and forth",
     minShots: 3,
-    music: "glassGarden",
+    music: "nightLab",
     grid: String.raw`
       # . # . . . . . .
       . . . . . . . . .
@@ -124,7 +150,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     id: "two-step",
     name: "Two-step",
     minShots: 4,
-    music: "glassGarden",
+    music: "nightLab",
     grid: String.raw`
       . \ . . \ . . . .
       . . . . . . . / G
@@ -134,32 +160,6 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . . # . / . .
       . . . . . # . . .
       . # . . . . . . .
-    `,
-  },
-  {
-    id: "double-take",
-    name: "Double take",
-    minShots: 2,
-    goalHits: 2,
-    music: "nightLab",
-    grid: String.raw`
-      . . \ . .
-      . . / . G
-      . . / # .
-      . . . . .
-    `,
-  },
-  {
-    id: "encore",
-    name: "Encore",
-    minShots: 3,
-    goalHits: 2,
-    music: "nightLab",
-    grid: String.raw`
-      . . . . \ .
-      . . . . / G
-      . . . . \ .
-      \ . . . # .
     `,
   },
 ];

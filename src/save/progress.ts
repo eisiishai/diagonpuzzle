@@ -64,18 +64,18 @@ export function isCompleted(progress: Progress, levelId: string): boolean {
 
 /**
  * The first level is always unlocked; each other one once the previous is
- * completed or skipped.
+ * completed or skipped. A level already completed or skipped always stays
+ * unlocked, even if levels before it are not (e.g. after levels are added
+ * or reordered).
  */
 export function isUnlocked(
   progress: Progress,
   levelIds: readonly string[],
   index: number,
 ): boolean {
-  if (index === 0) {
-    return true;
-  }
-  const previous = levelIds[index - 1];
-  return isCompleted(progress, previous) || isSkipped(progress, previous);
+  const passed = (id: string) =>
+    isCompleted(progress, id) || isSkipped(progress, id);
+  return index === 0 || passed(levelIds[index]) || passed(levelIds[index - 1]);
 }
 
 /**

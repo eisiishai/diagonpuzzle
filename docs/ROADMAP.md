@@ -94,7 +94,7 @@ with flipping mirrors, before it is built.
   bonus target can be reached
 - [x] Multi-hit goal: a goal that must be hit several times to complete the
   level, showing the hits remaining. Decided: each hit is a separate shot,
-  mirror flips stay between hits, and par counts all shots. Levels 9–10
+  mirror flips stay between hits, and par counts all shots. Levels 5–6
   teach it
 
 ### Presentation
