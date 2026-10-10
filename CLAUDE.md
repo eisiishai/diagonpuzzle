@@ -57,6 +57,9 @@ scripts/        development tools run with tsx (not part of the game)
   result". New block types are added there, not as special cases in the
   simulation loop.
 - Formatting follows Prettier via ESLint; keep `npm run lint` clean.
+- Visual style follows the "Laser lab" art direction in `docs/DESIGN.md`.
+  Colours, fonts, text styles and glow filters come only from
+  `src/render/theme.ts`; buttons use `Button` from `src/render/ui.ts`.
 - The game may be hosted in a subfolder (`base: "./"` in `vite.config.ts`).
   Refer to files in `public/` with relative paths (`assets/x.png`), never
   root paths (`/assets/x.png`).

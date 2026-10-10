@@ -3,16 +3,7 @@ import type { ShotResult } from "../game/simulate";
 import type { Board, CellType } from "../game/types";
 import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
-
-const COLORS = {
-  boardBackground: 0x252b3a,
-  gridLine: 0x3a4256,
-  rowHighlight: 0xffffff,
-  mirror: 0xe8ecf4,
-  wall: 0x6b7280,
-  goal: 0x4ade80,
-  launcher: 0xf59e0b,
-};
+import { COLORS, createBloom } from "./theme";
 
 const MIRROR_TURN_MS = 150;
 
@@ -37,6 +28,9 @@ interface MirrorTurn {
  *
  * Each cell has its own view, centred in the cell, so cells can change while
  * playing. Mirrors are all drawn as "\" and rotated 90° to show "/".
+ *
+ * A bloom filter on the whole view makes the bright pieces glow (beam,
+ * mirrors, goal, selected emitter) while the dark panel stays unaffected.
  */
 export class BoardView extends Container {
   private readonly boardWidth: number;
@@ -55,10 +49,11 @@ export class BoardView extends Container {
     this.boardHeight = board.height;
     this.cellSize = cellSize;
     this.cells = board.cells.map((row) => [...row]);
+    this.filters = [createBloom()];
 
     this.rowHighlight
       .rect(cellSize, 0, board.width * cellSize, cellSize)
-      .fill({ color: COLORS.rowHighlight, alpha: 0.06 });
+      .fill({ color: COLORS.beam, alpha: 0.06 });
     this.rowHighlight.visible = false;
     this.addChild(this.drawGrid(), this.rowHighlight);
 
@@ -108,11 +103,9 @@ export class BoardView extends Container {
 
   /** Highlights the launcher and board row of `row`, or nothing if null. */
   setSelectedRow(row: number | null): void {
-    this.launchers.forEach((launcher, index) => {
-      const selected = index === row;
-      launcher.scale.set(selected ? 1.3 : 1);
-      launcher.alpha = selected ? 1 : 0.55;
-    });
+    this.launchers.forEach((launcher, index) =>
+      this.drawLauncher(launcher, index === row),
+    );
     this.rowHighlight.visible = row !== null;
     if (row !== null) {
       this.rowHighlight.y = row * this.cellSize;
@@ -187,30 +180,28 @@ export class BoardView extends Container {
   private drawGrid(): Graphics {
     const { boardWidth: width, boardHeight: height, cellSize } = this;
     const g = new Graphics();
+    const left = cellSize;
+    const right = (width + 1) * cellSize;
+    const bottom = height * cellSize;
 
-    g.rect(cellSize, 0, width * cellSize, height * cellSize).fill(
-      COLORS.boardBackground,
-    );
-    for (let x = 0; x <= width; x++) {
-      g.moveTo((x + 1) * cellSize, 0).lineTo(
-        (x + 1) * cellSize,
-        height * cellSize,
-      );
+    g.roundRect(left, 0, width * cellSize, bottom, 10).fill(COLORS.panel);
+    for (let x = 1; x < width; x++) {
+      g.moveTo(left + x * cellSize, 0).lineTo(left + x * cellSize, bottom);
     }
-    for (let y = 0; y <= height; y++) {
-      g.moveTo(cellSize, y * cellSize).lineTo(
-        (width + 1) * cellSize,
-        y * cellSize,
-      );
+    for (let y = 1; y < height; y++) {
+      g.moveTo(left, y * cellSize).lineTo(right, y * cellSize);
     }
-    g.stroke({ width: 1, color: COLORS.gridLine });
+    g.stroke({ width: 1, color: COLORS.grid });
+    g.roundRect(left, 0, width * cellSize, bottom, 10).stroke({
+      width: 1.5,
+      color: COLORS.panelBorder,
+    });
     return g;
   }
 
   /** Draws `cell` into `g`, centred on g's origin. */
   private drawCell(g: Graphics, cell: CellType): void {
     const half = this.cellSize / 2;
-    const reach = half * 0.7;
     g.clear();
     g.rotation = 0;
 
@@ -218,32 +209,52 @@ export class BoardView extends Container {
       case "empty":
         break;
       case "mirrorBackslash":
-      case "mirrorSlash":
+      case "mirrorSlash": {
+        // A glass bar with a bright centre line.
+        const reach = half * 0.7;
         g.moveTo(-reach, -reach)
           .lineTo(reach, reach)
-          .stroke({ width: 5, color: COLORS.mirror, cap: "round" });
+          .stroke({ width: 7, color: COLORS.glass, cap: "round" })
+          .moveTo(-reach + 2, -reach + 2)
+          .lineTo(reach - 2, reach - 2)
+          .stroke({ width: 1.5, color: COLORS.glassHighlight, cap: "round" });
         g.rotation = cell === "mirrorSlash" ? Math.PI / 2 : 0;
         break;
-      case "wall":
-        g.rect(-half + 2, -half + 2, half * 2 - 4, half * 2 - 4).fill(
-          COLORS.wall,
-        );
+      }
+      case "wall": {
+        // A dark block with diagonal hatching.
+        const edge = half * 0.87;
+        g.roundRect(-edge, -edge, edge * 2, edge * 2, 6)
+          .fill(COLORS.wall)
+          .stroke({ width: 1.5, color: COLORS.wallEdge });
+        const h = edge * 0.75;
+        g.moveTo(-h, h)
+          .lineTo(h, -h)
+          .moveTo(-h, h * 0.1)
+          .lineTo(h * 0.1, -h)
+          .moveTo(-h * 0.1, h)
+          .lineTo(h, h * 0.1)
+          .stroke({ width: 4, color: COLORS.wallHatch, cap: "round" });
         break;
-      case "goal":
-        g.circle(0, 0, half * 0.6)
-          .stroke({ width: 4, color: COLORS.goal })
-          .circle(0, 0, half * 0.24)
-          .fill(COLORS.goal);
+      }
+      case "goal": {
+        // A crystal: a diamond outline around a solid diamond.
+        const outer = half * 0.85;
+        const inner = half * 0.4;
+        g.poly([0, -outer, outer, 0, 0, outer, -outer, 0])
+          .stroke({ width: 3, color: COLORS.success, join: "miter" })
+          .poly([0, -inner, inner, 0, 0, inner, -inner, 0])
+          .fill(COLORS.success);
         break;
+      }
     }
   }
 
-  /** A right-pointing triangle centred in the launcher cell of `row`. */
+  /** An emitter centred in the launcher cell of `row`. */
   private createLauncher(row: number, handlers: BoardViewHandlers): Graphics {
     const size = this.cellSize;
-    const r = size * 0.22;
-
-    const g = new Graphics().poly([-r, -r, r, 0, -r, r]).fill(COLORS.launcher);
+    const g = new Graphics();
+    this.drawLauncher(g, false);
     g.position.set(size / 2, (row + 0.5) * size);
     g.eventMode = "static";
     g.cursor = "pointer";
@@ -251,6 +262,23 @@ export class BoardView extends Container {
     g.on("pointerover", () => handlers.onHover(row));
     g.on("pointertap", () => handlers.onLaunch(row));
     return g;
+  }
+
+  /** A rounded box with a nozzle; the selected one is lit in the beam colour. */
+  private drawLauncher(g: Graphics, selected: boolean): void {
+    const size = this.cellSize;
+    const w = size * (selected ? 0.62 : 0.56);
+    const h = size * (selected ? 0.52 : 0.46);
+    const r = size * 0.12;
+    g.clear()
+      .roundRect(-w / 2, -h / 2, w, h, 7)
+      .fill(selected ? COLORS.emitterSelected : COLORS.panel)
+      .stroke({
+        width: selected ? 2 : 1.5,
+        color: selected ? COLORS.beam : COLORS.panelBorder,
+      })
+      .poly([-r * 0.6, -r, r * 1.1, 0, -r * 0.6, r])
+      .fill(selected ? COLORS.beam : COLORS.emitterIdle);
   }
 }
 

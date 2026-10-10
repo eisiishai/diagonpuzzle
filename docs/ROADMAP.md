@@ -69,10 +69,13 @@ with flipping mirrors, before it is built.
 
 ### Presentation
 
-- [ ] Graphics and art pass
+- [x] Graphics and art pass: "Laser lab" direction (style guide in
+  `docs/DESIGN.md`, Art direction)
 - [ ] Real sound effects and music to replace the synthesized placeholders
-- [ ] Show shot outcomes by shape or icon as well as colour (colour-blind
+- [x] Show shot outcomes by shape or icon as well as colour (colour-blind
   players)
+- [ ] Small ambient animations (e.g. a gently pulsing goal crystal, a faint
+  moving background grid)
 
 ## Engineering track
 

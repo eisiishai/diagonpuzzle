@@ -1,3 +1,6 @@
+import "@fontsource/chakra-petch/latin-500.css";
+import "@fontsource/chakra-petch/latin-700.css";
+import "@fontsource/jetbrains-mono/latin-500.css";
 import { Application } from "pixi.js";
 import { GameAudio } from "./audio/GameAudio";
 import { bindKeyboard } from "./input/keyboard";
@@ -10,6 +13,7 @@ import {
   recordCompletion,
   serializeProgress,
 } from "./save/progress";
+import { BACKGROUND_CSS, FONT_FACES } from "./render/theme";
 import { readStorage, removeStorage, writeStorage } from "./save/storage";
 import { GameScene } from "./scenes/GameScene";
 import type { Scene } from "./scenes/Scene";
@@ -19,8 +23,15 @@ const PROGRESS_STORAGE_KEY = "progress";
 
 (async () => {
   const app = new Application();
+  // PixiJS draws text once, when it is created, so the fonts must be loaded
+  // before any screen is built. A font that fails to load falls back to the
+  // system font rather than stopping the game.
+  await Promise.all(
+    FONT_FACES.map((face) => document.fonts.load(face).catch(() => [])),
+  );
+
   await app.init({
-    background: "#161a24",
+    background: BACKGROUND_CSS,
     resizeTo: window,
     antialias: true,
     // Render at the screen's pixel density, so text stays sharp on phones and

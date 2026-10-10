@@ -138,8 +138,8 @@ variety of solutions.
 
 ## Presentation
 
-- The pellet's path is animated cell by cell, leaving a trail. When the shot
-  ends, the trail is coloured by outcome: green for the goal, red otherwise.
+- The pellet's path is animated cell by cell as a laser beam. When the shot
+  ends, its outcome is shown by shape as well as colour (see *Art direction*).
 - Sound effects for firing, mirror bounces (each further bounce in a shot is a
   step higher in pitch), hitting a wall, leaving the grid and reaching the goal;
   background music.
@@ -149,6 +149,68 @@ variety of solutions.
   work on small screens and phones; they are never enlarged, which would blur
   text. The game renders at the screen's pixel density, so text is sharp on
   high-resolution displays. On touch screens, tapping an arrow fires.
+
+## Art direction: Laser lab
+
+The game looks like a dark laboratory where a laser is steered with glass
+mirrors. The board and its pieces glow; the interface around them is quiet
+and technical. Mock-ups: the "A · Laser lab" artboard of the art-directions
+canvas. Colours and fonts are defined once in `src/render/theme.ts`.
+
+### Palette
+
+| Role | Colour | Use |
+|---|---|---|
+| Background | `#0a0e18` | Page and screen background |
+| Panel | `#0f1728`, border `#24375a` | Board, buttons |
+| Grid | `#172540` | Grid lines and dots |
+| Text | `#e6f1ff` | Headings, values |
+| Dim text | `#9fb6d6` | Labels, secondary buttons |
+| Beam | `#ff4d7d`, core `#fff3f6` | Laser beam, selected emitter |
+| Glass | `#4f9fe0` → `#d8f3ff`, highlight `#f2fbff` | Mirrors |
+| Success | `#3dffb4` | Goal crystal, completed shots, primary button |
+| Star | `#ffe08a` | Stars, par celebrations |
+| Wall | `#18233a`, edge `#34466b` | Walls |
+| Idle emitter | `#3b5a86` | Launchers not selected |
+
+Text colours keep at least 4.5:1 contrast on the background.
+
+### Type
+
+- **Chakra Petch** (500, 700) for all interface text. Headings and buttons in
+  capitals with slightly wide letter spacing.
+- **JetBrains Mono** (500) for numbers that change: shots, par.
+- Fonts are bundled with the game (Fontsource packages), never loaded from a
+  font service.
+
+### Shapes
+
+- **Emitters** (launchers): rounded boxes with a triangular nozzle; the
+  selected one is outlined in the beam colour and glows.
+- **Mirrors**: glass bars with a bright centre line, glowing pale blue.
+- **Walls**: dark rounded blocks with diagonal hatching, no glow.
+- **Goal**: a crystal (diamond within a diamond) glowing green.
+- **Beam**: a glowing coloured band with a thin white core.
+- **Buttons**: rounded rectangles with a thin outline; the primary action
+  (*Next level*) is filled with the success colour.
+
+### Light and motion
+
+- Glow comes from a bloom effect on the board: only bright things glow
+  (beam, mirrors, goal, selected emitter); the panel and grid stay dark.
+- Mirrors turn 90° in 150 ms when hit; the beam travels about 9 cells a
+  second.
+- Celebrations use star-shaped particles in the star and success colours.
+
+### Readability
+
+- Shot outcomes are shown by **shape** as well as colour, so they can be told
+  apart without colour vision: reaching the goal turns the whole beam green;
+  a miss dims the beam and marks where it ended: an **×** at a wall, an
+  open **chevron** pointing off the board where it left, a **ring** for a
+  loop.
+- Glow never replaces outlines: every piece is recognisable with the bloom
+  turned off.
 
 ## Future ideas (not yet designed)
 

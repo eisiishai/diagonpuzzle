@@ -3,17 +3,9 @@ import type { ShotOutcome, ShotResult } from "../game/simulate";
 import type { CellType } from "../game/types";
 import { pathPoints } from "./pathPoints";
 import type { PathPoint } from "./pathPoints";
+import { COLORS } from "./theme";
 
 const SPEED_CELLS_PER_SECOND = 9;
-const TRAIL_COLOR = 0xfbbf24;
-const PELLET_COLOR = 0xfff7d6;
-
-const OUTCOME_COLORS: Record<ShotOutcome, number> = {
-  goal: 0x4ade80,
-  exit: 0xf87171,
-  blocked: 0xf87171,
-  loop: 0xc084fc,
-};
 
 export interface ShotCallbacks {
   /** Called as the pellet reaches each mirror; numbered from 1 per shot. */
@@ -32,7 +24,11 @@ interface PixelPoint {
   cell: PathPoint;
 }
 
-/** Moves a pellet along a shot's path, drawing its trail behind it. */
+/**
+ * Moves a pellet along a shot's path as a laser beam. When the shot ends, a
+ * beam that reached the goal turns green; a miss dims and gets an end marker
+ * whose shape tells the outcome (see docs/DESIGN.md, Readability).
+ */
 export class PelletAnimator extends Container {
   private readonly cellSize: number;
   private readonly toPixels: (x: number, y: number) => { x: number; y: number };
@@ -56,7 +52,11 @@ export class PelletAnimator extends Container {
     super();
     this.cellSize = cellSize;
     this.toPixels = toPixels;
-    this.pellet.circle(0, 0, cellSize * 0.12).fill(PELLET_COLOR);
+    this.pellet
+      .circle(0, 0, cellSize * 0.17)
+      .fill({ color: COLORS.beam, alpha: 0.5 })
+      .circle(0, 0, cellSize * 0.09)
+      .fill(COLORS.beamCore);
     this.pellet.visible = false;
     this.addChild(this.trail, this.pellet);
   }
@@ -70,6 +70,10 @@ export class PelletAnimator extends Container {
       ...this.toPixels(cell.x, cell.y),
       cell,
     }));
+    // Start at the emitter's nozzle rather than its centre.
+    if (this.points.length > 0) {
+      this.points[0].x += this.cellSize * 0.3;
+    }
     this.outcome = result.outcome;
     this.callbacks = callbacks;
     this.segment = 0;
@@ -137,34 +141,93 @@ export class PelletAnimator extends Container {
 
   private draw(): void {
     const head = this.currentPosition();
-    this.drawTrail(
-      [...this.points.slice(0, this.segment + 1), head],
-      TRAIL_COLOR,
-    );
+    this.drawBeam([...this.points.slice(0, this.segment + 1), head], {
+      color: COLORS.beam,
+      dimmed: false,
+    });
     this.pellet.position.set(head.x, head.y);
   }
 
   private finish(): void {
     this.playing = false;
     this.pellet.visible = false;
-    const color = OUTCOME_COLORS[this.outcome];
-    this.drawTrail(this.points, color);
-    const end = this.points[this.points.length - 1];
-    if (end) {
-      this.trail.circle(end.x, end.y, this.cellSize * 0.12).fill(color);
+    if (this.outcome === "goal") {
+      this.drawBeam(this.points, { color: COLORS.success, dimmed: false });
+    } else {
+      this.drawBeam(this.points, { color: COLORS.beam, dimmed: true });
+      this.drawEndMarker();
     }
     this.callbacks?.onFinish();
   }
 
-  private drawTrail(points: { x: number; y: number }[], color: number): void {
+  /** A coloured band with a thin bright core; dimmed for a missed shot. */
+  private drawBeam(
+    points: { x: number; y: number }[],
+    style: { color: number; dimmed: boolean },
+  ): void {
     const g = this.trail.clear();
     if (points.length < 2) {
       return;
     }
-    g.moveTo(points[0].x, points[0].y);
-    for (const p of points.slice(1)) {
-      g.lineTo(p.x, p.y);
+    const path = () => {
+      g.moveTo(points[0].x, points[0].y);
+      for (const p of points.slice(1)) {
+        g.lineTo(p.x, p.y);
+      }
+    };
+    path();
+    g.stroke({
+      width: this.cellSize * 0.2,
+      color: style.color,
+      alpha: style.dimmed ? 0.12 : 0.4,
+      cap: "round",
+      join: "round",
+    });
+    path();
+    g.stroke({
+      width: 2.5,
+      color: COLORS.beamCore,
+      alpha: style.dimmed ? 0.3 : 1,
+      cap: "round",
+      join: "round",
+    });
+  }
+
+  /**
+   * Marks where a missed shot ended, by shape: × at a wall, a chevron pointing
+   * the way it left the board, a ring for a loop.
+   */
+  private drawEndMarker(): void {
+    const end = this.points[this.points.length - 1];
+    const before = this.points[this.points.length - 2];
+    if (!end || !before) {
+      return;
     }
-    g.stroke({ width: 4, color, cap: "round", join: "round" });
+    const g = this.trail;
+    const r = this.cellSize * 0.15;
+    const stroke = {
+      width: 3,
+      color: COLORS.beam,
+      cap: "round",
+      join: "round",
+    } as const;
+
+    if (this.outcome === "blocked") {
+      g.moveTo(end.x - r, end.y - r)
+        .lineTo(end.x + r, end.y + r)
+        .moveTo(end.x + r, end.y - r)
+        .lineTo(end.x - r, end.y + r)
+        .stroke(stroke);
+    } else if (this.outcome === "exit") {
+      const length = Math.hypot(end.x - before.x, end.y - before.y) || 1;
+      const dx = (end.x - before.x) / length;
+      const dy = (end.y - before.y) / length;
+      g.moveTo(end.x - dx * r - dy * r, end.y - dy * r + dx * r)
+        .lineTo(end.x + dx * r, end.y + dy * r)
+        .lineTo(end.x - dx * r + dy * r, end.y - dy * r - dx * r)
+        .stroke(stroke);
+    } else {
+      g.circle(end.x, end.y, r).stroke(stroke);
+    }
   }
 }

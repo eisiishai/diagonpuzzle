@@ -8,22 +8,19 @@ import type { GameAction } from "../input/keyboard";
 import { BoardView } from "../render/BoardView";
 import { Celebration } from "../render/Celebration";
 import { fitToScreen } from "../render/fitToScreen";
-import {
-  AudioControls,
-  TEXT_STYLE,
-  UI_COLORS,
-  makeClickable,
-} from "../render/ui";
+import { COLORS, textStyle } from "../render/theme";
+import { AudioControls, Button } from "../render/ui";
 import type { Scene } from "./Scene";
 import { STAR, completionMessage } from "./scoreText";
 
 const CELL_SIZE = 64;
-const TEXT_HEIGHT = 40;
-const HEADER_ROW_HEIGHT = 30;
-const HEADER_HEIGHT = 2 * HEADER_ROW_HEIGHT + 10;
-const MESSAGE_HEIGHT = 60;
+/** Height of a row of buttons. */
+const ROW_HEIGHT = 44;
+const ROW_GAP = 8;
+const HEADER_HEIGHT = 2 * ROW_HEIGHT + ROW_GAP + 20;
+const MESSAGE_HEIGHT = 64;
 const INTRO_MESSAGE =
-  "Aim with ↑/↓ and fire with Enter, or click an arrow. Mirrors turn when hit.";
+  "Aim with ↑/↓ and fire with Enter, or click an emitter. Mirrors turn when hit.";
 
 const OUTCOME_MESSAGES: Record<Exclude<ShotOutcome, "goal">, string> = {
   exit: "The pellet left the grid.",
@@ -65,7 +62,9 @@ export class GameScene extends Container implements Scene {
   private readonly shotsText: Text;
   private readonly audioControls: AudioControls;
   private readonly messageText: Text;
-  private readonly nextButton: Text;
+  private readonly nextButton: Button;
+  /** Bottom edge of the scene's content. */
+  private readonly contentHeight: number;
   private readonly session: LevelSession;
   private readonly celebration = new Celebration();
 
@@ -85,42 +84,44 @@ export class GameScene extends Container implements Scene {
     // Header: level name and menu on the first row, shots and restart on the
     // second, so the rows fit even on narrow boards.
     const levelText = new Text({
-      text: `Level ${levelNumber}/${levelCount}: ${levelName}`,
-      style: TEXT_STYLE,
+      text: `LEVEL ${levelNumber}/${levelCount} · ${levelName.toUpperCase()}`,
+      style: textStyle("heading"),
     });
-    const menuButton = makeClickable(
-      new Text({ text: "Menu (Esc)", style: TEXT_STYLE }),
-      () => options.onMenu(),
-    );
-    menuButton.anchor.set(1, 0);
-    menuButton.x = width;
-    this.shotsText = new Text({ style: TEXT_STYLE });
-    this.shotsText.y = HEADER_ROW_HEIGHT;
-    const restartButton = makeClickable(
-      new Text({ text: "Restart (R)", style: TEXT_STYLE }),
-      () => this.restart(),
-    );
-    restartButton.anchor.set(1, 0);
-    restartButton.position.set(width, HEADER_ROW_HEIGHT);
+    levelText.y = Math.round((ROW_HEIGHT - levelText.height) / 2);
+    const menuButton = new Button({
+      label: "MENU · ESC",
+      onTap: () => options.onMenu(),
+    });
+    menuButton.x = width - menuButton.width;
+
+    const secondRow = ROW_HEIGHT + ROW_GAP;
+    this.shotsText = new Text({ style: textStyle("value") });
+    const restartButton = new Button({
+      label: "RESTART · R",
+      onTap: () => this.restart(),
+    });
+    restartButton.position.set(width - restartButton.width, secondRow);
 
     this.messageText = new Text({
       text: INTRO_MESSAGE,
-      style: { ...TEXT_STYLE, wordWrap: true, wordWrapWidth: width },
+      style: textStyle("body", { wordWrap: true, wordWrapWidth: width }),
     });
-    this.messageText.y = HEADER_HEIGHT + this.boardView.contentHeight + 16;
+    this.messageText.y = HEADER_HEIGHT + this.boardView.contentHeight + 18;
 
-    const isLastLevel = options.levelNumber === options.levelCount;
-    this.nextButton = new Text({
-      text: isLastLevel ? "Back to title ▶" : "Next level ▶",
-      style: { ...TEXT_STYLE, fill: UI_COLORS.success, fontWeight: "bold" },
-    });
     // Bottom row, below room for a two-line message: next button on the
-    // left, sound toggle on the right.
-    this.nextButton.y = this.messageText.y + MESSAGE_HEIGHT;
-    makeClickable(this.nextButton, () => options.onNext());
+    // left, sound buttons on the right.
+    const bottomRow = this.messageText.y + MESSAGE_HEIGHT;
+    const isLastLevel = options.levelNumber === options.levelCount;
+    this.nextButton = new Button({
+      label: isLastLevel ? "BACK TO TITLE ▶" : "NEXT LEVEL ▶",
+      variant: "primary",
+      onTap: () => options.onNext(),
+    });
+    this.nextButton.y = bottomRow;
     this.nextButton.visible = false;
     this.audioControls = new AudioControls(options.audio, "right");
-    this.audioControls.position.set(width, this.nextButton.y);
+    this.audioControls.position.set(width, bottomRow);
+    this.contentHeight = bottomRow + ROW_HEIGHT;
 
     this.addChild(
       levelText,
@@ -134,6 +135,7 @@ export class GameScene extends Container implements Scene {
       this.celebration,
     );
     this.updateShots();
+    this.shotsText.y = secondRow + (ROW_HEIGHT - this.shotsText.height) / 2;
     this.boardView.setSelectedRow(this.session.selectedRow);
   }
 
@@ -144,7 +146,7 @@ export class GameScene extends Container implements Scene {
         x: 0,
         y: 0,
         width: this.boardView.contentWidth,
-        height: this.nextButton.y + TEXT_HEIGHT,
+        height: this.contentHeight,
       },
       screenWidth,
       screenHeight,
@@ -203,7 +205,7 @@ export class GameScene extends Container implements Scene {
 
     this.boardView.setSelectedRow(this.session.selectedRow);
     this.updateShots();
-    this.messageText.text = "";
+    this.showMessage("");
     this.options.audio.play("fire");
     this.boardView.playShot(result, {
       onBounce: (bounceNumber) => this.options.audio.playBounce(bounceNumber),
@@ -219,17 +221,16 @@ export class GameScene extends Container implements Scene {
       this.boardView.setSelectedRow(null);
       const { previousBest, allLevelsAtPar } = this.options.onComplete(shots);
       this.celebrate(result, shots, allLevelsAtPar);
-      this.messageText.text = completionMessage(
-        shots,
-        this.options.par,
-        previousBest,
+      this.showMessage(
+        completionMessage(shots, this.options.par, previousBest),
+        COLORS.success,
       );
       this.nextButton.visible = true;
       return;
     }
 
     audio.play(outcome === "blocked" ? "wall" : outcome);
-    this.messageText.text = OUTCOME_MESSAGES[outcome];
+    this.showMessage(OUTCOME_MESSAGES[outcome]);
   }
 
   /**
@@ -258,8 +259,8 @@ export class GameScene extends Container implements Scene {
         y,
         CELL_SIZE,
         this.boardView.contentWidth,
-        this.nextButton.y + TEXT_HEIGHT,
-        `${STAR} All levels at par! ${STAR}`,
+        this.contentHeight,
+        `${STAR} ALL LEVELS AT PAR! ${STAR}`,
       );
     } else {
       audio.play("par");
@@ -272,12 +273,18 @@ export class GameScene extends Container implements Scene {
     this.session.restart();
     this.boardView.showBoard(this.session.board);
     this.updateShots();
-    this.messageText.text = INTRO_MESSAGE;
+    this.showMessage(INTRO_MESSAGE);
     this.nextButton.visible = false;
     this.boardView.setSelectedRow(this.session.selectedRow);
   }
 
+  private showMessage(text: string, color: number = COLORS.text): void {
+    this.messageText.text = text;
+    this.messageText.style.fill = color;
+  }
+
   private updateShots(): void {
-    this.shotsText.text = `Shots: ${this.session.shots}  ·  Par: ${this.options.par}`;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    this.shotsText.text = `SHOTS ${pad(this.session.shots)}  ·  PAR ${pad(this.options.par)}`;
   }
 }

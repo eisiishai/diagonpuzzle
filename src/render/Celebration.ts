@@ -1,8 +1,14 @@
 import { Container, Graphics, Text } from "pixi.js";
-import { TEXT_STYLE, UI_COLORS } from "./ui";
+import { COLORS, createBloom, textStyle } from "./theme";
 
-const BURST_COLORS = [0xfbbf24, 0xfde68a, 0x4ade80, 0xffffff];
-const RAIN_COLORS = [0xfbbf24, 0x4ade80, 0x60a5fa, 0xf472b6, 0xffffff];
+const BURST_COLORS = [COLORS.star, COLORS.success, COLORS.beamCore];
+const RAIN_COLORS = [
+  COLORS.star,
+  COLORS.success,
+  COLORS.beam,
+  COLORS.glass,
+  COLORS.beamCore,
+];
 
 const RING_LIFE_MS = 650;
 const BANNER_POP_MS = 400;
@@ -43,6 +49,7 @@ export class Celebration extends Container {
     super();
     // Effects must never block clicks on the buttons underneath.
     this.eventMode = "none";
+    this.filters = [createBloom()];
   }
 
   /** Level completed in par: stars burst from (x, y) and a ring expands. */
@@ -105,7 +112,7 @@ export class Celebration extends Container {
   private addRing(x: number, y: number, size: number): void {
     const view = new Graphics()
       .circle(0, 0, size * 0.32)
-      .stroke({ width: 4, color: UI_COLORS.highlight });
+      .stroke({ width: 4, color: COLORS.star });
     view.position.set(x, y);
     this.addChild(view);
     this.rings.push({ view, ageMs: 0 });
@@ -181,16 +188,15 @@ export class Celebration extends Container {
     this.banner?.view.destroy();
     const view = new Text({
       text,
-      style: {
-        ...TEXT_STYLE,
-        fontSize: 40,
-        fontWeight: "bold",
-        fill: UI_COLORS.highlight,
-        stroke: { color: 0x161a24, width: 8, join: "round" },
+      style: textStyle("title", {
+        fontSize: 38,
+        letterSpacing: 3,
+        fill: COLORS.star,
+        stroke: { color: COLORS.background, width: 8, join: "round" },
         align: "center",
         wordWrap: true,
         wordWrapWidth: maxWidth,
-      },
+      }),
     });
     view.anchor.set(0.5);
     view.position.set(x, y);

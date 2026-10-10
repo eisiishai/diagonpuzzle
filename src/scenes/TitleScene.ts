@@ -1,14 +1,10 @@
-import { Container, Text } from "pixi.js";
+import { Container, Graphics, Text } from "pixi.js";
 import type { GameAudio } from "../audio/GameAudio";
 import type { GameAction } from "../input/keyboard";
 import type { LevelDefinition } from "../levels/levels";
 import { fitToScreen } from "../render/fitToScreen";
-import {
-  AudioControls,
-  TEXT_STYLE,
-  UI_COLORS,
-  makeClickable,
-} from "../render/ui";
+import { COLORS, createBloom, createGlow, textStyle } from "../render/theme";
+import { AudioControls, Button } from "../render/ui";
 import {
   isCompleted,
   isUnlocked,
@@ -20,8 +16,9 @@ import { GAME_VERSION } from "../version";
 import type { Scene } from "./Scene";
 import { STAR, levelListLabel } from "./scoreText";
 
-const GAME_TITLE = "Diagon Puzzle";
-const LEVEL_ROW_HEIGHT = 36;
+const GAME_TITLE = "DIAGON PUZZLE";
+const LIST_WIDTH = 440;
+const LEVEL_ROW_HEIGHT = 50;
 
 export interface TitleSceneOptions {
   levels: readonly LevelDefinition[];
@@ -32,8 +29,7 @@ export interface TitleSceneOptions {
 }
 
 interface MenuItem {
-  text: Text;
-  enabled: boolean;
+  button: Button;
   activate: () => void;
 }
 
@@ -52,14 +48,13 @@ export class TitleScene extends Container implements Scene {
     const levelIds = levels.map((level) => level.id);
     let y = 0;
 
-    const title = this.addCentered(
-      new Text({
-        text: GAME_TITLE,
-        style: { ...TEXT_STYLE, fontSize: 56, fontWeight: "bold" },
-      }),
-      y,
-    );
-    y += title.height + 32;
+    const title = new Text({ text: GAME_TITLE, style: textStyle("title") });
+    title.anchor.set(0.5, 0);
+    title.filters = [createGlow(COLORS.beam, 1.5)];
+    this.addChild(title);
+    y += title.height + 10;
+    this.addChild(titleBeam(title.width, y));
+    y += 40;
 
     const next = nextLevelIndex(progress, levelIds);
     const completedCount = levelIds.filter((id) =>
@@ -67,80 +62,95 @@ export class TitleScene extends Container implements Scene {
     ).length;
     const playLabel =
       completedCount === 0
-        ? "Play"
+        ? "PLAY ▶"
         : completedCount === levels.length
-          ? "Play again from level 1"
-          : `Continue: level ${next + 1}`;
-    const play = this.addCentered(
-      new Text({
-        text: playLabel,
-        style: { ...TEXT_STYLE, fontSize: 28, fontWeight: "bold" },
+          ? "PLAY AGAIN FROM LEVEL 1 ▶"
+          : `CONTINUE: LEVEL ${next + 1} ▶`;
+    const play = this.addItem(
+      new Button({
+        label: playLabel,
+        variant: "primary",
+        large: true,
+        width: LIST_WIDTH,
+        onTap: () => options.onStartLevel(next),
+        onHover: () => this.select(0),
       }),
       y,
+      () => options.onStartLevel(next),
     );
-    this.addItem(play, true, () => options.onStartLevel(next));
-    y += play.height + 36;
+    y += play.button.height + 30;
 
     const stars = starCount(progress, levels);
     const allAtPar = stars === levels.length;
-    const header = this.addCentered(
-      new Text({
-        text: `LEVELS  ·  ${STAR} ${stars}/${levels.length}${allAtPar ? "  ·  all at par!" : ""}`,
-        style: {
-          ...TEXT_STYLE,
-          fontSize: 16,
-          fill: allAtPar ? UI_COLORS.highlight : UI_COLORS.dim,
-        },
+    const header = new Text({
+      text: `LEVELS  ·  ${STAR} ${stars}/${levels.length}${allAtPar ? "  ·  ALL AT PAR!" : ""}`,
+      style: textStyle("label", {
+        fill: allAtPar ? COLORS.star : COLORS.dim,
       }),
-      y,
-    );
+    });
+    header.anchor.set(0.5, 0);
+    header.y = y;
+    this.addChild(header);
     y += header.height + 12;
 
     levels.forEach((level, index) => {
-      const unlocked = isUnlocked(progress, levelIds, index);
-      const best = progress.levels[level.id]?.bestShots;
       const label = levelListLabel(
         index + 1,
         level.name,
         level.minShots,
-        unlocked,
-        best,
+        isUnlocked(progress, levelIds, index),
+        progress.levels[level.id]?.bestShots,
       );
-      const text = this.addCentered(
-        new Text({ text: label, style: TEXT_STYLE }),
+      const itemIndex = this.items.length;
+      const item = this.addItem(
+        new Button({
+          label,
+          width: LIST_WIDTH,
+          onTap: () => options.onStartLevel(index),
+          onHover: () => this.select(itemIndex),
+        }),
         y,
+        () => options.onStartLevel(index),
       );
-      this.addItem(text, unlocked, () => options.onStartLevel(index));
+      item.button.disabled = !isUnlocked(progress, levelIds, index);
       y += LEVEL_ROW_HEIGHT;
     });
-    y += 20;
+    y += 16;
 
-    const reset = this.addCentered(
-      new Text({ style: { ...TEXT_STYLE, fontSize: 16 } }),
-      y,
-    );
-    this.resetItem = this.addItem(reset, completedCount > 0, () => {
+    const resetIndex = this.items.length;
+    const resetActivate = () => {
       if (this.resetArmed) {
         options.onResetProgress();
       } else {
         this.resetArmed = true;
         this.refresh();
       }
-    });
-    y += reset.height + 28;
+    };
+    this.resetItem = this.addItem(
+      new Button({
+        label: "RESET PROGRESS",
+        onTap: resetActivate,
+        onHover: () => this.select(resetIndex),
+      }),
+      y,
+      resetActivate,
+    );
+    this.resetItem.button.disabled = completedCount === 0;
+    this.resetItem.button.visible = completedCount > 0;
+    y += this.resetItem.button.height + 24;
 
     this.audioControls = new AudioControls(audio, "center");
     this.audioControls.y = y;
     this.addChild(this.audioControls);
     y += this.audioControls.height + 24;
 
-    const version = this.addCentered(
-      new Text({
-        text: GAME_VERSION,
-        style: { ...TEXT_STYLE, fontSize: 14, fill: UI_COLORS.dim },
-      }),
-      y,
-    );
+    const version = new Text({
+      text: GAME_VERSION,
+      style: textStyle("value", { fontSize: 13 }),
+    });
+    version.anchor.set(0.5, 0);
+    version.y = y;
+    this.addChild(version);
     this.contentHeight = y + version.height;
 
     this.refresh();
@@ -168,7 +178,9 @@ export class TitleScene extends Container implements Scene {
         this.moveSelection(1);
         break;
       case "fire":
-        this.items[this.selected].activate();
+        if (!this.items[this.selected].button.disabled) {
+          this.items[this.selected].activate();
+        }
         break;
       case "toggleMusic":
         this.audioControls.toggle("music");
@@ -183,24 +195,12 @@ export class TitleScene extends Container implements Scene {
 
   update(): void {}
 
-  private addCentered<T extends Text>(text: T, y: number): T {
-    text.anchor.set(0.5, 0);
-    text.y = y;
-    this.addChild(text);
-    return text;
-  }
-
-  private addItem(
-    text: Text,
-    enabled: boolean,
-    activate: () => void,
-  ): MenuItem {
-    const item = { text, enabled, activate };
-    const index = this.items.length;
+  /** Adds a centred menu button at `y`; keyboard selection follows the list. */
+  private addItem(button: Button, y: number, activate: () => void): MenuItem {
+    button.position.set(-button.width / 2, y);
+    this.addChild(button);
+    const item = { button, activate };
     this.items.push(item);
-    if (enabled) {
-      makeClickable(text, activate, () => this.select(index));
-    }
     return item;
   }
 
@@ -211,7 +211,7 @@ export class TitleScene extends Container implements Scene {
       index >= 0 && index < this.items.length;
       index += step
     ) {
-      if (this.items[index].enabled) {
+      if (!this.items[index].button.disabled) {
         this.select(index);
         return;
       }
@@ -228,16 +228,45 @@ export class TitleScene extends Container implements Scene {
   }
 
   private refresh(): void {
-    this.resetItem.text.text = this.resetArmed
-      ? "Press Enter or click again to erase all progress"
-      : "Reset progress";
+    const reset = this.resetItem.button;
+    reset.setLabel(
+      this.resetArmed
+        ? "PRESS ENTER OR CLICK AGAIN TO ERASE ALL PROGRESS"
+        : "RESET PROGRESS",
+    );
+    reset.x = -reset.width / 2;
     this.items.forEach((item, index) => {
-      item.text.style.fill = !item.enabled
-        ? UI_COLORS.dim
-        : index === this.selected
-          ? UI_COLORS.highlight
-          : UI_COLORS.text;
+      item.button.selected = index === this.selected;
     });
-    this.resetItem.text.visible = this.resetItem.enabled;
   }
+}
+
+/**
+ * A short laser beam under the title, ending in a goal crystal: the game's
+ * idea in one line. Centred on x = 0 at height `y`.
+ */
+function titleBeam(width: number, y: number): Container {
+  const half = width / 2;
+  const crystal = 11;
+  const end = half - crystal * 2;
+  const g = new Graphics()
+    .moveTo(-half, y)
+    .lineTo(end, y)
+    .stroke({ width: 10, color: COLORS.beam, alpha: 0.4, cap: "round" })
+    .moveTo(-half, y)
+    .lineTo(end, y)
+    .stroke({ width: 2, color: COLORS.beamCore, cap: "round" })
+    .poly([
+      half - crystal,
+      y - crystal,
+      half,
+      y,
+      half - crystal,
+      y + crystal,
+      half - crystal * 2,
+      y,
+    ])
+    .fill(COLORS.success);
+  g.filters = [createBloom()];
+  return g;
 }
