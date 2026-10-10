@@ -5,6 +5,7 @@ import { LEVELS } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
 import {
   EMPTY_PROGRESS,
+  completesAllPar,
   parseProgress,
   recordCompletion,
   serializeProgress,
@@ -78,10 +79,14 @@ const PROGRESS_STORAGE_KEY = "progress";
           par: level.minShots,
           audio,
           onComplete: (shots) => {
+            const before = progress;
             const result = recordCompletion(progress, level.id, shots);
             progress = result.progress;
             writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
-            return result;
+            return {
+              previousBest: result.previousBest,
+              allLevelsAtPar: completesAllPar(before, progress, LEVELS),
+            };
           },
           onNext: () => (isLastLevel ? showTitle() : startLevel(index + 1)),
           onMenu: showTitle,

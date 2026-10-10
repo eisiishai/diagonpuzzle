@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   EMPTY_PROGRESS,
+  earnsStar,
   isCompleted,
   isUnlocked,
   nextLevelIndex,
   parseProgress,
   recordCompletion,
+  completesAllPar,
   serializeProgress,
+  starCount,
 } from "./progress";
 
 const IDS = ["a", "b", "c"];
@@ -54,6 +57,47 @@ describe("unlocking and next level", () => {
       EMPTY_PROGRESS,
     );
     expect(nextLevelIndex(all, IDS)).toBe(0);
+  });
+});
+
+describe("stars", () => {
+  const levels = [
+    { id: "a", minShots: 1 },
+    { id: "b", minShots: 2 },
+  ];
+
+  it("are earned at par and not above it", () => {
+    expect(earnsStar(2, 2)).toBe(true);
+    expect(earnsStar(3, 2)).toBe(false);
+  });
+
+  it("are counted from best scores, for completed levels only", () => {
+    expect(starCount(EMPTY_PROGRESS, levels)).toBe(0);
+    let progress = recordCompletion(EMPTY_PROGRESS, "a", 1).progress;
+    progress = recordCompletion(progress, "b", 3).progress;
+    expect(starCount(progress, levels)).toBe(1);
+    progress = recordCompletion(progress, "b", 2).progress;
+    expect(starCount(progress, levels)).toBe(2);
+  });
+});
+
+describe("completesAllPar", () => {
+  const levels = [
+    { id: "a", minShots: 1 },
+    { id: "b", minShots: 2 },
+  ];
+  const aAtPar = recordCompletion(EMPTY_PROGRESS, "a", 1).progress;
+
+  it("is true only for the completion that earns the last star", () => {
+    const bAbovePar = recordCompletion(aAtPar, "b", 3).progress;
+    expect(completesAllPar(aAtPar, bAbovePar, levels)).toBe(false);
+
+    const bAtPar = recordCompletion(bAbovePar, "b", 2).progress;
+    expect(completesAllPar(bAbovePar, bAtPar, levels)).toBe(true);
+
+    // Replaying at par once every star is already earned.
+    const again = recordCompletion(bAtPar, "a", 1).progress;
+    expect(completesAllPar(bAtPar, again, levels)).toBe(false);
   });
 });
 

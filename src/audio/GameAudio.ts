@@ -1,6 +1,7 @@
 import { readStorage, writeStorage } from "../save/storage";
 
-export type SoundEffect = "fire" | "wall" | "exit" | "loop" | "goal";
+export type SoundEffect =
+  "fire" | "wall" | "exit" | "loop" | "goal" | "par" | "allPar";
 
 /** Music and sound effects are switched on and off separately. */
 export type AudioChannel = "music" | "effects";
@@ -118,10 +119,35 @@ export class GameAudio {
         this.tone(300, 280, 0.15, "sawtooth", t + 0.15, 0.4);
         break;
       case "goal":
-        [72, 76, 79, 84].forEach((note, i) => {
+        this.notes([72, 76, 79, 84], t, 0.09, 0.18, "triangle", 0.9);
+        break;
+      case "par":
+        // The goal tune a fourth higher, then high sparkles.
+        this.notes([77, 81, 84, 89], t, 0.08, 0.2, "triangle", 0.9);
+        this.notes([96, 101, 100, 105], t + 0.36, 0.07, 0.12, "sine", 0.5);
+        break;
+      case "allPar":
+        // A rising run, a held chord, and sparkles on top.
+        this.notes(
+          [72, 74, 76, 77, 79, 81, 83, 84],
+          t,
+          0.06,
+          0.12,
+          "square",
+          0.35,
+        );
+        for (const note of [72, 76, 79, 84]) {
           const f = midiToFrequency(note);
-          this.tone(f, f, 0.18, "triangle", t + i * 0.09, 0.9);
-        });
+          this.tone(f, f * 1.001, 1.4, "triangle", t + 0.5, 0.7);
+        }
+        this.notes(
+          [96, 100, 103, 108, 103, 108],
+          t + 0.6,
+          0.11,
+          0.15,
+          "sine",
+          0.45,
+        );
         break;
     }
   }
@@ -134,6 +160,21 @@ export class GameAudio {
     }
     const f = 600 * 2 ** ((Math.min(bounceNumber - 1, 10) * 2) / 12);
     this.tone(f, f * 1.02, 0.07, "triangle", t, 0.7);
+  }
+
+  /** Plays `notes` (MIDI numbers) one after another, `spacing` seconds apart. */
+  private notes(
+    notes: number[],
+    startTime: number,
+    spacing: number,
+    duration: number,
+    type: OscillatorType,
+    volume: number,
+  ): void {
+    notes.forEach((note, i) => {
+      const f = midiToFrequency(note);
+      this.tone(f, f, duration, type, startTime + i * spacing, volume);
+    });
   }
 
   private tone(

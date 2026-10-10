@@ -177,7 +177,7 @@ export class BoardView extends Container {
   }
 
   /** Pixel centre of board cell (x, y); x = -1 is the launcher column. */
-  private cellCenter(x: number, y: number): { x: number; y: number } {
+  cellCenter(x: number, y: number): { x: number; y: number } {
     return {
       x: (x + 1.5) * this.cellSize,
       y: (y + 0.5) * this.cellSize,

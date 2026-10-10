@@ -123,6 +123,13 @@ variety of solutions.
   (★), shown in the level list; the list header shows stars earned out of the
   total. The completion message says whether par was reached. Stars are
   worked out from the saved best scores, so they need no extra saved data.
+- **Par celebrations.** Completing a level in par plays a brighter version of
+  the goal tune with sparkles, and stars burst from the goal with an expanding
+  ring. Earning the last missing star, so that every level is completed in
+  par, plays a longer fanfare instead: a bigger burst, stars raining over the
+  screen and an "All levels at par!" banner. That happens once, on the shot
+  that earns the last star; once all stars are earned, the level list header
+  turns gold and reads "all at par!".
 - Progress is saved in the browser (localStorage), keyed by each level's
   stable id, so levels can be reordered or added without breaking saves.
   *Reset progress* erases it after a second confirming click or Enter.

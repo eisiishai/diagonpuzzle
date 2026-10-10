@@ -9,11 +9,16 @@ import {
   UI_COLORS,
   makeClickable,
 } from "../render/ui";
-import { isCompleted, isUnlocked, nextLevelIndex } from "../save/progress";
+import {
+  isCompleted,
+  isUnlocked,
+  nextLevelIndex,
+  starCount,
+} from "../save/progress";
 import type { Progress } from "../save/progress";
 import { GAME_VERSION } from "../version";
 import type { Scene } from "./Scene";
-import { STAR, earnsStar, levelListLabel } from "./scoreText";
+import { STAR, levelListLabel } from "./scoreText";
 
 const GAME_TITLE = "Diagon Puzzle";
 const LEVEL_ROW_HEIGHT = 36;
@@ -76,14 +81,16 @@ export class TitleScene extends Container implements Scene {
     this.addItem(play, true, () => options.onStartLevel(next));
     y += play.height + 36;
 
-    const stars = levels.filter((level) => {
-      const best = progress.levels[level.id]?.bestShots;
-      return best !== undefined && earnsStar(best, level.minShots);
-    }).length;
+    const stars = starCount(progress, levels);
+    const allAtPar = stars === levels.length;
     const header = this.addCentered(
       new Text({
-        text: `LEVELS  ·  ${STAR} ${stars}/${levels.length}`,
-        style: { ...TEXT_STYLE, fontSize: 16, fill: UI_COLORS.dim },
+        text: `LEVELS  ·  ${STAR} ${stars}/${levels.length}${allAtPar ? "  ·  all at par!" : ""}`,
+        style: {
+          ...TEXT_STYLE,
+          fontSize: 16,
+          fill: allAtPar ? UI_COLORS.highlight : UI_COLORS.dim,
+        },
       }),
       y,
     );

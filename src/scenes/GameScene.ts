@@ -1,10 +1,12 @@
 import { Container, Text } from "pixi.js";
 import type { GameAudio } from "../audio/GameAudio";
 import { LevelSession } from "../game/LevelSession";
-import type { ShotOutcome } from "../game/simulate";
+import type { ShotOutcome, ShotResult } from "../game/simulate";
+import { earnsStar } from "../save/progress";
 import type { Board } from "../game/types";
 import type { GameAction } from "../input/keyboard";
 import { BoardView } from "../render/BoardView";
+import { Celebration } from "../render/Celebration";
 import { fitToScreen } from "../render/fitToScreen";
 import {
   AudioControls,
@@ -13,7 +15,7 @@ import {
   makeClickable,
 } from "../render/ui";
 import type { Scene } from "./Scene";
-import { completionMessage } from "./scoreText";
+import { STAR, completionMessage } from "./scoreText";
 
 const CELL_SIZE = 64;
 const TEXT_HEIGHT = 40;
@@ -29,6 +31,13 @@ const OUTCOME_MESSAGES: Record<Exclude<ShotOutcome, "goal">, string> = {
   loop: "The pellet got stuck in a loop.",
 };
 
+export interface CompletionResult {
+  /** The level's best shot count before this completion, if any. */
+  previousBest?: number;
+  /** True if this completion earned the last star: every level is at par. */
+  allLevelsAtPar: boolean;
+}
+
 export interface GameSceneOptions {
   /** The level's starting board. */
   board: Board;
@@ -39,7 +48,7 @@ export interface GameSceneOptions {
   par: number;
   audio: GameAudio;
   /** Records a completion; returns the level's best shot count before it, if any. */
-  onComplete: (shots: number) => { previousBest?: number };
+  onComplete: (shots: number) => CompletionResult;
   /** Called when the player continues after completing the level. */
   onNext: () => void;
   /** Called when the player leaves for the title screen. */
@@ -58,6 +67,7 @@ export class GameScene extends Container implements Scene {
   private readonly messageText: Text;
   private readonly nextButton: Text;
   private readonly session: LevelSession;
+  private readonly celebration = new Celebration();
 
   constructor(options: GameSceneOptions) {
     super();
@@ -121,6 +131,7 @@ export class GameScene extends Container implements Scene {
       this.boardView,
       this.messageText,
       this.nextButton,
+      this.celebration,
     );
     this.updateShots();
     this.boardView.setSelectedRow(this.session.selectedRow);
@@ -174,6 +185,7 @@ export class GameScene extends Container implements Scene {
 
   update(deltaMs: number): void {
     this.boardView.update(deltaMs);
+    this.celebration.update(deltaMs);
   }
 
   private select(row: number): void {
@@ -195,18 +207,18 @@ export class GameScene extends Container implements Scene {
     this.options.audio.play("fire");
     this.boardView.playShot(result, {
       onBounce: (bounceNumber) => this.options.audio.playBounce(bounceNumber),
-      onFinish: () => this.finishShot(),
+      onFinish: () => this.finishShot(result),
     });
   }
 
-  private finishShot(): void {
+  private finishShot(result: ShotResult): void {
     const { audio } = this.options;
     const outcome = this.session.finishShot();
     if (outcome === "goal") {
       const { shots } = this.session;
-      audio.play("goal");
       this.boardView.setSelectedRow(null);
-      const { previousBest } = this.options.onComplete(shots);
+      const { previousBest, allLevelsAtPar } = this.options.onComplete(shots);
+      this.celebrate(result, shots, allLevelsAtPar);
       this.messageText.text = completionMessage(
         shots,
         this.options.par,
@@ -218,6 +230,41 @@ export class GameScene extends Container implements Scene {
 
     audio.play(outcome === "blocked" ? "wall" : outcome);
     this.messageText.text = OUTCOME_MESSAGES[outcome];
+  }
+
+  /**
+   * Sound and effects for reaching the goal: a celebration at par, and a
+   * bigger one when that earned the last star of the game.
+   */
+  private celebrate(
+    result: ShotResult,
+    shots: number,
+    allLevelsAtPar: boolean,
+  ): void {
+    const { audio } = this.options;
+    if (!allLevelsAtPar && !earnsStar(shots, this.options.par)) {
+      audio.play("goal");
+      return;
+    }
+
+    const goal = result.path[result.path.length - 1];
+    const center = this.boardView.cellCenter(goal.x, goal.y);
+    const x = this.boardView.x + center.x;
+    const y = this.boardView.y + center.y;
+    if (allLevelsAtPar) {
+      audio.play("allPar");
+      this.celebration.allParCelebration(
+        x,
+        y,
+        CELL_SIZE,
+        this.boardView.contentWidth,
+        this.nextButton.y + TEXT_HEIGHT,
+        `${STAR} All levels at par! ${STAR}`,
+      );
+    } else {
+      audio.play("par");
+      this.celebration.parBurst(x, y, CELL_SIZE);
+    }
   }
 
   /** Puts the level back to its starting board, with no shots fired. */

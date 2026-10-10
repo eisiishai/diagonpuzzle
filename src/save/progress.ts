@@ -56,6 +56,37 @@ export function nextLevelIndex(
   return index === -1 ? 0 : index;
 }
 
+/** A level earns a star when completed in par (its minimum shot count). */
+export function earnsStar(shots: number, par: number): boolean {
+  return shots <= par;
+}
+
+/** Number of levels completed in par. */
+export function starCount(
+  progress: Progress,
+  levels: readonly { id: string; minShots: number }[],
+): number {
+  return levels.filter((level) => {
+    const best = progress.levels[level.id]?.bestShots;
+    return best !== undefined && earnsStar(best, level.minShots);
+  }).length;
+}
+
+/**
+ * True when going from `before` to `after` earned the last missing star, so
+ * every level is now completed in par.
+ */
+export function completesAllPar(
+  before: Progress,
+  after: Progress,
+  levels: readonly { id: string; minShots: number }[],
+): boolean {
+  return (
+    starCount(before, levels) < levels.length &&
+    starCount(after, levels) === levels.length
+  );
+}
+
 export function serializeProgress(progress: Progress): string {
   return JSON.stringify({ version: FORMAT_VERSION, levels: progress.levels });
 }

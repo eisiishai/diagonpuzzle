@@ -1,11 +1,8 @@
 // Player-facing text about shots, par and stars. Pure, so it can be tested.
 
-export const STAR = "★";
+import { earnsStar } from "../save/progress";
 
-/** A level earns a star when completed in par (its minimum shot count). */
-export function earnsStar(shots: number, par: number): boolean {
-  return shots <= par;
-}
+export const STAR = "★";
 
 export function shotCount(shots: number): string {
   return shots === 1 ? "1 shot" : `${shots} shots`;

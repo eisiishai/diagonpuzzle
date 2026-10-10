@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completionMessage, earnsStar, levelListLabel } from "./scoreText";
-
-describe("earnsStar", () => {
-  it("is earned at par and not above it", () => {
-    expect(earnsStar(2, 2)).toBe(true);
-    expect(earnsStar(3, 2)).toBe(false);
-  });
-});
+import { completionMessage, levelListLabel } from "./scoreText";
 
 describe("completionMessage", () => {
   it("awards a star at par", () => {
