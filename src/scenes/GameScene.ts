@@ -1,6 +1,6 @@
 import { Container, Text } from "pixi.js";
 import type { GameAudio } from "../audio/GameAudio";
-import { fire } from "../game/simulate";
+import { LevelSession } from "../game/LevelSession";
 import type { ShotOutcome } from "../game/simulate";
 import type { Board } from "../game/types";
 import type { GameAction } from "../input/keyboard";
@@ -42,10 +42,10 @@ export interface GameSceneOptions {
   onMenu: () => void;
 }
 
-/** Aiming: waiting for a shot. Firing: pellet in flight. Complete: goal reached. */
-type Phase = "aiming" | "firing" | "complete";
-
-/** One level: the board, the shot counter, status messages and sound. */
+/**
+ * One level on screen: draws the LevelSession's state and plays its shots
+ * with animation and sound. The rules of play live in LevelSession.
+ */
 export class GameScene extends Container implements Scene {
   private readonly options: GameSceneOptions;
   private readonly boardView: BoardView;
@@ -53,18 +53,13 @@ export class GameScene extends Container implements Scene {
   private readonly soundToggle: SoundToggle;
   private readonly messageText: Text;
   private readonly nextButton: Text;
-  private phase: Phase = "aiming";
-  private shots = 0;
-  private selectedRow: number;
-  /** The board as changed by the shots so far. */
-  private board: Board;
+  private readonly session: LevelSession;
 
   constructor(options: GameSceneOptions) {
     super();
     this.options = options;
     const { board, levelNumber, levelCount, levelName } = options;
-    this.board = board;
-    this.selectedRow = Math.floor(board.height / 2);
+    this.session = new LevelSession(board);
 
     this.boardView = new BoardView(board, CELL_SIZE, {
       onLaunch: (row) => this.fireFrom(row),
@@ -125,7 +120,7 @@ export class GameScene extends Container implements Scene {
       this.nextButton,
     );
     this.updateShots();
-    this.boardView.setSelectedRow(this.selectedRow);
+    this.boardView.setSelectedRow(this.session.selectedRow);
   }
 
   /** Centres the scene in a screen of the given size. */
@@ -141,16 +136,16 @@ export class GameScene extends Container implements Scene {
   handleAction(action: GameAction): void {
     switch (action) {
       case "selectUp":
-        this.select(this.selectedRow - 1);
+        this.select(this.session.selectedRow - 1);
         break;
       case "selectDown":
-        this.select(this.selectedRow + 1);
+        this.select(this.session.selectedRow + 1);
         break;
       case "fire":
-        if (this.phase === "complete") {
+        if (this.session.phase === "complete") {
           this.options.onNext();
         } else {
-          this.fireFrom(this.selectedRow);
+          this.fireFrom(this.session.selectedRow);
         }
         break;
       case "back":
@@ -170,65 +165,57 @@ export class GameScene extends Container implements Scene {
   }
 
   private select(row: number): void {
-    if (this.phase === "complete") {
-      return;
+    this.session.select(row);
+    if (this.session.phase !== "complete") {
+      this.boardView.setSelectedRow(this.session.selectedRow);
     }
-    const lastRow = this.options.board.height - 1;
-    this.selectedRow = Math.max(0, Math.min(lastRow, row));
-    this.boardView.setSelectedRow(this.selectedRow);
   }
 
   private fireFrom(row: number): void {
-    if (this.phase !== "aiming") {
+    const result = this.session.fire(row);
+    if (!result) {
       return;
     }
 
-    this.select(row);
-    this.phase = "firing";
-    this.shots++;
+    this.boardView.setSelectedRow(this.session.selectedRow);
     this.updateShots();
     this.messageText.text = "";
     this.options.audio.play("fire");
-
-    const result = fire(this.board, row);
-    this.board = result.board;
     this.boardView.playShot(result, {
       onBounce: (bounceNumber) => this.options.audio.playBounce(bounceNumber),
-      onFinish: () => this.finishShot(result.outcome),
+      onFinish: () => this.finishShot(),
     });
   }
 
-  private finishShot(outcome: ShotOutcome): void {
+  private finishShot(): void {
     const { audio } = this.options;
+    const outcome = this.session.finishShot();
     if (outcome === "goal") {
-      this.phase = "complete";
+      const { shots } = this.session;
       audio.play("goal");
       this.boardView.setSelectedRow(null);
-      const { previousBest } = this.options.onComplete(this.shots);
-      this.messageText.text = `Level complete in ${shotCount(this.shots)}!${bestText(this.shots, previousBest)} Press Enter to continue.`;
+      const { previousBest } = this.options.onComplete(shots);
+      this.messageText.text = `Level complete in ${shotCount(shots)}!${bestText(shots, previousBest)} Press Enter to continue.`;
       this.nextButton.visible = true;
       return;
     }
 
-    this.phase = "aiming";
     audio.play(outcome === "blocked" ? "wall" : outcome);
     this.messageText.text = OUTCOME_MESSAGES[outcome];
   }
 
   /** Puts the level back to its starting board, with no shots fired. */
   private restart(): void {
-    this.board = this.options.board;
-    this.boardView.showBoard(this.board);
-    this.phase = "aiming";
-    this.shots = 0;
+    this.session.restart();
+    this.boardView.showBoard(this.session.board);
     this.updateShots();
     this.messageText.text = INTRO_MESSAGE;
     this.nextButton.visible = false;
-    this.boardView.setSelectedRow(this.selectedRow);
+    this.boardView.setSelectedRow(this.session.selectedRow);
   }
 
   private updateShots(): void {
-    this.shotsText.text = `Shots: ${this.shots}`;
+    this.shotsText.text = `Shots: ${this.session.shots}`;
   }
 }
 

@@ -11,9 +11,12 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 ## Commands
 
 - `npm run dev` — dev server on http://localhost:8080
-- `npm run build` — lint + type-check + production build (use this to verify changes)
+- `npm run build` — lint + type-check + tests + production build (use this to
+  verify changes)
 - `npm run lint` — ESLint (with Prettier formatting rules)
 - `npm test` — Vitest unit tests
+- `npm run levels` — level design report: shortest solution, setup routes and
+  first-shot outcomes for every level (`scripts/levels.ts`, runs with tsx)
 - Deploy: `npm run build`, then copy the contents of `dist/` to the web host
 
 ## Code structure
@@ -22,13 +25,15 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 src/
   main.ts       PixiJS bootstrap, starts the first scene
   game/         game rules: types, board, cell behaviors, pellet simulation,
-                solver (fewest shots for a level)
+                solver (fewest shots for a level), LevelSession (state of a
+                level being played)
   levels/       level list (levels.ts, text grids) and the parser
   render/       PixiJS views and animations
   input/        mouse/keyboard → game actions
   audio/        sound effects and music (synthesized placeholders, Web Audio)
   save/         saved progress (pure rules) and localStorage helpers
   scenes/       TitleScene and GameScene; main.ts switches between them
+scripts/        development tools run with tsx (not part of the game)
 ```
 
 ## Conventions
@@ -37,6 +42,8 @@ src/
   TypeScript so rules can be tested and reused (e.g. level solvability checks).
 - The simulation computes the pellet's full path and outcome up front; the
   renderer only animates that result.
+- Scenes hold no game rules: a level's state and what the player may do live
+  in `LevelSession` (tested); `GameScene` calls it and displays the result.
 - Each cell type defines its behavior as "pellet enters moving in direction D →
   result". New block types are added there, not as special cases in the
   simulation loop.

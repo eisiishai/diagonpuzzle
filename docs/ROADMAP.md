@@ -2,6 +2,18 @@
 
 Status is tracked only here. Check items off as they are completed.
 
+Completed milestones are kept below for history. Open work is split into two
+tracks:
+
+- **Game track:** what the player sees and plays: mechanics, levels,
+  presentation, platforms. New mechanics are designed in `docs/DESIGN.md`
+  before they are built.
+- **Engineering track:** how the project is built: code structure, testing,
+  tooling, deployment. These change no gameplay.
+
+Ordering: finish *Engineering → Next* before starting the next new mechanic,
+since those items make mechanic changes safer to build and test.
+
 ## M1 — Playable prototype
 
 One level, playable with the mouse, plain graphics.
@@ -35,13 +47,46 @@ One level, playable with the mouse, plain graphics.
 - [x] Restart a level (R)
 - [x] Level solver; tests check each level's minimum shot count
 
-## Later
+## Game track
 
-- More levels built around flipping mirrors, with rising difficulty
-- Par scores: show the minimum shot count, and reward matching it
+### Next
 
-- Player-placed blocks
-- Firing from other edges
-- New block types
-- Graphics and art pass
-- Real sound effects and music to replace the synthesized placeholders
+- [ ] More levels built around flipping mirrors, with rising difficulty
+- [ ] Par scores: show each level's minimum shot count and reward matching it
+- [ ] Scale the game to fit the window, so larger levels work on small
+  screens and phones (touch input already works through pointer events)
+
+### Mechanic ideas
+
+Each needs a design in `docs/DESIGN.md`, and a decision on how it interacts
+with flipping mirrors, before it is built.
+
+- [ ] Player-placed blocks
+- [ ] Firing from other edges
+- [ ] New block types
+
+### Presentation
+
+- [ ] Graphics and art pass
+- [ ] Real sound effects and music to replace the synthesized placeholders
+- [ ] Show shot outcomes by shape or icon as well as colour (colour-blind
+  players)
+
+## Engineering track
+
+### Next
+
+- [x] Run the tests as part of `npm run build`, so a deployed build has always
+  passed them
+- [x] Move level state (phase, current board, shot count, restart, whether a
+  shot may be fired) from `GameScene` into a pure `LevelSession` class in
+  `src/game/` with tests; `GameScene` only displays it
+- [x] Level design tool, `npm run levels`: prints each level's shortest
+  solution, setup routes and first-shot outcome per row (runs with `tsx`)
+
+### Later
+
+- [ ] Tag releases (`git tag v0.x`) and note the deployed version
+- [ ] Upgrade ESLint 9 → 10 (9 shows a deprecation notice)
+- [ ] Automated browser smoke tests (e.g. Playwright), if the UI grows enough
+  that manual checks become a burden
