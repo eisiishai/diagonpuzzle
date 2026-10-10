@@ -2,16 +2,8 @@
 // to docs/solutions.local.md, which is git-ignored and never part of the
 // built game, so solutions are not committed or published.
 
-import type { CellType } from "../src/game/types";
+import { CELL_SYMBOLS } from "../src/levels/parse";
 import { analyzeLevels, rowList } from "./levelAnalysis";
-
-const SYMBOLS: Record<CellType, string> = {
-  empty: ".",
-  mirrorBackslash: "\\",
-  mirrorSlash: "/",
-  wall: "#",
-  goal: "G",
-};
 
 const analyses = analyzeLevels();
 const lines: string[] = [
@@ -52,7 +44,7 @@ for (const analysis of analyses) {
     `     ${Array.from({ length: board.width }, (_, x) => x + 1).join(" ")}`,
   );
   board.cells.forEach((row, y) => {
-    const cells = row.map((cell) => SYMBOLS[cell]).join(" ");
+    const cells = row.map((cell) => CELL_SYMBOLS[cell]).join(" ");
     lines.push(`${String(y + 1).padStart(3)}  ${cells}`);
   });
   lines.push("```", "");

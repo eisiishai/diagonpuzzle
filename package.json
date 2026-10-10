@@ -10,6 +10,7 @@
     "dev": "vite",
     "test": "vitest run",
     "levels": "tsx scripts/levels.ts",
+    "generate": "tsx scripts/generate.ts",
     "solutions": "tsx scripts/solutions.ts > docs/solutions.local.md",
     "version:major": "git config diagonpuzzle.nextMajor true && echo 'The next commit on main starts a new major version.'",
     "prepare": "git config core.hooksPath .githooks && git config push.followTags true"

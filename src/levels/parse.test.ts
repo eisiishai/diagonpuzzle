@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseLevel } from "./parse";
+import { formatLevel, parseLevel } from "./parse";
 
 describe("parseLevel", () => {
   it("maps every symbol to its cell type", () => {
@@ -41,5 +41,15 @@ describe("parseLevel", () => {
 
   it("rejects an empty level", () => {
     expect(() => parseLevel("  \n ")).toThrow("empty");
+  });
+
+  it("formats a board back into the same grid", () => {
+    const grid = String.raw`
+      . \ / G
+      # . . .
+    `;
+    const text = formatLevel(parseLevel(grid), "  ");
+    expect(text).toBe("  . \\ / G\n  # . . .");
+    expect(parseLevel(text)).toEqual(parseLevel(grid));
   });
 });

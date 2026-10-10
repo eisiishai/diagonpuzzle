@@ -124,6 +124,8 @@ with flipping mirrors, before it is built.
   `src/game/` with tests; `GameScene` only displays it
 - [x] Level design tool, `npm run levels`: prints each level's shortest
   solution, setup routes and first-shot outcome per row (runs with `tsx`)
+- [x] Level generator, `npm run generate`: searches random boards for a given
+  par and size, preferring a unique shortest solution
 
 ### Later
 

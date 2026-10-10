@@ -18,6 +18,9 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm test` — Vitest unit tests
 - `npm run levels` — level design report: shortest solution, setup routes and
   first-shot outcomes for every level (`scripts/levels.ts`, runs with tsx)
+- `npm run generate -- [options]` — searches random boards for new levels
+  with a given par, best (unique shortest solution) first, printed ready to
+  paste into `levels.ts`; `--help` lists the options
 - `npm run solutions` — writes `docs/solutions.local.md` (git-ignored, also
   run by `npm run build`): every level's grid and solution, for the user to
   look up. Don't commit or publish it.
@@ -76,8 +79,9 @@ scripts/        development tools run with tsx (not part of the game)
 - Shots change the board (mirrors flip when hit): `fire()` returns the new
   board and never modifies the one passed in.
 - Every level declares `minShots` (and `goalHits` when the goal needs more
-  than one hit); `src/levels/levels.test.ts` checks it with the solver. When designing a level, run the solver to confirm the intended
-  minimum and that no shorter solution exists.
+  than one hit); `src/levels/levels.test.ts` checks it with the solver.
+  Design new levels with `npm run generate`, then hand-tune the board and
+  confirm it with `npm run levels`.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
 - Every commit runs `npm run build` first (pre-commit hook) and is stopped if

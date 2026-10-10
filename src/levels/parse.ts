@@ -1,12 +1,20 @@
 import type { Board, CellType } from "../game/types";
 
-const SYMBOLS: Partial<Record<string, CellType>> = {
-  ".": "empty",
-  "\\": "mirrorBackslash",
-  "/": "mirrorSlash",
-  "#": "wall",
-  G: "goal",
+/** The text symbol of each cell type in level grids. */
+export const CELL_SYMBOLS: Readonly<Record<CellType, string>> = {
+  empty: ".",
+  mirrorBackslash: "\\",
+  mirrorSlash: "/",
+  wall: "#",
+  goal: "G",
 };
+
+const CELLS_BY_SYMBOL = new Map(
+  (Object.keys(CELL_SYMBOLS) as CellType[]).map((cell) => [
+    CELL_SYMBOLS[cell],
+    cell,
+  ]),
+);
 
 /**
  * Parses a level text grid (format in docs/DESIGN.md). Whitespace within a
@@ -35,7 +43,7 @@ export function parseLevel(text: string): Board {
       );
     }
     return [...symbols].map((symbol, column) => {
-      const cell = SYMBOLS[symbol];
+      const cell = CELLS_BY_SYMBOL.get(symbol);
       if (cell === undefined) {
         throw new Error(
           `Line ${lineNumber}, cell ${column + 1}: unknown symbol "${symbol}"`,
@@ -53,4 +61,14 @@ export function parseLevel(text: string): Board {
   }
 
   return { width, height: rows.length, cells };
+}
+
+/**
+ * The board as a level text grid, the reverse of parseLevel: one line per
+ * row, cells separated by spaces, each line prefixed with `indent`.
+ */
+export function formatLevel(board: Board, indent = ""): string {
+  return board.cells
+    .map((row) => indent + row.map((cell) => CELL_SYMBOLS[cell]).join(" "))
+    .join("\n");
 }

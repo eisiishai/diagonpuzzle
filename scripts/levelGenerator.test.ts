@@ -1,0 +1,96 @@
+import { describe, expect, it } from "vitest";
+import { solve } from "../src/game/solver";
+import { parseLevel } from "../src/levels/parse";
+import {
+  createRandom,
+  findCandidates,
+  randomBoard,
+  shortestSolutions,
+} from "./levelGenerator";
+import type { GeneratorOptions } from "./levelGenerator";
+
+const OPTIONS: GeneratorOptions = {
+  width: 5,
+  height: 4,
+  mirrors: 4,
+  walls: 1,
+  shots: 2,
+  goalHits: 1,
+  tries: 300,
+  seed: 7,
+  requireSetup: false,
+  noRepeat: false,
+};
+
+describe("createRandom", () => {
+  it("repeats the same numbers for the same seed, in [0, 1)", () => {
+    const a = createRandom(42);
+    const b = createRandom(42);
+    const numbers = Array.from({ length: 100 }, () => a());
+    expect(numbers).toEqual(Array.from({ length: 100 }, () => b()));
+    expect(numbers.every((n) => n >= 0 && n < 1)).toBe(true);
+  });
+});
+
+describe("randomBoard", () => {
+  it("places the goal in the rightmost column and the asked pieces", () => {
+    const board = randomBoard(OPTIONS, createRandom(3));
+    const cells = board.cells.flat();
+    const count = (pred: (cell: string) => boolean) =>
+      cells.filter(pred).length;
+    expect(board.cells.filter((row) => row[4] === "goal")).toHaveLength(1);
+    expect(count((cell) => cell === "goal")).toBe(1);
+    expect(count((cell) => cell.startsWith("mirror"))).toBe(4);
+    expect(count((cell) => cell === "wall")).toBe(1);
+  });
+
+  it("refuses more pieces than fit left of the goal column", () => {
+    expect(() =>
+      randomBoard({ width: 2, height: 2, mirrors: 2, walls: 1 }, Math.random),
+    ).toThrow("Too many");
+  });
+});
+
+describe("shortestSolutions", () => {
+  it("lists every solution of exactly the given length", () => {
+    // Row 0 misses but flips its mirror, then row 0 wins (see solver tests).
+    const board = parseLevel(String.raw`
+      / .
+      \ G
+    `);
+    expect(shortestSolutions(board, 2)).toEqual([[0, 0]]);
+    expect(shortestSolutions(board, 1)).toEqual([]);
+  });
+
+  it("counts separate goal hits", () => {
+    expect(shortestSolutions(parseLevel(". G"), 2, 2)).toEqual([[0, 0]]);
+  });
+});
+
+describe("findCandidates", () => {
+  it("returns only boards whose par is the asked shots, unique ones first", () => {
+    const candidates = findCandidates(OPTIONS);
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board, solutions } of candidates) {
+      expect(solve(board, 6)).toHaveLength(2);
+      expect(solutions.length).toBeGreaterThan(0);
+    }
+    const counts = candidates.map((c) => c.solutions.length);
+    expect(counts).toEqual([...counts].sort((a, b) => a - b));
+  });
+
+  it("applies the setup and no-repeat filters", () => {
+    for (const c of findCandidates({
+      ...OPTIONS,
+      shots: 1,
+      requireSetup: true,
+    })) {
+      expect(c.setupRoutes.length).toBeGreaterThan(0);
+    }
+    for (const c of findCandidates({ ...OPTIONS, noRepeat: true })) {
+      for (const rows of c.solutions) {
+        expect(rows[0]).not.toBe(rows[1]);
+      }
+    }
+  });
+});
