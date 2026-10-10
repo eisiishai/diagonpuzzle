@@ -1,0 +1,45 @@
+#!/bin/sh
+# Run by post-commit: rebuilds dist/ from the new commit, so it shows the
+# new version and is ready to upload. Lint and tests already ran in the
+# pre-commit hook, so only the production build runs here (about a second).
+# Never stops anything. Turn off with `git config diagonpuzzle.autoBuild
+# false`. See docs/WORKFLOW.md, "Release to the website".
+
+RELEASE_BRANCH=main
+
+[ "$(git config --bool diagonpuzzle.autoBuild)" = "false" ] && exit 0
+
+# Same rules as tagging: only main, and not in the middle of a rebase.
+[ "$(git symbolic-ref --quiet --short HEAD)" = "$RELEASE_BRANCH" ] || exit 0
+git_dir=$(git rev-parse --git-dir)
+[ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ] && exit 0
+
+note() {
+  echo "dist/ not rebuilt: $1" >&2
+  echo "  For an upload, build from a clean tree: npm run build" >&2
+}
+
+# Uncommitted changes would be built in, and the version would end in -dirty.
+if ! git diff --quiet HEAD || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  note "there are uncommitted changes."
+  exit 0
+fi
+# Only a commit that passed the checks: pre-commit records the tree it
+# checked, which differs after --no-verify or a fast-forward merge.
+if [ "$(cat "$git_dir/checked-tree" 2>/dev/null)" != "$(git rev-parse 'HEAD^{tree}')" ]; then
+  note "the checks didn't run for this commit."
+  exit 0
+fi
+
+# Hooks started from an editor may not have nvm's Node on the PATH.
+if ! command -v npx >/dev/null 2>&1 && [ -s "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+fi
+log="$git_dir/build-release.log"
+if npx vite build >"$log" 2>&1; then
+  echo "Built dist/ for $(git describe --tags), ready to upload."
+else
+  cat "$log" >&2
+  note "the production build failed."
+fi
+exit 0

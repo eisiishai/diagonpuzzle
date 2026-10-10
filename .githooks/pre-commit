@@ -28,3 +28,5 @@ if ! npm run build --silent >"$log" 2>&1; then
   exit 1
 fi
 echo "pre-commit: all checks passed."
+# For build-release (after the commit): the tree these checks were for.
+git write-tree >"$(git rev-parse --git-dir)/checked-tree"

@@ -119,9 +119,10 @@ git commit -m "Short summary of the change"
   ```
 - Update `docs/ROADMAP.md` checkboxes and `docs/DESIGN.md` in the same commit
   as the change they describe.
-- Each commit on `main` is tagged with the next version and pushed to the
-  backup automatically; git prints e.g. `Tagged v0.6.` and `Pushed to
-  backup.` See *Versions* and *4. Back up* below.
+- Each commit on `main` is tagged with the next version, pushed to the
+  backup and built into `dist/` automatically; git prints e.g. `Tagged
+  v0.6.`, `Pushed to backup.` and `Built dist/ for v0.6, ready to upload.`
+  See *Versions*, *4. Back up* and *5. Release to the website* below.
 
 ## Versions
 
@@ -218,15 +219,25 @@ The backup doesn't include uncommitted work, stashes, local git settings
 
 ## 5. Release to the website
 
-1. Commit everything first, then build. The build runs every check and stops
-   before creating `dist/` if one fails.
+1. Commit everything. After each commit on `main`, the `post-commit` hook
+   rebuilds `dist/` with the new version (`.githooks/build-release`), and
+   git prints `Built dist/ for v0.6, ready to upload.` That build only runs
+   the production build: the checks already passed before the commit.
+
+   If git printed `dist/ not rebuilt` instead, build by hand from a clean
+   tree. The build runs every check and stops before creating `dist/` if
+   one fails.
    ```bash
    git status                   # must show no changes
    npm run build
    ```
-   Always build again after committing, even though the pre-commit check
-   already built `dist/`: that build ran before the commit and its version
-   tag existed, so it shows the previous version as "-dirty" (see below).
+   It is skipped, with that note, when there are uncommitted changes (the
+   version would end in "-dirty"), when the checks didn't run for the
+   commit (`--no-verify`, or a fast-forward merge), or if the build fails
+   (the errors are shown). The pre-commit check's own build doesn't count:
+   it ran before the commit had its version tag, so it shows the previous
+   version as "-dirty" (see below). Turn the automatic build off with
+   `git config diagonpuzzle.autoBuild false`.
 2. Optionally test the built version locally:
    ```bash
    npx vite preview             # http://localhost:4173

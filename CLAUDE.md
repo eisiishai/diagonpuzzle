@@ -29,8 +29,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   look up. Don't commit or publish it.
 - `npm run version:major` — make the next commit on main start a new major
   version (only when the user asks for a major version bump)
-- Deploy: commit, then `npm run build` from a clean working tree, then copy
-  the contents of `dist/` to the web host (details in `docs/WORKFLOW.md`).
+- Deploy: commit (the `post-commit` hook rebuilds `dist/` with the new
+  version; if it says "dist/ not rebuilt", run `npm run build` from a clean
+  working tree), then copy the contents of `dist/` to the web host (details
+  in `docs/WORKFLOW.md`).
   The build embeds `git describe --tags` as the version shown on the title
   screen; a build with uncommitted changes shows "-dirty".
 
@@ -100,8 +102,9 @@ scripts/        development tools run with tsx (not part of the game)
   the git hooks in `.githooks/`. Don't create version tags by hand, and don't
   rewrite history on `main` (rebase), which leaves tags on the old commits.
 - The `post-commit` hook then pushes `main` and its tags to the `backup`
-  remote (never forced; it only warns if that fails). Don't push or
-  force-push by hand unless the user asks.
+  remote (never forced; it only warns if that fails) and rebuilds `dist/`
+  with the new version. Don't push or force-push by hand unless the user
+  asks.
 
 ## Environment
 

@@ -1,10 +1,11 @@
 #!/bin/sh
-# After each commit on main: tag it with the next version, then push it to the
-# backup. See docs/WORKFLOW.md.
+# After each commit on main: tag it with the next version, push it to the
+# backup, and rebuild dist/ with the new version. See docs/WORKFLOW.md.
 
 hooks=$(dirname "$0")
 "$hooks/tag-version"
 "$hooks/push-backup"
+"$hooks/build-release"
 
 # The commit itself is already done; a hook failure must not look like it failed.
 exit 0
