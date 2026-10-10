@@ -28,6 +28,17 @@ interface MirrorTurn {
   elapsedMs: number;
 }
 
+/** A piece of a breakable wall flying off as it breaks. */
+interface Debris {
+  view: Graphics;
+  vx: number;
+  vy: number;
+  spin: number;
+  ageMs: number;
+}
+
+const DEBRIS_LIFE_MS = 600;
+
 /** A small twinkle near a bonus target. */
 interface Sparkle {
   view: Graphics;
@@ -60,6 +71,9 @@ export class BoardView extends Container {
   private readonly sparkleLayer = new Container();
   private sparkles: Sparkle[] = [];
   private sparkleTimerMs = 0;
+  /** Pieces of broken walls, above the cells. */
+  private readonly debrisLayer = new Container();
+  private debris: Debris[] = [];
   private selectedRow: number | null = null;
   /** Time for the ambient pulses of the goal and the selected emitter. */
   private ambientMs = 0;
@@ -90,7 +104,7 @@ export class BoardView extends Container {
       this.cellViews.push(row);
     }
     this.redrawCells();
-    this.addChild(this.goalMarkers, this.sparkleLayer);
+    this.addChild(this.goalMarkers, this.sparkleLayer, this.debrisLayer);
 
     for (let row = 0; row < board.height; row++) {
       const launcher = this.createLauncher(row, handlers);
@@ -191,6 +205,7 @@ export class BoardView extends Container {
   update(deltaMs: number): void {
     this.animator.update(deltaMs);
     this.updateTurns(deltaMs);
+    this.updateDebris(deltaMs);
     this.updateAmbient(deltaMs);
   }
 
@@ -275,6 +290,9 @@ export class BoardView extends Container {
     this.cells[y][x] = cell;
     if (!(isMirror(previous) && isMirror(cell))) {
       this.drawCell(view, cell);
+      if (previous === "breakable") {
+        this.addDebris(x, y);
+      }
       return;
     }
 
@@ -284,6 +302,51 @@ export class BoardView extends Container {
     const target = (existing ? existing.to : view.rotation) + Math.PI / 2;
     this.turns = this.turns.filter((turn) => turn !== existing);
     this.turns.push({ view, from: view.rotation, to: target, elapsedMs: 0 });
+  }
+
+  /** A breakable wall at (x, y) bursts into stone pieces that fall away. */
+  private addDebris(x: number, y: number): void {
+    const center = this.cellCenter(x, y);
+    const size = this.cellSize;
+    for (let i = 0; i < 10; i++) {
+      const r = size * (0.06 + Math.random() * 0.07);
+      const view = new Graphics()
+        .poly([-r, -r * 0.6, r * 0.8, -r, r, r * 0.7, -r * 0.5, r])
+        .fill(i % 3 === 0 ? COLORS.stoneEdge : COLORS.stone);
+      view.position.set(
+        center.x + (Math.random() - 0.5) * size * 0.6,
+        center.y + (Math.random() - 0.5) * size * 0.6,
+      );
+      view.rotation = Math.random() * Math.PI;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = size * (1.5 + Math.random() * 2.5);
+      this.debrisLayer.addChild(view);
+      this.debris.push({
+        view,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - size * 1.5,
+        spin: (Math.random() - 0.5) * 10,
+        ageMs: 0,
+      });
+    }
+  }
+
+  private updateDebris(deltaMs: number): void {
+    const seconds = deltaMs / 1000;
+    const gravity = this.cellSize * 9;
+    this.debris = this.debris.filter((piece) => {
+      piece.ageMs += deltaMs;
+      if (piece.ageMs >= DEBRIS_LIFE_MS) {
+        piece.view.destroy();
+        return false;
+      }
+      piece.vy += gravity * seconds;
+      piece.view.x += piece.vx * seconds;
+      piece.view.y += piece.vy * seconds;
+      piece.view.rotation += piece.spin * seconds;
+      piece.view.alpha = 1 - piece.ageMs / DEBRIS_LIFE_MS;
+      return true;
+    });
   }
 
   private updateTurns(deltaMs: number): void {
@@ -377,6 +440,31 @@ export class BoardView extends Container {
           .moveTo(-h * 0.1, h)
           .lineTo(h, h * 0.1)
           .stroke({ width: 4, color: COLORS.wallHatch, cap: "round" });
+        break;
+      }
+      case "breakable": {
+        // A stone block with cracks running through it: it breaks when hit.
+        const edge = half * 0.87;
+        g.roundRect(-edge, -edge, edge * 2, edge * 2, 6)
+          .fill(COLORS.stone)
+          .stroke({ width: 1.5, color: COLORS.stoneEdge });
+        const crack = (points: number[]) => {
+          g.moveTo(points[0] * edge, points[1] * edge);
+          for (let i = 2; i < points.length; i += 2) {
+            g.lineTo(points[i] * edge, points[i + 1] * edge);
+          }
+        };
+        crack([-0.2, -0.98, -0.05, -0.55, -0.28, -0.2, 0.05, 0.15]);
+        crack([0.05, 0.15, -0.12, 0.55, 0.08, 0.98]);
+        crack([0.05, 0.15, 0.45, 0.3, 0.6, 0.72]);
+        crack([0.98, -0.45, 0.55, -0.35, 0.38, -0.65]);
+        crack([-0.98, 0.35, -0.6, 0.45, -0.5, 0.75]);
+        g.stroke({
+          width: 2.5,
+          color: COLORS.stoneCrack,
+          cap: "round",
+          join: "round",
+        });
         break;
       }
       case "bonus": {

@@ -21,6 +21,9 @@ export const COLORS = {
   wall: 0x18233a,
   wallEdge: 0x34466b,
   wallHatch: 0x26365a,
+  stone: 0x323846,
+  stoneEdge: 0x5d6680,
+  stoneCrack: 0x0d111b,
   emitterIdle: 0x3b5a86,
   emitterSelected: 0x11223a,
 } as const;

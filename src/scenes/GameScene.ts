@@ -26,6 +26,8 @@ const INTRO_MESSAGE =
 
 /** How long the Skip button waits for its confirming second press. */
 const SKIP_CONFIRM_MS = 3000;
+const BREAKABLE_INTRO_MESSAGE =
+  "Cracked walls stop the pellet and break: the next shot passes through.";
 const BONUS_INTRO_MESSAGE =
   "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
 
@@ -331,6 +333,11 @@ export class GameScene extends Container implements Scene {
       return;
     }
 
+    if (outcome === "blocked" && result.path[result.path.length - 1].becomes) {
+      audio.play("break");
+      this.showMessage("The pellet broke a cracked wall.");
+      return;
+    }
     audio.play(outcome === "blocked" ? "wall" : outcome);
     this.showMessage(OUTCOME_MESSAGES[outcome]);
   }
@@ -525,8 +532,12 @@ export class GameScene extends Container implements Scene {
     if (bonus.shown && this.bonusesCollected < bonus.total) {
       return BONUS_INTRO_MESSAGE;
     }
-    return goalHits > 1
-      ? `This goal needs ${goalHits} hits, each from a separate shot. Mirrors stay flipped between shots.`
-      : INTRO_MESSAGE;
+    if (goalHits > 1) {
+      return `This goal needs ${goalHits} hits, each from a separate shot. Mirrors stay flipped between shots.`;
+    }
+    const hasBreakable = this.options.board.cells.some((row) =>
+      row.includes("breakable"),
+    );
+    return hasBreakable ? BREAKABLE_INTRO_MESSAGE : INTRO_MESSAGE;
   }
 }

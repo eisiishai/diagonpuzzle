@@ -114,9 +114,9 @@ export class PelletAnimator extends Container {
       distance -= remaining;
       this.segment++;
       this.segmentProgress = 0;
-      const { bounce, becomes, x, y } = to.cell;
+      const { bounce, becomes, changedCell = to.cell } = to.cell;
       if (becomes) {
-        this.callbacks?.onCellChange(x, y, becomes);
+        this.callbacks?.onCellChange(changedCell.x, changedCell.y, becomes);
       }
       if (bounce) {
         this.callbacks?.onBounce(++this.bounces);

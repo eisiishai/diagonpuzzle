@@ -6,6 +6,7 @@ export const CELL_SYMBOLS: Readonly<Record<CellType, string>> = {
   mirrorBackslash: "\\",
   mirrorSlash: "/",
   wall: "#",
+  breakable: "%",
   goal: "G",
   bonus: "*",
 };

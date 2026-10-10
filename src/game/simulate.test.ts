@@ -179,3 +179,18 @@ describe("level 1", () => {
     expect(outcomes).toEqual(["exit", "blocked", "blocked", "goal", "exit"]);
   });
 });
+
+describe("breakable walls", () => {
+  it("stop the pellet and break, so the next shot passes", () => {
+    const board = parseLevel(". % G");
+    const first = fire(board, 0);
+    expect(first.outcome).toBe("blocked");
+    expect(first.path[first.path.length - 1]).toMatchObject({
+      x: 1,
+      y: 0,
+      becomes: "empty",
+    });
+    expect(first.board.cells[0][1]).toBe("empty");
+    expect(fire(first.board, 0).outcome).toBe("goal");
+  });
+});

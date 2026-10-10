@@ -42,4 +42,14 @@ describe("pathPoints", () => {
   it("stops at the near edge of a wall", () => {
     expect(lastPoint(". # G", 0)).toEqual({ x: 0.5, y: 0, bounce: false });
   });
+
+  it("ends at a breakable wall's edge, naming the cell that breaks", () => {
+    expect(lastPoint(". % G", 0)).toEqual({
+      x: 0.5,
+      y: 0,
+      bounce: false,
+      becomes: "empty",
+      changedCell: { x: 1, y: 0 },
+    });
+  });
 });

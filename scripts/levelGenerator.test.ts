@@ -6,6 +6,7 @@ import {
   findCandidates,
   randomBoard,
   shortestSolutions,
+  withSolidWalls,
 } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
 
@@ -14,6 +15,7 @@ const OPTIONS: GeneratorOptions = {
   height: 4,
   mirrors: 4,
   walls: 1,
+  breakable: 0,
   shots: 2,
   goalHits: 1,
   tries: 300,
@@ -42,11 +44,21 @@ describe("randomBoard", () => {
     expect(count((cell) => cell === "goal")).toBe(1);
     expect(count((cell) => cell.startsWith("mirror"))).toBe(4);
     expect(count((cell) => cell === "wall")).toBe(1);
+    const breakable = randomBoard(
+      { ...OPTIONS, breakable: 2 },
+      createRandom(3),
+    );
+    expect(
+      breakable.cells.flat().filter((c) => c === "breakable"),
+    ).toHaveLength(2);
   });
 
   it("refuses more pieces than fit left of the goal column", () => {
     expect(() =>
-      randomBoard({ width: 2, height: 2, mirrors: 2, walls: 1 }, Math.random),
+      randomBoard(
+        { width: 2, height: 2, mirrors: 2, walls: 1, breakable: 0 },
+        Math.random,
+      ),
     ).toThrow("Too many");
   });
 });
@@ -91,6 +103,14 @@ describe("findCandidates", () => {
       for (const rows of c.solutions) {
         expect(rows[0]).not.toBe(rows[1]);
       }
+    }
+  });
+
+  it("keeps only boards that need a breakable wall broken for par", () => {
+    const candidates = findCandidates({ ...OPTIONS, breakable: 2 });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board } of candidates) {
+      expect(solve(withSolidWalls(board), 2)).toBeNull();
     }
   });
 });

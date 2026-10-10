@@ -44,6 +44,8 @@ export const CELL_BEHAVIORS: Record<
     becomes: "mirrorBackslash",
   }),
   wall: () => ({ kind: "stop", reason: "blocked" }),
+  // A cracked wall stops the pellet and breaks: the next shot passes through.
+  breakable: () => ({ kind: "stop", reason: "blocked", becomes: "empty" }),
   goal: () => ({ kind: "stop", reason: "goal" }),
   // An optional bonus target stops the pellet and is collected: it is gone
   // for the rest of the level.

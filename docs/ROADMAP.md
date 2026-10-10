@@ -66,6 +66,8 @@ with flipping mirrors, before it is built.
 - [ ] Player-placed blocks
 - [ ] Firing from other edges
 - [ ] New block types
+  - [x] Breakable walls (`%`): stop the pellet once and break; levels
+    11–12 use them
 - [x] Optional bonus targets: one extra target per level, not needed to
   finish and not counted in par, shown once the level has been completed
   at par; collecting it turns the level's star golden. Design in

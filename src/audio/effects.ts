@@ -7,6 +7,7 @@ import { midi } from "./synth";
 export type SoundEffect =
   | "fire"
   | "wall"
+  | "break"
   | "exit"
   | "loop"
   | "goal"
@@ -61,6 +62,37 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         dest,
       });
       s.noise({ t, d: 0.02, vol: 0.12, f: 2000, q: 1.5, dest });
+    },
+  },
+  // Breakable wall: a crunch of noise over a low thud, with a few small
+  // pieces clattering after it. Not from the sound lab; tune by ear.
+  break: {
+    seconds: 0.3,
+    play: (s, dest, t, pitch) => {
+      s.tone({
+        type: "triangle",
+        f: 170 * pitch,
+        f2: 60 * pitch,
+        t,
+        d: 0.2,
+        vol: 0.3,
+        dest,
+      });
+      s.noise({ t, d: 0.16, vol: 0.16, f: 1800, f2: 500, q: 0.7, dest });
+      for (const [delay, f] of [
+        [0.07, 3200],
+        [0.12, 2600],
+        [0.19, 3600],
+      ]) {
+        s.noise({
+          t: t + delay,
+          d: 0.025,
+          vol: 0.06,
+          f: f * pitch,
+          q: 3,
+          dest,
+        });
+      }
     },
   },
   // Off the board (C, "Two-tone drop"): a polite "missed".

@@ -12,6 +12,11 @@ export interface GeneratorOptions {
   height: number;
   mirrors: number;
   walls: number;
+  /**
+   * Breakable walls. With any, only boards that need one broken for par
+   * are kept (as solid walls, par would be higher).
+   */
+  breakable: number;
   /** The par: fewest shots that complete the level. */
   shots: number;
   /** Goal hits needed to complete the level. */
@@ -49,16 +54,20 @@ export function createRandom(seed: number): () => number {
 }
 
 /**
- * A random board: the goal somewhere in the rightmost column, mirrors and
- * walls in random empty cells left of it. Asks for no more pieces than fit.
+ * A random board: the goal somewhere in the rightmost column, mirrors,
+ * walls and breakable walls in random empty cells left of it. Asks for no
+ * more pieces than fit.
  */
 export function randomBoard(
-  options: Pick<GeneratorOptions, "width" | "height" | "mirrors" | "walls">,
+  options: Pick<
+    GeneratorOptions,
+    "width" | "height" | "mirrors" | "walls" | "breakable"
+  >,
   random: () => number,
 ): Board {
-  const { width, height, mirrors, walls } = options;
-  if (mirrors + walls > (width - 1) * height) {
-    throw new Error("Too many mirrors and walls for the board size");
+  const { width, height, mirrors, walls, breakable } = options;
+  if (mirrors + walls + breakable > (width - 1) * height) {
+    throw new Error("Too many pieces for the board size");
   }
   const cells: CellType[][] = Array.from({ length: height }, () =>
     Array<CellType>(width).fill("empty"),
@@ -77,7 +86,18 @@ export function randomBoard(
   };
   place(() => (random() < 0.5 ? "mirrorBackslash" : "mirrorSlash"), mirrors);
   place(() => "wall", walls);
+  place(() => "breakable", breakable);
   return { width, height, cells };
+}
+
+/** The board with every breakable wall made solid. */
+export function withSolidWalls(board: Board): Board {
+  return {
+    ...board,
+    cells: board.cells.map((row) =>
+      row.map((cell) => (cell === "breakable" ? "wall" : cell)),
+    ),
+  };
 }
 
 /**
@@ -125,6 +145,12 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
     }
     const solution = solve(board, options.shots, options.goalHits);
     if (solution?.length !== options.shots) {
+      continue;
+    }
+    if (
+      options.breakable > 0 &&
+      solve(withSolidWalls(board), options.shots, options.goalHits) !== null
+    ) {
       continue;
     }
     const solutions = shortestSolutions(board, options.shots, options.goalHits);

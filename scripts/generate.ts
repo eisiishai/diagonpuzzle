@@ -5,7 +5,7 @@
 
 import { fire } from "../src/game/simulate";
 import { formatLevel } from "../src/levels/parse";
-import { rowList } from "./levelAnalysis";
+import { describeShot, rowList } from "./levelAnalysis";
 import { findCandidates } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
 
@@ -17,6 +17,7 @@ const DEFAULTS: GeneratorOptions & { show: number } = {
   height: 5,
   mirrors: 6,
   walls: 2,
+  breakable: 0,
   shots: 2,
   goalHits: 1,
   tries: 20000,
@@ -32,6 +33,8 @@ const HELP = `Usage: npm run generate -- [options]
   --height N        board height (default ${DEFAULTS.height})
   --mirrors N       mirrors (default ${DEFAULTS.mirrors})
   --walls N         walls (default ${DEFAULTS.walls})
+  --breakable N     breakable walls; boards must need one broken for par
+                    (default ${DEFAULTS.breakable})
   --shots N         par: fewest shots that complete the level (default ${DEFAULTS.shots})
   --goal-hits N     goal hits needed (default ${DEFAULTS.goalHits})
   --tries N         random boards to try (default ${DEFAULTS.tries})
@@ -47,6 +50,7 @@ const FLAGS: Record<string, keyof typeof DEFAULTS> = {
   "--height": "height",
   "--mirrors": "mirrors",
   "--walls": "walls",
+  "--breakable": "breakable",
   "--shots": "shots",
   "--goal-hits": "goalHits",
   "--tries": "tries",
@@ -101,10 +105,7 @@ if (options === null) {
     let current = board;
     for (const row of solutions[0]) {
       const result = fire(current, row);
-      const flips = result.path.filter((step) => step.becomes).length;
-      console.log(
-        `  row ${row + 1}: ${result.outcome}, flips ${flips} mirror${flips === 1 ? "" : "s"}`,
-      );
+      console.log(`  row ${row + 1}: ${describeShot(result)}`);
       current = result.board;
     }
     if (solutions.length > 1) {

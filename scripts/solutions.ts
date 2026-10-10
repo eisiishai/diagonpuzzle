@@ -50,10 +50,9 @@ for (const analysis of analyses) {
   });
   lines.push("```", "");
 
-  solutionShots.forEach(({ row, outcome, flips }, index) => {
-    const flipped = flips === 1 ? "1 mirror" : `${flips} mirrors`;
+  solutionShots.forEach(({ row, outcome, summary }, index) => {
     lines.push(
-      `${index + 1}. Row ${row + 1}: ${outcome === "goal" ? "**goal**" : outcome}, flips ${flipped}`,
+      `${index + 1}. Row ${row + 1}: ${outcome === "goal" ? summary.replace("goal", "**goal**") : summary}`,
     );
   });
   const { bonusSolution } = analysis;

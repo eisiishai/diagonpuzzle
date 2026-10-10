@@ -10,6 +10,11 @@ export interface PathPoint {
   bounce: boolean;
   /** Set if the cell at this point changes when hit (e.g. a mirror flips). */
   becomes?: CellType;
+  /**
+   * The board cell that `becomes` applies to, when this point is not its
+   * centre (a breakable wall, hit at its near edge).
+   */
+  changedCell?: { x: number; y: number };
 }
 
 /**
@@ -44,6 +49,10 @@ export function pathPoints(result: ShotResult): PathPoint[] {
       x: last.x - delta.x / 2,
       y: last.y - delta.y / 2,
       bounce: false,
+      ...(last.becomes && {
+        becomes: last.becomes,
+        changedCell: { x: last.x, y: last.y },
+      }),
     };
   }
   return points;

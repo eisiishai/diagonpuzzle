@@ -178,4 +178,35 @@ export const LEVELS: readonly LevelDefinition[] = [
       . # . . . . . * .
     `,
   },
+  {
+    id: "breakthrough",
+    name: "Breakthrough",
+    minShots: 3,
+    bonusShots: 4,
+    music: "nightLab",
+    grid: String.raw`
+      / . . / \ . . .
+      . . % . \ . . .
+      / . / . . . . .
+      . # * . . . . .
+      # . . \ / . . G
+      . . . . % . / .
+    `,
+  },
+  {
+    id: "stone-by-stone",
+    name: "Stone by stone",
+    minShots: 4,
+    bonusShots: 5,
+    music: "nightLab",
+    grid: String.raw`
+      . / . . . \ . . .
+      \ % # . . . . % .
+      . . / / . . . . .
+      . . . . / \ \ . .
+      \ . / . . . / . .
+      . \ . . . % . . G
+      . \ . . . # * . .
+    `,
+  },
 ];

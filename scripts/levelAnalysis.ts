@@ -2,7 +2,7 @@
 // Rows are 0-based here; the tools show them from 1, as the player counts.
 
 import { fire } from "../src/game/simulate";
-import type { ShotOutcome } from "../src/game/simulate";
+import type { ShotOutcome, ShotResult } from "../src/game/simulate";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
 import { setupRoutes, solve, solveBonus } from "../src/game/solver";
 import type { Board } from "../src/game/types";
@@ -16,8 +16,20 @@ const SEARCH_EXTRA_SHOTS = 2;
 export interface SolutionShot {
   row: number;
   outcome: ShotOutcome;
-  /** Mirrors the shot flipped. */
-  flips: number;
+  /** What the shot did, e.g. "blocked, breaks a wall, flips 2 mirrors". */
+  summary: string;
+}
+
+/** What a shot did: its outcome, a wall it broke and mirrors it flipped. */
+export function describeShot(result: ShotResult): string {
+  const { path, outcome } = result;
+  const flips = path.filter((step) => step.becomes?.startsWith("mirror"));
+  const broke = outcome === "blocked" && path[path.length - 1].becomes;
+  const n = flips.length;
+  return (
+    `${outcome}${broke ? ", breaks a wall" : ""}` +
+    `, flips ${n} mirror${n === 1 ? "" : "s"}`
+  );
 }
 
 export interface LevelAnalysis {
@@ -60,7 +72,7 @@ export function analyzeLevels(): LevelAnalysis[] {
       solutionShots.push({
         row,
         outcome: result.outcome,
-        flips: result.path.filter((step) => step.becomes).length,
+        summary: describeShot(result),
       });
       current = result.board;
     }

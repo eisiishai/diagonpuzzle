@@ -108,6 +108,7 @@ puzzle on top of the level for players who have mastered it.
 | `\` | Mirror (backslash) | Turns the pellet 90°: right → down, down → right, left → up, up → left. Then flips to `/`. |
 | `/` | Mirror (slash) | Turns the pellet 90°: right → up, up → right, left → down, down → left. Then flips to `\`. |
 | `#` | Wall | Stops the pellet. |
+| `%` | Breakable wall | Stops the pellet and breaks: it becomes empty, so later shots pass through. |
 | `G` | Goal | Pellet reaches the goal; level complete. |
 | `*` | Bonus target | Stops the pellet and is collected (becomes empty). Hidden (empty) until the level is completed at par; see *Bonus targets*. |
 
@@ -120,7 +121,7 @@ Mirrors are two-sided: a pellet is deflected from either side.
 | `goal` | Pellet enters the goal cell | Level complete |
 | `bonus` | Pellet enters a bonus target | Target collected; next turn |
 | `exit` | Pellet leaves the grid through any edge | Next turn |
-| `blocked` | Pellet hits a wall | Next turn |
+| `blocked` | Pellet hits a wall (a breakable one breaks) | Next turn |
 | `loop` | Pellet returns to a cell it has already visited, moving in the same direction, with the board in the same state | Stop the shot; next turn. Cannot happen with the current cells: every step can be traced back uniquely, so a shot that enters from the edge must end. Guards against future block types. |
 
 ## Levels
@@ -158,6 +159,12 @@ levels 1 and 2 have one.
 | 8 | Third time lucky | 3 | Row 5 twice turns the pellet a step further each time; row 2 then loops to the goal. |
 | 9 | Back and forth | 3 | Rows 4, 6, 4: two different setup shots, and a final shot that crosses its own path. |
 | 10 | Two-step | 4 | Rows 3, 5, 3, 5: each shot flips mirrors the other row's next shot needs. |
+| 11 | Breakthrough | 3 | Introduces breakable walls. Row 2 breaks the cracked wall in front of it, then runs through to flip the mirrors it needs, then reaches the goal: the same row three times, each shot changing the board. |
+| 12 | Stone by stone | 4 | Rows 6, 7, 6, 7: three of the four shots break a cracked wall, opening the way for the next. |
+
+Levels 11–12 were found with `npm run generate -- --breakable N`, which
+keeps only boards that can't be solved with their breakable walls made
+solid; the tests check that too.
 
 Levels 5–10 were found by searching random boards with the solver, keeping
 ones with exactly one shortest solution, and choosing by readability and
@@ -264,6 +271,7 @@ canvas. Colours and fonts are defined once in `src/render/theme.ts`.
 | Star | `#ffe08a` | Stars, par celebrations, golden stars |
 | Bonus prism | `#ff5fd2` `#ffa45c` `#ffe08a` `#3dffb4` `#5fd8ff` `#a98bff` | Bonus target facets, its sparkles and bursts (the only multicoloured piece) |
 | Wall | `#18233a`, edge `#34466b` | Walls |
+| Stone | `#323846`, edge `#5d6680`, cracks `#0d111b` | Breakable walls |
 | Idle emitter | `#3b5a86` | Launchers not selected |
 
 Text colours keep at least 4.5:1 contrast on the background.
@@ -282,6 +290,9 @@ Text colours keep at least 4.5:1 contrast on the background.
   selected one is outlined in the beam colour and glows.
 - **Mirrors**: glass bars with a bright centre line, glowing pale blue.
 - **Walls**: dark rounded blocks with diagonal hatching, no glow.
+- **Breakable walls**: lighter stone blocks with dark jagged cracks
+  running through them instead of hatching, no glow. When hit, they burst
+  into stone pieces that fall away and fade.
 - **Goal**: a crystal (diamond within a diamond) glowing green.
 - **Bonus target**: a prism gem: a hexagon of six facets, one in each
   bonus colour, with a white rim and a bright core.
@@ -335,6 +346,7 @@ every variant), so the names below are its variant names.
 | Fire | *Soft pulse*: a gentle falling tone with a breath of air |
 | Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is two semitones higher (capped) |
 | Wall | *Soft knock* |
+| Breakable wall | A crunch over a low thud, with small pieces clattering after it (not from the sound lab) |
 | Off the board | *Two-tone drop*: two notes stepping down |
 | Loop | *Question chime*: two bells rising |
 | Goal (above par) | *Crystal chime*: glassy notes rising |
@@ -350,7 +362,7 @@ every variant), so the names below are its variant names.
 | Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
 | Levels 1–4 | **Pulse**: driving synthwave with a soft beat, 104 BPM |
 | Levels 5–8 | **Glass garden**: a slow, dark ambient drone only (no melody), so it stays out of the way on the harder levels |
-| Levels 9–10 | **Night lab**, as on the title screen |
+| Levels 9–12 | **Night lab**, as on the title screen |
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different
@@ -363,8 +375,8 @@ track crossfades in over about a second.
   (ducking), so they stand out.
 - At most six effects play at once; extra ones are skipped (goal, par and
   final-star sounds always play).
-- Fire, wall and off-the-board sounds vary in pitch by up to a quarter of a
-  semitone, so repeats don't sound mechanical.
+- Fire, wall, breaking and off-the-board sounds vary in pitch by up to a
+  quarter of a semitone, so repeats don't sound mechanical.
 - Music and effects can each be switched off; their reverb and echo tails go
   silent with them.
 
