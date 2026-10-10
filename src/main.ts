@@ -4,17 +4,25 @@ import "@fontsource/jetbrains-mono/latin-500.css";
 import { Application } from "pixi.js";
 import { GameAudio } from "./audio/GameAudio";
 import { TITLE_MUSIC } from "./audio/music";
+import { bonusPositions, withBonuses } from "./game/bonus";
 import { bindKeyboard } from "./input/keyboard";
 import { LEVELS } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
 import {
   EMPTY_PROGRESS,
+  collectedBonuses,
+  completesAllBonuses,
   completesAllPar,
+  earnsStar,
+  hasAllBonuses,
+  isCompleted,
   parseProgress,
+  recordBonus,
   recordCompletion,
   recordSkip,
   serializeProgress,
 } from "./save/progress";
+import type { LevelSummary } from "./save/progress";
 import { BackgroundGrid } from "./render/BackgroundGrid";
 import { BACKGROUND_CSS, FONT_FACES } from "./render/theme";
 import { readStorage, removeStorage, writeStorage } from "./save/storage";
@@ -23,6 +31,12 @@ import type { Scene } from "./scenes/Scene";
 import { TitleScene } from "./scenes/TitleScene";
 
 const PROGRESS_STORAGE_KEY = "progress";
+
+const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
+  id: level.id,
+  minShots: level.minShots,
+  bonusCount: bonusPositions(parseLevel(level.grid)).length,
+}));
 
 (async () => {
   const app = new Application();
@@ -78,6 +92,7 @@ const PROGRESS_STORAGE_KEY = "progress";
       audio.setMusic(TITLE_MUSIC);
       return new TitleScene({
         levels: LEVELS,
+        summaries: LEVEL_SUMMARIES,
         progress,
         audio,
         onStartLevel: startLevel,
@@ -91,16 +106,34 @@ const PROGRESS_STORAGE_KEY = "progress";
 
   const startLevel = (index: number) => {
     const level = LEVELS[index];
+    const summary = LEVEL_SUMMARIES[index];
     const isLastLevel = index === LEVELS.length - 1;
     switchTo(() => {
       audio.setMusic(level.music);
+      // Bonus targets appear on visits after the level was completed at
+      // par, never on the visit that first reaches par.
+      const fullBoard = parseLevel(level.grid);
+      const bonuses = bonusPositions(fullBoard);
+      const best = progress.levels[level.id]?.bestShots;
+      const bonusesShown =
+        best !== undefined && earnsStar(best, level.minShots);
+      const collected = collectedBonuses(progress, level.id);
       return new GameScene({
-        board: parseLevel(level.grid),
+        board: withBonuses(
+          fullBoard,
+          (bonus) => bonusesShown && !collected.includes(bonus),
+        ),
         levelNumber: index + 1,
         levelCount: LEVELS.length,
         levelName: level.name,
         par: level.minShots,
         goalHits: level.goalHits ?? 1,
+        completedBefore: isCompleted(progress, level.id),
+        bonus: {
+          shown: bonusesShown,
+          total: bonuses.length,
+          collected: collected.length,
+        },
         audio,
         onComplete: (shots) => {
           const before = progress;
@@ -110,6 +143,16 @@ const PROGRESS_STORAGE_KEY = "progress";
           return {
             previousBest: result.previousBest,
             allLevelsAtPar: completesAllPar(before, progress, LEVELS),
+          };
+        },
+        onBonus: (x, y) => {
+          const before = progress;
+          const bonus = bonuses.findIndex((p) => p.x === x && p.y === y);
+          progress = recordBonus(progress, level.id, bonus);
+          writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
+          return {
+            levelGolden: hasAllBonuses(progress, summary),
+            allBonuses: completesAllBonuses(before, progress, LEVEL_SUMMARIES),
           };
         },
         onNext: () => (isLastLevel ? showTitle() : startLevel(index + 1)),

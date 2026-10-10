@@ -3,10 +3,15 @@ import type { ShotResult } from "../game/simulate";
 import type { Board, CellType } from "../game/types";
 import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
-import { prefersReducedMotion, pulse } from "./ambient";
-import { COLORS, createBloom } from "./theme";
+import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
+import { BONUS_COLORS, COLORS, createBloom } from "./theme";
 
 const MIRROR_TURN_MS = 150;
+/** How often each bonus target gives off a sparkle, and how long it lasts. */
+const SPARKLE_INTERVAL_MS = 170;
+const SPARKLE_LIFE_MS = 750;
+/** Turning speed of the bonus gem, in radians per millisecond. */
+const BONUS_SPIN = (2 * Math.PI) / 9000;
 
 export interface BoardViewHandlers {
   /** A launcher was clicked or tapped. */
@@ -21,6 +26,12 @@ interface MirrorTurn {
   from: number;
   to: number;
   elapsedMs: number;
+}
+
+/** A small twinkle near a bonus target. */
+interface Sparkle {
+  view: Graphics;
+  ageMs: number;
 }
 
 /**
@@ -45,6 +56,10 @@ export class BoardView extends Container {
   private readonly launchers: Graphics[] = [];
   private readonly animator: PelletAnimator;
   private turns: MirrorTurn[] = [];
+  /** Sparkles around bonus targets, above the cells and under the beam. */
+  private readonly sparkleLayer = new Container();
+  private sparkles: Sparkle[] = [];
+  private sparkleTimerMs = 0;
   private selectedRow: number | null = null;
   /** Time for the ambient pulses of the goal and the selected emitter. */
   private ambientMs = 0;
@@ -75,7 +90,7 @@ export class BoardView extends Container {
       this.cellViews.push(row);
     }
     this.redrawCells();
-    this.addChild(this.goalMarkers);
+    this.addChild(this.goalMarkers, this.sparkleLayer);
 
     for (let row = 0; row < board.height; row++) {
       const launcher = this.createLauncher(row, handlers);
@@ -181,7 +196,8 @@ export class BoardView extends Container {
 
   /**
    * Goal crystals breathe (grow slightly and glow), and the selected
-   * emitter's glow pulses. Still when the player prefers reduced motion.
+   * emitter's glow pulses. Bonus targets turn, pulse faster and deeper, and
+   * give off sparkles. Still when the player prefers reduced motion.
    */
   private updateAmbient(deltaMs: number): void {
     if (prefersReducedMotion()) {
@@ -189,18 +205,67 @@ export class BoardView extends Container {
     }
     this.ambientMs += deltaMs;
     const breath = pulse(this.ambientMs);
+    const bonusBreath = pulse(this.ambientMs, BONUS_PULSE_PERIOD_MS);
+    this.sparkleTimerMs += deltaMs;
+    const sparkle = this.sparkleTimerMs >= SPARKLE_INTERVAL_MS;
+    if (sparkle) {
+      this.sparkleTimerMs %= SPARKLE_INTERVAL_MS;
+    }
     this.cells.forEach((row, y) =>
       row.forEach((cell, x) => {
+        const view = this.cellViews[y][x];
         if (cell === "goal") {
-          const view = this.cellViews[y][x];
           view.scale.set(1 + 0.07 * breath);
           view.alpha = 0.8 + 0.2 * breath;
+        } else if (cell === "bonus") {
+          view.scale.set(1 + 0.16 * bonusBreath);
+          view.alpha = 0.85 + 0.15 * bonusBreath;
+          view.rotation = this.ambientMs * BONUS_SPIN;
+          if (sparkle) {
+            this.addSparkle(x, y);
+          }
         }
       }),
     );
+    this.updateSparkles(deltaMs);
     if (this.selectedRow !== null) {
       this.launchers[this.selectedRow].alpha = 0.75 + 0.25 * breath;
     }
+  }
+
+  /** A four-pointed twinkle at a random spot around bonus target (x, y). */
+  private addSparkle(x: number, y: number): void {
+    const center = this.cellCenter(x, y);
+    const angle = Math.random() * Math.PI * 2;
+    const distance = this.cellSize * (0.25 + Math.random() * 0.3);
+    const r = this.cellSize * (0.05 + Math.random() * 0.05);
+    const w = r * 0.25;
+    const colors = [...BONUS_COLORS, COLORS.beamCore];
+    const view = new Graphics()
+      .poly([0, -r, w, -w, r, 0, w, w, 0, r, -w, w, -r, 0, -w, -w])
+      .fill(colors[Math.floor(Math.random() * colors.length)]);
+    view.position.set(
+      center.x + Math.cos(angle) * distance,
+      center.y + Math.sin(angle) * distance,
+    );
+    view.scale.set(0);
+    this.sparkleLayer.addChild(view);
+    this.sparkles.push({ view, ageMs: 0 });
+  }
+
+  /** Sparkles grow and shrink once, turning a little, then disappear. */
+  private updateSparkles(deltaMs: number): void {
+    this.sparkles = this.sparkles.filter((sparkle) => {
+      sparkle.ageMs += deltaMs;
+      const t = sparkle.ageMs / SPARKLE_LIFE_MS;
+      if (t >= 1) {
+        sparkle.view.destroy();
+        return false;
+      }
+      sparkle.view.scale.set(Math.sin(Math.PI * t));
+      sparkle.view.rotation = t * 0.8;
+      return true;
+    });
   }
 
   /** Changes a cell; a mirror flipping to the other mirror rotates into place. */
@@ -312,6 +377,33 @@ export class BoardView extends Container {
           .moveTo(-h * 0.1, h)
           .lineTo(h, h * 0.1)
           .stroke({ width: 4, color: COLORS.wallHatch, cap: "round" });
+        break;
+      }
+      case "bonus": {
+        // A prism gem: a hexagon cut into facets of every bonus colour
+        // around a bright core. It turns slowly, so the colours swirl.
+        const outer = half * 0.62;
+        const inner = half * 0.2;
+        const corner = (i: number, radius: number) => {
+          const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+          return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+        };
+        for (let i = 0; i < 6; i++) {
+          g.poly([0, 0, ...corner(i, outer), ...corner(i + 1, outer)]).fill(
+            BONUS_COLORS[i],
+          );
+        }
+        for (let i = 0; i < 6; i++) {
+          const [cx, cy] = corner(i, outer);
+          g.moveTo(0, 0).lineTo(cx, cy);
+        }
+        g.stroke({ width: 1, color: COLORS.panel, alpha: 0.6 });
+        const hexagon = (radius: number) =>
+          Array.from({ length: 6 }, (_, i) => corner(i, radius)).flat();
+        g.poly(hexagon(outer))
+          .stroke({ width: 2, color: COLORS.glassHighlight, join: "miter" })
+          .poly(hexagon(inner))
+          .fill(COLORS.beamCore);
         break;
       }
       case "goal": {

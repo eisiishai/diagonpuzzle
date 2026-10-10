@@ -1,7 +1,8 @@
 import { Container, Graphics, Text } from "pixi.js";
-import { COLORS, createBloom, textStyle } from "./theme";
+import { BONUS_COLORS, COLORS, createBloom, textStyle } from "./theme";
 
 const BURST_COLORS = [COLORS.star, COLORS.success, COLORS.beamCore];
+const BONUS_BURST_COLORS = [...BONUS_COLORS, COLORS.beamCore];
 const RAIN_COLORS = [
   COLORS.star,
   COLORS.success,
@@ -36,8 +37,8 @@ interface Banner {
 }
 
 /**
- * Par celebrations, drawn on top of a scene: bursts of stars, an expanding
- * ring, stars raining over the scene and a banner. Runs on update() and
+ * Par and bonus celebrations, drawn on top of a scene: bursts of stars, an
+ * expanding ring, stars raining over the scene and a banner. Runs on update() and
  * cleans up after itself; positions are in the parent scene's coordinates.
  */
 export class Celebration extends Container {
@@ -54,8 +55,15 @@ export class Celebration extends Container {
 
   /** Level completed in par: stars burst from (x, y) and a ring expands. */
   parBurst(x: number, y: number, size: number): void {
-    this.addRing(x, y, size);
-    this.addBurst(x, y, size, 26);
+    this.addRing(x, y, size, COLORS.star);
+    this.addBurst(x, y, size, 26, BURST_COLORS);
+  }
+
+  /** A bonus target hit: stars in every bonus colour burst from (x, y). */
+  bonusBurst(x: number, y: number, size: number): void {
+    this.addRing(x, y, size, BONUS_COLORS[0]);
+    this.addRing(x, y, size * 0.7, BONUS_COLORS[4]);
+    this.addBurst(x, y, size, 36, BONUS_BURST_COLORS);
   }
 
   /**
@@ -70,9 +78,27 @@ export class Celebration extends Container {
     height: number,
     bannerText: string,
   ): void {
-    this.addRing(x, y, size);
-    this.addBurst(x, y, size * 1.4, 60);
-    this.addRain(width, height, size, 140);
+    this.addRing(x, y, size, COLORS.star);
+    this.addBurst(x, y, size * 1.4, 60, BURST_COLORS);
+    this.addRain(width, height, size, 140, RAIN_COLORS);
+    this.addBanner(width / 2, height / 2, width, bannerText);
+  }
+
+  /**
+   * The last bonus target of the game: like allParCelebration(), in every
+   * bonus colour, with more stars.
+   */
+  allBonusCelebration(
+    x: number,
+    y: number,
+    size: number,
+    width: number,
+    height: number,
+    bannerText: string,
+  ): void {
+    this.bonusBurst(x, y, size * 1.4);
+    this.addBurst(x, y, size * 1.4, 50, BONUS_BURST_COLORS);
+    this.addRain(width, height, size, 200, BONUS_BURST_COLORS);
     this.addBanner(width / 2, height / 2, width, bannerText);
   }
 
@@ -109,16 +135,22 @@ export class Celebration extends Container {
     }
   }
 
-  private addRing(x: number, y: number, size: number): void {
+  private addRing(x: number, y: number, size: number, color: number): void {
     const view = new Graphics()
       .circle(0, 0, size * 0.32)
-      .stroke({ width: 4, color: COLORS.star });
+      .stroke({ width: 4, color });
     view.position.set(x, y);
     this.addChild(view);
     this.rings.push({ view, ageMs: 0 });
   }
 
-  private addBurst(x: number, y: number, size: number, count: number): void {
+  private addBurst(
+    x: number,
+    y: number,
+    size: number,
+    count: number,
+    colors: readonly number[],
+  ): void {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = size * (2.5 + Math.random() * 4);
@@ -127,7 +159,7 @@ export class Celebration extends Container {
         vy: Math.sin(angle) * speed - size * 1.5,
         gravity: size * 6,
         lifeMs: 900 + Math.random() * 600,
-        colors: BURST_COLORS,
+        colors,
       });
     }
   }
@@ -138,6 +170,7 @@ export class Celebration extends Container {
     height: number,
     size: number,
     count: number,
+    colors: readonly number[],
   ): void {
     for (let i = 0; i < count; i++) {
       const x = Math.random() * width;
@@ -148,7 +181,7 @@ export class Celebration extends Container {
         vy: fallSpeed,
         gravity: size * 0.8,
         lifeMs: ((height - y) / fallSpeed) * 1000,
-        colors: RAIN_COLORS,
+        colors,
       });
     }
   }
@@ -162,7 +195,7 @@ export class Celebration extends Container {
       vy: number;
       gravity: number;
       lifeMs: number;
-      colors: number[];
+      colors: readonly number[];
     },
   ): void {
     const color =

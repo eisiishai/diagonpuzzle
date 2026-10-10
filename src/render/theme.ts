@@ -25,6 +25,14 @@ export const COLORS = {
   emitterSelected: 0x11223a,
 } as const;
 
+/**
+ * The bonus target's prism colours: its gem facets, sparkles and bursts.
+ * The only multicoloured piece on the board, so it stands out from the goal.
+ */
+export const BONUS_COLORS = [
+  0xff5fd2, 0xffa45c, 0xffe08a, 0x3dffb4, 0x5fd8ff, 0xa98bff,
+] as const;
+
 /** The same background as a CSS colour, for the page and the renderer. */
 export const BACKGROUND_CSS = "#0a0e18";
 

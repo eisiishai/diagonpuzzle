@@ -27,8 +27,9 @@ interface PixelPoint {
 
 /**
  * Moves a pellet along a shot's path as a laser beam. When the shot ends, a
- * beam that reached the goal turns green; a miss dims and gets an end marker
- * whose shape tells the outcome (see docs/DESIGN.md, Readability).
+ * beam that reached the goal turns green and one that hit a bonus target
+ * gold; a miss dims and gets an end marker whose shape tells the outcome
+ * (see docs/DESIGN.md, Readability).
  */
 export class PelletAnimator extends Container {
   private readonly cellSize: number;
@@ -154,6 +155,8 @@ export class PelletAnimator extends Container {
     this.pellet.visible = false;
     if (this.outcome === "goal") {
       this.drawBeam(this.points, { color: COLORS.success, dimmed: false });
+    } else if (this.outcome === "bonus") {
+      this.drawBeam(this.points, { color: COLORS.star, dimmed: false });
     } else {
       this.drawBeam(this.points, { color: COLORS.beam, dimmed: true });
       this.drawEndMarker();

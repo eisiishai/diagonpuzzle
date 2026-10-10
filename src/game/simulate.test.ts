@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LEVELS } from "../levels/levels";
 import { parseLevel } from "../levels/parse";
+import { withBonuses } from "./bonus";
 import { CELL_BEHAVIORS } from "./cells";
 import { fire } from "./simulate";
 import type { Direction } from "./types";
@@ -170,7 +171,7 @@ describe("mirror flipping", () => {
 
 describe("level 1", () => {
   it("is solvable only from row 3", () => {
-    const board = parseLevel(LEVELS[0].grid);
+    const board = withBonuses(parseLevel(LEVELS[0].grid));
     const outcomes = Array.from(
       { length: board.height },
       (_, row) => fire(board, row).outcome,

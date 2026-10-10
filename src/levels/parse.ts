@@ -7,6 +7,7 @@ export const CELL_SYMBOLS: Readonly<Record<CellType, string>> = {
   mirrorSlash: "/",
   wall: "#",
   goal: "G",
+  bonus: "*",
 };
 
 const CELLS_BY_SYMBOL = new Map(

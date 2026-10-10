@@ -1,5 +1,5 @@
 import { boardStateKey, fire } from "./simulate";
-import type { Board } from "./types";
+import type { Board, Position } from "./types";
 
 /**
  * Finds a shortest sequence of rows to fire from that completes the level:
@@ -63,4 +63,53 @@ export function setupRoutes(board: Board): [number, number][] {
     }
   }
   return routes;
+}
+
+/**
+ * Finds a shortest sequence of rows that hits the bonus target at `bonus`,
+ * starting from `board` (which has it). Completing the level ends the try,
+ * so the last goal hit is a dead end; earlier hits of a multi-hit goal are
+ * allowed. Returns null if there is no such sequence within `maxShots`.
+ */
+export function solveBonus(
+  board: Board,
+  bonus: Position,
+  maxShots = 6,
+  goalHits = 1,
+): number[] | null {
+  type State = { board: Board; hits: number; rows: number[] };
+  const stateKey = (state: Omit<State, "rows">) =>
+    `${state.hits}|${boardStateKey(state.board)}`;
+  let frontier: State[] = [{ board, hits: 0, rows: [] }];
+  const seen = new Set([stateKey(frontier[0])]);
+
+  for (let shots = 1; shots <= maxShots && frontier.length > 0; shots++) {
+    const next: State[] = [];
+    for (const state of frontier) {
+      for (let row = 0; row < board.height; row++) {
+        const result = fire(state.board, row);
+        const rows = [...state.rows, row];
+        const end = result.path[result.path.length - 1];
+        if (
+          result.outcome === "bonus" &&
+          end.x === bonus.x &&
+          end.y === bonus.y
+        ) {
+          return rows;
+        }
+        const hits = state.hits + (result.outcome === "goal" ? 1 : 0);
+        if (hits >= goalHits) {
+          continue;
+        }
+        const after = { board: result.board, hits, rows };
+        const key = stateKey(after);
+        if (!seen.has(key)) {
+          seen.add(key);
+          next.push(after);
+        }
+      }
+    }
+    frontier = next;
+  }
+  return null;
 }

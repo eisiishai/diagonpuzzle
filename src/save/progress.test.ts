@@ -12,6 +12,11 @@ import {
   completesAllPar,
   serializeProgress,
   starCount,
+  recordBonus,
+  collectedBonuses,
+  hasAllBonuses,
+  goldenStarCount,
+  completesAllBonuses,
 } from "./progress";
 
 const IDS = ["a", "b", "c"];
@@ -162,6 +167,22 @@ describe("parseProgress", () => {
       levels: { a: { bestShots: 2 } },
     });
     expect(parseProgress(json).skipped).toEqual([]);
+    expect(parseProgress(json).bonuses).toEqual({});
+  });
+
+  it("round-trips collected bonus targets and drops invalid ones", () => {
+    const progress = recordBonus(
+      recordCompletion(EMPTY_PROGRESS, "a", 2).progress,
+      "a",
+      0,
+    );
+    expect(parseProgress(serializeProgress(progress))).toEqual(progress);
+    const json = JSON.stringify({
+      version: 1,
+      levels: {},
+      bonuses: { a: [0, 0, -1, "1", 2], b: "x" },
+    });
+    expect(parseProgress(json).bonuses).toEqual({ a: [0, 2] });
   });
 
   it("returns empty progress for missing or malformed data", () => {
@@ -184,6 +205,46 @@ describe("parseProgress", () => {
     expect(parseProgress(json)).toEqual({
       levels: { good: { bestShots: 2 } },
       skipped: [],
+      bonuses: {},
     });
+  });
+});
+
+describe("bonus targets", () => {
+  const LEVELS = [
+    { id: "a", minShots: 1, bonusCount: 1 },
+    { id: "b", minShots: 2, bonusCount: 2 },
+    { id: "c", minShots: 1, bonusCount: 0 },
+  ];
+  const completed = recordCompletion(EMPTY_PROGRESS, "a", 1).progress;
+
+  it("records each bonus target once, apart from completion", () => {
+    const once = recordBonus(completed, "a", 0);
+    expect(collectedBonuses(once, "a")).toEqual([0]);
+    expect(recordBonus(once, "a", 0)).toBe(once);
+    expect(once.levels).toBe(completed.levels);
+  });
+
+  it("keeps collected bonus targets when the level is completed again", () => {
+    const bonus = recordBonus(completed, "a", 0);
+    const again = recordCompletion(bonus, "a", 3).progress;
+    expect(collectedBonuses(again, "a")).toEqual([0]);
+  });
+
+  it("gives a golden star once all of a level's bonus targets are collected", () => {
+    const oneOfTwo = recordBonus(EMPTY_PROGRESS, "b", 1);
+    expect(hasAllBonuses(oneOfTwo, LEVELS[1])).toBe(false);
+    const both = recordBonus(oneOfTwo, "b", 0);
+    expect(hasAllBonuses(both, LEVELS[1])).toBe(true);
+    expect(hasAllBonuses(EMPTY_PROGRESS, LEVELS[2])).toBe(false);
+    expect(goldenStarCount(both, LEVELS)).toBe(1);
+  });
+
+  it("detects collecting the last bonus target of the game", () => {
+    const before = recordBonus(recordBonus(EMPTY_PROGRESS, "a", 0), "b", 0);
+    const after = recordBonus(before, "b", 1);
+    expect(completesAllBonuses(before, after, LEVELS)).toBe(true);
+    expect(completesAllBonuses(after, after, LEVELS)).toBe(false);
+    expect(completesAllBonuses(EMPTY_PROGRESS, before, LEVELS)).toBe(false);
   });
 });

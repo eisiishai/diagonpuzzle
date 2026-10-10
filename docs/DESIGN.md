@@ -52,6 +52,45 @@ Some levels' goal needs several hits (`goalHits` in the level list; default
   Hit it once more to finish."
 - Restarting resets the hits along with the board.
 
+## Bonus targets
+
+Every level has an optional bonus target (`*` in the level list): a
+puzzle on top of the level for players who have mastered it.
+
+- **Hidden until par.** A level's bonus target appears only on visits
+  after the level was completed at par: not on the visit that first
+  reaches par (restarting doesn't show it either), but once the player
+  goes back to the menu, or on to another level, and returns. Until then
+  its cell is empty.
+- **Hitting it** stops the beam, like the goal, and collects it: the
+  target disappears with a burst of colour and the board keeps the
+  mirrors the shot flipped. Play continues; completing the level still
+  ends the try.
+- **Collected for good.** A hit is saved at once, even if the try is never
+  finished, and a collected target stays gone, also after restarting or
+  coming back later. Collected targets are saved per level, apart from
+  completion and best scores, by their index in reading order (row by row),
+  so don't add a second target before an existing one in a released level.
+- **Shots** spent on a bonus target count in the try's total like any
+  other, but never take away a par star already earned: only a better
+  score replaces the best.
+- **Golden star.** Once a level's bonus target is collected, its par star
+  turns golden in the level list, which also shows `GOLDEN ★ n/10` once
+  there is at least one. The header shows `BONUS 0/1` while playing a
+  level whose bonus target has appeared.
+- **Last bonus target of the game:** a celebration like the one for the
+  last par star, in the bonus colours, with an "All bonus targets found!"
+  banner and its own fanfare.
+- **Design checks.** Each level declares `bonusShots`, the fewest shots
+  that hit its bonus target from the starting board without completing the
+  level first (a non-final hit of a multi-hit goal is allowed). The tests
+  check it with the solver (`solveBonus()`), check `minShots` with the
+  bonus target removed (it is hidden until par), and check that par is
+  still possible with the target showing. At most one per level for now.
+  The bonus targets were placed where they don't block the par solution,
+  favouring spots that need setup shots; `npm run levels` shows the
+  shortest route to each.
+
 ## Cell types
 
 | Symbol | Name | Behavior |
@@ -61,6 +100,7 @@ Some levels' goal needs several hits (`goalHits` in the level list; default
 | `/` | Mirror (slash) | Turns the pellet 90°: right → up, up → right, left → down, down → left. Then flips to `\`. |
 | `#` | Wall | Stops the pellet. |
 | `G` | Goal | Pellet reaches the goal; level complete. |
+| `*` | Bonus target | Stops the pellet and is collected (becomes empty). Hidden (empty) until the level is completed at par; see *Bonus targets*. |
 
 Mirrors are two-sided: a pellet is deflected from either side.
 
@@ -69,6 +109,7 @@ Mirrors are two-sided: a pellet is deflected from either side.
 | Outcome | When | Result |
 |---|---|---|
 | `goal` | Pellet enters the goal cell | Level complete |
+| `bonus` | Pellet enters a bonus target | Target collected; next turn |
 | `exit` | Pellet leaves the grid through any edge | Next turn |
 | `blocked` | Pellet hits a wall | Next turn |
 | `loop` | Pellet returns to a cell it has already visited, moving in the same direction, with the board in the same state | Stop the shot; next turn. Cannot happen with the current cells: every step can be traced back uniquely, so a shot that enters from the edge must end. Guards against future block types. |
@@ -125,6 +166,10 @@ difficulty doesn't dip at the end.
   split start with both off.)
 - After completing a level, Enter/Space or the *Next level* button continues.
   After the last level, it returns to the title screen.
+  On a level completed before, the *Next level* button (outlined, not
+  filled) is there from the start, so a player going for the bonus target
+  can move on at any time; Enter/Space still fires until the level is
+  completed again.
 - **Esc** or the *Menu* label returns to the title screen at any time.
 - **Hidden skip:** Shift+N, or pressing and holding the level name in the
   header for about 1.2 seconds (mouse or touch), moves on to the next level
@@ -193,7 +238,8 @@ canvas. Colours and fonts are defined once in `src/render/theme.ts`.
 | Beam | `#ff4d7d`, core `#fff3f6` | Laser beam, selected emitter |
 | Glass | `#4f9fe0` → `#d8f3ff`, highlight `#f2fbff` | Mirrors |
 | Success | `#3dffb4` | Goal crystal, completed shots, primary button |
-| Star | `#ffe08a` | Stars, par celebrations |
+| Star | `#ffe08a` | Stars, par celebrations, golden stars |
+| Bonus prism | `#ff5fd2` `#ffa45c` `#ffe08a` `#3dffb4` `#5fd8ff` `#a98bff` | Bonus target facets, its sparkles and bursts (the only multicoloured piece) |
 | Wall | `#18233a`, edge `#34466b` | Walls |
 | Idle emitter | `#3b5a86` | Launchers not selected |
 
@@ -214,6 +260,8 @@ Text colours keep at least 4.5:1 contrast on the background.
 - **Mirrors**: glass bars with a bright centre line, glowing pale blue.
 - **Walls**: dark rounded blocks with diagonal hatching, no glow.
 - **Goal**: a crystal (diamond within a diamond) glowing green.
+- **Bonus target**: a prism gem: a hexagon of six facets, one in each
+  bonus colour, with a white rim and a bright core.
 - **Beam**: a glowing coloured band with a thin white core.
 - **Buttons**: rounded rectangles with a thin outline; the primary action
   (*Next level*) is filled with the success colour.
@@ -233,6 +281,10 @@ Text colours keep at least 4.5:1 contrast on the background.
   about half a minute). Its lines are one screen pixel wide, on the screen's
   pixel grid, and it moves in whole screen pixels, so it stays crisp without
   shimmering.
+- The bonus target is livelier than the goal, so it is noticed when it
+  appears: it turns slowly (once every 9 s, so its colours swirl), pulses
+  faster and deeper (grows 16 % every 1.5 s) and gives off small
+  four-pointed sparkles in its colours.
 - When the player's system asks for reduced motion, all ambient motion stops;
   the pieces stay at rest.
 
@@ -240,6 +292,7 @@ Text colours keep at least 4.5:1 contrast on the background.
 
 - Shot outcomes are shown by **shape** as well as colour, so they can be told
   apart without colour vision: reaching the goal turns the whole beam green;
+  hitting a bonus target turns it gold;
   a miss dims the beam and marks where it ended: an **×** at a wall, an
   open **chevron** pointing off the board where it left, a **ring** for a
   loop.
@@ -264,6 +317,8 @@ every variant), so the names below are its variant names.
 | Goal (above par) | *Crystal chime*: glassy notes rising |
 | Par | *Chime and sparkle* |
 | Final star | *Synth fanfare*: brassy chords stepping up into a bright chord |
+| Bonus target | A quick glissando of bells up a pentatonic scale, then high sparkles (not from the sound lab) |
+| Last bonus target | Like the final-star fanfare, with brighter major-seventh chords and bells on each chord (not from the sound lab) |
 
 ### Music
 
@@ -281,7 +336,7 @@ track crossfades in over about a second.
 ### Mix
 
 - Effects at 80 %, music at 45 % of their full level (balanced by ear).
-- The music drops to a quarter during the par and final-star sounds
+- The music drops to a quarter during the par, final-star and bonus sounds
   (ducking), so they stand out.
 - At most six effects play at once; extra ones are skipped (goal, par and
   final-star sounds always play).

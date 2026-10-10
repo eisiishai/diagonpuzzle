@@ -4,6 +4,9 @@
 /** Seconds per breath of pulsing pieces (goal crystal, selected emitter). */
 export const PULSE_PERIOD_MS = 2400;
 
+/** The bonus target pulses faster and deeper than the goal, to stand out. */
+export const BONUS_PULSE_PERIOD_MS = 1500;
+
 /**
  * A smooth breathing value between 0 and 1, repeating every `periodMs`;
  * 0 at time 0.

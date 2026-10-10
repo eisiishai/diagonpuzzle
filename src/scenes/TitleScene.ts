@@ -7,13 +7,16 @@ import { fitToScreen } from "../render/fitToScreen";
 import { COLORS, createBloom, createGlow, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
 import {
+  bonusLevelCount,
+  goldenStarCount,
+  hasAllBonuses,
   isCompleted,
   isSkipped,
   isUnlocked,
   nextLevelIndex,
   starCount,
 } from "../save/progress";
-import type { Progress } from "../save/progress";
+import type { LevelSummary, Progress } from "../save/progress";
 import { GAME_VERSION } from "../version";
 import type { Scene } from "./Scene";
 import { STAR, levelListLabel } from "./scoreText";
@@ -24,6 +27,8 @@ const LEVEL_ROW_HEIGHT = 50;
 
 export interface TitleSceneOptions {
   levels: readonly LevelDefinition[];
+  /** The same levels as `levels`, with what progress needs to know. */
+  summaries: readonly LevelSummary[];
   progress: Progress;
   audio: GameAudio;
   onStartLevel: (index: number) => void;
@@ -48,7 +53,7 @@ export class TitleScene extends Container implements Scene {
 
   constructor(options: TitleSceneOptions) {
     super();
-    const { levels, progress, audio } = options;
+    const { levels, summaries, progress, audio } = options;
     const levelIds = levels.map((level) => level.id);
     let y = 0;
 
@@ -86,20 +91,13 @@ export class TitleScene extends Container implements Scene {
     );
     y += play.button.height + 30;
 
-    const stars = starCount(progress, levels);
-    const allAtPar = stars === levels.length;
-    const header = new Text({
-      text: `LEVELS  ·  ${STAR} ${stars}/${levels.length}${allAtPar ? "  ·  ALL AT PAR!" : ""}`,
-      style: textStyle("label", {
-        fill: allAtPar ? COLORS.star : COLORS.dim,
-      }),
-    });
-    header.anchor.set(0.5, 0);
+    const header = levelListHeader(progress, summaries);
     header.y = y;
     this.addChild(header);
     y += header.height + 12;
 
     levels.forEach((level, index) => {
+      const golden = hasAllBonuses(progress, summaries[index]);
       const label = levelListLabel(
         index + 1,
         level.name,
@@ -107,11 +105,13 @@ export class TitleScene extends Container implements Scene {
         isUnlocked(progress, levelIds, index),
         progress.levels[level.id]?.bestShots,
         isSkipped(progress, level.id),
+        golden,
       );
       const itemIndex = this.items.length;
       const item = this.addItem(
         new Button({
           label,
+          badge: golden ? { text: STAR, color: COLORS.star } : undefined,
           width: LIST_WIDTH,
           onTap: () => options.onStartLevel(index),
           onHover: () => this.select(itemIndex),
@@ -256,6 +256,38 @@ export class TitleScene extends Container implements Scene {
       item.button.selected = index === this.selected;
     });
   }
+}
+
+/**
+ * The level list's header, centred on x = 0: stars earned at par, gold once
+ * all are earned, and golden stars (all bonus targets of a level collected)
+ * once there is at least one, since bonus targets are a hidden extra.
+ */
+function levelListHeader(
+  progress: Progress,
+  summaries: readonly LevelSummary[],
+): Container {
+  const stars = starCount(progress, summaries);
+  const allAtPar = stars === summaries.length;
+  const header = new Container();
+  const par = new Text({
+    text: `LEVELS  ·  ${STAR} ${stars}/${summaries.length}${allAtPar ? "  ·  ALL AT PAR!" : ""}`,
+    style: textStyle("label", {
+      fill: allAtPar ? COLORS.star : COLORS.dim,
+    }),
+  });
+  header.addChild(par);
+  const golden = goldenStarCount(progress, summaries);
+  if (golden > 0) {
+    const goldenText = new Text({
+      text: `  ·  GOLDEN ${STAR} ${golden}/${bonusLevelCount(summaries)}`,
+      style: textStyle("label", { fill: COLORS.star }),
+    });
+    goldenText.x = par.width;
+    header.addChild(goldenText);
+  }
+  header.pivot.x = Math.round(header.width / 2);
+  return header;
 }
 
 /**

@@ -30,7 +30,11 @@ function bestText(shots: number, previousBest: number | undefined): string {
   return ` Best: ${shotCount(previousBest)}.`;
 }
 
-/** A level's line in the title screen's level list. */
+/**
+ * A level's line in the title screen's level list. A golden star (all bonus
+ * targets collected) replaces the par star and is shown separately, in its
+ * own colour, so it is left out here.
+ */
 export function levelListLabel(
   number: number,
   name: string,
@@ -38,6 +42,7 @@ export function levelListLabel(
   unlocked: boolean,
   best: number | undefined,
   skipped = false,
+  golden = false,
 ): string {
   const title = `${number}. ${name}`;
   if (!unlocked) {
@@ -48,6 +53,6 @@ export function levelListLabel(
       ? `${title}  ·  skipped  ·  par ${par}`
       : `${title}  ·  par ${par}`;
   }
-  const star = earnsStar(best, par) ? `  ${STAR}` : "";
+  const star = earnsStar(best, par) && !golden ? `  ${STAR}` : "";
   return `✓ ${title}  ·  best ${best} / par ${par}${star}`;
 }

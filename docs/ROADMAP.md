@@ -66,32 +66,10 @@ with flipping mirrors, before it is built.
 - [ ] Player-placed blocks
 - [ ] Firing from other edges
 - [ ] New block types
-- [ ] Optional bonus targets: extra targets in some levels that are not
-  needed to finish and not counted in par. A level can still be completed at
-  par without them; hitting them as well earns a hidden achievement.
-  Decided:
-  - Bonus targets can be collected across tries: each one stays collected
-    once hit.
-  - A level's bonus targets are hidden until the level has been completed
-    at par with the normal goal; only then do they appear on the board.
-  - Collected bonus targets are saved per level, separately from goal
-    completion and the best shot count.
-  - The level's star turns golden once its bonus targets are collected,
-    instead of the normal par star, in the level list and elsewhere the
-    star is shown.
-  - Collecting the last bonus target of the whole game plays a special
-    animation and sound, like the celebration for reaching par on every
-    level.
-  - Hitting a bonus target stops the beam, like the goal.
-  - Bonus targets are hit during a try, before the goal; completing the
-    level still ends the try (no shooting afterwards).
-  - A bonus hit is saved immediately, even if that try is not finished.
-  - Shots spent on bonus targets count in the try's shot total, but never
-    take away a par star already earned (only a better score replaces the
-    best).
-  Still to decide when designing: how bonus targets look and their symbol
-  in the level text format, and how the solver and tests check that every
-  bonus target can be reached
+- [x] Optional bonus targets: one extra target per level, not needed to
+  finish and not counted in par, shown once the level has been completed
+  at par; collecting it turns the level's star golden. Design in
+  `docs/DESIGN.md`, *Bonus targets*
 - [x] Multi-hit goal: a goal that must be hit several times to complete the
   level, showing the hits remaining. Decided: each hit is a separate shot,
   mirror flips stay between hits, and par counts all shots. Levels 5–6

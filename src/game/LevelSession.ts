@@ -1,6 +1,7 @@
+import { withEmptyCells } from "./bonus";
 import { fire } from "./simulate";
 import type { ShotOutcome, ShotResult } from "./simulate";
-import type { Board } from "./types";
+import type { Board, Position } from "./types";
 
 /**
  * Aiming: waiting for a shot. Firing: a shot is in progress (the pellet is
@@ -23,8 +24,10 @@ export class LevelSession {
   /** Goal hits needed to complete the level; each must be a separate shot. */
   readonly goalHits: number;
   private _hits = 0;
-  /** Outcome of the shot in progress, applied by finishShot(). */
-  private pendingOutcome?: ShotOutcome;
+  /** Bonus targets hit so far; they stay collected across restarts. */
+  private readonly _collectedBonuses: Position[] = [];
+  /** The shot in progress, applied by finishShot(). */
+  private pendingShot?: ShotResult;
 
   constructor(startBoard: Board, goalHits = 1) {
     this.startBoard = startBoard;
@@ -36,6 +39,11 @@ export class LevelSession {
   /** Goal hits so far. */
   get hits(): number {
     return this._hits;
+  }
+
+  /** Positions of the bonus targets hit so far, in the order hit. */
+  get collectedBonuses(): readonly Position[] {
+    return this._collectedBonuses;
   }
 
   /** The board as changed by the shots so far. */
@@ -86,37 +94,43 @@ export class LevelSession {
     this._board = result.board;
     this._shots++;
     this._phase = "firing";
-    this.pendingOutcome = result.outcome;
+    this.pendingShot = result;
     return result;
   }
 
   /**
    * Ends the shot in progress. A shot reaching the goal counts as a hit; the
-   * level is complete once there are as many hits as it needs. The board
-   * keeps every change the shot made either way.
+   * level is complete once there are as many hits as it needs. A shot
+   * reaching a bonus target collects it. The board keeps every change the
+   * shot made either way.
    */
   finishShot(): ShotOutcome {
-    if (this._phase !== "firing" || this.pendingOutcome === undefined) {
+    const shot = this.pendingShot;
+    if (this._phase !== "firing" || shot === undefined) {
       throw new Error("finishShot() called with no shot in progress");
     }
-    const outcome = this.pendingOutcome;
-    this.pendingOutcome = undefined;
+    this.pendingShot = undefined;
+    const { outcome, path } = shot;
     if (outcome === "goal") {
       this._hits++;
+    } else if (outcome === "bonus") {
+      const { x, y } = path[path.length - 1];
+      this._collectedBonuses.push({ x, y });
     }
     this._phase = this._hits >= this.goalHits ? "complete" : "aiming";
     return outcome;
   }
 
   /**
-   * Back to the starting board with no shots fired, from any phase. A shot in
-   * progress is abandoned; the selected row is kept.
+   * Back to the starting board with no shots fired, from any phase, except
+   * that collected bonus targets stay gone. A shot in progress is abandoned;
+   * the selected row is kept.
    */
   restart(): void {
-    this._board = this.startBoard;
+    this._board = withEmptyCells(this.startBoard, this._collectedBonuses);
     this._shots = 0;
     this._hits = 0;
     this._phase = "aiming";
-    this.pendingOutcome = undefined;
+    this.pendingShot = undefined;
   }
 }

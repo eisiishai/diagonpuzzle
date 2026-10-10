@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseLevel } from "../levels/parse";
 import { fire } from "./simulate";
-import { setupRoutes, solve } from "./solver";
+import { setupRoutes, solve, solveBonus } from "./solver";
 
 describe("solve", () => {
   it("finds a one-shot solution", () => {
@@ -56,5 +56,30 @@ describe("setupRoutes", () => {
       . G
     `);
     expect(setupRoutes(board)).toEqual([]);
+  });
+});
+
+describe("solveBonus", () => {
+  it("finds the shortest way to hit a bonus target", () => {
+    // The first shot from row 0 flips the mirror; the second goes down into
+    // the bonus target.
+    const board = parseLevel(String.raw`
+      . / G
+      # * .
+    `);
+    expect(solveBonus(board, { x: 1, y: 1 })).toEqual([0, 0]);
+  });
+
+  it("does not complete the level on the way", () => {
+    // Row 1 turns up into the goal, flipping its mirror; only then does it
+    // turn down into the bonus target. That needs a goal hit that does not
+    // complete the level.
+    const board = parseLevel(String.raw`
+      . G
+      . /
+      # *
+    `);
+    expect(solveBonus(board, { x: 1, y: 2 }, 6, 1)).toBeNull();
+    expect(solveBonus(board, { x: 1, y: 2 }, 6, 2)).toEqual([1, 1]);
   });
 });

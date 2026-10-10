@@ -2,7 +2,7 @@ import { getCell, step } from "./board";
 import { CELL_BEHAVIORS } from "./cells";
 import type { Board, CellType, Direction, Position } from "./types";
 
-export type ShotOutcome = "goal" | "exit" | "blocked" | "loop";
+export type ShotOutcome = "goal" | "bonus" | "exit" | "blocked" | "loop";
 
 export interface PathStep {
   x: number;
@@ -69,7 +69,11 @@ export function fire(board: Board, row: number): ShotResult {
         ...position,
         directionIn: direction,
         directionOut: direction,
+        ...(effect.becomes && { becomes: effect.becomes }),
       });
+      if (effect.becomes) {
+        cells[position.y][position.x] = effect.becomes;
+      }
       return done(effect.reason);
     }
 

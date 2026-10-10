@@ -15,7 +15,7 @@ export const DIRECTION_DELTAS: Record<Direction, Position> = {
 };
 
 export type CellType =
-  "empty" | "mirrorBackslash" | "mirrorSlash" | "wall" | "goal";
+  "empty" | "mirrorBackslash" | "mirrorSlash" | "wall" | "goal" | "bonus";
 
 export interface Board {
   readonly width: number;

@@ -79,7 +79,8 @@ scripts/        development tools run with tsx (not part of the game)
 - Shots change the board (mirrors flip when hit): `fire()` returns the new
   board and never modifies the one passed in.
 - Every level declares `minShots` (and `goalHits` when the goal needs more
-  than one hit); `src/levels/levels.test.ts` checks it with the solver.
+  than one hit, `bonusShots` when it has a bonus target `*`);
+  `src/levels/levels.test.ts` checks them with the solver.
   Design new levels with `npm run generate`, then hand-tune the board and
   confirm it with `npm run levels`.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and

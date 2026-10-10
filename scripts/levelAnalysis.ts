@@ -3,7 +3,8 @@
 
 import { fire } from "../src/game/simulate";
 import type { ShotOutcome } from "../src/game/simulate";
-import { setupRoutes, solve } from "../src/game/solver";
+import { bonusPositions, withBonuses } from "../src/game/bonus";
+import { setupRoutes, solve, solveBonus } from "../src/game/solver";
 import type { Board } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
 import type { LevelDefinition } from "../src/levels/levels";
@@ -22,6 +23,7 @@ export interface SolutionShot {
 export interface LevelAnalysis {
   number: number;
   level: LevelDefinition;
+  /** The starting board, with its bonus target if it has one. */
   board: Board;
   /** A shortest solution, or null if none was found. */
   solution: number[] | null;
@@ -31,11 +33,20 @@ export interface LevelAnalysis {
   firstShots: ShotOutcome[];
   /** True if the solver confirms the level's declared minShots. */
   minShotsConfirmed: boolean;
+  /**
+   * A shortest way to hit the bonus target (undefined if the level has none,
+   * null if none was found).
+   */
+  bonusSolution?: number[] | null;
+  /** True if the solver confirms the level's declared bonusShots. */
+  bonusShotsConfirmed: boolean;
 }
 
 export function analyzeLevels(): LevelAnalysis[] {
   return LEVELS.map((level, index) => {
-    const board = parseLevel(level.grid);
+    const fullBoard = parseLevel(level.grid);
+    // Par is played without bonus targets: they appear only after it.
+    const board = withBonuses(fullBoard);
     const solution = solve(
       board,
       level.minShots + SEARCH_EXTRA_SHOTS,
@@ -54,10 +65,20 @@ export function analyzeLevels(): LevelAnalysis[] {
       current = result.board;
     }
 
+    const [bonus] = bonusPositions(fullBoard);
+    const bonusSolution = bonus
+      ? solveBonus(
+          fullBoard,
+          bonus,
+          (level.bonusShots ?? level.minShots) + SEARCH_EXTRA_SHOTS,
+          level.goalHits ?? 1,
+        )
+      : undefined;
+
     return {
       number: index + 1,
       level,
-      board,
+      board: fullBoard,
       solution,
       solutionShots,
       // Setup routes are about a single goal hit.
@@ -67,6 +88,8 @@ export function analyzeLevels(): LevelAnalysis[] {
         (_, row) => fire(board, row).outcome,
       ),
       minShotsConfirmed: solution?.length === level.minShots,
+      bonusSolution,
+      bonusShotsConfirmed: bonusSolution?.length === level.bonusShots,
     };
   });
 }

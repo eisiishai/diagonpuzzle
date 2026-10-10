@@ -7,7 +7,7 @@ import type { CellType, Direction } from "./types";
  */
 export type CellEffect =
   | { kind: "pass"; direction: Direction; becomes?: CellType }
-  | { kind: "stop"; reason: "blocked" | "goal" };
+  | { kind: "stop"; reason: "blocked" | "goal" | "bonus"; becomes?: CellType };
 
 const BACKSLASH_TURNS: Record<Direction, Direction> = {
   right: "down",
@@ -45,4 +45,7 @@ export const CELL_BEHAVIORS: Record<
   }),
   wall: () => ({ kind: "stop", reason: "blocked" }),
   goal: () => ({ kind: "stop", reason: "goal" }),
+  // An optional bonus target stops the pellet and is collected: it is gone
+  // for the rest of the level.
+  bonus: () => ({ kind: "stop", reason: "bonus", becomes: "empty" }),
 };

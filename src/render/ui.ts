@@ -17,6 +17,8 @@ export interface ButtonOptions {
   /** Fixed width; otherwise the button fits its label. */
   width?: number;
   icon?: IconDrawer;
+  /** Text after the label in its own colour, such as a golden star. */
+  badge?: { text: string; color: number };
   onTap: () => void;
   onHover?: () => void;
 }
@@ -25,6 +27,7 @@ const PADDING_X = 16;
 const MIN_HEIGHT = 44;
 const ICON_SIZE = 16;
 const ICON_GAP = 8;
+const BADGE_GAP = 8;
 
 /**
  * A rounded, outlined button. `selected` shows keyboard focus (and pointer
@@ -35,6 +38,8 @@ export class Button extends Container {
   private readonly background = new Graphics();
   private readonly icon = new Graphics();
   private readonly labelText: Text;
+  private readonly badgeText?: Text;
+  private variant: ButtonVariant;
   private _selected = false;
   private _disabled = false;
   private hovered = false;
@@ -42,11 +47,22 @@ export class Button extends Container {
   constructor(options: ButtonOptions) {
     super();
     this.options = options;
+    this.variant = options.variant ?? "secondary";
     this.labelText = new Text({
       text: options.label,
       style: textStyle("label", options.large ? { fontSize: 24 } : {}),
     });
     this.addChild(this.background, this.icon, this.labelText);
+    if (options.badge) {
+      this.badgeText = new Text({
+        text: options.badge.text,
+        style: textStyle("label", {
+          ...(options.large ? { fontSize: 24 } : {}),
+          fill: options.badge.color,
+        }),
+      });
+      this.addChild(this.badgeText);
+    }
 
     this.eventMode = "static";
     this.cursor = "pointer";
@@ -88,13 +104,19 @@ export class Button extends Container {
     this.redraw();
   }
 
+  setVariant(variant: ButtonVariant): void {
+    this.variant = variant;
+    this.redraw();
+  }
+
   setLabel(label: string): void {
     this.labelText.text = label;
     this.redraw();
   }
 
   private redraw(): void {
-    const { variant = "secondary", width, icon, large } = this.options;
+    const { width, icon, large } = this.options;
+    const { variant } = this;
     const active = !this._disabled && (this._selected || this.hovered);
     const primary = variant === "primary";
 
@@ -109,7 +131,8 @@ export class Button extends Container {
     this.labelText.style.fontWeight = primary ? "700" : "500";
 
     const iconWidth = icon ? ICON_SIZE + ICON_GAP : 0;
-    const contentWidth = iconWidth + this.labelText.width;
+    const badgeWidth = this.badgeText ? BADGE_GAP + this.badgeText.width : 0;
+    const contentWidth = iconWidth + this.labelText.width + badgeWidth;
     const w = width ?? contentWidth + 2 * PADDING_X;
     const h = Math.max(MIN_HEIGHT, this.labelText.height + (large ? 24 : 16));
 
@@ -128,6 +151,13 @@ export class Button extends Container {
       left + iconWidth,
       Math.round((h - this.labelText.height) / 2),
     );
+    if (this.badgeText) {
+      this.badgeText.alpha = this._disabled ? 0.4 : 1;
+      this.badgeText.position.set(
+        this.labelText.x + this.labelText.width + BADGE_GAP,
+        Math.round((h - this.badgeText.height) / 2),
+      );
+    }
     this.icon.clear();
     if (icon) {
       icon(this.icon, textColor);

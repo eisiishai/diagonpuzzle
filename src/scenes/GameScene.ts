@@ -24,7 +24,13 @@ const MIN_SCENE_WIDTH = 600;
 const INTRO_MESSAGE =
   "Aim with ↑/↓ and fire with Enter, or click an emitter. Mirrors turn when hit.";
 
-const OUTCOME_MESSAGES: Record<Exclude<ShotOutcome, "goal">, string> = {
+const BONUS_INTRO_MESSAGE =
+  "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
+
+const OUTCOME_MESSAGES: Record<
+  Exclude<ShotOutcome, "goal" | "bonus">,
+  string
+> = {
   exit: "The pellet left the grid.",
   blocked: "The pellet hit a wall.",
   loop: "The pellet got stuck in a loop.",
@@ -37,6 +43,13 @@ export interface CompletionResult {
   allLevelsAtPar: boolean;
 }
 
+export interface BonusResult {
+  /** True if every bonus target of the level is now collected. */
+  levelGolden: boolean;
+  /** True if this was the last bonus target of the whole game. */
+  allBonuses: boolean;
+}
+
 export interface GameSceneOptions {
   /** The level's starting board. */
   board: Board;
@@ -47,9 +60,22 @@ export interface GameSceneOptions {
   par: number;
   /** Goal hits needed to complete the level, each from a separate shot. */
   goalHits: number;
+  /**
+   * True if the level was completed before this visit: the next level is
+   * then offered from the start, not only after completing it again.
+   */
+  completedBefore: boolean;
+  /**
+   * The level's bonus targets: whether they are shown (the level was
+   * completed at par before this visit), how many there are and how many
+   * were collected before. `board` holds only the ones still to collect.
+   */
+  bonus: { shown: boolean; total: number; collected: number };
   audio: GameAudio;
   /** Records a completion; returns the level's best shot count before it, if any. */
   onComplete: (shots: number) => CompletionResult;
+  /** Records a bonus target hit at board cell (x, y). */
+  onBonus: (x: number, y: number) => BonusResult;
   /** Called when the player continues after completing the level. */
   onNext: () => void;
   /** Called when the player leaves for the title screen. */
@@ -134,7 +160,7 @@ export class GameScene extends Container implements Scene {
       onTap: () => options.onNext(),
     });
     this.nextButton.y = bottomRow;
-    this.nextButton.visible = false;
+    this.showNextButton(false);
     this.audioControls = new AudioControls(options.audio, "right");
     this.audioControls.position.set(width, bottomRow);
     this.contentHeight = bottomRow + ROW_HEIGHT;
@@ -236,6 +262,10 @@ export class GameScene extends Container implements Scene {
   private finishShot(result: ShotResult): void {
     const { audio } = this.options;
     const outcome = this.session.finishShot();
+    if (outcome === "bonus") {
+      this.collectBonus(result);
+      return;
+    }
     if (outcome === "goal") {
       this.boardView.setGoalHits(this.session.hits, this.session.goalHits);
       this.updateShots();
@@ -257,7 +287,7 @@ export class GameScene extends Container implements Scene {
         completionMessage(shots, this.options.par, previousBest),
         COLORS.success,
       );
-      this.nextButton.visible = true;
+      this.showNextButton(true);
       return;
     }
 
@@ -280,10 +310,7 @@ export class GameScene extends Container implements Scene {
       return;
     }
 
-    const goal = result.path[result.path.length - 1];
-    const center = this.boardView.cellCenter(goal.x, goal.y);
-    const x = this.boardView.x + center.x;
-    const y = this.boardView.y + center.y;
+    const { x, y } = this.shotEnd(result);
     if (allLevelsAtPar) {
       audio.play("allPar");
       this.celebration.allParCelebration(
@@ -298,6 +325,45 @@ export class GameScene extends Container implements Scene {
       audio.play("par");
       this.celebration.parBurst(x, y, CELL_SIZE);
     }
+  }
+
+  /**
+   * A bonus target hit: saved at once, with a burst in the bonus colours,
+   * or a bigger celebration when it was the last one of the game.
+   */
+  private collectBonus(result: ShotResult): void {
+    const { audio } = this.options;
+    const end = result.path[result.path.length - 1];
+    const { levelGolden, allBonuses } = this.options.onBonus(end.x, end.y);
+    this.updateShots();
+    const { x, y } = this.shotEnd(result);
+    if (allBonuses) {
+      audio.play("allBonus");
+      this.celebration.allBonusCelebration(
+        x,
+        y,
+        CELL_SIZE,
+        this.sceneWidth,
+        this.contentHeight,
+        `${STAR} ALL BONUS TARGETS FOUND! ${STAR}`,
+      );
+    } else {
+      audio.play("bonus");
+      this.celebration.bonusBurst(x, y, CELL_SIZE);
+    }
+    this.showMessage(
+      levelGolden
+        ? `Bonus target hit! This level's ${STAR} is now golden.`
+        : "Bonus target hit!",
+      COLORS.star,
+    );
+  }
+
+  /** Where a shot ended, in scene coordinates. */
+  private shotEnd(result: ShotResult): { x: number; y: number } {
+    const end = result.path[result.path.length - 1];
+    const center = this.boardView.cellCenter(end.x, end.y);
+    return { x: this.boardView.x + center.x, y: this.boardView.y + center.y };
   }
 
   /**
@@ -334,8 +400,18 @@ export class GameScene extends Container implements Scene {
     this.boardView.setGoalHits(0, this.session.goalHits);
     this.updateShots();
     this.showMessage(this.introMessage());
-    this.nextButton.visible = false;
+    this.showNextButton(false);
     this.boardView.setSelectedRow(this.session.selectedRow);
+  }
+
+  /**
+   * The next-level button: the main action once the level is complete in
+   * this visit; before that an ordinary button, shown only if the level was
+   * completed before (e.g. while going for its bonus target).
+   */
+  private showNextButton(complete: boolean): void {
+    this.nextButton.visible = complete || this.options.completedBefore;
+    this.nextButton.setVariant(complete ? "primary" : "secondary");
   }
 
   private showMessage(text: string, color: number = COLORS.text): void {
@@ -347,12 +423,23 @@ export class GameScene extends Container implements Scene {
     const pad = (n: number) => String(n).padStart(2, "0");
     const { shots, hits, goalHits } = this.session;
     const goal = goalHits > 1 ? `  ·  GOAL ${hits}/${goalHits}` : "";
-    this.shotsText.text = `SHOTS ${pad(shots)}  ·  PAR ${pad(this.options.par)}${goal}`;
+    const { shown, total } = this.options.bonus;
+    const bonus =
+      shown && total > 0 ? `  ·  BONUS ${this.bonusesCollected}/${total}` : "";
+    this.shotsText.text = `SHOTS ${pad(shots)}  ·  PAR ${pad(this.options.par)}${goal}${bonus}`;
+  }
+
+  /** Bonus targets of the level collected, before and during this visit. */
+  private get bonusesCollected(): number {
+    return this.options.bonus.collected + this.session.collectedBonuses.length;
   }
 
   /** The message shown when a level starts or restarts. */
   private introMessage(): string {
-    const { goalHits } = this.options;
+    const { goalHits, bonus } = this.options;
+    if (bonus.shown && this.bonusesCollected < bonus.total) {
+      return BONUS_INTRO_MESSAGE;
+    }
     return goalHits > 1
       ? `This goal needs ${goalHits} hits, each from a separate shot. Mirrors stay flipped between shots.`
       : INTRO_MESSAGE;

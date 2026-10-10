@@ -5,7 +5,15 @@ import type { Synth } from "./synth";
 import { midi } from "./synth";
 
 export type SoundEffect =
-  "fire" | "wall" | "exit" | "loop" | "goal" | "par" | "allPar";
+  | "fire"
+  | "wall"
+  | "exit"
+  | "loop"
+  | "goal"
+  | "par"
+  | "allPar"
+  | "bonus"
+  | "allBonus";
 
 export interface EffectDefinition {
   /** About how long the sound lasts, for limiting overlapping sounds. */
@@ -135,6 +143,73 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
       });
       s.notes([96, 100, 103, 108], t + 0.9, 0.09, (f, tt) =>
         s.tone({ f, t: tt, d: 0.3, vol: 0.05, dest, wet: 0.6 }),
+      );
+    },
+  },
+  // Bonus target: a quick glissando of bells up a pentatonic scale, then a
+  // shimmer of high sparkles. Not from the sound lab; tune by ear.
+  bonus: {
+    seconds: 1.2,
+    important: true,
+    duckSeconds: 1.2,
+    play: (s, dest, t) => {
+      s.notes([79, 81, 84, 86, 88, 91, 93, 96], t, 0.04, (f, tt) =>
+        s.bell({
+          f,
+          t: tt,
+          d: 0.6,
+          vol: 0.06,
+          ratio: 3.5,
+          index: 1.2,
+          dest,
+          wet: 0.5,
+        }),
+      );
+      s.notes([108, 103, 110, 105, 112, 115], t + 0.34, 0.05, (f, tt) =>
+        s.tone({ f, t: tt, d: 0.16, vol: 0.04, dest, wet: 0.6 }),
+      );
+    },
+  },
+  // Last bonus target of the game: like the final-star fanfare, with
+  // brighter major-seventh chords, bells on each chord and a long shimmer.
+  allBonus: {
+    seconds: 3,
+    important: true,
+    duckSeconds: 3.8,
+    play: (s, dest, t) => {
+      const chords = [
+        [60, 64, 67, 71],
+        [62, 65, 69, 72],
+        [65, 69, 72, 76],
+        [67, 71, 74, 79],
+      ];
+      chords.forEach((chord, i) => {
+        const last = i === chords.length - 1;
+        chord.forEach((note, j) => {
+          s.tone({
+            type: "sawtooth",
+            f: midi(note),
+            t: t + i * 0.24,
+            a: 0.02,
+            d: last ? 1.8 : 0.22,
+            vol: 0.04,
+            filter: { f: 1000 },
+            filterEnd: last ? 5000 : 2000,
+            dest,
+            wet: 0.4,
+          });
+          s.bell({
+            f: midi(note + 24),
+            t: t + i * 0.24 + j * 0.04,
+            d: 0.5,
+            vol: 0.035,
+            dest,
+            wet: 0.5,
+          });
+        });
+      });
+      s.notes([96, 98, 100, 103, 105, 108, 110, 112], t + 1, 0.06, (f, tt) =>
+        s.tone({ f, t: tt, d: 0.3, vol: 0.045, dest, wet: 0.6 }),
       );
     },
   },

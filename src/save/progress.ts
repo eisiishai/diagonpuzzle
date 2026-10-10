@@ -1,5 +1,5 @@
 // Player progress: which levels are completed and the best shot count for
-// each, and which levels were skipped. Pure functions; reading and writing
+// each, which levels were skipped, and which bonus targets were collected. Pure functions; reading and writing
 // storage is done by the caller.
 
 export interface LevelProgress {
@@ -14,9 +14,27 @@ export interface Progress {
    * A skipped level is not passed, but unlocks the level after it.
    */
   readonly skipped: readonly string[];
+  /**
+   * Collected bonus targets, keyed by level id: indices into the level's
+   * bonus targets in reading order (see bonusPositions()). Kept apart from
+   * completion and best scores.
+   */
+  readonly bonuses: Readonly<Partial<Record<string, readonly number[]>>>;
 }
 
-export const EMPTY_PROGRESS: Progress = { levels: {}, skipped: [] };
+/** What progress needs to know about a level for stars and bonus targets. */
+export interface LevelSummary {
+  id: string;
+  minShots: number;
+  /** Number of bonus targets in the level. */
+  bonusCount: number;
+}
+
+export const EMPTY_PROGRESS: Progress = {
+  levels: {},
+  skipped: [],
+  bonuses: {},
+};
 
 const FORMAT_VERSION = 1;
 
@@ -36,6 +54,7 @@ export function recordCompletion(
     previousBest === undefined ? shots : Math.min(previousBest, shots);
   return {
     progress: {
+      ...progress,
       levels: { ...progress.levels, [levelId]: { bestShots } },
       skipped: progress.skipped.filter((id) => id !== levelId),
     },
@@ -127,11 +146,83 @@ export function completesAllPar(
   );
 }
 
+/** Records that bonus target `index` of a level was hit. */
+export function recordBonus(
+  progress: Progress,
+  levelId: string,
+  index: number,
+): Progress {
+  const collected = collectedBonuses(progress, levelId);
+  if (collected.includes(index)) {
+    return progress;
+  }
+  return {
+    ...progress,
+    bonuses: { ...progress.bonuses, [levelId]: [...collected, index] },
+  };
+}
+
+/** Indices of the level's bonus targets collected so far. */
+export function collectedBonuses(
+  progress: Progress,
+  levelId: string,
+): readonly number[] {
+  return progress.bonuses[levelId] ?? [];
+}
+
+/**
+ * True when the level has bonus targets and all are collected: its star
+ * turns golden.
+ */
+export function hasAllBonuses(
+  progress: Progress,
+  level: Pick<LevelSummary, "id" | "bonusCount">,
+): boolean {
+  const collected = collectedBonuses(progress, level.id);
+  return (
+    level.bonusCount > 0 &&
+    Array.from({ length: level.bonusCount }, (_, i) => i).every((i) =>
+      collected.includes(i),
+    )
+  );
+}
+
+/** Number of levels with all their bonus targets collected (golden stars). */
+export function goldenStarCount(
+  progress: Progress,
+  levels: readonly LevelSummary[],
+): number {
+  return levels.filter((level) => hasAllBonuses(progress, level)).length;
+}
+
+/** Number of levels that have bonus targets. */
+export function bonusLevelCount(levels: readonly LevelSummary[]): number {
+  return levels.filter((level) => level.bonusCount > 0).length;
+}
+
+/**
+ * True when going from `before` to `after` collected the last bonus target
+ * of the whole game.
+ */
+export function completesAllBonuses(
+  before: Progress,
+  after: Progress,
+  levels: readonly LevelSummary[],
+): boolean {
+  const total = bonusLevelCount(levels);
+  return (
+    total > 0 &&
+    goldenStarCount(before, levels) < total &&
+    goldenStarCount(after, levels) === total
+  );
+}
+
 export function serializeProgress(progress: Progress): string {
   return JSON.stringify({
     version: FORMAT_VERSION,
     levels: progress.levels,
     skipped: progress.skipped,
+    bonuses: progress.bonuses,
   });
 }
 
@@ -177,5 +268,22 @@ export function parseProgress(json: string | null): Progress {
           (id): id is string => typeof id === "string" && !(id in levels),
         )
       : [];
-  return { levels, skipped };
+
+  // Saves from before bonus targets existed have no "bonuses".
+  const bonuses: Record<string, number[]> = {};
+  if (
+    "bonuses" in data &&
+    typeof data.bonuses === "object" &&
+    data.bonuses !== null
+  ) {
+    for (const [id, entry] of Object.entries(data.bonuses)) {
+      if (Array.isArray(entry)) {
+        const indices = entry.filter(
+          (index): index is number => Number.isInteger(index) && index >= 0,
+        );
+        bonuses[id] = [...new Set(indices)];
+      }
+    }
+  }
+  return { levels, skipped, bonuses };
 }
