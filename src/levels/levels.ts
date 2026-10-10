@@ -209,4 +209,35 @@ export const LEVELS: readonly LevelDefinition[] = [
       . \ . . . # * . .
     `,
   },
+  {
+    id: "crack-and-double",
+    name: "Crack and double",
+    minShots: 3,
+    goalHits: 2,
+    bonusShots: 4,
+    music: "nightLab",
+    grid: String.raw`
+      \ / . # . .
+      . \ . . . .
+      . . . \ . .
+      / / . % . G
+      . / . . * .
+    `,
+  },
+  {
+    id: "rubble-run",
+    name: "Rubble run",
+    minShots: 5,
+    goalHits: 2,
+    bonusShots: 6,
+    music: "nightLab",
+    grid: String.raw`
+      / . . . # . .
+      / . . \ . . G
+      . . % \ . . .
+      / . / . % . .
+      . . . \ . . .
+      / # / . . * .
+    `,
+  },
 ];

@@ -161,8 +161,10 @@ levels 1 and 2 have one.
 | 10 | Two-step | 4 | Rows 3, 5, 3, 5: each shot flips mirrors the other row's next shot needs. |
 | 11 | Breakthrough | 3 | Introduces breakable walls. Row 2 breaks the cracked wall in front of it, then runs through to flip the mirrors it needs, then reaches the goal: the same row three times, each shot changing the board. |
 | 12 | Stone by stone | 4 | Rows 6, 7, 6, 7: three of the four shots break a cracked wall, opening the way for the next. |
+| 13 | Crack and double | 3 | Breakable walls with a two-hit goal. Row 3 breaks the cracked wall in front of the goal; rows 5 and 2 then reach it through the gap. |
+| 14 | Rubble run | 5 | Goal needs 2 hits. Rows 4, 2, 3, 4, 3: a miss sets up the mirrors, row 2 breaks a cracked wall, and rows 3 and 4 take turns reaching the goal. |
 
-Levels 11–12 were found with `npm run generate -- --breakable N`, which
+Levels 11–14 were found with `npm run generate -- --breakable N`, which
 keeps only boards that can't be solved with their breakable walls made
 solid; the tests check that too.
 
@@ -362,7 +364,7 @@ every variant), so the names below are its variant names.
 | Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
 | Levels 1–4 | **Pulse**: driving synthwave with a soft beat, 104 BPM |
 | Levels 5–8 | **Glass garden**: a slow, dark ambient drone only (no melody), so it stays out of the way on the harder levels |
-| Levels 9–12 | **Night lab**, as on the title screen |
+| Levels 9–14 | **Night lab**, as on the title screen |
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different

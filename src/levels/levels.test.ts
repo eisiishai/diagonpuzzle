@@ -18,7 +18,12 @@ it.each(LEVELS_WITH_SETUP_ROUTE)("%s has a two-shot setup route", (id) => {
 
 // Levels built around breakable walls: with every breakable wall solid,
 // they can't be solved at all (within a generous number of shots).
-const LEVELS_NEEDING_BREAKS = ["breakthrough", "stone-by-stone"];
+const LEVELS_NEEDING_BREAKS = [
+  "breakthrough",
+  "stone-by-stone",
+  "crack-and-double",
+  "rubble-run",
+];
 
 it.each(LEVELS_NEEDING_BREAKS)("%s needs a breakable wall broken", (id) => {
   const level = LEVELS.find((candidate) => candidate.id === id);
@@ -30,8 +35,9 @@ it.each(LEVELS_NEEDING_BREAKS)("%s needs a breakable wall broken", (id) => {
       row.map((cell) => (cell === "breakable" ? "wall" : cell)),
     ),
   };
-  expect(solve(board, level!.minShots)).not.toBeNull();
-  expect(solve(solid, 8)).toBeNull();
+  const goalHits = level!.goalHits ?? 1;
+  expect(solve(board, level!.minShots, goalHits)).not.toBeNull();
+  expect(solve(solid, 8, goalHits)).toBeNull();
 });
 
 it("gives every level an existing music track", () => {
