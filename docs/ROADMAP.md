@@ -178,10 +178,11 @@ the polyline rule and is checked on a phone. In suggested order:
     pointer hover stays silent)
   - [x] A glass tap for button clicks
   - [x] A glass swish with the mirror flip
-- [ ] Review the older effects (fire, bounces, wall, off the board, goal,
+- [x] Review the older effects (fire, bounces, wall, off the board, goal,
   par) in long play: the softened level-start sound showed that sounds
-  heard on every shot or level can wear on the ear. Make them quieter or
-  softer where needed
+  heard on every shot or level can wear on the ear. Chosen on sound lab 3:
+  the *Softer* version of each (30–40 % quieter, a little rounder), with
+  the overall effects level kept at 80 %
 - [ ] Ghost of the previous shot: when the next shot fires, the previous
   path stays until the shot after. Wanted, although it changes how puzzles
   play (shows what flipped). Chosen: a very dim band with small chevrons

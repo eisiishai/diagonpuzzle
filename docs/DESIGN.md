@@ -453,7 +453,11 @@ Text colours keep at least 4.5:1 contrast on the background.
 All sound is synthesized in code with the Web Audio API: no audio files.
 Effects and music were chosen by ear on the sound lab page (an artifact with
 every variant), so the names below are its variant names; later choices
-came from sound lab 2.
+came from sound lab 2. Sound lab 3 then reviewed the effects for long play:
+fire, bounce, wall, breaking wall, off the board, loop, goal, par and mirror
+placed are its *Softer* versions, the same sounds about 30–40 % quieter and
+a little rounder, so they don't wear on the ear over many levels. The rare
+celebrations (final star, bonus targets) keep their full level.
 
 ### Effects
 

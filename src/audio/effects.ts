@@ -44,6 +44,8 @@ export interface EffectDefinition {
 
 export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
   // Fire (C, "Soft pulse"): a gentle falling tone with a breath of air.
+  // Like the other everyday effects, softened for long play (sound lab 3,
+  // "Softer"): about 40 % quieter and a little rounder.
   fire: {
     seconds: 0.15,
     play: (s, dest, t, pitch) => {
@@ -52,12 +54,13 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         f: 700 * pitch,
         f2: 330 * pitch,
         t,
-        d: 0.14,
-        vol: 0.2,
+        d: 0.13,
+        vol: 0.12,
+        filter: { f: 1800 },
         dest,
         wet: 0.15,
       });
-      s.noise({ t, d: 0.12, vol: 0.05, f: 2500, f2: 900, q: 0.8, dest });
+      s.noise({ t, d: 0.1, vol: 0.03, f: 2000, f2: 800, q: 0.8, dest });
     },
   },
   // Wall (C, "Soft knock").
@@ -69,11 +72,11 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         f: 240 * pitch,
         f2: 110 * pitch,
         t,
-        d: 0.11,
-        vol: 0.3,
+        d: 0.1,
+        vol: 0.18,
         dest,
       });
-      s.noise({ t, d: 0.02, vol: 0.12, f: 2000, q: 1.5, dest });
+      s.noise({ t, d: 0.02, vol: 0.06, f: 1800, q: 1.5, dest });
     },
   },
   // Breakable wall: a crunch of noise over a low thud, with a few small
@@ -87,10 +90,10 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         f2: 60 * pitch,
         t,
         d: 0.2,
-        vol: 0.3,
+        vol: 0.18,
         dest,
       });
-      s.noise({ t, d: 0.16, vol: 0.16, f: 1800, f2: 500, q: 0.7, dest });
+      s.noise({ t, d: 0.15, vol: 0.09, f: 1600, f2: 500, q: 0.7, dest });
       for (const [delay, f] of [
         [0.07, 3200],
         [0.12, 2600],
@@ -99,7 +102,7 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         s.noise({
           t: t + delay,
           d: 0.025,
-          vol: 0.06,
+          vol: 0.035,
           f: f * pitch,
           q: 3,
           dest,
@@ -112,18 +115,18 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
   place: {
     seconds: 0.5,
     play: (s, dest, t, pitch) => {
-      s.noise({ t, d: 0.03, vol: 0.08, f: 4200 * pitch, q: 2, dest });
+      s.noise({ t, d: 0.03, vol: 0.05, f: 4200 * pitch, q: 2, dest });
       s.tone({
         type: "triangle",
         f: 520 * pitch,
         f2: 380 * pitch,
         t,
         d: 0.08,
-        vol: 0.15,
+        vol: 0.09,
         dest,
       });
       s.notes([81, 88], t + 0.04, 0.07, (f, tt) =>
-        s.bell({ f: f * pitch, t: tt, d: 0.4, vol: 0.07, dest, wet: 0.35 }),
+        s.bell({ f: f * pitch, t: tt, d: 0.4, vol: 0.045, dest, wet: 0.35 }),
       );
     },
   },
@@ -181,8 +184,8 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
           type: "triangle",
           f: f * pitch,
           t: tt,
-          d: 0.16,
-          vol: 0.2,
+          d: 0.15,
+          vol: 0.12,
           dest,
           wet: 0.15,
         }),
@@ -193,7 +196,7 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
     seconds: 0.9,
     play: (s, dest, t) =>
       s.notes([69, 74], t, 0.18, (f, tt) =>
-        s.bell({ f, t: tt, d: 0.7, vol: 0.1, dest, wet: 0.4 }),
+        s.bell({ f, t: tt, d: 0.7, vol: 0.06, dest, wet: 0.4 }),
       ),
   },
   // Goal (A, "Crystal chime"): glassy notes rising, with overtones, on the
@@ -203,8 +206,8 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
     important: true,
     play: (s, dest, t, _pitch, harmony) =>
       s.notes(goalChimeNotes(harmony), t, 0.08, (f, tt) => {
-        s.tone({ f, t: tt, d: 0.7, vol: 0.13, dest, wet: 0.45 });
-        s.tone({ f: f * 2.76, t: tt, d: 0.25, vol: 0.03, dest, wet: 0.45 });
+        s.tone({ f, t: tt, d: 0.7, vol: 0.085, dest, wet: 0.45 });
+        s.tone({ f: f * 2.76, t: tt, d: 0.2, vol: 0.015, dest, wet: 0.45 });
       }),
   },
   // Par (A, "Chime and sparkle").
@@ -214,10 +217,10 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
     duckSeconds: 1.6,
     play: (s, dest, t, _pitch, harmony) => {
       s.notes(goalChimeNotes(harmony), t, 0.08, (f, tt) =>
-        s.tone({ f, t: tt, d: 0.8, vol: 0.13, dest, wet: 0.5 }),
+        s.tone({ f, t: tt, d: 0.8, vol: 0.09, dest, wet: 0.5 }),
       );
       s.notes([103, 100, 108, 105, 112, 108], t + 0.34, 0.055, (f, tt) =>
-        s.tone({ f, t: tt, d: 0.14, vol: 0.05, dest, wet: 0.6 }),
+        s.tone({ f, t: tt, d: 0.14, vol: 0.032, dest, wet: 0.6 }),
       );
     },
   },
@@ -326,7 +329,7 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
 };
 
 /** Seconds a mirror bounce lasts, for limiting overlapping sounds. */
-export const BOUNCE_SECONDS = 0.5;
+export const BOUNCE_SECONDS = 0.45;
 
 /**
  * Mirror bounce (B, "Crystal ping"): a small bell, one note higher on the
@@ -343,15 +346,15 @@ export function playBounce(
   s.bell({
     f: midi(bounceNote(bounceNumber, harmony.scale)),
     t,
-    d: 0.5,
-    vol: 0.12,
+    d: 0.45,
+    vol: 0.075,
     ratio: 3.5,
-    index: 1.4,
+    index: 1.1,
     dest,
     wet: 0.3,
   });
   // The mirror turning (sound lab 2, "Glass swish"), kept quiet.
-  s.noise({ t, d: 0.1, vol: 0.03, f: 6000, f2: 3000, q: 2, dest });
+  s.noise({ t, d: 0.09, vol: 0.02, f: 5500, f2: 3000, q: 2, dest });
 }
 
 /** Lowest note of the bounce ladder (E5). */
