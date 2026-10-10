@@ -1,0 +1,30 @@
+#!/bin/sh
+# Runs the full check (lint, type check, tests, production build) before each
+# commit, and stops the commit if anything fails. Skip in an emergency with
+# `git commit --no-verify`. See docs/WORKFLOW.md.
+
+# Hooks started from an editor may not have nvm's Node on the PATH.
+if ! command -v npm >/dev/null 2>&1 && [ -s "$HOME/.nvm/nvm.sh" ]; then
+  . "$HOME/.nvm/nvm.sh"
+fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "pre-commit: npm not found, so the checks can't run. Commit stopped." >&2
+  echo "Use 'git commit --no-verify' to commit without checks." >&2
+  exit 1
+fi
+
+# The checks run on the working tree, which differs from the commit if some
+# changes are not staged.
+if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  echo "pre-commit: note: some changes are not staged; the checks include them." >&2
+fi
+
+log="$(git rev-parse --git-dir)/pre-commit.log"
+echo "pre-commit: running checks (npm run build)..."
+if ! npm run build --silent >"$log" 2>&1; then
+  cat "$log" >&2
+  echo >&2
+  echo "pre-commit: checks failed. Commit stopped." >&2
+  exit 1
+fi
+echo "pre-commit: all checks passed."

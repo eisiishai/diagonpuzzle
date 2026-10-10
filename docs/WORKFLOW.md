@@ -40,7 +40,8 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, then builds `dist/`. Stops at the first failure. |
 
-`npm run build` is the full check: run it before committing.
+`npm run build` is the full check. **It runs automatically before every
+commit** (see *3. Commit*); run it yourself any time to check earlier.
 
 What the tests cover: game rules, simulation, solver, `LevelSession`, level
 parser, saved progress and path geometry. Every level is checked against its
@@ -61,8 +62,16 @@ git add -A
 git commit -m "Short summary of the change"
 ```
 
-- Work directly on `main`. Commit small, working steps: each commit should
-  pass `npm run build`.
+- Work directly on `main`. Commit small, working steps.
+- **Checks before each commit:** the `pre-commit` hook runs `npm run build`
+  (lint, type check, tests, production build; about 5 seconds). If anything
+  fails, the commit is stopped and the errors are shown; fix them and commit
+  again. Merge commits are checked the same way.
+- The checks run on the files in the working tree. If some changes are not
+  staged for the commit, the hook prints a note, since the checked files then
+  differ from the commit. With `git add -A` they are the same.
+- To commit without the checks, e.g. to save unfinished work, use
+  `git commit --no-verify`. The commit still gets a version tag.
 - Use a branch only for experiments you may throw away:
   ```bash
   git switch -c try-something    # experiment
@@ -76,8 +85,8 @@ git commit -m "Short summary of the change"
 
 ## Versions
 
-Every commit on `main` gets a version tag, `vMAJOR.MINOR`, from the git hooks
-in `.githooks/`:
+Every commit on `main` gets a version tag, `vMAJOR.MINOR`, from the
+`post-commit` and `post-merge` hooks in `.githooks/`:
 
 - Each commit increases the minor version: v0.9 → v0.10 → v0.11. Versions
   compare as numbers, so v0.10 is newer than v0.9.
@@ -154,8 +163,6 @@ tree (`git status` shows no changes), so the build matches the tagged commit.
 
 Not set up, and not needed at the current size:
 
-- **Pre-commit hook** running `npm test` automatically before each commit
-  (the `.githooks/` folder is already in place for it).
 - **Version shown in the game**, e.g. on the title screen, from
   `git describe --tags` at build time.
 - **`npm run deploy`** uploading `dist/` from WSL (e.g. with `rsync` or

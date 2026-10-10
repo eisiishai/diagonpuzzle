@@ -66,6 +66,9 @@ scripts/        development tools run with tsx (not part of the game)
   minimum and that no shorter solution exists.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
+- Every commit runs `npm run build` first (pre-commit hook) and is stopped if
+  it fails: fix the problem rather than bypassing it. Use `--no-verify` only
+  when the user asks for it.
 - Every commit on `main` is tagged with the next version (`vMAJOR.MINOR`) by
   the git hooks in `.githooks/`. Don't create version tags by hand, and don't
   rewrite history on `main` (rebase), which leaves tags on the old commits.
