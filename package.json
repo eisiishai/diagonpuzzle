@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "dev": "vite",
     "test": "vitest run",
-    "levels": "tsx scripts/levels.ts"
+    "levels": "tsx scripts/levels.ts",
+    "version:major": "git config diagonpuzzle.nextMajor true && echo 'The next commit on main starts a new major version.'",
+    "prepare": "git config core.hooksPath .githooks && git config push.followTags true"
   },
   "dependencies": {
     "pixi.js": "^8.8.1"

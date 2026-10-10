@@ -1,0 +1,52 @@
+#!/bin/sh
+# Tags each new commit on main with the next release version: v0.9 -> v0.10.
+# `npm run version:major` makes the next commit start a new major version
+# instead: v0.10 -> v1.0. See docs/WORKFLOW.md.
+
+RELEASE_BRANCH=main
+VERSION_PATTERN='^v[0-9]+\.[0-9]+$'
+
+# Only commits on the release branch get versions, not experiment branches.
+[ "$(git symbolic-ref --quiet --short HEAD)" = "$RELEASE_BRANCH" ] || exit 0
+
+# A rebase rewrites existing commits rather than adding new ones.
+git_dir=$(git rev-parse --git-dir)
+[ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ] && exit 0
+
+versions_at() {
+  git tag --points-at "$1" --list 'v*' | grep -E "$VERSION_PATTERN"
+}
+
+# Already has a version (e.g. the hook ran twice).
+[ -n "$(versions_at HEAD)" ] && exit 0
+
+# An amended commit replaces the previous one: move its tag instead of using
+# a new version.
+if git reflog -1 --format=%gs HEAD | grep -q '^commit (amend)'; then
+  previous_tag=$(versions_at 'HEAD@{1}' | head -n 1)
+  if [ -n "$previous_tag" ]; then
+    git tag --force --annotate "$previous_tag" --message "Release $previous_tag" HEAD >/dev/null
+    echo "Moved tag $previous_tag to the amended commit."
+    exit 0
+  fi
+fi
+
+latest=$(git tag --list 'v*' --sort=-version:refname | grep -E "$VERSION_PATTERN" | head -n 1)
+if [ -z "$latest" ]; then
+  major=0
+  minor=0
+else
+  version=${latest#v}
+  major=${version%%.*}
+  minor=${version#*.}
+fi
+
+if [ "$(git config --bool diagonpuzzle.nextMajor)" = "true" ]; then
+  tag="v$((major + 1)).0"
+  git config --unset diagonpuzzle.nextMajor
+else
+  tag="v$major.$((minor + 1))"
+fi
+
+git tag --annotate "$tag" --message "Release $tag"
+echo "Tagged $tag."

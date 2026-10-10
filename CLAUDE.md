@@ -7,6 +7,7 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - Game design and rules: `docs/DESIGN.md`
 - Milestones and current status: `docs/ROADMAP.md` (the only place status is tracked)
 - Detailed feature specs, when needed: `docs/features/`
+- Develop / check / commit / back up / release steps: `docs/WORKFLOW.md`
 
 ## Commands
 
@@ -17,7 +18,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm test` — Vitest unit tests
 - `npm run levels` — level design report: shortest solution, setup routes and
   first-shot outcomes for every level (`scripts/levels.ts`, runs with tsx)
+- `npm run version:major` — make the next commit on main start a new major
+  version (only when the user asks for a major version bump)
 - Deploy: `npm run build`, then copy the contents of `dist/` to the web host
+  (details in `docs/WORKFLOW.md`)
 
 ## Code structure
 
@@ -62,6 +66,9 @@ scripts/        development tools run with tsx (not part of the game)
   minimum and that no shorter solution exists.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
+- Every commit on `main` is tagged with the next version (`vMAJOR.MINOR`) by
+  the git hooks in `.githooks/`. Don't create version tags by hand, and don't
+  rewrite history on `main` (rebase), which leaves tags on the old commits.
 
 ## Environment
 

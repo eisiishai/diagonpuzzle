@@ -86,7 +86,8 @@ with flipping mirrors, before it is built.
 
 ### Later
 
-- [ ] Tag releases (`git tag v0.x`) and note the deployed version
+- [x] Version tags: each commit on `main` is tagged automatically
+  (`.githooks/`, details in `docs/WORKFLOW.md`)
 - [ ] Upgrade ESLint 9 → 10 (9 shows a deprecation notice)
 - [ ] Automated browser smoke tests (e.g. Playwright), if the UI grows enough
   that manual checks become a burden
