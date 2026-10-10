@@ -14,6 +14,13 @@ tracks:
 Ordering: finish *Engineering → Next* before starting the next new mechanic,
 since those items make mechanic changes safer to build and test.
 
+## Version 1.0 — complete (2026-10-11)
+
+The first major version is complete and released as v1.0: 17 levels with
+flipping mirrors, multi-hit goals, breakable walls, the player-placed mirror
+and bonus targets, the Laser lab graphics and sound passes, saved progress
+and par stars. Open items below belong to later versions.
+
 ## M1 — Playable prototype
 
 One level, playable with the mouse, plain graphics.
