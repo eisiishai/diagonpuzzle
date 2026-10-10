@@ -2,6 +2,7 @@ import { Container, Graphics } from "pixi.js";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
 import type { CellType } from "../game/types";
 import { pathPoints } from "./pathPoints";
+import { distinctPoints } from "./polyline";
 import type { PathPoint } from "./pathPoints";
 import { COLORS } from "./theme";
 
@@ -162,10 +163,13 @@ export class PelletAnimator extends Container {
 
   /** A coloured band with a thin bright core; dimmed for a missed shot. */
   private drawBeam(
-    points: { x: number; y: number }[],
+    allPoints: { x: number; y: number }[],
     style: { color: number; dimmed: boolean },
   ): void {
     const g = this.trail.clear();
+    // The moving head can sit exactly on the last corner; a repeated point
+    // breaks the stroke on some phone GPUs (see polyline.ts).
+    const points = distinctPoints(allPoints);
     if (points.length < 2) {
       return;
     }

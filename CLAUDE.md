@@ -61,6 +61,11 @@ scripts/        development tools run with tsx (not part of the game)
 - Visual style follows the "Laser lab" art direction in `docs/DESIGN.md`.
   Colours, fonts, text styles and glow filters come only from
   `src/render/theme.ts`; buttons use `Button` from `src/render/ui.ts`.
+- Stroked lines must never contain two identical points in a row, and don't
+  use `Graphics.arc()`: some phone GPUs draw the resulting invalid points as
+  stray lines to the screen's corner (desktop browsers hide this). Build
+  curves with `arcPoints()` and clean point lists with `distinctPoints()`
+  from `src/render/polyline.ts`.
 - The game may be hosted in a subfolder (`base: "./"` in `vite.config.ts`).
   Refer to files in `public/` with relative paths (`assets/x.png`), never
   root paths (`/assets/x.png`).

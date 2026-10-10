@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle, Text } from "pixi.js";
 import type { AudioChannel, GameAudio } from "../audio/GameAudio";
+import { arcPoints } from "./polyline";
 import { COLORS, textStyle } from "./theme";
 
 /** Primary: the main action, filled. Secondary: everything else, outlined. */
@@ -153,13 +154,14 @@ export function speakerIcon(on: boolean): IconDrawer {
   return (g, color) => {
     g.poly([-8, -3, -4, -3, 1, -7, 1, 7, -4, 3, -8, 3]).fill(color);
     if (on) {
-      // Each wave starts with moveTo at its own first point: an arc without
-      // one starts from an undefined point after a polygon, which some phone
-      // GPUs draw as a stray line across the screen.
+      // Waves as short straight pieces, not Graphics.arc(): see polyline.ts.
       for (const radius of [5, 9]) {
-        g.moveTo(1 + radius * Math.cos(-0.8), radius * Math.sin(-0.8))
-          .arc(1, 0, radius, -0.8, 0.8)
-          .stroke({ width: 1.8, color, cap: "round" });
+        const [first, ...rest] = arcPoints(1, 0, radius, -0.8, 0.8, 6);
+        g.moveTo(first.x, first.y);
+        for (const p of rest) {
+          g.lineTo(p.x, p.y);
+        }
+        g.stroke({ width: 1.8, color, cap: "round", join: "round" });
       }
     } else {
       g.moveTo(4, -4)
