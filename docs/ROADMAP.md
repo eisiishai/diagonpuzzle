@@ -104,7 +104,9 @@ to see) and overstate levels that repeat a row (8, 11).
   times harder than 14: add a par-3 level between them (player mirror with
   a two-hit goal or breakable walls; `npm run generate` with
   `--player-mirror slash --breakable 2 --goal-hits 2 --shots 3` found
-  several), or make 17 par 3
+  several), or make 17 par 3. The step is measured by random-play odds
+  only; whether it feels too steep is a subjective call, best made after
+  playing it (or seeing testers play it) rather than from the numbers
 - [ ] Optional: level 7 is a slight dip after levels 5–6 (as hard as 4)
 
 ### Presentation
@@ -220,7 +222,27 @@ the polyline rule and is checked on a phone. In suggested order:
     Compare it with how testers actually do, then refine it (e.g. weight
     moves a player would try first) or add a second measure
 - [ ] Automated browser smoke tests (e.g. Playwright), if the UI grows enough
-  that manual checks become a burden
+  that manual checks become a burden. They would catch crashes and broken
+  flows, not how things look or sound, so the desktop and phone checks
+  stay. Possible scope:
+  - load the built game (`vite preview`) in headless Chromium and fail on
+    any console error or uncaught exception
+  - title screen: the level list appears; *Continue* and a level button
+    open a level
+  - play a level: fire with the keyboard and with a click on a launcher,
+    restart (R), and complete level 1 by its known solution to reach the
+    *Next level* button
+  - player mirror: place it with the mouse and with the keyboard
+  - skips: the skip button's two presses, and the hidden skip (Shift+N)
+  - saved progress: reload the page and see the completed level kept;
+    with localStorage blocked, the game still starts
+  - a phone-sized viewport with touch input, for layout and taps
+  - Needs: Playwright and a browser installed by the user
+    (`npm i -D @playwright/test && npx playwright install chromium`); a
+    way for tests to find things on a PixiJS canvas (e.g. clicking at
+    positions computed from the layout, or a small test-only hook that
+    reports button and cell positions); and a separate `npm run e2e`
+    rather than part of `npm run build`, since it needs a browser
 
 ## Discarded ideas
 

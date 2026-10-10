@@ -254,7 +254,9 @@ difficulty doesn't dip at the end.
   header for about 1.2 seconds (mouse or touch), moves on to the next level
   without completing the current one (from the last level: back to the
   title screen). Nothing in the game mentions it; it is a debugging aid,
-  works on any level and uses none of the visible skips. A skipped level counts as
+  works on any level and uses none of the visible skips. It stays in the
+  release build on purpose: testers use it to reach any level on the
+  deployed game, so don't limit it to development builds. A skipped level counts as
   not passed (no ✓, no star) and shows "skipped" in the level list, but it
   unlocks the level after it. Completing it later makes it an ordinary
   completed level. *Continue* on the title screen goes to the first level

@@ -6,7 +6,6 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 
 - Game design and rules: `docs/DESIGN.md`
 - Milestones and current status: `docs/ROADMAP.md` (the only place status is tracked)
-- Detailed feature specs, when needed: `docs/features/`
 - Develop / check / commit / back up / release steps: `docs/WORKFLOW.md`
 
 ## Commands
