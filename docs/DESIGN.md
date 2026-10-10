@@ -302,6 +302,14 @@ difficulty doesn't dip at the end.
 
 ## Presentation
 
+- **Presentation stays unobtrusive.** Players solve many levels in a row,
+  so nothing should pull attention away from the puzzle: level music is
+  calm ambient, sounds heard on every shot or level are quiet and soft, and
+  animations are one-off moments (a transition, a hit) rather than
+  repeating eye-catchers. A variant that sounds or looks fine once on a lab
+  page can wear in long play, so lean quieter and rarer. Tried and found
+  too much: beat-driven level music, a rising level-start sweep, and the
+  title beam firing every few seconds.
 - The pellet's path is animated cell by cell as a laser beam. When the shot
   ends, its outcome is shown by shape as well as colour (see *Art direction*).
 - Sound effects and background music; see *Sound*.
