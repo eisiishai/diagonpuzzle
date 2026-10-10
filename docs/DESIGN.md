@@ -125,14 +125,14 @@ multi-hit goal.
 - After completing a level, Enter/Space or the *Next level* button continues.
   After the last level, it returns to the title screen.
 - **Esc** or the *Menu* label returns to the title screen at any time.
-- **Hidden skip:** Shift+N, or three quick clicks or taps on the level name in
-  the header, moves on to the next level without completing the current one
-  (from the last level: back to the title screen). Nothing in the game
-  mentions it. A skipped level counts as not passed (no ✓, no star) and shows
-  "skipped" in the level list, but it unlocks the level after it. Completing
-  it later makes it an ordinary completed level. *Continue* on the title
-  screen goes to the first level that is neither completed nor skipped, and
-  only then back to skipped ones.
+- **Hidden skip:** Shift+N, or pressing and holding the level name in the
+  header for about 1.2 seconds (mouse or touch), moves on to the next level
+  without completing the current one (from the last level: back to the
+  title screen). Nothing in the game mentions it. A skipped level counts as
+  not passed (no ✓, no star) and shows "skipped" in the level list, but it
+  unlocks the level after it. Completing it later makes it an ordinary
+  completed level. *Continue* on the title screen goes to the first level
+  that is neither completed nor skipped, and only then back to skipped ones.
 - A new shot can't be fired while the pellet is still moving.
 
 ## Title screen and progress

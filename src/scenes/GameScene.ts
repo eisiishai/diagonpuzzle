@@ -55,8 +55,8 @@ export interface GameSceneOptions {
   /** Called when the player leaves for the title screen. */
   onMenu: () => void;
   /**
-   * Called when the player uses the hidden skip (Shift+N, or a triple
-   * click on the level name) to move on without completing the level.
+   * Called when the player uses the hidden skip (Shift+N, or pressing and
+   * holding the level name) to move on without completing the level.
    */
   onSkip: () => void;
 }
@@ -301,22 +301,30 @@ export class GameScene extends Container implements Scene {
   }
 
   /**
-   * The hidden skip: three clicks or taps on the level name within a short
-   * time. No cursor change or other hint, on purpose.
+   * The hidden skip: pressing and holding the level name. Works the same
+   * with a mouse and on touch screens. No cursor change or other hint, on
+   * purpose.
    */
   private addHiddenSkip(levelText: Text): void {
-    const TAPS = 3;
-    const WITHIN_MS = 800;
-    let taps: number[] = [];
+    const HOLD_MS = 1200;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const cancel = () => {
+      clearTimeout(timer);
+      timer = undefined;
+    };
     levelText.eventMode = "static";
-    levelText.on("pointertap", () => {
-      const now = performance.now();
-      taps = [...taps.filter((time) => now - time < WITHIN_MS), now];
-      if (taps.length >= TAPS) {
-        taps = [];
+    levelText.on("pointerdown", () => {
+      cancel();
+      timer = setTimeout(() => {
+        timer = undefined;
         this.options.onSkip();
-      }
+      }, HOLD_MS);
     });
+    levelText.on("pointerup", cancel);
+    levelText.on("pointerupoutside", cancel);
+    levelText.on("pointerleave", cancel);
+    levelText.on("pointercancel", cancel);
+    this.on("destroyed", cancel);
   }
 
   /** Puts the level back to its starting board, with no shots fired. */

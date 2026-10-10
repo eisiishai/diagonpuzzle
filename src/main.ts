@@ -43,6 +43,9 @@ const PROGRESS_STORAGE_KEY = "progress";
     autoDensity: true,
   });
   document.getElementById("pixi-container")!.appendChild(app.canvas);
+  // A long press (the hidden level skip) must not open the browser's
+  // context menu on phones.
+  app.canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
   // Browsers only allow audio after a user gesture. Registered before the
   // keyboard binding so the audio is ready when the first action plays a sound.

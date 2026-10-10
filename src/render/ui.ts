@@ -153,8 +153,14 @@ export function speakerIcon(on: boolean): IconDrawer {
   return (g, color) => {
     g.poly([-8, -3, -4, -3, 1, -7, 1, 7, -4, 3, -8, 3]).fill(color);
     if (on) {
-      g.arc(1, 0, 5, -0.8, 0.8).stroke({ width: 1.8, color, cap: "round" });
-      g.arc(1, 0, 9, -0.8, 0.8).stroke({ width: 1.8, color, cap: "round" });
+      // Each wave starts with moveTo at its own first point: an arc without
+      // one starts from an undefined point after a polygon, which some phone
+      // GPUs draw as a stray line across the screen.
+      for (const radius of [5, 9]) {
+        g.moveTo(1 + radius * Math.cos(-0.8), radius * Math.sin(-0.8))
+          .arc(1, 0, radius, -0.8, 0.8)
+          .stroke({ width: 1.8, color, cap: "round" });
+      }
     } else {
       g.moveTo(4, -4)
         .lineTo(10, 4)

@@ -13,3 +13,12 @@ body {
     justify-content: center;
     align-items: center;
 }
+
+/* No text selection, callout or tap highlight on the game: a long press on
+   the canvas is a game gesture (the hidden level skip). */
+canvas {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
