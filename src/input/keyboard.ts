@@ -45,6 +45,38 @@ const NO_REPEAT: ReadonlySet<GameAction> = new Set([
   "skipLevel",
 ]);
 
+/** The parts of a key press that decide its action. */
+export type KeyPress = Pick<
+  KeyboardEvent,
+  "key" | "shiftKey" | "ctrlKey" | "altKey" | "metaKey" | "repeat"
+>;
+
+/**
+ * The game action for a key press. Undefined for keys the game doesn't use,
+ * for presses with Ctrl, Alt or Meta (left to the browser), and for a held
+ * key repeating an action that shouldn't repeat. `used` is true when the
+ * key belongs to the game even if it does nothing now (a held Enter), so
+ * the browser shouldn't act on it either.
+ */
+export function keyAction(press: KeyPress): {
+  action?: GameAction;
+  used: boolean;
+} {
+  if (press.ctrlKey || press.altKey || press.metaKey) {
+    return { used: false };
+  }
+  const key = press.key.length === 1 ? press.key.toLowerCase() : press.key;
+  const action =
+    (press.shiftKey ? SHIFT_KEY_ACTIONS[key] : undefined) ?? KEY_ACTIONS[key];
+  if (action === undefined) {
+    return { used: false };
+  }
+  if (press.repeat && NO_REPEAT.has(action)) {
+    return { used: true };
+  }
+  return { action, used: true };
+}
+
 /**
  * Translates key presses into game actions. Returns a function that removes
  * the listener.
@@ -53,21 +85,14 @@ export function bindKeyboard(
   onAction: (action: GameAction) => void,
 ): () => void {
   const listener = (event: KeyboardEvent) => {
-    if (event.ctrlKey || event.altKey || event.metaKey) {
-      return;
+    const { action, used } = keyAction(event);
+    if (used) {
+      // Stop arrows and space from scrolling the page.
+      event.preventDefault();
     }
-    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
-    const action =
-      (event.shiftKey ? SHIFT_KEY_ACTIONS[key] : undefined) ?? KEY_ACTIONS[key];
-    if (action === undefined) {
-      return;
+    if (action !== undefined) {
+      onAction(action);
     }
-    // Stop arrows and space from scrolling the page.
-    event.preventDefault();
-    if (event.repeat && NO_REPEAT.has(action)) {
-      return;
-    }
-    onAction(action);
   };
 
   window.addEventListener("keydown", listener);

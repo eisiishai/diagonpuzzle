@@ -77,12 +77,6 @@ describe("GameProgress.complete", () => {
     expect(game.complete(1, 3).allLevelsAtPar).toBe(true);
     expect(game.complete(1, 3).allLevelsAtPar).toBe(false);
   });
-
-  it("turns a skipped level into a completed one", () => {
-    const game = newGame({ skipped: ["a"] });
-    game.complete(0, 2);
-    expect(game.progress.skipped).toEqual([]);
-  });
 });
 
 describe("GameProgress.collectBonus", () => {

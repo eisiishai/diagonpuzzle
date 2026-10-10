@@ -260,7 +260,7 @@ the polyline rule and is checked on a phone. In suggested order:
   - Also move choosing the level's opening message (`introMessage()`:
     bonus target, player mirror, multi-hit goal, breakable walls, in
     that order) into a tested pure function, e.g. in `scoreText.ts`
-- [ ] Small test gaps and clean-ups, as one batch:
+- [x] Small test gaps and clean-ups, as one batch:
   - Test the order of `bonusPositions()` (reading order): saved
     progress identifies a collected bonus target by its index in it, so
     a change would silently move saved bonus targets to other cells

@@ -46,6 +46,9 @@ export function fire(board: Board, row: number): ShotResult {
   // The pellet is in a loop if it repeats a position and direction on an
   // identical board, so the board is part of the visited key. Every state is
   // visited at most once, so the loop terminates.
+  // With the current cells a loop can't happen (every step can be traced
+  // back uniquely, see docs/DESIGN.md), so no test builds one; the check
+  // guards future block types.
   const visited = new Set<string>();
   let boardKey = boardStateKey(current);
   let position: Position = { x: 0, y: row };
