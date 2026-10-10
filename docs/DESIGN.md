@@ -74,10 +74,16 @@ Each level declares `minShots`, the fewest shots that solve it. A solver
 (`src/game/solver.ts`) searches every sequence of shots, and the tests check
 each level's `minShots` against it.
 
+Levels 1 and 2 also have a two-shot *setup route*: a first shot that misses
+but changes the board so that a second shot wins, which would not win on the
+starting board. This lets players discover flipping before level 3 requires
+it. `setupRoutes()` in the solver finds such routes; the tests check that
+levels 1 and 2 have one.
+
 | # | Level | Min shots | Idea |
 |---|---|---|---|
-| 1 | First light | 1 | Find the one row that reaches the goal. |
-| 2 | Up and over | 1 | As above, on a bigger board. |
+| 1 | First light | 1 | Row 4 reaches the goal directly. Alternative: row 5 misses but flips three mirrors, after which row 1 gets through. |
+| 2 | Up and over | 1 | Row 5 reaches the goal directly. Alternative: row 1 runs down column 3 and flips the mirrors at both ends; row 6 then runs back up it and round to the goal. |
 | 3 | Second try | 2 | The first shot from row 2 flips the mirror at the edge; the same row then reaches the goal. Teaches flipping. |
 | 4 | Set the stage | 2 | A shot from row 4 flips two mirrors in column 4, which the next shot from row 3 needs. A different row must set up the board. |
 

@@ -30,3 +30,26 @@ export function solve(board: Board, maxShots = 6): number[] | null {
   }
   return null;
 }
+
+/**
+ * Two-shot "setup" routes: [first, second] row pairs where the first shot
+ * misses, and the second wins only because of what the first shot changed
+ * (the second row does not win on the original board).
+ */
+export function setupRoutes(board: Board): [number, number][] {
+  const rows = Array.from({ length: board.height }, (_, row) => row);
+  const winsAtStart = rows.map((row) => fire(board, row).outcome === "goal");
+  const routes: [number, number][] = [];
+  for (const first of rows) {
+    const shot = fire(board, first);
+    if (shot.outcome === "goal") {
+      continue;
+    }
+    for (const second of rows) {
+      if (!winsAtStart[second] && fire(shot.board, second).outcome === "goal") {
+        routes.push([first, second]);
+      }
+    }
+  }
+  return routes;
+}

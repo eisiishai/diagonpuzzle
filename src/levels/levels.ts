@@ -21,7 +21,7 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . \ . .
       # . / . . G
       . . . . # .
-      . . / . . .
+      . . / \ . .
       . . . / . .
     `,
   },
@@ -30,12 +30,12 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Up and over",
     minShots: 1,
     grid: String.raw`
-      . . \ . . . .
+      . . \ . . . \
       . . . / . . G
       . . . . . # .
       . \ . . . . .
       . . . / . . .
-      . . . . \ . .
+      . . \ . \ . .
     `,
   },
   {

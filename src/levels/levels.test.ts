@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { solve } from "../game/solver";
+import { setupRoutes, solve } from "../game/solver";
 import { LEVELS } from "./levels";
 import { parseLevel } from "./parse";
+
+// Levels that can be solved in one shot, but also by a two-shot route where
+// the first shot sets up the board for the second.
+const LEVELS_WITH_SETUP_ROUTE = ["first-light", "up-and-over"];
+
+it.each(LEVELS_WITH_SETUP_ROUTE)("%s has a two-shot setup route", (id) => {
+  const level = LEVELS.find((candidate) => candidate.id === id);
+  expect(level).toBeDefined();
+  expect(setupRoutes(parseLevel(level!.grid)).length).toBeGreaterThan(0);
+});
 
 it("has unique level ids", () => {
   const ids = LEVELS.map((level) => level.id);

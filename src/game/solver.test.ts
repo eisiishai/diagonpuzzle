@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseLevel } from "../levels/parse";
 import { fire } from "./simulate";
-import { solve } from "./solver";
+import { setupRoutes, solve } from "./solver";
 
 describe("solve", () => {
   it("finds a one-shot solution", () => {
@@ -22,5 +22,26 @@ describe("solve", () => {
 
   it("returns null when there is no solution within the shot limit", () => {
     expect(solve(parseLevel("# G"))).toBeNull();
+  });
+});
+
+describe("setupRoutes", () => {
+  it("finds a miss that sets up a winning second shot", () => {
+    // Same board as above: row 0 misses but flips its mirror, then row 0
+    // wins. Row 1 never wins, before or after either shot.
+    const board = parseLevel(String.raw`
+      / .
+      \ G
+    `);
+    expect(setupRoutes(board)).toEqual([[0, 0]]);
+  });
+
+  it("ignores second shots that would win anyway", () => {
+    // Row 1 always wins straight ahead, whatever row 0 changed.
+    const board = parseLevel(String.raw`
+      / .
+      . G
+    `);
+    expect(setupRoutes(board)).toEqual([]);
   });
 });
