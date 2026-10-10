@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { parseLevel } from "../levels/parse";
 import { fire } from "./simulate";
-import { setupRoutes, solve, solveBonus } from "./solver";
+import {
+  playMoves,
+  setupRoutes,
+  solve,
+  solveBonus,
+  solveBonusMoves,
+  solveMoves,
+} from "./solver";
 
 describe("solve", () => {
   it("finds a one-shot solution", () => {
@@ -81,5 +88,44 @@ describe("solveBonus", () => {
     `);
     expect(solveBonus(board, { x: 1, y: 2 }, 6, 1)).toBeNull();
     expect(solveBonus(board, { x: 1, y: 2 }, 6, 2)).toEqual([1, 1]);
+  });
+});
+
+describe("player-placed mirror", () => {
+  it("places the mirror when the solution needs it, taking no shot", () => {
+    const board = parseLevel(String.raw`
+      . . .
+      # G .
+    `);
+    expect(solve(board)).toBeNull();
+    expect(solveMoves(board, { playerMirror: "mirrorBackslash" })).toEqual([
+      { x: 1, y: 0, mirror: "mirrorBackslash" },
+      0,
+    ]);
+    expect(solve(board, 6, 1, "mirrorBackslash")).toEqual([0]);
+  });
+
+  it("places the mirror only after a shot that needs the cell empty", () => {
+    // Row 0 must first flip the mirror at (2, 0) to "/"; a "/" placed
+    // below it then turns row 1 up into it and on to the goal.
+    const board = parseLevel(String.raw`
+      . . \ G
+      . . . #
+    `);
+    const moves = solveMoves(board, { playerMirror: "mirrorSlash" });
+    expect(moves).toEqual([0, { x: 2, y: 1, mirror: "mirrorSlash" }, 1]);
+    const { shots } = playMoves(board, moves!);
+    expect(shots.map((shot) => shot.outcome)).toEqual(["exit", "goal"]);
+  });
+
+  it("solves a bonus target with the placed mirror", () => {
+    const board = parseLevel(String.raw`
+      # . * G
+      . . . .
+    `);
+    expect(
+      solveBonusMoves(board, { x: 2, y: 0 }, { playerMirror: "mirrorSlash" }),
+    ).toEqual([{ x: 2, y: 1, mirror: "mirrorSlash" }, 1]);
+    expect(solveBonus(board, { x: 2, y: 0 })).toBeNull();
   });
 });

@@ -1,9 +1,10 @@
 import { Container, Text } from "pixi.js";
 import type { GameAudio } from "../audio/GameAudio";
 import { LevelSession } from "../game/LevelSession";
+import { canPlaceAt, placementPositions } from "../game/placement";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
 import { earnsStar } from "../save/progress";
-import type { Board } from "../game/types";
+import type { Board, MirrorType, Position } from "../game/types";
 import type { GameAction } from "../input/keyboard";
 import { BoardView } from "../render/BoardView";
 import { Celebration } from "../render/Celebration";
@@ -28,6 +29,10 @@ const INTRO_MESSAGE =
 const SKIP_CONFIRM_MS = 3000;
 const BREAKABLE_INTRO_MESSAGE =
   "Cracked walls stop the pellet and break: the next shot passes through.";
+const PLACED_MESSAGE = "Mirror placed. It flips when hit, like the others.";
+const TAP_AGAIN_MESSAGE = "Tap the cell again to place your mirror there.";
+const KEYBOARD_PLACE_MESSAGE =
+  "Choose a cell with the arrow keys, then press P or Enter to place your mirror. Esc cancels.";
 const BONUS_INTRO_MESSAGE =
   "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
 
@@ -70,6 +75,8 @@ export interface GameSceneOptions {
   par: number;
   /** Goal hits needed to complete the level, each from a separate shot. */
   goalHits: number;
+  /** A mirror the player may place once, on any empty cell, if the level gives one. */
+  playerMirror?: MirrorType;
   /**
    * True if the level was completed or skipped before this visit: the next
    * level is then offered from the start, instead of the Skip button.
@@ -128,6 +135,12 @@ export class GameScene extends Container implements Scene {
   private readonly celebration = new Celebration();
   /** The level's bonus targets collected, in this visit or before. */
   private bonusesCollected: number;
+  /**
+   * The cell chosen for the player's mirror, while choosing: with the
+   * keyboard (arrow keys move it), or by a first tap on a touch screen.
+   */
+  private placeCursor: { position: Position; by: "keyboard" | "touch" } | null =
+    null;
 
   constructor(options: GameSceneOptions) {
     super();
@@ -136,11 +149,18 @@ export class GameScene extends Container implements Scene {
     this.passed = options.passedBefore;
     this.skipsLeft = options.skipsLeft;
     const { board, levelNumber, levelCount, levelName } = options;
-    this.session = new LevelSession(board, options.goalHits);
+    this.session = new LevelSession(
+      board,
+      options.goalHits,
+      options.playerMirror,
+    );
 
     this.boardView = new BoardView(board, CELL_SIZE, {
       onLaunch: (row) => this.fireFrom(row),
       onHover: (row) => this.select(row),
+      onCellHover: (position, pointerType) =>
+        this.hoverCell(position, pointerType),
+      onCellTap: (position, pointerType) => this.tapCell(position, pointerType),
     });
     this.boardView.y = HEADER_HEIGHT;
     // Narrow boards are centred in a minimum width, so the header and the
@@ -213,6 +233,7 @@ export class GameScene extends Container implements Scene {
     this.shotsText.y = secondRow + (ROW_HEIGHT - this.shotsText.height) / 2;
     this.boardView.setSelectedRow(this.session.selectedRow);
     this.boardView.setGoalHits(0, this.session.goalHits);
+    this.boardView.setPlacing(this.session.mirrorInHand);
   }
 
   /** Centres the scene in a screen of the given size, shrinking it to fit. */
@@ -232,6 +253,9 @@ export class GameScene extends Container implements Scene {
   }
 
   handleAction(action: GameAction): void {
+    if (this.placeCursor?.by === "keyboard" && this.handlePlaceKey(action)) {
+      return;
+    }
     switch (action) {
       case "selectUp":
         this.select(this.session.selectedRow - 1);
@@ -245,6 +269,9 @@ export class GameScene extends Container implements Scene {
         } else {
           this.fireFrom(this.session.selectedRow);
         }
+        break;
+      case "place":
+        this.startKeyboardPlacing();
         break;
       case "back":
         this.options.onMenu();
@@ -288,6 +315,7 @@ export class GameScene extends Container implements Scene {
       return;
     }
 
+    this.setPlaceCursor(null);
     this.boardView.setSelectedRow(this.session.selectedRow);
     this.updateShots();
     this.showMessage("");
@@ -296,6 +324,126 @@ export class GameScene extends Container implements Scene {
       onBounce: (bounceNumber) => this.options.audio.playBounce(bounceNumber),
       onFinish: () => this.finishShot(result),
     });
+  }
+
+  /** Places the player's mirror at `position`, if allowed now. */
+  private place(position: Position): void {
+    if (!this.session.place(position)) {
+      return;
+    }
+    const { x, y } = position;
+    this.setPlaceCursor(null);
+    this.boardView.setPlacing(false);
+    this.boardView.placeMirror(x, y, this.session.board.cells[y][x]);
+    this.options.audio.play("place");
+    this.showMessage(PLACED_MESSAGE);
+    this.updateShots();
+  }
+
+  /** Moves the cell chosen for the mirror and shows it, or hides it (null). */
+  private setPlaceCursor(cursor: GameScene["placeCursor"]): void {
+    this.placeCursor = cursor;
+    this.showPreview(cursor?.position ?? null);
+  }
+
+  private showPreview(position: Position | null): void {
+    const { playerMirror } = this.session;
+    if (playerMirror === undefined) {
+      return;
+    }
+    this.boardView.showPlacePreview(
+      position,
+      playerMirror,
+      position !== null && this.session.canPlace(position),
+    );
+  }
+
+  /**
+   * A mouse over the board previews the mirror on empty cells; on touch
+   * screens there is no hover, and a first tap previews instead.
+   */
+  private hoverCell(position: Position | null, pointerType: string): void {
+    if (pointerType !== "mouse" || this.placeCursor) {
+      return;
+    }
+    this.showPreview(
+      position && canPlaceAt(this.session.board, position) ? position : null,
+    );
+  }
+
+  /**
+   * A click places the mirror at once (the hover showed where). A tap on a
+   * touch screen first previews it, and a second tap on the same cell
+   * places it, so a stray tap doesn't use up the mirror.
+   */
+  private tapCell(position: Position, pointerType: string): void {
+    if (!this.session.canPlace(position)) {
+      return;
+    }
+    const cursor = this.placeCursor?.position;
+    const confirmed = cursor?.x === position.x && cursor?.y === position.y;
+    if (pointerType === "mouse" || confirmed) {
+      this.place(position);
+      return;
+    }
+    this.setPlaceCursor({ position, by: "touch" });
+    this.showMessage(TAP_AGAIN_MESSAGE);
+  }
+
+  /**
+   * P starts choosing a cell with the keyboard, starting from an empty cell
+   * in the selected row if there is one.
+   */
+  private startKeyboardPlacing(): void {
+    if (!this.session.mirrorInHand || !this.session.canFire) {
+      return;
+    }
+    const empty = placementPositions(this.session.board);
+    const start = empty.find((p) => p.y === this.session.selectedRow) ??
+      empty[0] ?? { x: 0, y: this.session.selectedRow };
+    this.setPlaceCursor({ position: start, by: "keyboard" });
+    this.showMessage(KEYBOARD_PLACE_MESSAGE);
+  }
+
+  /**
+   * Keys while choosing a cell with the keyboard: arrows move, P or Enter
+   * places, Esc cancels. Returns false for keys left to the usual actions.
+   */
+  private handlePlaceKey(action: GameAction): boolean {
+    const cursor = this.placeCursor!.position;
+    const { width, height } = this.session.board;
+    const move = (dx: number, dy: number) =>
+      this.setPlaceCursor({
+        position: {
+          x: Math.max(0, Math.min(width - 1, cursor.x + dx)),
+          y: Math.max(0, Math.min(height - 1, cursor.y + dy)),
+        },
+        by: "keyboard",
+      });
+    switch (action) {
+      case "selectUp":
+        move(0, -1);
+        return true;
+      case "selectDown":
+        move(0, 1);
+        return true;
+      case "selectLeft":
+        move(-1, 0);
+        return true;
+      case "selectRight":
+        move(1, 0);
+        return true;
+      case "place":
+      case "fire":
+        this.place(cursor);
+        return true;
+      case "back":
+        this.setPlaceCursor(null);
+        this.showMessage(this.introMessage());
+        return true;
+      default:
+        return false;
+    }
   }
 
   private finishShot(result: ShotResult): void {
@@ -320,6 +468,7 @@ export class GameScene extends Container implements Scene {
       }
       const { shots } = this.session;
       this.boardView.setSelectedRow(null);
+      this.boardView.setPlacing(false);
       const { previousBest, allLevelsAtPar, skipReturned } =
         this.options.onComplete(shots);
       this.celebrate(result, shots, allLevelsAtPar);
@@ -445,7 +594,9 @@ export class GameScene extends Container implements Scene {
   /** Puts the level back to its starting board, with no shots fired. */
   private restart(): void {
     this.session.restart();
+    this.setPlaceCursor(null);
     this.boardView.showBoard(this.session.board);
+    this.boardView.setPlacing(this.session.mirrorInHand);
     this.boardView.setGoalHits(0, this.session.goalHits);
     this.updateShots();
     this.showMessage(this.introMessage());
@@ -523,7 +674,11 @@ export class GameScene extends Container implements Scene {
     const { shown, total } = this.options.bonus;
     const bonus =
       shown && total > 0 ? `  ·  BONUS ${this.bonusesCollected}/${total}` : "";
-    this.shotsText.text = `SHOTS ${pad(shots)}  ·  PAR ${pad(this.options.par)}${goal}${bonus}`;
+    const mirror =
+      this.session.playerMirror === undefined
+        ? ""
+        : `  ·  MIRROR ×${this.session.mirrorInHand ? 1 : 0}`;
+    this.shotsText.text = `SHOTS ${pad(shots)}  ·  PAR ${pad(this.options.par)}${goal}${mirror}${bonus}`;
   }
 
   /** The message shown when a level starts or restarts. */
@@ -531,6 +686,10 @@ export class GameScene extends Container implements Scene {
     const { goalHits, bonus } = this.options;
     if (bonus.shown && this.bonusesCollected < bonus.total) {
       return BONUS_INTRO_MESSAGE;
+    }
+    if (this.options.playerMirror) {
+      const symbol = this.options.playerMirror === "mirrorSlash" ? "/" : "\\";
+      return `Place your ${symbol} mirror on any empty cell: click it, tap it twice, or press P. It takes no shot; only Restart takes it back.`;
     }
     if (goalHits > 1) {
       return `This goal needs ${goalHits} hits, each from a separate shot. Mirrors stay flipped between shots.`;

@@ -8,7 +8,7 @@ import { LEVELS } from "../src/levels/levels";
 import { CELL_SYMBOLS, formatLevel, parseLevel } from "../src/levels/parse";
 import { findPlacements } from "./bonusPlacement";
 import type { Placement } from "./bonusPlacement";
-import { rowList } from "./levelAnalysis";
+import { cellName, rowList } from "./levelAnalysis";
 
 // Node's process, without depending on @types/node.
 declare const process: { argv: string[]; exitCode?: number };
@@ -66,8 +66,7 @@ function parseArgs(args: string[]): Args | null {
   return parsed as Args;
 }
 
-/** A position as the player counts it: (column, row) from 1. */
-const at = ({ x, y }: { x: number; y: number }) => `(${x + 1},${y + 1})`;
+const at = cellName;
 
 function describe(placement: Placement): string {
   const changes =
@@ -100,6 +99,7 @@ if (args === null) {
   const placements = findPlacements(parseLevel(level.grid), {
     minShots: level.minShots,
     goalHits: level.goalHits ?? 1,
+    playerMirror: level.playerMirror,
     bonusShots,
     changes: args.changes,
   });

@@ -40,6 +40,17 @@ it.each(LEVELS_NEEDING_BREAKS)("%s needs a breakable wall broken", (id) => {
   expect(solve(solid, 8, goalHits)).toBeNull();
 });
 
+// Levels that give the player a mirror are built around it: without it,
+// par is out of reach (a longer way round may exist).
+it.each(LEVELS.filter((level) => level.playerMirror).map((level) => level.id))(
+  "%s needs the player's mirror",
+  (id) => {
+    const level = LEVELS.find((candidate) => candidate.id === id)!;
+    const board = withBonuses(parseLevel(level.grid));
+    expect(solve(board, level.minShots, level.goalHits ?? 1)).toBeNull();
+  },
+);
+
 it("gives every level an existing music track", () => {
   for (const level of LEVELS) {
     expect(MUSIC_TRACKS[level.music]).toBeDefined();
@@ -53,7 +64,7 @@ it("has unique level ids", () => {
 
 describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
   "level $number ($name)",
-  ({ grid, minShots, goalHits = 1, bonusShots, number }) => {
+  ({ grid, minShots, goalHits = 1, bonusShots, playerMirror, number }) => {
     it("parses", () => {
       expect(() => parseLevel(grid)).not.toThrow();
     });
@@ -61,7 +72,12 @@ describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
     // Bonus targets are hidden until the level is completed at par, so par
     // is checked without them.
     it(`needs exactly ${minShots} shot(s) at best`, () => {
-      const solution = solve(withBonuses(parseLevel(grid)), minShots, goalHits);
+      const solution = solve(
+        withBonuses(parseLevel(grid)),
+        minShots,
+        goalHits,
+        playerMirror,
+      );
       expect(solution).not.toBeNull();
       expect(solution).toHaveLength(minShots);
     });
@@ -80,6 +96,7 @@ describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
           bonuses[0],
           bonusShots,
           goalHits,
+          playerMirror,
         );
         expect(solution).not.toBeNull();
         expect(solution).toHaveLength(bonusShots!);
@@ -93,7 +110,12 @@ describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
       });
 
       it("can still be completed at par with the bonus target showing", () => {
-        const solution = solve(parseLevel(grid), minShots, goalHits);
+        const solution = solve(
+          parseLevel(grid),
+          minShots,
+          goalHits,
+          playerMirror,
+        );
         expect(solution).toHaveLength(minShots);
       });
     } else {

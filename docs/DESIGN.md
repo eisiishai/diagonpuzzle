@@ -100,6 +100,40 @@ puzzle on top of the level for players who have mastered it.
   their routes mix several rows rather than repeating one; `npm run
   levels` shows the shortest route to each.
 
+## Player-placed mirror
+
+Some levels give the player a mirror of their own (`playerMirror` in the
+level list), to place once, anywhere it fits:
+
+- **Fixed direction, free cell.** The level decides which mirror the
+  player gets, `\` or `/`; the player decides *where* it goes, and *when*.
+  It can't be turned (a rotate option may come later).
+- **Where:** any empty cell. Not on another piece, the goal or a showing
+  bonus target; a cell emptied by a broken wall or a collected bonus target
+  is empty, so it counts.
+- **When:** whenever a shot could be fired: before the first shot or
+  between shots, not while the pellet is moving or after the level is
+  complete. Placing takes no shot, so it doesn't count towards par.
+- **Once placed** it is an ordinary mirror: it turns the pellet and flips
+  when hit. It can't be moved or taken back; *Restart* returns it to the
+  player.
+- **Placing it** (see *Controls*): with a mouse, hovering over an empty
+  cell previews the mirror there and a click places it. On a touch screen
+  the first tap previews it and a second tap on the same cell places it,
+  so a stray tap doesn't use it up. With the keyboard, P shows a cell
+  cursor. The mirror drops into place with a glassy click.
+- **Header:** `MIRROR ×1` while the mirror is in hand, `MIRROR ×0` once
+  placed.
+- **For now** one mirror per level. More mirrors, a choice of direction or
+  other placeable blocks could follow.
+- **Design checks.** The solver tries placing the mirror on every empty
+  cell before every shot (free moves), so `minShots` and `bonusShots`
+  count shots only. Solutions are lists of moves: a row fired, or the
+  mirror placed; `npm run levels` shows a placement as e.g. `/ at (3,4)`
+  (column, row) and counts the shortest solutions, so a level can be
+  checked for a unique one. A test checks that every level with a player
+  mirror can't reach par without it.
+
 ## Cell types
 
 | Symbol | Name | Behavior |
@@ -163,6 +197,13 @@ levels 1 and 2 have one.
 | 12 | Stone by stone | 4 | Rows 6, 7, 6, 7: three of the four shots break a cracked wall, opening the way for the next. |
 | 13 | Crack and double | 3 | Breakable walls with a two-hit goal. Row 3 breaks the cracked wall in front of the goal; rows 5 and 2 then reach it through the gap. |
 | 14 | Rubble run | 5 | Goal needs 2 hits. Rows 4, 2, 3, 4, 3: a miss sets up the mirrors, row 2 breaks a cracked wall, and rows 3 and 4 take turns reaching the goal. |
+| 15 | Your move | 1 | Introduces the player-placed mirror (`/`). Row 4 runs along the bottom; the mirror in the corner below the goal turns it up into it. The bonus target needs the mirror somewhere else: row 1, then the mirror at (1,2), then row 2. |
+| 16 | Double duty | 3 | Player mirror `/`, used twice. Row 2 first flips the mirror at (2,2); with the mirror placed at (3,4), row 2 then runs down and round, bouncing off it and flipping it; row 4 turns down at the flipped mirror and runs to the goal. The bonus target needs the mirror placed later: rows 5, 5, then the mirror at (5,3), then rows 1, 1. |
+
+Levels 15–16 were found with `npm run generate -- --player-mirror slash`
+(16 with `--place-later`), which keeps only boards that can't reach par
+without the mirror; the tests check that too. Both have a unique shortest
+solution.
 
 Levels 11–14 were found with `npm run generate -- --breakable N`, which
 keeps only boards that can't be solved with their breakable walls made
@@ -177,7 +218,11 @@ difficulty doesn't dip at the end.
 ## Controls
 
 - **Mouse:** hovering over a launch position selects its row; clicking fires.
-- **Keyboard:** ↑/↓ (or W/S) select a row, Enter/Space fires.
+  In levels with a player mirror, hovering over an empty cell previews it
+  and clicking places it; on touch screens, tap a cell twice.
+- **Keyboard:** ↑/↓ (or W/S) select a row, Enter/Space fires. In levels with
+  a player mirror, P shows a cell cursor: the arrow keys (or WASD) move it,
+  P or Enter places the mirror there, Esc cancels.
 - Music and sound effects are switched on and off separately: **M** or the
   *Music* label for music, **F** or the *Sounds* label for sound effects.
   Both choices are remembered. (Players who had muted all sound before the
@@ -296,6 +341,11 @@ Text colours keep at least 4.5:1 contrast on the background.
   running through them instead of hatching, no glow. When hit, they burst
   into stone pieces that fall away and fade.
 - **Goal**: a crystal (diamond within a diamond) glowing green.
+- **Mirror preview** (where the player's mirror would go): four corner
+  brackets around the cell and the mirror's outline in glass-coloured
+  dashes, pulsing gently with the goal's breath; on a cell where it can't
+  go, only dim brackets. A placed mirror drops in from slightly larger,
+  fading in (220 ms), and then looks like any other mirror.
 - **Bonus target**: a prism gem: a hexagon of six facets, one in each
   bonus colour, with a white rim and a bright core.
 - **Beam**: a glowing coloured band with a thin white core.
@@ -349,6 +399,7 @@ every variant), so the names below are its variant names.
 | Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is two semitones higher (capped) |
 | Wall | *Soft knock* |
 | Breakable wall | A crunch over a low thud, with small pieces clattering after it (not from the sound lab) |
+| Mirror placed | A glassy click, then two short bells (not from the sound lab) |
 | Off the board | *Two-tone drop*: two notes stepping down |
 | Loop | *Question chime*: two bells rising |
 | Goal (above par) | *Crystal chime*: glassy notes rising |
@@ -364,7 +415,7 @@ every variant), so the names below are its variant names.
 | Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
 | Levels 1–4 | **Pulse**: driving synthwave with a soft beat, 104 BPM |
 | Levels 5–8 | **Glass garden**: a slow, dark ambient drone only (no melody), so it stays out of the way on the harder levels |
-| Levels 9–14 | **Night lab**, as on the title screen |
+| Levels 9–16 | **Night lab**, as on the title screen |
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different
@@ -387,8 +438,9 @@ track crossfades in over about a second.
 - Firing from other edges of the grid.
 - More block types (e.g. one-way blocks, splitters, rotating or breakable
   mirrors).
-- Player-placed blocks: the player places a limited set of blocks before or
-  between shots.
+- More player-placed blocks: several mirrors, choosing or rotating the
+  mirror's direction, or other kinds of blocks (see *Player-placed
+  mirror*).
 - Shot limits or par scores per level.
 - Level select and progress saving.
 

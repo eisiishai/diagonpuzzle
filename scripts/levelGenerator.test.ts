@@ -16,6 +16,7 @@ const OPTIONS: GeneratorOptions = {
   mirrors: 4,
   walls: 1,
   breakable: 0,
+  placeLater: false,
   shots: 2,
   goalHits: 1,
   tries: 300,
@@ -77,6 +78,19 @@ describe("shortestSolutions", () => {
   it("counts separate goal hits", () => {
     expect(shortestSolutions(parseLevel(". G"), 2, 2)).toEqual([[0, 0]]);
   });
+
+  it("includes the player's mirror, counting the same play once", () => {
+    // Row 1 hits the goal whether or not the mirror is placed somewhere
+    // else first; row 0 needs it at (1, 0).
+    const board = parseLevel(String.raw`
+      . . .
+      . G .
+    `);
+    expect(shortestSolutions(board, 1, 1, "mirrorBackslash")).toEqual([
+      [1],
+      [{ x: 1, y: 0, mirror: "mirrorBackslash" }, 0],
+    ]);
+  });
 });
 
 describe("findCandidates", () => {
@@ -111,6 +125,22 @@ describe("findCandidates", () => {
     expect(candidates.length).toBeGreaterThan(0);
     for (const { board } of candidates) {
       expect(solve(withSolidWalls(board), 2)).toBeNull();
+    }
+  });
+
+  it("keeps only boards that need the player's mirror, later if asked", () => {
+    const candidates = findCandidates({
+      ...OPTIONS,
+      playerMirror: "mirrorSlash",
+      placeLater: true,
+    });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board, solutions } of candidates) {
+      expect(solve(board, 2)).toBeNull();
+      expect(solve(board, 2, 1, "mirrorSlash")).toHaveLength(2);
+      for (const moves of solutions) {
+        expect(typeof moves[0]).toBe("number");
+      }
     }
   });
 });

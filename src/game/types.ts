@@ -23,6 +23,9 @@ export type CellType =
   | "goal"
   | "bonus";
 
+/** The two mirror cells, e.g. the kind of mirror a player may place. */
+export type MirrorType = "mirrorBackslash" | "mirrorSlash";
+
 export interface Board {
   readonly width: number;
   readonly height: number;

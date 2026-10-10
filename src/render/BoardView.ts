@@ -1,12 +1,15 @@
 import { Container, Graphics, Rectangle } from "pixi.js";
+import type { FederatedPointerEvent } from "pixi.js";
 import type { ShotResult } from "../game/simulate";
-import type { Board, CellType } from "../game/types";
+import type { Board, CellType, MirrorType, Position } from "../game/types";
 import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
 import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
 import { BONUS_COLORS, COLORS, createBloom } from "./theme";
 
 const MIRROR_TURN_MS = 150;
+/** How long a placed mirror takes to drop into place. */
+const MIRROR_PLACE_MS = 220;
 /** How often each bonus target gives off a sparkle, and how long it lasts. */
 const SPARKLE_INTERVAL_MS = 170;
 const SPARKLE_LIFE_MS = 750;
@@ -18,6 +21,16 @@ export interface BoardViewHandlers {
   onLaunch: (row: number) => void;
   /** The pointer moved over a launcher. */
   onHover: (row: number) => void;
+  /** The pointer moved onto board cell `position`, or off the board (null). */
+  onCellHover: (position: Position | null, pointerType: string) => void;
+  /** A board cell was clicked or tapped. */
+  onCellTap: (position: Position, pointerType: string) => void;
+}
+
+/** A placed mirror settling into place. */
+interface Placing {
+  view: Graphics;
+  elapsedMs: number;
 }
 
 /** A mirror rotating by 90° after a flip. */
@@ -67,6 +80,11 @@ export class BoardView extends Container {
   private readonly launchers: Graphics[] = [];
   private readonly animator: PelletAnimator;
   private turns: MirrorTurn[] = [];
+  private placings: Placing[] = [];
+  /** Where the player's mirror would go; see showPlacePreview(). */
+  private readonly placePreview = new Graphics();
+  /** Pointer events over the board's cells, while placing; see setPlacing(). */
+  private cellPointer!: Container;
   /** Sparkles around bonus targets, above the cells and under the beam. */
   private readonly sparkleLayer = new Container();
   private sparkles: Sparkle[] = [];
@@ -104,7 +122,13 @@ export class BoardView extends Container {
       this.cellViews.push(row);
     }
     this.redrawCells();
-    this.addChild(this.goalMarkers, this.sparkleLayer, this.debrisLayer);
+    this.addChild(
+      this.goalMarkers,
+      this.placePreview,
+      this.sparkleLayer,
+      this.debrisLayer,
+      this.createCellPointer(handlers),
+    );
 
     for (let row = 0; row < board.height; row++) {
       const launcher = this.createLauncher(row, handlers);
@@ -131,6 +155,7 @@ export class BoardView extends Container {
   showBoard(board: Board): void {
     this.animator.clear();
     this.turns = [];
+    this.placings = [];
     board.cells.forEach((row, y) =>
       row.forEach((cell, x) => (this.cells[y][x] = cell)),
     );
@@ -202,9 +227,86 @@ export class BoardView extends Container {
     });
   }
 
+  /**
+   * Shows the player's mirror placed at (x, y): `cell` is the mirror. It
+   * drops in from slightly larger, fading in.
+   */
+  placeMirror(x: number, y: number, cell: CellType): void {
+    const view = this.cellViews[y][x];
+    this.cells[y][x] = cell;
+    this.drawCell(view, cell);
+    if (!prefersReducedMotion()) {
+      this.placings.push({ view, elapsedMs: 0 });
+      this.updatePlacings(0);
+    }
+  }
+
+  /**
+   * Marks board cell `position` as where the player's `mirror` would go:
+   * corner brackets, and the mirror's outline in dashes if it can go there
+   * (`placeable`). Null hides it.
+   */
+  showPlacePreview(
+    position: Position | null,
+    mirror: MirrorType,
+    placeable: boolean,
+  ): void {
+    const g = this.placePreview.clear();
+    g.visible = position !== null;
+    if (position === null) {
+      return;
+    }
+    const center = this.cellCenter(position.x, position.y);
+    g.position.set(center.x, center.y);
+    const half = this.cellSize / 2;
+    if (placeable) {
+      const reach = half * 0.7;
+      const dashes = 5;
+      for (let i = 0; i < dashes; i++) {
+        const from = -reach + (2 * reach * (i + 0.2)) / dashes;
+        const to = -reach + (2 * reach * (i + 0.8)) / dashes;
+        // Drawn as "\"; a "/" is the same line mirrored left to right.
+        const sx = mirror === "mirrorSlash" ? -1 : 1;
+        g.moveTo(sx * from, from).lineTo(sx * to, to);
+      }
+      g.stroke({ width: 4, color: COLORS.glass, alpha: 0.8, cap: "round" });
+    }
+    const edge = half * 0.82;
+    const arm = half * 0.28;
+    for (const [sx, sy] of [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ]) {
+      g.moveTo(sx * edge, sy * (edge - arm))
+        .lineTo(sx * edge, sy * edge)
+        .lineTo(sx * (edge - arm), sy * edge);
+    }
+    g.stroke({
+      width: 2,
+      color: placeable ? COLORS.glass : COLORS.dim,
+      alpha: placeable ? 0.7 : 0.4,
+      cap: "round",
+      join: "round",
+    });
+  }
+
+  /**
+   * Turns pointer events over the board's cells on or off: on while the
+   * player has a mirror to place.
+   */
+  setPlacing(placing: boolean): void {
+    this.cellPointer.eventMode = placing ? "static" : "none";
+    if (!placing) {
+      this.showPlacePreview(null, "mirrorSlash", false);
+    }
+  }
+
   update(deltaMs: number): void {
     this.animator.update(deltaMs);
     this.updateTurns(deltaMs);
+    this.updatePlacings(deltaMs);
     this.updateDebris(deltaMs);
     this.updateAmbient(deltaMs);
   }
@@ -243,6 +345,7 @@ export class BoardView extends Container {
       }),
     );
     this.updateSparkles(deltaMs);
+    this.placePreview.alpha = 0.65 + 0.35 * breath;
     if (this.selectedRow !== null) {
       this.launchers[this.selectedRow].alpha = 0.75 + 0.25 * breath;
     }
@@ -346,6 +449,17 @@ export class BoardView extends Container {
       piece.view.rotation += piece.spin * seconds;
       piece.view.alpha = 1 - piece.ageMs / DEBRIS_LIFE_MS;
       return true;
+    });
+  }
+
+  private updatePlacings(deltaMs: number): void {
+    this.placings = this.placings.filter((placing) => {
+      placing.elapsedMs += deltaMs;
+      const t = Math.min(1, placing.elapsedMs / MIRROR_PLACE_MS);
+      const eased = 1 - (1 - t) ** 3;
+      placing.view.scale.set(1.35 - 0.35 * eased);
+      placing.view.alpha = eased;
+      return t < 1;
     });
   }
 
@@ -505,6 +619,45 @@ export class BoardView extends Container {
         break;
       }
     }
+  }
+
+  /**
+   * An invisible area over the board's cells reporting which cell the
+   * pointer is over or taps. Off until setPlacing(true).
+   */
+  private createCellPointer(handlers: BoardViewHandlers): Container {
+    const area = new Container();
+    const { cellSize } = this;
+    area.hitArea = new Rectangle(
+      cellSize,
+      0,
+      this.boardWidth * cellSize,
+      this.boardHeight * cellSize,
+    );
+    area.eventMode = "none";
+    area.cursor = "pointer";
+    const cellAt = (event: FederatedPointerEvent): Position | null => {
+      const local = area.toLocal(event.global);
+      const x = Math.floor(local.x / cellSize) - 1;
+      const y = Math.floor(local.y / cellSize);
+      return x >= 0 && x < this.boardWidth && y >= 0 && y < this.boardHeight
+        ? { x, y }
+        : null;
+    };
+    area.on("pointermove", (event) =>
+      handlers.onCellHover(cellAt(event), event.pointerType),
+    );
+    area.on("pointerleave", (event) =>
+      handlers.onCellHover(null, event.pointerType),
+    );
+    area.on("pointertap", (event) => {
+      const position = cellAt(event);
+      if (position) {
+        handlers.onCellTap(position, event.pointerType);
+      }
+    });
+    this.cellPointer = area;
+    return area;
   }
 
   /** An emitter centred in the launcher cell of `row`. */

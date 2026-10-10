@@ -1,6 +1,7 @@
+import { canPlaceAt, placeMirror } from "./placement";
 import { fire } from "./simulate";
 import type { ShotOutcome, ShotResult } from "./simulate";
-import type { Board } from "./types";
+import type { Board, MirrorType, Position } from "./types";
 
 /**
  * Aiming: waiting for a shot. Firing: a shot is in progress (the pellet is
@@ -25,12 +26,22 @@ export class LevelSession {
   private _hits = 0;
   /** Outcome of the shot in progress, applied by finishShot(). */
   private pendingOutcome?: ShotOutcome;
+  /** The mirror the level lets the player place, if any. */
+  readonly playerMirror?: MirrorType;
+  private _mirrorInHand: boolean;
 
-  constructor(startBoard: Board, goalHits = 1) {
+  constructor(startBoard: Board, goalHits = 1, playerMirror?: MirrorType) {
     this.startBoard = startBoard;
     this._board = startBoard;
     this._selectedRow = Math.floor(startBoard.height / 2);
     this.goalHits = goalHits;
+    this.playerMirror = playerMirror;
+    this._mirrorInHand = playerMirror !== undefined;
+  }
+
+  /** True while the player's mirror has not been placed yet. */
+  get mirrorInHand(): boolean {
+    return this._mirrorInHand;
   }
 
   /** Goal hits so far. */
@@ -90,6 +101,28 @@ export class LevelSession {
     return result;
   }
 
+  /** True if the player's mirror can be placed at `position` now. */
+  canPlace(position: Position): boolean {
+    return (
+      this._mirrorInHand && this.canFire && canPlaceAt(this._board, position)
+    );
+  }
+
+  /**
+   * Places the player's mirror at `position`. It takes no shot and stays
+   * until a restart. Returns false, changing nothing, if it can't be placed
+   * now: no mirror in hand, during a shot, after the level is complete, or
+   * on a cell that isn't empty.
+   */
+  place(position: Position): boolean {
+    if (!this.canPlace(position) || this.playerMirror === undefined) {
+      return false;
+    }
+    this._board = placeMirror(this._board, position, this.playerMirror);
+    this._mirrorInHand = false;
+    return true;
+  }
+
   /**
    * Ends the shot in progress. A shot reaching the goal counts as a hit; the
    * level is complete once there are as many hits as it needs. The board
@@ -117,6 +150,7 @@ export class LevelSession {
     this._board = this.startBoard;
     this._shots = 0;
     this._hits = 0;
+    this._mirrorInHand = this.playerMirror !== undefined;
     this._phase = "aiming";
     this.pendingOutcome = undefined;
   }

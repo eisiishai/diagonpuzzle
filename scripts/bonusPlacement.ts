@@ -5,8 +5,19 @@
 
 import { withBonuses } from "../src/game/bonus";
 import { boardStateKey, fire } from "../src/game/simulate";
-import { solve, solveBonus } from "../src/game/solver";
-import type { Board, CellType, Position } from "../src/game/types";
+import {
+  canPlaceAt,
+  placeMirror,
+  placementPositions,
+} from "../src/game/placement";
+import {
+  shotRows,
+  solve,
+  solveBonusMoves,
+  solveMoves,
+} from "../src/game/solver";
+import type { Move } from "../src/game/solver";
+import type { Board, CellType, MirrorType, Position } from "../src/game/types";
 import { shortestSolutions } from "./levelGenerator";
 
 export interface PlacementOptions {
@@ -17,6 +28,8 @@ export interface PlacementOptions {
   bonusShots: number;
   /** Most board cells to change (0 = place the bonus target only). */
   changes: number;
+  /** The mirror the player may place, if the level gives one. */
+  playerMirror?: MirrorType;
 }
 
 export interface CellChange extends Position {
@@ -32,7 +45,7 @@ export interface Placement {
   /** Ways to hit the bonus target in `bonusShots` shots (see firstEntries). */
   routes: number;
   /** A shortest route to the bonus target. */
-  route: number[];
+  route: Move[];
 }
 
 /** Cell types a board change may put in a cell. */
@@ -55,36 +68,71 @@ function withCell(board: Board, { x, y, cell }: CellChange): Board {
  * first shot number at which it can, and in how many ways. Ways are counted
  * by the board reached before the last shot and the row fired, so shots
  * that change nothing and setup shots in another order don't count as more
- * ways. Routes stop once they complete the level. Keyed "x,y".
+ * ways; nor does placing the player's mirror where no shot ever passes.
+ * Routes stop once they complete the level. Keyed "x,y".
  */
 export function firstEntries(
   board: Board,
   maxShots: number,
   goalHits: number,
+  playerMirror?: MirrorType,
 ): Map<string, { shots: number; routes: number }> {
-  const entries = new Map<string, { shots: number; routes: number }>();
-  type State = { board: Board; hits: number };
+  const entries = new Map<string, { shots: number; routes: Set<string> }>();
+  type State = {
+    board: Board;
+    hits: number;
+    inHand: boolean;
+    /** Where the player's mirror was placed, while no shot has passed it. */
+    untouched?: Position;
+  };
   const stateKey = (state: State) =>
-    `${state.hits}|${boardStateKey(state.board)}`;
-  let frontier: State[] = [{ board, hits: 0 }];
+    `${state.hits}|${state.inHand}|${boardStateKey(state.board)}`;
+  let frontier: State[] = [
+    { board, hits: 0, inHand: playerMirror !== undefined },
+  ];
   const seen = new Set([stateKey(frontier[0])]);
 
   for (let shots = 1; shots <= maxShots && frontier.length > 0; shots++) {
     const next: State[] = [];
+    const choices = [...frontier];
     for (const state of frontier) {
+      if (state.inHand && playerMirror !== undefined) {
+        for (const position of placementPositions(state.board)) {
+          choices.push({
+            board: placeMirror(state.board, position, playerMirror),
+            hits: state.hits,
+            inHand: false,
+            untouched: position,
+          });
+        }
+      }
+    }
+    for (const state of choices) {
       for (let row = 0; row < board.height; row++) {
         const result = fire(state.board, row);
-        for (const key of new Set(result.path.map((p) => `${p.x},${p.y}`))) {
+        const cells = new Set(result.path.map((p) => `${p.x},${p.y}`));
+        let untouched = state.untouched;
+        if (untouched && cells.has(`${untouched.x},${untouched.y}`)) {
+          untouched = undefined;
+        }
+        // A mirror no shot has passed plays as if still in hand.
+        const before = untouched
+          ? withCell(state.board, { ...untouched, cell: "empty" })
+          : state.board;
+        const route = `${boardStateKey(before)}|${row}`;
+        for (const key of cells) {
           const entry = entries.get(key);
           if (entry === undefined) {
-            entries.set(key, { shots, routes: 1 });
+            entries.set(key, { shots, routes: new Set([route]) });
           } else if (entry.shots === shots) {
-            entry.routes++;
+            entry.routes.add(route);
           }
         }
-        const after = {
+        const after: State = {
           board: result.board,
           hits: state.hits + (result.outcome === "goal" ? 1 : 0),
+          inHand: state.inHand,
+          untouched,
         };
         const key = stateKey(after);
         if (after.hits < goalHits && !seen.has(key)) {
@@ -95,7 +143,12 @@ export function firstEntries(
     }
     frontier = next;
   }
-  return entries;
+  return new Map(
+    [...entries].map(([key, { shots, routes }]) => [
+      key,
+      { shots, routes: routes.size },
+    ]),
+  );
 }
 
 /**
@@ -110,21 +163,24 @@ export function findPlacements(
   levelBoard: Board,
   options: PlacementOptions,
 ): Placement[] {
-  const { minShots, goalHits, bonusShots } = options;
+  const { minShots, goalHits, bonusShots, playerMirror } = options;
+  const solveOptions = { maxShots: minShots, goalHits, playerMirror };
   const start = withBonuses(levelBoard);
-  const par = solve(start, minShots, goalHits);
+  const par = solveMoves(start, solveOptions);
   if (par === null) {
     throw new Error(`The level has no solution within ${minShots} shots`);
   }
-  const parSolutions = shortestSolutions(start, minShots, goalHits).length;
+  const solutionCount = (board: Board) =>
+    shortestSolutions(board, minShots, goalHits, playerMirror).length;
+  const parSolutions = solutionCount(start);
   const placements: Placement[] = [];
 
   const evaluate = (board: Board, changes: CellChange[]) => {
     if (changes.length > 0) {
-      if (solve(board, minShots - 1, goalHits) !== null) {
+      if (solve(board, minShots - 1, goalHits, playerMirror) !== null) {
         return;
       }
-      if (shortestSolutions(board, minShots, goalHits).length > parSolutions) {
+      if (solutionCount(board) > parSolutions) {
         return;
       }
     }
@@ -132,8 +188,16 @@ export function findPlacements(
     const used = new Set<string>();
     let current = board;
     let hits = 0;
-    for (const row of par) {
-      const result = fire(current, row);
+    for (const move of par) {
+      if (typeof move !== "number") {
+        if (!canPlaceAt(current, move)) {
+          return;
+        }
+        current = placeMirror(current, move, move.mirror);
+        used.add(`${move.x},${move.y}`);
+        continue;
+      }
+      const result = fire(current, move);
       result.path.forEach((p) => used.add(`${p.x},${p.y}`));
       hits += result.outcome === "goal" ? 1 : 0;
       current = result.board;
@@ -142,7 +206,7 @@ export function findPlacements(
       return;
     }
 
-    const entries = firstEntries(board, bonusShots, goalHits);
+    const entries = firstEntries(board, bonusShots, goalHits, playerMirror);
     board.cells.forEach((row, y) =>
       row.forEach((cell, x) => {
         const entry = entries.get(`${x},${y}`);
@@ -159,7 +223,12 @@ export function findPlacements(
           bonus: { x, y },
           board: withBonus,
           routes: entry.routes,
-          route: solveBonus(withBonus, { x, y }, bonusShots, goalHits) ?? [],
+          route:
+            solveBonusMoves(
+              withBonus,
+              { x, y },
+              { maxShots: bonusShots, goalHits, playerMirror },
+            ) ?? [],
         });
       }),
     );
@@ -190,7 +259,8 @@ export function findPlacements(
   };
   search(start, [], 0);
 
-  const variety = (placement: Placement) => new Set(placement.route).size;
+  const variety = (placement: Placement) =>
+    new Set(shotRows(placement.route)).size;
   return placements.sort(
     (a, b) =>
       a.routes - b.routes ||

@@ -1,7 +1,10 @@
 export type GameAction =
   | "selectUp"
   | "selectDown"
+  | "selectLeft"
+  | "selectRight"
   | "fire"
+  | "place"
   | "back"
   | "restart"
   | "toggleMusic"
@@ -13,8 +16,13 @@ const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   w: "selectUp",
   ArrowDown: "selectDown",
   s: "selectDown",
+  ArrowLeft: "selectLeft",
+  a: "selectLeft",
+  ArrowRight: "selectRight",
+  d: "selectRight",
   Enter: "fire",
   " ": "fire",
+  p: "place",
   Escape: "back",
   r: "restart",
   m: "toggleMusic",
@@ -29,6 +37,7 @@ const SHIFT_KEY_ACTIONS: Partial<Record<string, GameAction>> = {
 /** Actions that should not repeat while the key is held down. */
 const NO_REPEAT: ReadonlySet<GameAction> = new Set([
   "fire",
+  "place",
   "back",
   "restart",
   "toggleMusic",

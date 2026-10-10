@@ -3,9 +3,10 @@
 // into src/levels/levels.ts. Rows are numbered from 1 at the top, as the
 // player counts them. Run `npm run generate -- --help` for the options.
 
-import { fire } from "../src/game/simulate";
-import { formatLevel } from "../src/levels/parse";
-import { describeShot, rowList } from "./levelAnalysis";
+import { playMoves } from "../src/game/solver";
+import type { MirrorType } from "../src/game/types";
+import { CELL_SYMBOLS, formatLevel } from "../src/levels/parse";
+import { cellName, describeShot, rowList } from "./levelAnalysis";
 import { findCandidates } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
 
@@ -18,6 +19,8 @@ const DEFAULTS: GeneratorOptions & { show: number } = {
   mirrors: 6,
   walls: 2,
   breakable: 0,
+  playerMirror: undefined,
+  placeLater: false,
   shots: 2,
   goalHits: 1,
   tries: 20000,
@@ -35,6 +38,9 @@ const HELP = `Usage: npm run generate -- [options]
   --walls N         walls (default ${DEFAULTS.walls})
   --breakable N     breakable walls; boards must need one broken for par
                     (default ${DEFAULTS.breakable})
+  --player-mirror M the player may place one mirror M (slash or backslash)
+                    on any empty cell; boards must need it for par
+  --place-later     no shortest solution places the mirror before the first shot
   --shots N         par: fewest shots that complete the level (default ${DEFAULTS.shots})
   --goal-hits N     goal hits needed (default ${DEFAULTS.goalHits})
   --tries N         random boards to try (default ${DEFAULTS.tries})
@@ -45,12 +51,21 @@ const HELP = `Usage: npm run generate -- [options]
 
 Example: npm run generate -- --width 7 --height 6 --mirrors 8 --shots 3`;
 
+const PLAYER_MIRRORS: Partial<Record<string, MirrorType>> = {
+  slash: "mirrorSlash",
+  "/": "mirrorSlash",
+  backslash: "mirrorBackslash",
+  "\\": "mirrorBackslash",
+};
+
 const FLAGS: Record<string, keyof typeof DEFAULTS> = {
+  "--player-mirror": "playerMirror",
   "--width": "width",
   "--height": "height",
   "--mirrors": "mirrors",
   "--walls": "walls",
   "--breakable": "breakable",
+  "--place-later": "placeLater",
   "--shots": "shots",
   "--goal-hits": "goalHits",
   "--tries": "tries",
@@ -69,6 +84,15 @@ function parseArgs(args: string[]): typeof DEFAULTS | null {
         args[i] === "--help" ? HELP : `Unknown option ${args[i]}\n\n${HELP}`,
       );
       return null;
+    }
+    if (args[i] === "--player-mirror") {
+      const mirror = PLAYER_MIRRORS[args[++i]];
+      if (mirror === undefined) {
+        console.error("--player-mirror needs slash or backslash");
+        return null;
+      }
+      options.playerMirror = mirror;
+      continue;
     }
     if (typeof DEFAULTS[key] === "boolean") {
       Object.assign(options, { [key]: true });
@@ -101,12 +125,20 @@ if (options === null) {
     console.log("    grid: String.raw`");
     console.log(formatLevel(board, "      "));
     console.log("    `,");
+    if (options.playerMirror) {
+      console.log(`    playerMirror: "${options.playerMirror}",`);
+    }
 
-    let current = board;
-    for (const row of solutions[0]) {
-      const result = fire(current, row);
-      console.log(`  row ${row + 1}: ${describeShot(result)}`);
-      current = result.board;
+    const { shots } = playMoves(board, solutions[0]);
+    let shot = 0;
+    for (const move of solutions[0]) {
+      if (typeof move === "number") {
+        console.log(`  row ${move + 1}: ${describeShot(shots[shot++])}`);
+      } else {
+        console.log(
+          `  place the ${CELL_SYMBOLS[move.mirror]} mirror at ${cellName(move)}`,
+        );
+      }
     }
     if (solutions.length > 1) {
       console.log(`  all: ${solutions.map(rowList).join(", ")}`);

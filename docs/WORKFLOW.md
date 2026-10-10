@@ -43,6 +43,13 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   is printed as a `grid:` block to paste into `src/levels/levels.ts`, with its
   solution. Try other `--seed` values for different boards, then adjust the
   board by hand and check it with `npm run levels`.
+- For levels with a player-placed mirror, add `--player-mirror slash` (or
+  `backslash`): only boards that need the mirror for par are kept, and
+  `--place-later` also drops boards where a shortest solution places it
+  before the first shot. Solutions show a placement as `place the /
+  mirror at (column,row)`; copy the printed `playerMirror` line into the
+  level too. These searches are slower: try `--tries 4000` (about 15 s
+  for a 6×5 board at par 3).
 - The generator doesn't place bonus targets. Once the level is in
   `src/levels/levels.ts`, run `npm run bonus -- --level N` to find cells
   for its `*` (`--help` lists the options), for example:

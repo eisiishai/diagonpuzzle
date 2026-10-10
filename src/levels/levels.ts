@@ -1,4 +1,5 @@
 import type { MusicTrackId } from "../audio/music";
+import type { MirrorType } from "../game/types";
 
 export interface LevelDefinition {
   /** Stable identifier used for saved progress; never change it once released. */
@@ -20,6 +21,11 @@ export interface LevelDefinition {
    * the level has a bonus target; tests check it with the solver.
    */
   bonusShots?: number;
+  /**
+   * A mirror the player may place once, on any empty cell, between shots
+   * (see docs/DESIGN.md, Player-placed mirror). Tests check that par needs it.
+   */
+  playerMirror?: MirrorType;
   /** Background music while playing the level. */
   music: MusicTrackId;
   /** Text grid, format in docs/DESIGN.md. */
@@ -238,6 +244,35 @@ export const LEVELS: readonly LevelDefinition[] = [
       / . / . % . .
       . . . \ . . .
       / # / . . * .
+    `,
+  },
+  {
+    id: "your-move",
+    name: "Your move",
+    minShots: 1,
+    bonusShots: 2,
+    playerMirror: "mirrorSlash",
+    music: "nightLab",
+    grid: String.raw`
+      \ . * . G
+      . . # / .
+      / . . # .
+      . . . . .
+    `,
+  },
+  {
+    id: "double-duty",
+    name: "Double duty",
+    minShots: 3,
+    bonusShots: 4,
+    playerMirror: "mirrorSlash",
+    music: "nightLab",
+    grid: String.raw`
+      . . . / . .
+      . / . . \ \
+      . . # \ . .
+      . . . . # *
+      . \ / . . G
     `,
   },
 ];

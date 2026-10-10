@@ -64,6 +64,11 @@ Each needs a design in `docs/DESIGN.md`, and a decision on how it interacts
 with flipping mirrors, before it is built.
 
 - [ ] Player-placed blocks
+  - [x] One player-placed mirror of a fixed direction, on any empty cell,
+    placed between shots without taking one; levels 15–16 use it. Design
+    in `docs/DESIGN.md`, *Player-placed mirror*
+  - [ ] Option to rotate the placed mirror (choose `\` or `/`)
+  - [ ] More mirrors per level, or other placeable blocks
 - [ ] Firing from other edges
 - [ ] New block types
   - [x] Breakable walls (`%`): stop the pellet once and break; levels
@@ -118,3 +123,16 @@ with flipping mirrors, before it is built.
   (currently TypeScript < 6.1)
 - [ ] Automated browser smoke tests (e.g. Playwright), if the UI grows enough
   that manual checks become a burden
+
+## Discarded ideas
+
+Ideas that were tried or designed and then dropped, with the reason, so
+they aren't proposed again without new arguments. Each could come back if
+the reason no longer holds.
+
+- **Fixed mirror slots** (2026-10-10): a level marked a cell (`n` for `\`,
+  `z` for `/`) where the player could place a mirror once; the player
+  chose only *when* to place it. Built and playable, but never released:
+  replaced by the player-placed mirror on any empty cell before it was
+  committed. Reason: no use was seen for a fixed position once the mirror can go
+  on any empty cell, which was the intended mechanic.

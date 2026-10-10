@@ -2,9 +2,11 @@
 // keeps the ones the solver says need exactly the wanted number of shots.
 // Rows are 0-based here, like the solver's.
 
+import { placeMirror, placementPositions } from "../src/game/placement";
 import { fire } from "../src/game/simulate";
-import { setupRoutes, solve } from "../src/game/solver";
-import type { Board, CellType } from "../src/game/types";
+import { setupRoutes, shotRows, solve } from "../src/game/solver";
+import type { Move } from "../src/game/solver";
+import type { Board, CellType, MirrorType } from "../src/game/types";
 import { formatLevel } from "../src/levels/parse";
 
 export interface GeneratorOptions {
@@ -17,6 +19,13 @@ export interface GeneratorOptions {
    * are kept (as solid walls, par would be higher).
    */
   breakable: number;
+  /**
+   * A mirror the player may place on any empty cell. With one, only boards
+   * that need it placed for par are kept.
+   */
+  playerMirror?: MirrorType;
+  /** Reject boards where a shortest solution places the mirror before the first shot. */
+  placeLater: boolean;
   /** The par: fewest shots that complete the level. */
   shots: number;
   /** Goal hits needed to complete the level. */
@@ -33,8 +42,11 @@ export interface GeneratorOptions {
 
 export interface Candidate {
   board: Board;
-  /** Every shortest solution; the best levels have exactly one. */
-  solutions: number[][];
+  /**
+   * Every shortest solution (rows fired and mirrors placed); the best
+   * levels have exactly one.
+   */
+  solutions: Move[][];
   /** Rows whose first shot reaches the goal on the starting board. */
   rowsHittingAtStart: number;
   setupRoutes: [number, number][];
@@ -55,8 +67,8 @@ export function createRandom(seed: number): () => number {
 
 /**
  * A random board: the goal somewhere in the rightmost column, mirrors,
- * walls and breakable walls in random empty cells left of it. Asks for no
- * more pieces than fit.
+ * walls and breakable walls in random empty cells left of it.
+ * Asks for no more pieces than fit.
  */
 export function randomBoard(
   options: Pick<
@@ -101,31 +113,60 @@ export function withSolidWalls(board: Board): Board {
 }
 
 /**
- * Every sequence of exactly `shots` rows that completes the level on its
- * last shot (searches all sequences, so keep `shots` small).
+ * Every sequence of exactly `shots` shots that completes the level on its
+ * last shot, placing `playerMirror` (if given) on an empty cell before any
+ * of them (searches all sequences, so keep `shots` small). Solutions that
+ * play out the same, shot by shot, count once: placing the mirror earlier
+ * than needed, or where no shot passes, is not a different solution.
  */
 export function shortestSolutions(
   board: Board,
   shots: number,
   goalHits = 1,
-): number[][] {
-  const solutions: number[][] = [];
-  const search = (current: Board, hits: number, rows: number[]) => {
-    for (let row = 0; row < board.height; row++) {
-      const result = fire(current, row);
-      const newHits = hits + (result.outcome === "goal" ? 1 : 0);
-      const newRows = [...rows, row];
-      if (newHits >= goalHits) {
-        if (newRows.length === shots) {
-          solutions.push(newRows);
+  playerMirror?: MirrorType,
+): Move[][] {
+  const solutions = new Map<string, Move[]>();
+  const search = (
+    current: Board,
+    inHand: boolean,
+    hits: number,
+    moves: Move[],
+    paths: string[],
+  ) => {
+    const choices: { board: Board; placed: Move[]; inHand: boolean }[] = [
+      { board: current, placed: [], inHand },
+    ];
+    if (inHand && playerMirror !== undefined) {
+      for (const position of placementPositions(current)) {
+        choices.push({
+          board: placeMirror(current, position, playerMirror),
+          placed: [{ ...position, mirror: playerMirror }],
+          inHand: false,
+        });
+      }
+    }
+    for (const choice of choices) {
+      for (let row = 0; row < board.height; row++) {
+        const result = fire(choice.board, row);
+        const newHits = hits + (result.outcome === "goal" ? 1 : 0);
+        const newMoves = [...moves, ...choice.placed, row];
+        const newPaths = [
+          ...paths,
+          result.path.map((p) => `${p.x},${p.y}`).join(" "),
+        ];
+        if (newHits >= goalHits) {
+          const key = newPaths.join("|");
+          if (newPaths.length === shots && !solutions.has(key)) {
+            solutions.set(key, newMoves);
+          }
+        } else if (newPaths.length < shots) {
+          search(result.board, choice.inHand, newHits, newMoves, newPaths);
         }
-      } else if (newRows.length < shots) {
-        search(result.board, newHits, newRows);
       }
     }
   };
-  search(board, 0, []);
-  return solutions;
+  search(board, playerMirror !== undefined, 0, [], []);
+  return [...solutions.values()];
 }
 
 /**
@@ -143,20 +184,32 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
     if (found.has(key)) {
       continue;
     }
-    const solution = solve(board, options.shots, options.goalHits);
+    const { shots, goalHits, playerMirror } = options;
+    const solution = solve(board, shots, goalHits, playerMirror);
     if (solution?.length !== options.shots) {
       continue;
     }
     if (
       options.breakable > 0 &&
-      solve(withSolidWalls(board), options.shots, options.goalHits) !== null
+      solve(withSolidWalls(board), shots, goalHits, playerMirror) !== null
     ) {
       continue;
     }
-    const solutions = shortestSolutions(board, options.shots, options.goalHits);
+    if (playerMirror !== undefined && solve(board, shots, goalHits) !== null) {
+      continue;
+    }
+    const solutions = shortestSolutions(board, shots, goalHits, playerMirror);
     if (
       options.noRepeat &&
-      solutions.some((rows) => rows.some((row, j) => row === rows[j - 1]))
+      solutions
+        .map(shotRows)
+        .some((rows) => rows.some((row, j) => row === rows[j - 1]))
+    ) {
+      continue;
+    }
+    if (
+      options.placeLater &&
+      solutions.some((moves) => typeof moves[0] !== "number")
     ) {
       continue;
     }

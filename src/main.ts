@@ -171,6 +171,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
         levelName: level.name,
         par: level.minShots,
         goalHits: level.goalHits ?? 1,
+        playerMirror: level.playerMirror,
         passedBefore:
           isCompleted(progress, level.id) || isSkipped(progress, level.id),
         skipsLeft: progress.skipsLeft,

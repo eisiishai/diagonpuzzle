@@ -4,8 +4,17 @@
 import { fire } from "../src/game/simulate";
 import type { ShotOutcome, ShotResult } from "../src/game/simulate";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
-import { setupRoutes, solve, solveBonus } from "../src/game/solver";
-import type { Board } from "../src/game/types";
+import {
+  playMoves,
+  setupRoutes,
+  shotRows,
+  solveBonusMoves,
+  solveMoves,
+} from "../src/game/solver";
+import type { Move, Placement } from "../src/game/solver";
+import { CELL_SYMBOLS } from "../src/levels/parse";
+import { shortestSolutions } from "./levelGenerator";
+import type { Board, Position } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
 import type { LevelDefinition } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
@@ -14,6 +23,8 @@ import { parseLevel } from "../src/levels/parse";
 const SEARCH_EXTRA_SHOTS = 2;
 
 export interface SolutionShot {
+  /** The player's mirror, if placed just before this shot. */
+  placed: Placement[];
   row: number;
   outcome: ShotOutcome;
   /** What the shot did, e.g. "blocked, breaks a wall, flips 2 mirrors". */
@@ -38,9 +49,11 @@ export interface LevelAnalysis {
   /** The starting board, with its bonus target if it has one. */
   board: Board;
   /** A shortest solution, or null if none was found. */
-  solution: number[] | null;
+  solution: Move[] | null;
   /** The shortest solution played out, shot by shot. */
   solutionShots: SolutionShot[];
+  /** How many different shortest solutions there are; 1 is best. */
+  shortestCount: number;
   setupRoutes: [number, number][];
   firstShots: ShotOutcome[];
   /** True if the solver confirms the level's declared minShots. */
@@ -49,7 +62,7 @@ export interface LevelAnalysis {
    * A shortest way to hit the bonus target (undefined if the level has none,
    * null if none was found).
    */
-  bonusSolution?: number[] | null;
+  bonusSolution?: Move[] | null;
   /** True if the solver confirms the level's declared bonusShots. */
   bonusShotsConfirmed: boolean;
 }
@@ -59,32 +72,38 @@ export function analyzeLevels(): LevelAnalysis[] {
     const fullBoard = parseLevel(level.grid);
     // Par is played without bonus targets: they appear only after it.
     const board = withBonuses(fullBoard);
-    const solution = solve(
-      board,
-      level.minShots + SEARCH_EXTRA_SHOTS,
-      level.goalHits ?? 1,
-    );
+    const { goalHits = 1, playerMirror } = level;
+    const solution = solveMoves(board, {
+      maxShots: level.minShots + SEARCH_EXTRA_SHOTS,
+      goalHits,
+      playerMirror,
+    });
 
     const solutionShots: SolutionShot[] = [];
-    let current = board;
-    for (const row of solution ?? []) {
-      const result = fire(current, row);
+    const { shots } = playMoves(board, solution ?? []);
+    let placed: Placement[] = [];
+    for (const move of solution ?? []) {
+      if (typeof move !== "number") {
+        placed.push(move);
+        continue;
+      }
+      const result = shots[solutionShots.length];
       solutionShots.push({
-        row,
+        placed,
+        row: move,
         outcome: result.outcome,
         summary: describeShot(result),
       });
-      current = result.board;
+      placed = [];
     }
 
     const [bonus] = bonusPositions(fullBoard);
     const bonusSolution = bonus
-      ? solveBonus(
-          fullBoard,
-          bonus,
-          (level.bonusShots ?? level.minShots) + SEARCH_EXTRA_SHOTS,
-          level.goalHits ?? 1,
-        )
+      ? solveBonusMoves(fullBoard, bonus, {
+          maxShots: (level.bonusShots ?? level.minShots) + SEARCH_EXTRA_SHOTS,
+          goalHits,
+          playerMirror,
+        })
       : undefined;
 
     return {
@@ -93,20 +112,51 @@ export function analyzeLevels(): LevelAnalysis[] {
       board: fullBoard,
       solution,
       solutionShots,
+      shortestCount:
+        solution === null
+          ? 0
+          : shortestSolutions(
+              board,
+              shotRows(solution).length,
+              goalHits,
+              playerMirror,
+            ).length,
       // Setup routes are about a single goal hit.
       setupRoutes: (level.goalHits ?? 1) === 1 ? setupRoutes(board) : [],
       firstShots: Array.from(
         { length: board.height },
         (_, row) => fire(board, row).outcome,
       ),
-      minShotsConfirmed: solution?.length === level.minShots,
+      minShotsConfirmed:
+        solution !== null && shotRows(solution).length === level.minShots,
       bonusSolution,
-      bonusShotsConfirmed: bonusSolution?.length === level.bonusShots,
+      bonusShotsConfirmed:
+        !!bonusSolution && shotRows(bonusSolution).length === level.bonusShots,
     };
   });
 }
 
-/** Rows as the player counts them, e.g. [3, 1] → "4 → 2". */
-export function rowList(rows: number[]): string {
-  return rows.map((row) => row + 1).join(" → ");
+/** A position as the player counts it: (column, row) from 1. */
+export function cellName({ x, y }: Position): string {
+  return `(${x + 1},${y + 1})`;
+}
+
+/**
+ * Moves as the player counts them, e.g. [3, {x: 2, y: 0, mirror:
+ * "mirrorSlash"}, 1] → "4 → / at (3,1) → 2": rows fired, and the player's
+ * mirror placed.
+ */
+export function rowList(moves: readonly Move[]): string {
+  return moves
+    .map((move) =>
+      typeof move === "number"
+        ? move + 1
+        : `${CELL_SYMBOLS[move.mirror]} at ${cellName(move)}`,
+    )
+    .join(" → ");
+}
+
+/** The number of shots in `moves`, which may also place the mirror. */
+export function shotCount(moves: readonly Move[]): number {
+  return shotRows(moves).length;
 }

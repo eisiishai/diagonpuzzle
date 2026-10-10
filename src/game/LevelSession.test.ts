@@ -142,3 +142,56 @@ describe("LevelSession bonus targets", () => {
     expect(session.board.cells[0][1]).toBe("bonus");
   });
 });
+
+describe("LevelSession player-placed mirror", () => {
+  // Row 0 passes the empty cell and exits; with a "\" placed there it turns
+  // down into the goal.
+  const MIRROR_BOARD = String.raw`
+    . . .
+    # G .
+  `;
+  const newMirrorSession = () =>
+    new LevelSession(parseLevel(MIRROR_BOARD), 1, "mirrorBackslash");
+
+  it("places the mirror on an empty cell without taking a shot, once", () => {
+    const session = newMirrorSession();
+    expect(session.mirrorInHand).toBe(true);
+    expect(session.canPlace({ x: 0, y: 1 })).toBe(false);
+    expect(session.place({ x: 1, y: 0 })).toBe(true);
+    expect(session.board.cells[0][1]).toBe("mirrorBackslash");
+    expect(session.mirrorInHand).toBe(false);
+    expect(session.shots).toBe(0);
+    expect(session.place({ x: 2, y: 0 })).toBe(false);
+    session.fire(0);
+    expect(session.finishShot()).toBe("goal");
+  });
+
+  it("has no mirror to place unless the level gives one", () => {
+    const session = new LevelSession(parseLevel(MIRROR_BOARD));
+    expect(session.mirrorInHand).toBe(false);
+    expect(session.place({ x: 1, y: 0 })).toBe(false);
+  });
+
+  it("can't place during a shot or after completion", () => {
+    const session = newMirrorSession();
+    session.fire(0);
+    expect(session.place({ x: 1, y: 0 })).toBe(false);
+    session.finishShot();
+    expect(session.place({ x: 1, y: 0 })).toBe(true);
+    session.fire(0);
+    session.finishShot();
+    expect(session.phase).toBe("complete");
+    session.restart();
+    session.fire(0);
+    session.finishShot();
+    expect(session.canPlace({ x: 1, y: 0 })).toBe(true);
+  });
+
+  it("takes the placed mirror back on restart", () => {
+    const session = newMirrorSession();
+    session.place({ x: 1, y: 0 });
+    session.restart();
+    expect(session.board.cells[0][1]).toBe("empty");
+    expect(session.mirrorInHand).toBe(true);
+  });
+});

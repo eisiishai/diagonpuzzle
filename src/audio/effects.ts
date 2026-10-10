@@ -8,6 +8,7 @@ export type SoundEffect =
   | "fire"
   | "wall"
   | "break"
+  | "place"
   | "exit"
   | "loop"
   | "goal"
@@ -93,6 +94,26 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
           dest,
         });
       }
+    },
+  },
+  // Mirror placed: a glassy click as it settles into place, then a
+  // short bell. Not from the sound lab; tune by ear.
+  place: {
+    seconds: 0.5,
+    play: (s, dest, t, pitch) => {
+      s.noise({ t, d: 0.03, vol: 0.08, f: 4200 * pitch, q: 2, dest });
+      s.tone({
+        type: "triangle",
+        f: 520 * pitch,
+        f2: 380 * pitch,
+        t,
+        d: 0.08,
+        vol: 0.15,
+        dest,
+      });
+      s.notes([81, 88], t + 0.04, 0.07, (f, tt) =>
+        s.bell({ f: f * pitch, t: tt, d: 0.4, vol: 0.07, dest, wet: 0.35 }),
+      );
     },
   },
   // Off the board (C, "Two-tone drop"): a polite "missed".

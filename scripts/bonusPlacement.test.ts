@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { fire } from "../src/game/simulate";
-import { solve, solveBonus } from "../src/game/solver";
+import {
+  playMoves,
+  shotRows,
+  solve,
+  solveBonusMoves,
+} from "../src/game/solver";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import { findPlacements, firstEntries } from "./bonusPlacement";
@@ -40,21 +44,20 @@ describe("findPlacements", () => {
       for (const placement of placements.slice(0, 20)) {
         const { board, bonus } = placement;
         expect(placement.changes.length).toBeLessThanOrEqual(changes);
-        expect(placement.route).toHaveLength(bonusShots);
-        expect(solveBonus(board, bonus, bonusShots, goalHits)).toEqual(
-          placement.route,
-        );
-        expect(solve(board, level.minShots, goalHits)).toHaveLength(
-          level.minShots,
-        );
+        expect(shotRows(placement.route)).toHaveLength(bonusShots);
+        expect(
+          solveBonusMoves(board, bonus, {
+            maxShots: bonusShots,
+            goalHits,
+            playerMirror: level.playerMirror,
+          }),
+        ).toEqual(placement.route);
+        expect(
+          solve(board, level.minShots, goalHits, level.playerMirror),
+        ).toHaveLength(level.minShots);
         // The route really ends on the bonus target.
-        let current = board;
-        for (const row of placement.route.slice(0, -1)) {
-          current = fire(current, row).board;
-        }
-        expect(fire(current, placement.route[bonusShots - 1]).outcome).toBe(
-          "bonus",
-        );
+        const { shots } = playMoves(board, placement.route);
+        expect(shots[shots.length - 1].outcome).toBe("bonus");
       }
       expect(placements[0].routes).toBeLessThanOrEqual(
         placements[1]?.routes ?? Infinity,
