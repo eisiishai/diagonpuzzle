@@ -21,7 +21,8 @@ for (const analysis of analyzeLevels()) {
     .join(" · ");
 
   console.log(
-    `Level ${number}: ${level.name} (${level.id}), ${board.width}×${board.height}`,
+    `Level ${number}: ${level.name} (${level.id}), ${board.width}×${board.height}` +
+      ((level.goalHits ?? 1) > 1 ? `, goal needs ${level.goalHits} hits` : ""),
   );
   console.log(`  Shortest:     ${shortest}  ${status}`);
   console.log(`  Setup routes: ${routes}`);

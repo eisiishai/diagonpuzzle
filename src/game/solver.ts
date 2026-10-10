@@ -2,27 +2,38 @@ import { boardStateKey, fire } from "./simulate";
 import type { Board } from "./types";
 
 /**
- * Finds a shortest sequence of rows to fire from that reaches the goal,
- * trying every row after every reachable board state (breadth-first).
- * Returns null if there is no solution within `maxShots` shots.
+ * Finds a shortest sequence of rows to fire from that completes the level:
+ * `goalHits` shots reaching the goal (each shot can hit it at most once,
+ * since the goal stops the beam). Tries every row after every reachable
+ * state of board and hits so far (breadth-first). Returns null if there is
+ * no solution within `maxShots` shots.
  */
-export function solve(board: Board, maxShots = 6): number[] | null {
-  let frontier: { board: Board; rows: number[] }[] = [{ board, rows: [] }];
-  const seen = new Set([boardStateKey(board)]);
+export function solve(
+  board: Board,
+  maxShots = 6,
+  goalHits = 1,
+): number[] | null {
+  type State = { board: Board; hits: number; rows: number[] };
+  const stateKey = (state: Omit<State, "rows">) =>
+    `${state.hits}|${boardStateKey(state.board)}`;
+  let frontier: State[] = [{ board, hits: 0, rows: [] }];
+  const seen = new Set([stateKey(frontier[0])]);
 
   for (let shots = 1; shots <= maxShots && frontier.length > 0; shots++) {
-    const next: typeof frontier = [];
+    const next: State[] = [];
     for (const state of frontier) {
       for (let row = 0; row < board.height; row++) {
         const result = fire(state.board, row);
         const rows = [...state.rows, row];
-        if (result.outcome === "goal") {
+        const hits = state.hits + (result.outcome === "goal" ? 1 : 0);
+        if (hits >= goalHits) {
           return rows;
         }
-        const key = boardStateKey(result.board);
+        const after = { board: result.board, hits, rows };
+        const key = stateKey(after);
         if (!seen.has(key)) {
           seen.add(key);
-          next.push({ board: result.board, rows });
+          next.push(after);
         }
       }
     }

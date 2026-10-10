@@ -37,7 +37,11 @@ for (const analysis of analyses) {
   const { number, level, board, solutionShots, setupRoutes } = analysis;
   lines.push("", `## ${number}. ${level.name}`, "");
   lines.push(
-    `Par ${level.minShots} · ${board.width}×${board.height} · id \`${level.id}\`` +
+    `Par ${level.minShots}` +
+      ((level.goalHits ?? 1) > 1
+        ? ` · goal needs ${level.goalHits} hits`
+        : "") +
+      ` · ${board.width}×${board.height} · id \`${level.id}\`` +
       (analysis.minShotsConfirmed
         ? ""
         : ` · **solver disagrees with minShots ${level.minShots}**`),

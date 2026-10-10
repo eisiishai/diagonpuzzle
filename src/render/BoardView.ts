@@ -40,6 +40,8 @@ export class BoardView extends Container {
   private readonly rowHighlight = new Graphics();
   private readonly cellViews: Graphics[][] = [];
   private readonly cells: CellType[][];
+  /** Markers under goals that need several hits; see setGoalHits(). */
+  private readonly goalMarkers = new Graphics();
   private readonly launchers: Graphics[] = [];
   private readonly animator: PelletAnimator;
   private turns: MirrorTurn[] = [];
@@ -73,6 +75,7 @@ export class BoardView extends Container {
       this.cellViews.push(row);
     }
     this.redrawCells();
+    this.addChild(this.goalMarkers);
 
     for (let row = 0; row < board.height; row++) {
       const launcher = this.createLauncher(row, handlers);
@@ -103,6 +106,47 @@ export class BoardView extends Container {
       row.forEach((cell, x) => (this.cells[y][x] = cell)),
     );
     this.redrawCells();
+  }
+
+  /**
+   * For a goal that needs several hits: one small diamond per hit needed at
+   * the bottom of each goal cell, filled for each hit so far. Nothing is
+   * shown when one hit is enough.
+   */
+  setGoalHits(hits: number, required: number): void {
+    const g = this.goalMarkers.clear();
+    if (required <= 1) {
+      return;
+    }
+    const r = this.cellSize * 0.06;
+    const gap = this.cellSize * 0.3;
+    this.cells.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        if (cell !== "goal") {
+          return;
+        }
+        const center = this.cellCenter(x, y);
+        const markerY = center.y + this.cellSize * 0.4;
+        for (let i = 0; i < required; i++) {
+          const mx = center.x + (i - (required - 1) / 2) * gap;
+          g.poly([
+            mx,
+            markerY - r,
+            mx + r,
+            markerY,
+            mx,
+            markerY + r,
+            mx - r,
+            markerY,
+          ]);
+          if (i < hits) {
+            g.fill(COLORS.success);
+          } else {
+            g.fill(COLORS.panel).stroke({ width: 1.5, color: COLORS.success });
+          }
+        }
+      }),
+    );
   }
 
   /** Highlights the launcher and board row of `row`, or nothing if null. */

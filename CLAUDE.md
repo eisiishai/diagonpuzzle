@@ -70,8 +70,8 @@ scripts/        development tools run with tsx (not part of the game)
   storage being unavailable.
 - Shots change the board (mirrors flip when hit): `fire()` returns the new
   board and never modifies the one passed in.
-- Every level declares `minShots`; `src/levels/levels.test.ts` checks it with
-  the solver. When designing a level, run the solver to confirm the intended
+- Every level declares `minShots` (and `goalHits` when the goal needs more
+  than one hit); `src/levels/levels.test.ts` checks it with the solver. When designing a level, run the solver to confirm the intended
   minimum and that no shorter solution exists.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.

@@ -36,6 +36,22 @@ flip, so a mirror hit twice in one shot ends up as it started.
 This is the core puzzle: a shot that misses the goal still changes the board,
 and the player plans shots that set up the board for a later shot.
 
+## Multi-hit goal
+
+Some levels' goal needs several hits (`goalHits` in the level list; default
+1):
+
+- Each hit must come from a separate shot. The goal stops the beam, so one
+  shot can never hit it twice.
+- A goal hit that is not yet the last one ends the shot like any other: the
+  board keeps every mirror flipped so far, and play continues.
+- The level is complete on the last hit; par and stars count the shots for
+  the whole level as usual.
+- Small diamonds under the goal crystal show the hits needed, filled for each
+  hit so far; the header shows `GOAL 1/2`. A non-final hit says "Goal hit!
+  Hit it once more to finish."
+- Restarting resets the hits along with the board.
+
 ## Cell types
 
 | Symbol | Name | Behavior |
@@ -90,10 +106,13 @@ levels 1 and 2 have one.
 | 6 | Third time lucky | 3 | Row 5 twice turns the pellet a step further each time; row 2 then loops to the goal. First level needing three shots. |
 | 7 | Back and forth | 3 | Rows 4, 6, 4: two different setup shots, and a final shot that crosses its own path. |
 | 8 | Two-step | 4 | Rows 3, 5, 3, 5: each shot flips mirrors the other row's next shot needs. |
+| 9 | Double take | 2 | Goal needs 2 hits. Row 3 climbs two mirrors into the goal, flipping them; that lets row 1 come down into the goal too. Repeating row 3 misses. Teaches the multi-hit goal. |
+| 10 | Encore | 3 | Goal needs 2 hits. Row 3 first hits a wall (a setup shot), then climbs into the goal; that lets row 1 hit it too. |
 
-Levels 5–8 were found by searching random boards with the solver, keeping
+Levels 5–10 were found by searching random boards with the solver, keeping
 ones with exactly one shortest solution, and choosing by readability and
-variety of solutions.
+variety of solutions. Levels 9–10 are deliberately small, to teach the
+multi-hit goal.
 
 ## Controls
 
@@ -252,6 +271,7 @@ every variant), so the names below are its variant names.
 | Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
 | Levels 1–4 | **Pulse**: driving synthwave with a soft beat, 104 BPM |
 | Levels 5–8 | **Glass garden**: a slow, dark ambient drone only (no melody), so it stays out of the way on the harder levels |
+| Levels 9–10 | **Night lab**, as on the title screen |
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different

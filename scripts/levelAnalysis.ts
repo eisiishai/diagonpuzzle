@@ -36,7 +36,11 @@ export interface LevelAnalysis {
 export function analyzeLevels(): LevelAnalysis[] {
   return LEVELS.map((level, index) => {
     const board = parseLevel(level.grid);
-    const solution = solve(board, level.minShots + SEARCH_EXTRA_SHOTS);
+    const solution = solve(
+      board,
+      level.minShots + SEARCH_EXTRA_SHOTS,
+      level.goalHits ?? 1,
+    );
 
     const solutionShots: SolutionShot[] = [];
     let current = board;
@@ -56,7 +60,8 @@ export function analyzeLevels(): LevelAnalysis[] {
       board,
       solution,
       solutionShots,
-      setupRoutes: setupRoutes(board),
+      // Setup routes are about a single goal hit.
+      setupRoutes: (level.goalHits ?? 1) === 1 ? setupRoutes(board) : [],
       firstShots: Array.from(
         { length: board.height },
         (_, row) => fire(board, row).outcome,

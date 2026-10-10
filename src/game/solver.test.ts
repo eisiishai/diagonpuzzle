@@ -20,6 +20,19 @@ describe("solve", () => {
     expect(solve(board)).toEqual([0, 0]);
   });
 
+  it("counts goal hits, one per shot, when the goal needs several", () => {
+    expect(solve(parseLevel(". G"), 6, 2)).toEqual([0, 0]);
+    // The first hit flips the mirror, so row 0 then misses (flipping it
+    // back); the other rows are walled off. Two hits take three shots.
+    const board = parseLevel(String.raw`
+      . \ .
+      # . .
+      # G .
+    `);
+    expect(fire(board, 0).outcome).toBe("goal");
+    expect(solve(board, 6, 2)).toEqual([0, 0, 0]);
+  });
+
   it("returns null when there is no solution within the shot limit", () => {
     expect(solve(parseLevel("# G"))).toBeNull();
   });

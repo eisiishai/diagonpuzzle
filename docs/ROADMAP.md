@@ -73,10 +73,10 @@ with flipping mirrors, before it is built.
   hit in one playthrough or can be collected across tries, whether they are
   visible from the start, what the achievement is and where it shows (e.g.
   a separate mark in the level list), and how they are saved in progress
-- [ ] Multi-hit goal: a goal that must be hit several times to complete the
-  level, showing the hits remaining. To decide: whether several hits can
-  come from one shot (the beam passing it twice) or must be separate shots,
-  and how it combines with flipping mirrors and par
+- [x] Multi-hit goal: a goal that must be hit several times to complete the
+  level, showing the hits remaining. Decided: each hit is a separate shot,
+  mirror flips stay between hits, and par counts all shots. Levels 9–10
+  teach it
 
 ### Presentation
 

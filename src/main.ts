@@ -97,6 +97,7 @@ const PROGRESS_STORAGE_KEY = "progress";
         levelCount: LEVELS.length,
         levelName: level.name,
         par: level.minShots,
+        goalHits: level.goalHits ?? 1,
         audio,
         onComplete: (shots) => {
           const before = progress;

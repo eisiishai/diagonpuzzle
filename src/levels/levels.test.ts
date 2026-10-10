@@ -27,13 +27,13 @@ it("has unique level ids", () => {
 
 describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
   "level $number ($name)",
-  ({ grid, minShots }) => {
+  ({ grid, minShots, goalHits = 1 }) => {
     it("parses", () => {
       expect(() => parseLevel(grid)).not.toThrow();
     });
 
     it(`needs exactly ${minShots} shot(s) at best`, () => {
-      const solution = solve(parseLevel(grid), minShots);
+      const solution = solve(parseLevel(grid), minShots, goalHits);
       expect(solution).not.toBeNull();
       expect(solution).toHaveLength(minShots);
     });

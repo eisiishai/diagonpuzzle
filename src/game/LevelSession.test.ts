@@ -69,6 +69,37 @@ describe("LevelSession", () => {
     expect(session.selectedRow).toBe(0);
   });
 
+  it("needs as many goal hits as the level asks for, keeping the board", () => {
+    const session = new LevelSession(parseLevel(". G"), 2);
+    session.fire(0);
+    expect(session.finishShot()).toBe("goal");
+    expect(session.hits).toBe(1);
+    expect(session.phase).toBe("aiming");
+    expect(session.canFire).toBe(true);
+
+    session.fire(0);
+    session.finishShot();
+    expect(session.hits).toBe(2);
+    expect(session.phase).toBe("complete");
+
+    session.restart();
+    expect(session.hits).toBe(0);
+  });
+
+  it("keeps mirror flips from a goal hit for the next shot", () => {
+    // Row 0 is turned down into the goal by "\", which flips on the way.
+    const session = new LevelSession(
+      parseLevel(String.raw`
+        . \ .
+        . G .
+      `),
+      2,
+    );
+    session.fire(0);
+    expect(session.finishShot()).toBe("goal");
+    expect(session.board.cells[0][1]).toBe("mirrorSlash");
+  });
+
   it("rejects finishShot() without a shot in progress", () => {
     expect(() => newSession().finishShot()).toThrow("no shot in progress");
   });

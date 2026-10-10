@@ -4,7 +4,8 @@ import type { Board } from "./types";
 
 /**
  * Aiming: waiting for a shot. Firing: a shot is in progress (the pellet is
- * being animated) until `finishShot()`. Complete: the goal was reached.
+ * being animated) until `finishShot()`. Complete: the goal was hit as many
+ * times as the level needs.
  */
 export type LevelPhase = "aiming" | "firing" | "complete";
 
@@ -19,13 +20,22 @@ export class LevelSession {
   private _phase: LevelPhase = "aiming";
   private _shots = 0;
   private _selectedRow: number;
+  /** Goal hits needed to complete the level; each must be a separate shot. */
+  readonly goalHits: number;
+  private _hits = 0;
   /** Outcome of the shot in progress, applied by finishShot(). */
   private pendingOutcome?: ShotOutcome;
 
-  constructor(startBoard: Board) {
+  constructor(startBoard: Board, goalHits = 1) {
     this.startBoard = startBoard;
     this._board = startBoard;
     this._selectedRow = Math.floor(startBoard.height / 2);
+    this.goalHits = goalHits;
+  }
+
+  /** Goal hits so far. */
+  get hits(): number {
+    return this._hits;
   }
 
   /** The board as changed by the shots so far. */
@@ -80,14 +90,21 @@ export class LevelSession {
     return result;
   }
 
-  /** Ends the shot in progress; the level is complete if it reached the goal. */
+  /**
+   * Ends the shot in progress. A shot reaching the goal counts as a hit; the
+   * level is complete once there are as many hits as it needs. The board
+   * keeps every change the shot made either way.
+   */
   finishShot(): ShotOutcome {
     if (this._phase !== "firing" || this.pendingOutcome === undefined) {
       throw new Error("finishShot() called with no shot in progress");
     }
     const outcome = this.pendingOutcome;
     this.pendingOutcome = undefined;
-    this._phase = outcome === "goal" ? "complete" : "aiming";
+    if (outcome === "goal") {
+      this._hits++;
+    }
+    this._phase = this._hits >= this.goalHits ? "complete" : "aiming";
     return outcome;
   }
 
@@ -98,6 +115,7 @@ export class LevelSession {
   restart(): void {
     this._board = this.startBoard;
     this._shots = 0;
+    this._hits = 0;
     this._phase = "aiming";
     this.pendingOutcome = undefined;
   }

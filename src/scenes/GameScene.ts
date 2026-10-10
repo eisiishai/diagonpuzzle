@@ -19,6 +19,8 @@ const ROW_HEIGHT = 44;
 const ROW_GAP = 8;
 const HEADER_HEIGHT = 2 * ROW_HEIGHT + ROW_GAP + 20;
 const MESSAGE_HEIGHT = 64;
+/** Narrowest the screen's content gets, whatever the board size. */
+const MIN_SCENE_WIDTH = 600;
 const INTRO_MESSAGE =
   "Aim with ↑/↓ and fire with Enter, or click an emitter. Mirrors turn when hit.";
 
@@ -43,6 +45,8 @@ export interface GameSceneOptions {
   levelName: string;
   /** Shots needed for a star: the level's minimum shot count. */
   par: number;
+  /** Goal hits needed to complete the level, each from a separate shot. */
+  goalHits: number;
   audio: GameAudio;
   /** Records a completion; returns the level's best shot count before it, if any. */
   onComplete: (shots: number) => CompletionResult;
@@ -70,6 +74,8 @@ export class GameScene extends Container implements Scene {
   private readonly nextButton: Button;
   /** Bottom edge of the scene's content. */
   private readonly contentHeight: number;
+  /** Width of the scene's content: the board's, or the minimum. */
+  private readonly sceneWidth: number;
   private readonly session: LevelSession;
   private readonly celebration = new Celebration();
 
@@ -77,14 +83,18 @@ export class GameScene extends Container implements Scene {
     super();
     this.options = options;
     const { board, levelNumber, levelCount, levelName } = options;
-    this.session = new LevelSession(board);
+    this.session = new LevelSession(board, options.goalHits);
 
     this.boardView = new BoardView(board, CELL_SIZE, {
       onLaunch: (row) => this.fireFrom(row),
       onHover: (row) => this.select(row),
     });
     this.boardView.y = HEADER_HEIGHT;
-    const width = this.boardView.contentWidth;
+    // Narrow boards are centred in a minimum width, so the header and the
+    // bottom row of buttons always fit.
+    const width = Math.max(this.boardView.contentWidth, MIN_SCENE_WIDTH);
+    this.sceneWidth = width;
+    this.boardView.x = Math.round((width - this.boardView.contentWidth) / 2);
 
     // Header: level name and menu on the first row, shots and restart on the
     // second, so the rows fit even on narrow boards.
@@ -109,7 +119,7 @@ export class GameScene extends Container implements Scene {
     restartButton.position.set(width - restartButton.width, secondRow);
 
     this.messageText = new Text({
-      text: INTRO_MESSAGE,
+      text: this.introMessage(),
       style: textStyle("body", { wordWrap: true, wordWrapWidth: width }),
     });
     this.messageText.y = HEADER_HEIGHT + this.boardView.contentHeight + 18;
@@ -143,6 +153,7 @@ export class GameScene extends Container implements Scene {
     this.updateShots();
     this.shotsText.y = secondRow + (ROW_HEIGHT - this.shotsText.height) / 2;
     this.boardView.setSelectedRow(this.session.selectedRow);
+    this.boardView.setGoalHits(0, this.session.goalHits);
   }
 
   /** Centres the scene in a screen of the given size, shrinking it to fit. */
@@ -151,7 +162,7 @@ export class GameScene extends Container implements Scene {
       {
         x: 0,
         y: 0,
-        width: this.boardView.contentWidth,
+        width: this.sceneWidth,
         height: this.contentHeight,
       },
       screenWidth,
@@ -226,6 +237,18 @@ export class GameScene extends Container implements Scene {
     const { audio } = this.options;
     const outcome = this.session.finishShot();
     if (outcome === "goal") {
+      this.boardView.setGoalHits(this.session.hits, this.session.goalHits);
+      this.updateShots();
+      if (this.session.phase !== "complete") {
+        // A goal hit that is not yet the last one: the board keeps its flips.
+        audio.play("goal");
+        const left = this.session.goalHits - this.session.hits;
+        this.showMessage(
+          `Goal hit! Hit it ${left === 1 ? "once more" : `${left} more times`} to finish.`,
+          COLORS.success,
+        );
+        return;
+      }
       const { shots } = this.session;
       this.boardView.setSelectedRow(null);
       const { previousBest, allLevelsAtPar } = this.options.onComplete(shots);
@@ -267,7 +290,7 @@ export class GameScene extends Container implements Scene {
         x,
         y,
         CELL_SIZE,
-        this.boardView.contentWidth,
+        this.sceneWidth,
         this.contentHeight,
         `${STAR} ALL LEVELS AT PAR! ${STAR}`,
       );
@@ -300,8 +323,9 @@ export class GameScene extends Container implements Scene {
   private restart(): void {
     this.session.restart();
     this.boardView.showBoard(this.session.board);
+    this.boardView.setGoalHits(0, this.session.goalHits);
     this.updateShots();
-    this.showMessage(INTRO_MESSAGE);
+    this.showMessage(this.introMessage());
     this.nextButton.visible = false;
     this.boardView.setSelectedRow(this.session.selectedRow);
   }
@@ -313,6 +337,16 @@ export class GameScene extends Container implements Scene {
 
   private updateShots(): void {
     const pad = (n: number) => String(n).padStart(2, "0");
-    this.shotsText.text = `SHOTS ${pad(this.session.shots)}  ·  PAR ${pad(this.options.par)}`;
+    const { shots, hits, goalHits } = this.session;
+    const goal = goalHits > 1 ? `  ·  GOAL ${hits}/${goalHits}` : "";
+    this.shotsText.text = `SHOTS ${pad(shots)}  ·  PAR ${pad(this.options.par)}${goal}`;
+  }
+
+  /** The message shown when a level starts or restarts. */
+  private introMessage(): string {
+    const { goalHits } = this.options;
+    return goalHits > 1
+      ? `This goal needs ${goalHits} hits, each from a separate shot. Mirrors stay flipped between shots.`
+      : INTRO_MESSAGE;
   }
 }

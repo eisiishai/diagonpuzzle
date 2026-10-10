@@ -9,6 +9,11 @@ export interface LevelDefinition {
    * solver, so a level that is accidentally easier or harder fails.
    */
   minShots: number;
+  /**
+   * How many times the goal must be hit to complete the level, each by a
+   * separate shot (the goal stops the beam). Default 1.
+   */
+  goalHits?: number;
   /** Background music while playing the level. */
   music: MusicTrackId;
   /** Text grid, format in docs/DESIGN.md. */
@@ -129,6 +134,32 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . . # . / . .
       . . . . . # . . .
       . # . . . . . . .
+    `,
+  },
+  {
+    id: "double-take",
+    name: "Double take",
+    minShots: 2,
+    goalHits: 2,
+    music: "nightLab",
+    grid: String.raw`
+      . . \ . .
+      . . / . G
+      . . / # .
+      . . . . .
+    `,
+  },
+  {
+    id: "encore",
+    name: "Encore",
+    minShots: 3,
+    goalHits: 2,
+    music: "nightLab",
+    grid: String.raw`
+      . . . . \ .
+      . . . . / G
+      . . . . \ .
+      \ . . . # .
     `,
   },
 ];
