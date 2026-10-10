@@ -159,6 +159,18 @@ commits.
 4. Open the site and play through a level to confirm it works. If the page is
    blank, check the browser's developer tools (F12): 404 errors mean files are
    missing or in the wrong folder.
+5. **Check on a phone.** Phone browsers differ from desktop ones in ways
+   desktop testing doesn't show: phone GPUs draw some shapes differently (an
+   earlier bug drew stray lines only on phones), and touch replaces the mouse
+   and keyboard. On the phone, open the site and check:
+   - the version on the title screen is the new one (if not, reload: the
+     browser may still have the old version cached);
+   - the title screen and buttons look right, with no stray lines or
+     misplaced shapes;
+   - a few shots on a level look right while the beam moves and when it
+     ends, and mirrors flip;
+   - touch works: tapping an emitter fires, buttons respond, and anything
+     changed in this release that uses touch (gestures, new buttons).
 
 The game works from any folder on the host (`base: "./"` in
 `vite.config.ts`).
