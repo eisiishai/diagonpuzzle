@@ -39,7 +39,8 @@ src/
   levels/       level list (levels.ts, text grids) and the parser
   render/       PixiJS views and animations
   input/        mouse/keyboard → game actions
-  audio/        sound effects and music (synthesized placeholders, Web Audio)
+  audio/        synthesized sound (Web Audio): synth.ts building blocks,
+                effects.ts, music.ts tracks, GameAudio.ts mixing and playback
   save/         saved progress (pure rules) and localStorage helpers
   scenes/       TitleScene and GameScene; main.ts switches between them
 scripts/        development tools run with tsx (not part of the game)

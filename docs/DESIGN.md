@@ -140,11 +140,7 @@ variety of solutions.
 
 - The pellet's path is animated cell by cell as a laser beam. When the shot
   ends, its outcome is shown by shape as well as colour (see *Art direction*).
-- Sound effects for firing, mirror bounces (each further bounce in a shot is a
-  step higher in pitch), hitting a wall, leaving the grid and reaching the goal;
-  background music.
-- Sound and music are currently placeholders synthesized in code (Web Audio
-  API), to be replaced with real audio files later.
+- Sound effects and background music; see *Sound*.
 - Screens shrink to fit the window, keeping a 16 px margin, so large levels
   work on small screens and phones; they are never enlarged, which would blur
   text. The game renders at the screen's pixel density, so text is sharp on
@@ -211,6 +207,49 @@ Text colours keep at least 4.5:1 contrast on the background.
   loop.
 - Glow never replaces outlines: every piece is recognisable with the bloom
   turned off.
+
+## Sound
+
+All sound is synthesized in code with the Web Audio API: no audio files.
+Effects and music were chosen by ear on the sound lab page (an artifact with
+every variant), so the names below are its variant names.
+
+### Effects
+
+| Event | Sound |
+|---|---|
+| Fire | *Soft pulse*: a gentle falling tone with a breath of air |
+| Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is two semitones higher (capped) |
+| Wall | *Soft knock* |
+| Off the board | *Two-tone drop*: two notes stepping down |
+| Loop | *Question chime*: two bells rising |
+| Goal (above par) | *Crystal chime*: glassy notes rising |
+| Par | *Chime and sparkle* |
+| Final star | *Synth fanfare*: brassy chords stepping up into a bright chord |
+
+### Music
+
+| Where | Track |
+|---|---|
+| Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
+| Levels 1–4 | **Pulse**: driving synthwave with a soft beat, 104 BPM |
+| Levels 5–8 | **Glass garden**: a slow, dark ambient drone only (no melody), so it stays out of the way on the harder levels |
+
+Each level names its track (`music` in `src/levels/levels.ts`). Moving
+between levels with the same track keeps the music playing; a different
+track crossfades in over about a second.
+
+### Mix
+
+- Effects at 80 %, music at 45 % of their full level (balanced by ear).
+- The music drops to a quarter during the par and final-star sounds
+  (ducking), so they stand out.
+- At most six effects play at once; extra ones are skipped (goal, par and
+  final-star sounds always play).
+- Fire, wall and off-the-board sounds vary in pitch by up to a quarter of a
+  semitone, so repeats don't sound mechanical.
+- Music and effects can each be switched off; their reverb and echo tails go
+  silent with them.
 
 ## Future ideas (not yet designed)
 

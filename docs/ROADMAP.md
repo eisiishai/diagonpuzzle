@@ -71,7 +71,13 @@ with flipping mirrors, before it is built.
 
 - [x] Graphics and art pass: "Laser lab" direction (style guide in
   `docs/DESIGN.md`, Art direction)
-- [ ] Real sound effects and music to replace the synthesized placeholders
+- [x] Sound design pass: effects and music designed in code (Web Audio) to
+  match the Laser lab look, chosen with a sound test page; music per level
+  - [x] Lower the music during celebrations (ducking), so fanfares stand out
+  - [x] Limit overlapping sounds, so rapid bounces don't get too loud
+  - [x] Balance volumes between music and effects
+  - [x] Small random pitch variation, so repeated sounds don't feel
+    mechanical
 - [x] Show shot outcomes by shape or icon as well as colour (colour-blind
   players)
 - [ ] Small ambient animations (e.g. a gently pulsing goal crystal, a faint

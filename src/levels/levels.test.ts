@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MUSIC_TRACKS } from "../audio/music";
 import { setupRoutes, solve } from "../game/solver";
 import { LEVELS } from "./levels";
 import { parseLevel } from "./parse";
@@ -11,6 +12,12 @@ it.each(LEVELS_WITH_SETUP_ROUTE)("%s has a two-shot setup route", (id) => {
   const level = LEVELS.find((candidate) => candidate.id === id);
   expect(level).toBeDefined();
   expect(setupRoutes(parseLevel(level!.grid)).length).toBeGreaterThan(0);
+});
+
+it("gives every level an existing music track", () => {
+  for (const level of LEVELS) {
+    expect(MUSIC_TRACKS[level.music]).toBeDefined();
+  }
 });
 
 it("has unique level ids", () => {

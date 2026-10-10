@@ -3,6 +3,7 @@ import "@fontsource/chakra-petch/latin-700.css";
 import "@fontsource/jetbrains-mono/latin-500.css";
 import { Application } from "pixi.js";
 import { GameAudio } from "./audio/GameAudio";
+import { TITLE_MUSIC } from "./audio/music";
 import { bindKeyboard } from "./input/keyboard";
 import { LEVELS } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
@@ -62,47 +63,47 @@ const PROGRESS_STORAGE_KEY = "progress";
     });
 
   const showTitle = () =>
-    switchTo(
-      () =>
-        new TitleScene({
-          levels: LEVELS,
-          progress,
-          audio,
-          onStartLevel: startLevel,
-          onResetProgress: () => {
-            progress = EMPTY_PROGRESS;
-            removeStorage(PROGRESS_STORAGE_KEY);
-            showTitle();
-          },
-        }),
-    );
+    switchTo(() => {
+      audio.setMusic(TITLE_MUSIC);
+      return new TitleScene({
+        levels: LEVELS,
+        progress,
+        audio,
+        onStartLevel: startLevel,
+        onResetProgress: () => {
+          progress = EMPTY_PROGRESS;
+          removeStorage(PROGRESS_STORAGE_KEY);
+          showTitle();
+        },
+      });
+    });
 
   const startLevel = (index: number) => {
     const level = LEVELS[index];
     const isLastLevel = index === LEVELS.length - 1;
-    switchTo(
-      () =>
-        new GameScene({
-          board: parseLevel(level.grid),
-          levelNumber: index + 1,
-          levelCount: LEVELS.length,
-          levelName: level.name,
-          par: level.minShots,
-          audio,
-          onComplete: (shots) => {
-            const before = progress;
-            const result = recordCompletion(progress, level.id, shots);
-            progress = result.progress;
-            writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
-            return {
-              previousBest: result.previousBest,
-              allLevelsAtPar: completesAllPar(before, progress, LEVELS),
-            };
-          },
-          onNext: () => (isLastLevel ? showTitle() : startLevel(index + 1)),
-          onMenu: showTitle,
-        }),
-    );
+    switchTo(() => {
+      audio.setMusic(level.music);
+      return new GameScene({
+        board: parseLevel(level.grid),
+        levelNumber: index + 1,
+        levelCount: LEVELS.length,
+        levelName: level.name,
+        par: level.minShots,
+        audio,
+        onComplete: (shots) => {
+          const before = progress;
+          const result = recordCompletion(progress, level.id, shots);
+          progress = result.progress;
+          writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
+          return {
+            previousBest: result.previousBest,
+            allLevelsAtPar: completesAllPar(before, progress, LEVELS),
+          };
+        },
+        onNext: () => (isLastLevel ? showTitle() : startLevel(index + 1)),
+        onMenu: showTitle,
+      });
+    });
   };
 
   showTitle();

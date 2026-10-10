@@ -1,15 +1,21 @@
 import { readStorage, writeStorage } from "../save/storage";
+import { BOUNCE_SECONDS, EFFECTS, playBounce } from "./effects";
+import type { SoundEffect } from "./effects";
+import { MUSIC_TRACKS } from "./music";
+import type { MusicTrack, MusicTrackId } from "./music";
+import { Synth } from "./synth";
+import { VoiceLimiter } from "./VoiceLimiter";
 
-export type SoundEffect =
-  "fire" | "wall" | "exit" | "loop" | "goal" | "par" | "allPar";
+export type { SoundEffect } from "./effects";
 
 /** Music and sound effects are switched on and off separately. */
 export type AudioChannel = "music" | "effects";
 
-const MASTER_VOLUME = 0.8;
+const MASTER_VOLUME = 0.9;
+/** The balance picked on the sound lab page: effects 80 %, music 45 %. */
 const CHANNEL_VOLUMES: Record<AudioChannel, number> = {
-  music: 0.1,
-  effects: 0.35,
+  effects: 0.8,
+  music: 0.45 * 0.6,
 };
 const CHANNEL_STORAGE_KEYS: Record<AudioChannel, string> = {
   music: "musicOn",
@@ -18,33 +24,46 @@ const CHANNEL_STORAGE_KEYS: Record<AudioChannel, string> = {
 /** Before music and effects were separate, one setting muted both. */
 const LEGACY_MUTED_STORAGE_KEY = "muted";
 
-// Placeholder music: an arpeggiated Am–F–C–G loop in eighth notes.
-const MUSIC_BPM = 96;
-const MUSIC_STEP_SECONDS = 60 / MUSIC_BPM / 2;
-const MUSIC_CHORDS = [
-  [57, 60, 64],
-  [53, 57, 60],
-  [48, 52, 55],
-  [55, 59, 62],
-];
-const ARPEGGIO = [0, 1, 2, 1, 0, 1, 2, 1];
-const SCHEDULE_AHEAD_SECONDS = 0.2;
+/** At most this many effects at once; goal and par sounds always play. */
+const MAX_EFFECT_VOICES = 6;
+/** Random pitch variation of everyday effects, in cents (± this much). */
+const PITCH_VARIATION_CENTS = 25;
+/** Music level while a celebration plays (ducking). */
+const DUCKED_LEVEL = 0.25;
+const CROSSFADE_SECONDS = 1.2;
+const SCHEDULE_AHEAD_SECONDS = 0.15;
+const SCHEDULER_INTERVAL_MS = 25;
 
-function midiToFrequency(note: number): number {
-  return 440 * 2 ** ((note - 69) / 12);
+interface PlayingTrack {
+  id: MusicTrackId;
+  track: MusicTrack;
+  /** This track's own volume, for crossfading between tracks. */
+  gain: GainNode;
+  step: number;
+  nextTime: number;
+}
+
+/** The audio graph, created on unlock(). */
+interface Graph {
+  ctx: AudioContext;
+  channels: Record<AudioChannel, GainNode>;
+  duck: GainNode;
+  effectsSynth: Synth;
+  musicSynth: Synth;
 }
 
 /**
  * Sound effects and background music, synthesized with the Web Audio API so
- * no audio files are needed. Browsers only allow audio to start after a user
- * gesture, so call `unlock()` from a click or key press first; sounds played
- * before that are silently skipped.
+ * no audio files are needed (effects in effects.ts, music in music.ts).
+ * Browsers only allow audio to start after a user gesture, so call `unlock()`
+ * from a click or key press first; sounds played before that are skipped,
+ * and the music starts on unlock.
  */
 export class GameAudio {
-  private context?: AudioContext;
-  private channels?: Record<AudioChannel, GainNode>;
-  private musicStep = 0;
-  private nextMusicTime = 0;
+  private graph?: Graph;
+  private readonly limiter = new VoiceLimiter(MAX_EFFECT_VOICES);
+  private wantedTrack?: MusicTrackId;
+  private playing?: PlayingTrack;
   private readonly enabled: Record<AudioChannel, boolean> = {
     music: loadEnabled("music"),
     effects: loadEnabled("effects"),
@@ -59,194 +78,230 @@ export class GameAudio {
     const on = !this.enabled[channel];
     this.enabled[channel] = on;
     writeStorage(CHANNEL_STORAGE_KEYS[channel], String(on));
-    if (this.context && this.channels) {
-      this.channels[channel].gain.setTargetAtTime(
+    if (this.graph) {
+      this.graph.channels[channel].gain.setTargetAtTime(
         on ? CHANNEL_VOLUMES[channel] : 0,
-        this.context.currentTime,
+        this.graph.ctx.currentTime,
         0.02,
       );
     }
   }
 
-  /** Creates the audio context and starts the music. Safe to call repeatedly. */
+  /**
+   * Plays `id` as the background music. Switching to the track already
+   * playing changes nothing; another track crossfades in.
+   */
+  setMusic(id: MusicTrackId): void {
+    this.wantedTrack = id;
+    if (this.graph) {
+      this.startTrack(this.graph, id);
+    }
+  }
+
+  /** Creates the audio graph and starts the music. Safe to call repeatedly. */
   unlock(): void {
-    if (this.context) {
-      if (this.context.state === "suspended" && !document.hidden) {
-        void this.context.resume();
+    if (this.graph) {
+      const { ctx } = this.graph;
+      if (ctx.state === "suspended" && !document.hidden) {
+        void ctx.resume();
       }
       return;
     }
 
-    const context = new AudioContext();
-    this.context = context;
-    const master = context.createGain();
+    const ctx = new AudioContext();
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -14;
+    compressor.ratio.value = 4;
+    compressor.connect(ctx.destination);
+    const master = ctx.createGain();
     master.gain.value = MASTER_VOLUME;
-    master.connect(context.destination);
-    const channel = (name: AudioChannel) => {
-      const gain = context.createGain();
+    master.connect(compressor);
+
+    // Music goes through the duck gain, which celebrations lower briefly.
+    const duck = ctx.createGain();
+    duck.connect(master);
+    const channel = (name: AudioChannel, to: AudioNode) => {
+      const gain = ctx.createGain();
       gain.gain.value = this.enabled[name] ? CHANNEL_VOLUMES[name] : 0;
-      gain.connect(master);
+      gain.connect(to);
       return gain;
     };
-    this.channels = { music: channel("music"), effects: channel("effects") };
+    const channels = {
+      effects: channel("effects", master),
+      music: channel("music", duck),
+    };
+
+    // Each channel has its own reverb (and the music its echo), returning
+    // into that channel, so switching a channel off silences its tails too.
+    const impulse = reverbImpulse(ctx);
+    const effectsSynth = new Synth(
+      ctx,
+      reverb(ctx, impulse, channels.effects),
+      channels.effects,
+    );
+    const musicSynth = new Synth(
+      ctx,
+      reverb(ctx, impulse, channels.music),
+      echo(ctx, channels.music),
+    );
+
+    const graph = { ctx, channels, duck, effectsSynth, musicSynth };
+    this.graph = graph;
 
     // Pause audio while the tab is hidden; timers are throttled there anyway.
     document.addEventListener("visibilitychange", () => {
-      void (document.hidden ? context.suspend() : context.resume());
+      void (document.hidden ? ctx.suspend() : ctx.resume());
     });
-
-    this.nextMusicTime = context.currentTime + 0.1;
-    setInterval(() => this.scheduleMusic(), 50);
+    setInterval(() => this.scheduleMusic(graph), SCHEDULER_INTERVAL_MS);
+    if (this.wantedTrack) {
+      this.startTrack(graph, this.wantedTrack);
+    }
   }
 
   play(effect: SoundEffect): void {
-    const t = this.context?.currentTime;
-    if (t === undefined) {
+    const graph = this.graph;
+    if (!graph || !this.enabled.effects) {
       return;
     }
-    switch (effect) {
-      case "fire":
-        this.tone(880, 440, 0.09, "square", t, 0.5);
-        break;
-      case "wall":
-        this.tone(160, 50, 0.18, "sine", t, 1);
-        break;
-      case "exit":
-        this.tone(420, 180, 0.3, "triangle", t, 0.8);
-        break;
-      case "loop":
-        this.tone(300, 320, 0.15, "sawtooth", t, 0.4);
-        this.tone(300, 280, 0.15, "sawtooth", t + 0.15, 0.4);
-        break;
-      case "goal":
-        this.notes([72, 76, 79, 84], t, 0.09, 0.18, "triangle", 0.9);
-        break;
-      case "par":
-        // The goal tune a fourth higher, then high sparkles.
-        this.notes([77, 81, 84, 89], t, 0.08, 0.2, "triangle", 0.9);
-        this.notes([96, 101, 100, 105], t + 0.36, 0.07, 0.12, "sine", 0.5);
-        break;
-      case "allPar":
-        // A rising run, a held chord, and sparkles on top.
-        this.notes(
-          [72, 74, 76, 77, 79, 81, 83, 84],
-          t,
-          0.06,
-          0.12,
-          "square",
-          0.35,
-        );
-        for (const note of [72, 76, 79, 84]) {
-          const f = midiToFrequency(note);
-          this.tone(f, f * 1.001, 1.4, "triangle", t + 0.5, 0.7);
-        }
-        this.notes(
-          [96, 100, 103, 108, 103, 108],
-          t + 0.6,
-          0.11,
-          0.15,
-          "sine",
-          0.45,
-        );
-        break;
+    const definition = EFFECTS[effect];
+    const t = graph.ctx.currentTime;
+    if (!this.limiter.tryStart(t, definition.seconds, definition.important)) {
+      return;
+    }
+    const pitch = definition.important ? 1 : randomPitch();
+    definition.play(graph.effectsSynth, graph.channels.effects, t, pitch);
+    if (definition.duckSeconds) {
+      this.duckMusic(graph, t, definition.duckSeconds);
     }
   }
 
   /** Mirror bounce; each further bounce in the same shot is a step higher. */
   playBounce(bounceNumber: number): void {
-    const t = this.context?.currentTime;
-    if (t === undefined) {
+    const graph = this.graph;
+    if (!graph || !this.enabled.effects) {
       return;
     }
-    const f = 600 * 2 ** ((Math.min(bounceNumber - 1, 10) * 2) / 12);
-    this.tone(f, f * 1.02, 0.07, "triangle", t, 0.7);
+    const t = graph.ctx.currentTime;
+    if (this.limiter.tryStart(t, BOUNCE_SECONDS)) {
+      playBounce(graph.effectsSynth, graph.channels.effects, t, bounceNumber);
+    }
   }
 
-  /** Plays `notes` (MIDI numbers) one after another, `spacing` seconds apart. */
-  private notes(
-    notes: number[],
-    startTime: number,
-    spacing: number,
-    duration: number,
-    type: OscillatorType,
-    volume: number,
-  ): void {
-    notes.forEach((note, i) => {
-      const f = midiToFrequency(note);
-      this.tone(f, f, duration, type, startTime + i * spacing, volume);
-    });
-  }
-
-  private tone(
-    startFrequency: number,
-    endFrequency: number,
-    duration: number,
-    type: OscillatorType,
-    startTime: number,
-    volume: number,
-    destination = this.channels?.effects,
-  ): void {
-    if (!this.context || !destination) {
+  private startTrack(graph: Graph, id: MusicTrackId): void {
+    if (this.playing?.id === id) {
       return;
     }
-    const oscillator = this.context.createOscillator();
-    const gain = this.context.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(startFrequency, startTime);
-    oscillator.frequency.exponentialRampToValueAtTime(
-      endFrequency,
-      startTime + duration,
-    );
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(volume, startTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-    oscillator.connect(gain).connect(destination);
-    oscillator.start(startTime);
-    oscillator.stop(startTime + duration + 0.02);
+    const { ctx } = graph;
+    const now = ctx.currentTime;
+
+    // Fade the old track out. Notes it already scheduled play out under the
+    // fading gain, which is then disconnected.
+    const old = this.playing;
+    if (old) {
+      old.gain.gain.setValueAtTime(old.gain.gain.value, now);
+      old.gain.gain.linearRampToValueAtTime(0, now + CROSSFADE_SECONDS);
+      setTimeout(() => old.gain.disconnect(), (CROSSFADE_SECONDS + 6) * 1000);
+    }
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(1, now + (old ? CROSSFADE_SECONDS : 0.3));
+    gain.connect(graph.channels.music);
+    this.playing = {
+      id,
+      track: MUSIC_TRACKS[id],
+      gain,
+      step: 0,
+      nextTime: now + 0.1,
+    };
   }
 
-  /** Schedules the music notes due within the next moment. */
-  private scheduleMusic(): void {
-    if (!this.context || this.context.state !== "running") {
+  /** Schedules the current track's notes due within the next moment. */
+  private scheduleMusic(graph: Graph): void {
+    const playing = this.playing;
+    if (!playing || graph.ctx.state !== "running") {
       return;
     }
-    const now = this.context.currentTime;
-    if (this.nextMusicTime < now) {
-      this.nextMusicTime = now;
+    const now = graph.ctx.currentTime;
+    const { track } = playing;
+    const stepSeconds = 60 / track.bpm / track.stepsPerBeat;
+    if (playing.nextTime < now) {
+      playing.nextTime = now;
     }
-    while (this.nextMusicTime < now + SCHEDULE_AHEAD_SECONDS) {
-      const step = this.musicStep % ARPEGGIO.length;
-      const bar = Math.floor(this.musicStep / ARPEGGIO.length);
-      const chord = MUSIC_CHORDS[bar % MUSIC_CHORDS.length];
-      const t = this.nextMusicTime;
-
-      const melody = midiToFrequency(chord[ARPEGGIO[step]] + 12);
-      this.tone(
-        melody,
-        melody,
-        MUSIC_STEP_SECONDS * 0.9,
-        "triangle",
-        t,
-        0.6,
-        this.channels?.music,
+    while (playing.nextTime < now + SCHEDULE_AHEAD_SECONDS) {
+      track.step(
+        graph.musicSynth,
+        playing.gain,
+        playing.step,
+        playing.nextTime,
+        stepSeconds,
       );
-      if (step % 4 === 0) {
-        const bass = midiToFrequency(chord[0] - 12);
-        this.tone(
-          bass,
-          bass,
-          MUSIC_STEP_SECONDS * 3.5,
-          "sine",
-          t,
-          1,
-          this.channels?.music,
-        );
-      }
-
-      this.musicStep++;
-      this.nextMusicTime += MUSIC_STEP_SECONDS;
+      playing.step++;
+      playing.nextTime += stepSeconds;
     }
   }
+
+  /** Lowers the music for `seconds` from `t`, then brings it back. */
+  private duckMusic(graph: Graph, t: number, seconds: number): void {
+    const level = graph.duck.gain;
+    level.cancelScheduledValues(t);
+    level.setValueAtTime(level.value, t);
+    level.linearRampToValueAtTime(DUCKED_LEVEL, t + 0.08);
+    level.setValueAtTime(DUCKED_LEVEL, t + seconds);
+    level.linearRampToValueAtTime(1, t + seconds + 0.8);
+  }
+}
+
+function randomPitch(): number {
+  const cents = (Math.random() * 2 - 1) * PITCH_VARIATION_CENTS;
+  return 2 ** (cents / 1200);
+}
+
+/** A decaying noise tail, the shape of a room's echo, for the reverbs. */
+function reverbImpulse(ctx: AudioContext): AudioBuffer {
+  const length = Math.floor(ctx.sampleRate * 2.6);
+  const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+  for (let channel = 0; channel < 2; channel++) {
+    const data = impulse.getChannelData(channel);
+    for (let i = 0; i < length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 3;
+    }
+  }
+  return impulse;
+}
+
+/** A reverb returning into `to`; returns its input. */
+function reverb(ctx: AudioContext, impulse: AudioBuffer, to: AudioNode) {
+  const input = ctx.createGain();
+  const convolver = ctx.createConvolver();
+  convolver.buffer = impulse;
+  const output = ctx.createGain();
+  output.gain.value = 0.5;
+  input.connect(convolver);
+  convolver.connect(output);
+  output.connect(to);
+  return input;
+}
+
+/** A darkening 0.36 s echo returning into `to`; returns its input. */
+function echo(ctx: AudioContext, to: AudioNode) {
+  const input = ctx.createGain();
+  const delay = ctx.createDelay(2);
+  delay.delayTime.value = 0.36;
+  const feedback = ctx.createGain();
+  feedback.gain.value = 0.35;
+  const darken = ctx.createBiquadFilter();
+  darken.type = "lowpass";
+  darken.frequency.value = 2200;
+  const output = ctx.createGain();
+  output.gain.value = 0.5;
+  input.connect(delay);
+  delay.connect(darken);
+  darken.connect(feedback);
+  feedback.connect(delay);
+  darken.connect(output);
+  output.connect(to);
+  return input;
 }
 
 function loadEnabled(channel: AudioChannel): boolean {
