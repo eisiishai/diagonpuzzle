@@ -249,6 +249,41 @@ the polyline rule and is checked on a phone. In suggested order:
     `audio/effects.ts`, `pathPoints.ts`, and `docs/DESIGN.md`
   - Optional: separate the particles' motion from their drawing and
     test it, as `ambient.ts` and `intro.ts` are
+- [ ] Move choosing the player mirror's cell out of `GameScene` into a
+  pure class in `src/game/` with tests, before the mirror can be rotated
+  (that mechanic extends this code). Today these rules sit untested in
+  the scene: a mouse click places at once; on touch a first tap previews
+  and a second tap on the same cell places; P starts the keyboard cursor
+  on an empty cell in the selected row (else the first empty cell),
+  arrows move it within the board, P or Enter places and Esc cancels.
+  `GameScene` then only shows the cursor and plays sounds
+  - Also move choosing the level's opening message (`introMessage()`:
+    bonus target, player mirror, multi-hit goal, breakable walls, in
+    that order) into a tested pure function, e.g. in `scoreText.ts`
+- [ ] Small test gaps and clean-ups, as one batch:
+  - Test the order of `bonusPositions()` (reading order): saved
+    progress identifies a collected bonus target by its index in it, so
+    a change would silently move saved bonus targets to other cells
+  - Keyboard: move the key → action lookup out of the listener in
+    `src/input/keyboard.ts` into a pure function and test it (Shift+N is
+    the hidden skip, Ctrl/Alt/Meta keys are ignored, fire, restart and
+    the other one-shot actions don't repeat while held)
+  - Test that `src/save/storage.ts` works when `localStorage` throws or
+    is missing (reads give null, writes and removes do nothing)
+  - Remove the `GameProgress` test "turns a skipped level into a
+    completed one", which repeats `progress.test.ts`
+  - Move the easing tests from `intro.test.ts` into `easing.test.ts`
+  - Comment in `src/game/simulate.ts` that the `loop` outcome appears
+    unreachable: every step of the pellet can be traced back exactly, so
+    a pellet entering from the edge must leave or stop (about 700,000
+    random shots found no loop). The check stays as a guard; no test can
+    build a loop
+  - Left for later: the pellet animation's timing (`PelletAnimator`:
+    cells change as the pellet reaches them, then the shot finishes),
+    best covered by the browser smoke tests or when it next changes;
+    `placementPositions()`, the formatting helpers in
+    `scripts/levelAnalysis.ts` and the title screen's menu choices are
+    small enough to leave
 
 ### Later
 
