@@ -265,6 +265,8 @@ difficulty doesn't dip at the end.
 
 - The title screen shows the game's name ("Diagon Puzzle", a working title),
   a *Play* button and the level list. Navigate with ↑/↓ and Enter, or the mouse.
+- The browser tab shows the same name, with the goal crystal as its icon
+  (`public/favicon.svg`, and a 32×32 PNG for browsers without SVG icons).
 - *Play* starts the first uncompleted level and reads *Continue: level N* once
   some levels are completed, or *Play again from level 1* when all are.
 - Level 1 is always unlocked; each further level unlocks when the previous one

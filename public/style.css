@@ -8,6 +8,9 @@ body {
 #app {
     width: 100%;
     height: 100vh;
+    /* The visible height on phones, where 100vh can include the space
+       behind the browser's address bar and hide the bottom of the game. */
+    height: 100dvh;
     overflow: hidden;
     display: flex;
     justify-content: center;
