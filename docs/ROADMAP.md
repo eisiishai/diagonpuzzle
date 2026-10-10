@@ -6,17 +6,17 @@ Status is tracked only here. Check items off as they are completed.
 
 One level, playable with the mouse, plain graphics.
 
-- [ ] Game model in `src/game/`: directions, positions, cell types, board
-- [ ] Cell behaviors for empty, `\`, `/`, wall and goal
-- [ ] Pellet simulation: `fire(board, row)` → path + outcome (`goal` / `exit` / `blocked` / `loop`)
-- [ ] Level text format and parser in `src/levels/`, with a first level
-- [ ] Unit tests for the simulation and parser (Vitest)
-- [ ] Draw the grid and cells with PixiJS (`Graphics`, no art yet)
-- [ ] Launch positions on the left edge; click to fire
-- [ ] Show the pellet's path after firing (no animation needed yet)
-- [ ] Shot counter on screen
-- [ ] "Level complete" message when the goal is reached
-- [ ] Remove the template's bunny and assets
+- [x] Game model in `src/game/`: directions, positions, cell types, board
+- [x] Cell behaviors for empty, `\`, `/`, wall and goal
+- [x] Pellet simulation: `fire(board, row)` → path + outcome (`goal` / `exit` / `blocked` / `loop`)
+- [x] Level text format and parser in `src/levels/`, with a first level
+- [x] Unit tests for the simulation and parser (Vitest)
+- [x] Draw the grid and cells with PixiJS (`Graphics`, no art yet)
+- [x] Launch positions on the left edge; click to fire
+- [x] Show the pellet's path after firing (no animation needed yet)
+- [x] Shot counter on screen
+- [x] "Level complete" message when the goal is reached
+- [x] Remove the template's bunny and assets
 
 ## M2 — Feel and controls
 
