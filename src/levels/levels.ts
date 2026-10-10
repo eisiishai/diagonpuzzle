@@ -61,24 +61,24 @@ export const LEVELS: readonly LevelDefinition[] = [
     id: "second-try",
     name: "Second try",
     minShots: 2,
-    bonusShots: 2,
+    bonusShots: 3,
     music: "pulse",
     grid: String.raw`
       . . . . . \ .
-      / * / . . . G
+      / . / . . . G
       . # . . . . .
       \ . / . . . .
-      . . . . . . .
+      . . / . . . *
     `,
   },
   {
     id: "set-the-stage",
     name: "Set the stage",
     minShots: 2,
-    bonusShots: 2,
+    bonusShots: 3,
     music: "pulse",
     grid: String.raw`
-      / \ . . . . . *
+      / \ . . \ . . *
       . . . . \ . # .
       / \ . / . . . .
       . . . / . . . G
@@ -105,11 +105,11 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Warm-up",
     minShots: 3,
     goalHits: 2,
-    bonusShots: 3,
+    bonusShots: 4,
     music: "glassGarden",
     grid: String.raw`
       . . . . \ *
-      . . . . / G
+      / . . . / G
       . . . . \ .
       \ . . . # .
     `,
@@ -118,11 +118,11 @@ export const LEVELS: readonly LevelDefinition[] = [
     id: "down-and-around",
     name: "Down and around",
     minShots: 2,
-    bonusShots: 2,
+    bonusShots: 3,
     music: "glassGarden",
     grid: String.raw`
-      # . * . . . . .
-      / # . . . . / G
+      # . . . * . . .
+      / # . . / . / G
       . . . . . / . .
       . . . . / . . .
       . . \ . . . . .
@@ -133,27 +133,27 @@ export const LEVELS: readonly LevelDefinition[] = [
     id: "third-time-lucky",
     name: "Third time lucky",
     minShots: 3,
-    bonusShots: 3,
+    bonusShots: 4,
     music: "glassGarden",
     grid: String.raw`
-      . / . . . . / .
+      \ / . . . . / .
       \ . . # . . . .
       . . . . . . . .
       . . \ . . . . .
       . . . . . . \ G
-      \ / . . . . . .
-      # * . . . / . .
+      \ / . . . . . *
+      # . . . . / . .
     `,
   },
   {
     id: "back-and-forth",
     name: "Back and forth",
     minShots: 3,
-    bonusShots: 3,
+    bonusShots: 4,
     music: "nightLab",
     grid: String.raw`
-      # . # . . . . * .
-      . . . . . . . . .
+      # . # . . . . . .
+      . . . . . \ . . *
       \ # . . . / \ / .
       . . . \ . . . . .
       . . . . . \ . \ .
@@ -165,17 +165,17 @@ export const LEVELS: readonly LevelDefinition[] = [
     id: "two-step",
     name: "Two-step",
     minShots: 4,
-    bonusShots: 4,
+    bonusShots: 6,
     music: "nightLab",
     grid: String.raw`
-      . \ . . \ . * . .
+      . \ . . \ . . . .
       . . . . . . . / G
       . . . \ . / . . .
       . . . . . \ / . .
       . . . \ . . \ / .
       . . . . # . / . .
-      . . . . . # . . .
-      . # . . . . . . .
+      . . . . . \ . . .
+      . # . . . . . * .
     `,
   },
 ];

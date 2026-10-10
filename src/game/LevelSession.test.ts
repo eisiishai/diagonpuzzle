@@ -129,19 +129,16 @@ describe("LevelSession", () => {
 });
 
 describe("LevelSession bonus targets", () => {
-  it("collects a bonus target, which stays gone after a restart", () => {
+  it("removes a bonus target hit until a restart, which brings it back", () => {
     const session = new LevelSession(parseLevel(". * G\n. . ."));
     session.fire(0);
     expect(session.finishShot()).toBe("bonus");
     expect(session.phase).toBe("aiming");
-    expect(session.collectedBonuses).toEqual([{ x: 1, y: 0 }]);
-    expect(session.board.cells[0][1]).toBe("empty");
-
-    session.restart();
-    expect(session.shots).toBe(0);
     expect(session.board.cells[0][1]).toBe("empty");
     session.fire(0);
     expect(session.finishShot()).toBe("goal");
-    expect(session.phase).toBe("complete");
+
+    session.restart();
+    expect(session.board.cells[0][1]).toBe("bonus");
   });
 });

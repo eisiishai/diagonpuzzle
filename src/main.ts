@@ -117,12 +117,9 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
       const best = progress.levels[level.id]?.bestShots;
       const bonusesShown =
         best !== undefined && earnsStar(best, level.minShots);
-      const collected = collectedBonuses(progress, level.id);
       return new GameScene({
-        board: withBonuses(
-          fullBoard,
-          (bonus) => bonusesShown && !collected.includes(bonus),
-        ),
+        // Collected bonus targets are shown too, so they can be replayed.
+        board: withBonuses(fullBoard, () => bonusesShown),
         levelNumber: index + 1,
         levelCount: LEVELS.length,
         levelName: level.name,
@@ -132,7 +129,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
         bonus: {
           shown: bonusesShown,
           total: bonuses.length,
-          collected: collected.length,
+          collected: collectedBonuses(progress, level.id).length,
         },
         audio,
         onComplete: (shots) => {
@@ -147,11 +144,13 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
         },
         onBonus: (x, y) => {
           const before = progress;
+          const wasGolden = hasAllBonuses(progress, summary);
           const bonus = bonuses.findIndex((p) => p.x === x && p.y === y);
           progress = recordBonus(progress, level.id, bonus);
           writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
           return {
-            levelGolden: hasAllBonuses(progress, summary),
+            newlyGolden: !wasGolden && hasAllBonuses(progress, summary),
+            collected: collectedBonuses(progress, level.id).length,
             allBonuses: completesAllBonuses(before, progress, LEVEL_SUMMARIES),
           };
         },

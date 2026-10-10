@@ -66,9 +66,13 @@ puzzle on top of the level for players who have mastered it.
   target disappears with a burst of colour and the board keeps the
   mirrors the shot flipped. Play continues; completing the level still
   ends the try.
-- **Collected for good.** A hit is saved at once, even if the try is never
-  finished, and a collected target stays gone, also after restarting or
-  coming back later. Collected targets are saved per level, apart from
+- **Collected for good, playable again.** A hit is saved at once, even if
+  the try is never finished. The target is gone for the rest of that try,
+  but a restart brings it back, and it keeps appearing on later visits
+  after it has been collected, so it can be replayed like the level
+  itself. Hitting it again plays the bonus burst and sound; the golden
+  star and the last-bonus celebration happen only the first time.
+  Collected targets are saved per level, apart from
   completion and best scores, by their index in reading order (row by row),
   so don't add a second target before an existing one in a released level.
 - **Shots** spent on a bonus target count in the try's total like any
@@ -87,9 +91,14 @@ puzzle on top of the level for players who have mastered it.
   check it with the solver (`solveBonus()`), check `minShots` with the
   bonus target removed (it is hidden until par), and check that par is
   still possible with the target showing. At most one per level for now.
-  The bonus targets were placed where they don't block the par solution,
-  favouring spots that need setup shots; `npm run levels` shows the
-  shortest route to each.
+- **Harder than par.** A bonus target needs more shots than par: one
+  more on levels 2–9, two more on level 10. Only level 1's takes as few
+  as par (1). A test checks `bonusShots` > `minShots` beyond level 1.
+  To get there, levels 3, 4 and 6–10 each got one extra mirror (on level
+  10 in place of a wall), chosen so that par and the par solution stay
+  the same. Targets sit where they don't block the par solution, and
+  their routes mix several rows rather than repeating one; `npm run
+  levels` shows the shortest route to each.
 
 ## Cell types
 

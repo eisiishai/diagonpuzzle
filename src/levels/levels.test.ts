@@ -29,7 +29,7 @@ it("has unique level ids", () => {
 
 describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
   "level $number ($name)",
-  ({ grid, minShots, goalHits = 1, bonusShots }) => {
+  ({ grid, minShots, goalHits = 1, bonusShots, number }) => {
     it("parses", () => {
       expect(() => parseLevel(grid)).not.toThrow();
     });
@@ -59,6 +59,13 @@ describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
         );
         expect(solution).not.toBeNull();
         expect(solution).toHaveLength(bonusShots!);
+      });
+
+      // A bonus target is a harder puzzle on top of the level; only the
+      // first level's may take as few shots as par.
+      it("needs more shots for the bonus target than par", () => {
+        const minimum = number === 1 ? minShots : minShots + 1;
+        expect(bonusShots).toBeGreaterThanOrEqual(minimum);
       });
 
       it("can still be completed at par with the bonus target showing", () => {

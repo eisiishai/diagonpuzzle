@@ -44,8 +44,10 @@ export interface CompletionResult {
 }
 
 export interface BonusResult {
-  /** True if every bonus target of the level is now collected. */
-  levelGolden: boolean;
+  /** True if this hit collected the level's last bonus target for the first time. */
+  newlyGolden: boolean;
+  /** The level's bonus targets collected so far, including this one. */
+  collected: number;
   /** True if this was the last bonus target of the whole game. */
   allBonuses: boolean;
 }
@@ -67,8 +69,8 @@ export interface GameSceneOptions {
   completedBefore: boolean;
   /**
    * The level's bonus targets: whether they are shown (the level was
-   * completed at par before this visit), how many there are and how many
-   * were collected before. `board` holds only the ones still to collect.
+   * completed at par before this visit; collected ones too, so they can be
+   * hit again), how many there are and how many were collected before.
    */
   bonus: { shown: boolean; total: number; collected: number };
   audio: GameAudio;
@@ -104,10 +106,13 @@ export class GameScene extends Container implements Scene {
   private readonly sceneWidth: number;
   private readonly session: LevelSession;
   private readonly celebration = new Celebration();
+  /** The level's bonus targets collected, in this visit or before. */
+  private bonusesCollected: number;
 
   constructor(options: GameSceneOptions) {
     super();
     this.options = options;
+    this.bonusesCollected = options.bonus.collected;
     const { board, levelNumber, levelCount, levelName } = options;
     this.session = new LevelSession(board, options.goalHits);
 
@@ -334,7 +339,11 @@ export class GameScene extends Container implements Scene {
   private collectBonus(result: ShotResult): void {
     const { audio } = this.options;
     const end = result.path[result.path.length - 1];
-    const { levelGolden, allBonuses } = this.options.onBonus(end.x, end.y);
+    const { newlyGolden, allBonuses, collected } = this.options.onBonus(
+      end.x,
+      end.y,
+    );
+    this.bonusesCollected = collected;
     this.updateShots();
     const { x, y } = this.shotEnd(result);
     if (allBonuses) {
@@ -352,7 +361,7 @@ export class GameScene extends Container implements Scene {
       this.celebration.bonusBurst(x, y, CELL_SIZE);
     }
     this.showMessage(
-      levelGolden
+      newlyGolden
         ? `Bonus target hit! This level's ${STAR} is now golden.`
         : "Bonus target hit!",
       COLORS.star,
@@ -427,11 +436,6 @@ export class GameScene extends Container implements Scene {
     const bonus =
       shown && total > 0 ? `  ·  BONUS ${this.bonusesCollected}/${total}` : "";
     this.shotsText.text = `SHOTS ${pad(shots)}  ·  PAR ${pad(this.options.par)}${goal}${bonus}`;
-  }
-
-  /** Bonus targets of the level collected, before and during this visit. */
-  private get bonusesCollected(): number {
-    return this.options.bonus.collected + this.session.collectedBonuses.length;
   }
 
   /** The message shown when a level starts or restarts. */
