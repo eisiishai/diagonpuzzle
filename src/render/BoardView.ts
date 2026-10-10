@@ -1,23 +1,25 @@
 import { Container, Graphics, Rectangle } from "pixi.js";
-import type { ShotOutcome, ShotResult } from "../game/simulate";
-import { DIRECTION_DELTAS } from "../game/types";
+import type { ShotResult } from "../game/simulate";
 import type { Board, CellType } from "../game/types";
+import { PelletAnimator } from "./PelletAnimator";
+import type { ShotCallbacks } from "./PelletAnimator";
 
 const COLORS = {
   boardBackground: 0x252b3a,
   gridLine: 0x3a4256,
+  rowHighlight: 0xffffff,
   mirror: 0xe8ecf4,
   wall: 0x6b7280,
   goal: 0x4ade80,
   launcher: 0xf59e0b,
 };
 
-const PATH_COLORS: Record<ShotOutcome, number> = {
-  goal: 0x4ade80,
-  exit: 0xf87171,
-  blocked: 0xf87171,
-  loop: 0xc084fc,
-};
+export interface BoardViewHandlers {
+  /** A launcher was clicked or tapped. */
+  onLaunch: (row: number) => void;
+  /** The pointer moved over a launcher. */
+  onHover: (row: number) => void;
+}
 
 /**
  * Draws the board with a column of launchers on its left. Board cell (x, y)
@@ -26,18 +28,31 @@ const PATH_COLORS: Record<ShotOutcome, number> = {
 export class BoardView extends Container {
   private readonly board: Board;
   private readonly cellSize: number;
-  private readonly pathGraphics = new Graphics();
+  private readonly rowHighlight = new Graphics();
+  private readonly launchers: Graphics[] = [];
+  private readonly animator: PelletAnimator;
 
-  constructor(board: Board, cellSize: number, onLaunch: (row: number) => void) {
+  constructor(board: Board, cellSize: number, handlers: BoardViewHandlers) {
     super();
     this.board = board;
     this.cellSize = cellSize;
 
-    this.addChild(this.drawBoard());
+    this.rowHighlight
+      .rect(cellSize, 0, board.width * cellSize, cellSize)
+      .fill({ color: COLORS.rowHighlight, alpha: 0.06 });
+    this.rowHighlight.visible = false;
+
+    this.addChild(this.drawBoard(), this.rowHighlight);
     for (let row = 0; row < board.height; row++) {
-      this.addChild(this.createLauncher(row, () => onLaunch(row)));
+      const launcher = this.createLauncher(row, handlers);
+      this.launchers.push(launcher);
+      this.addChild(launcher);
     }
-    this.addChild(this.pathGraphics);
+
+    this.animator = new PelletAnimator(cellSize, (x, y) =>
+      this.cellCenter(x, y),
+    );
+    this.addChild(this.animator);
   }
 
   /** Width in pixels: launcher column, board and a margin column on the right. */
@@ -49,45 +64,25 @@ export class BoardView extends Container {
     return this.board.height * this.cellSize;
   }
 
-  showPath(result: ShotResult): void {
-    const g = this.pathGraphics.clear();
-    const { path, outcome } = result;
-    if (path.length === 0) {
-      return;
+  /** Highlights the launcher and board row of `row`, or nothing if null. */
+  setSelectedRow(row: number | null): void {
+    this.launchers.forEach((launcher, index) => {
+      const selected = index === row;
+      launcher.scale.set(selected ? 1.3 : 1);
+      launcher.alpha = selected ? 1 : 0.55;
+    });
+    this.rowHighlight.visible = row !== null;
+    if (row !== null) {
+      this.rowHighlight.y = row * this.cellSize;
     }
-
-    const points = [
-      { x: -1, y: path[0].y },
-      ...path.map(({ x, y }) => ({ x, y })),
-    ];
-    const last = path[path.length - 1];
-    if (outcome === "exit") {
-      // Continue one cell past the edge to show the pellet leaving.
-      const delta = DIRECTION_DELTAS[last.directionOut];
-      points.push({ x: last.x + delta.x, y: last.y + delta.y });
-    } else if (outcome === "blocked") {
-      // Stop at the wall's edge rather than its centre.
-      const delta = DIRECTION_DELTAS[last.directionIn];
-      points[points.length - 1] = {
-        x: last.x - delta.x / 2,
-        y: last.y - delta.y / 2,
-      };
-    }
-
-    const color = PATH_COLORS[outcome];
-    const pixels = points.map(({ x, y }) => this.cellCenter(x, y));
-    g.moveTo(pixels[0].x, pixels[0].y);
-    for (const p of pixels.slice(1)) {
-      g.lineTo(p.x, p.y);
-    }
-    g.stroke({ width: 4, color, cap: "round", join: "round" });
-
-    const end = pixels[pixels.length - 1];
-    g.circle(end.x, end.y, this.cellSize * 0.12).fill(color);
   }
 
-  clearPath(): void {
-    this.pathGraphics.clear();
+  playShot(result: ShotResult, callbacks: ShotCallbacks): void {
+    this.animator.play(result, callbacks);
+  }
+
+  update(deltaMs: number): void {
+    this.animator.update(deltaMs);
   }
 
   /** Pixel centre of board cell (x, y); x = -1 is the launcher column. */
@@ -158,19 +153,18 @@ export class BoardView extends Container {
     }
   }
 
-  private createLauncher(row: number, onTap: () => void): Graphics {
+  /** A right-pointing triangle centred in the launcher cell of `row`. */
+  private createLauncher(row: number, handlers: BoardViewHandlers): Graphics {
     const size = this.cellSize;
-    const cx = size / 2;
-    const cy = (row + 0.5) * size;
     const r = size * 0.22;
 
-    const g = new Graphics()
-      .poly([cx - r, cy - r, cx + r, cy, cx - r, cy + r])
-      .fill(COLORS.launcher);
+    const g = new Graphics().poly([-r, -r, r, 0, -r, r]).fill(COLORS.launcher);
+    g.position.set(size / 2, (row + 0.5) * size);
     g.eventMode = "static";
     g.cursor = "pointer";
-    g.hitArea = new Rectangle(0, row * size, size, size);
-    g.on("pointertap", onTap);
+    g.hitArea = new Rectangle(-size / 2, -size / 2, size, size);
+    g.on("pointerover", () => handlers.onHover(row));
+    g.on("pointertap", () => handlers.onLaunch(row));
     return g;
   }
 }

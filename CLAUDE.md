@@ -22,10 +22,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 src/
   main.ts       PixiJS bootstrap, starts the first scene
   game/         game rules: types, board, cell behaviors, pellet simulation
-  levels/       level data (text grids) and the parser
+  levels/       level list (levels.ts, text grids) and the parser
   render/       PixiJS views and animations
   input/        mouse/keyboard → game actions
-  audio/        sound effects and music
+  audio/        sound effects and music (synthesized placeholders, Web Audio)
   scenes/       title / game / level-complete screens
 ```
 
@@ -42,6 +42,8 @@ src/
 - The game may be hosted in a subfolder (`base: "./"` in `vite.config.ts`).
   Refer to files in `public/` with relative paths (`assets/x.png`), never
   root paths (`/assets/x.png`).
+- Every level must be solvable; `src/levels/levels.test.ts` checks this for
+  all levels in `LEVELS`.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
 

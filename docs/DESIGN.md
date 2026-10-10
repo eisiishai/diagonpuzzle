@@ -56,14 +56,22 @@ launch edge.
 
 ## Controls
 
-- **Mouse:** click a launch position on the left edge to fire from that row.
-- **Keyboard:** up/down arrows select a row, Enter/Space fires.
+- **Mouse:** hovering over a launch position selects its row; clicking fires.
+- **Keyboard:** ↑/↓ (or W/S) select a row, Enter/Space fires.
+- **M** or clicking the sound label toggles all sound; the choice is remembered.
+- After completing a level, Enter/Space or the *Next level* button continues.
+  After the last level, play starts again from level 1.
+- A new shot can't be fired while the pellet is still moving.
 
 ## Presentation
 
-- The pellet's path is animated cell by cell.
-- Sound effects for firing, mirror bounces, hitting a wall, leaving the grid and
-  reaching the goal; background music.
+- The pellet's path is animated cell by cell, leaving a trail. When the shot
+  ends, the trail is coloured by outcome: green for the goal, red otherwise.
+- Sound effects for firing, mirror bounces (each further bounce in a shot is a
+  step higher in pitch), hitting a wall, leaving the grid and reaching the goal;
+  background music.
+- Sound and music are currently placeholders synthesized in code (Web Audio
+  API), to be replaced with real audio files later.
 
 ## Future ideas (not yet designed)
 

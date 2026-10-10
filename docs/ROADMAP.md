@@ -20,12 +20,12 @@ One level, playable with the mouse, plain graphics.
 
 ## M2 — Feel and controls
 
-- [ ] Animate the pellet moving cell by cell
-- [ ] Keyboard controls: arrows to select a row, Enter/Space to fire
-- [ ] Highlight the selected/hovered launch position
-- [ ] Sound effects (fire, bounce, wall, exit, goal)
-- [ ] Background music, with mute
-- [ ] Several levels and moving to the next level
+- [x] Animate the pellet moving cell by cell
+- [x] Keyboard controls: arrows to select a row, Enter/Space to fire
+- [x] Highlight the selected/hovered launch position
+- [x] Sound effects (fire, bounce, wall, exit, goal) — synthesized placeholders
+- [x] Background music, with mute
+- [x] Several levels and moving to the next level
 
 ## M3 — Game structure
 
@@ -39,3 +39,4 @@ One level, playable with the mouse, plain graphics.
 - Firing from other edges
 - New block types
 - Graphics and art pass
+- Real sound effects and music to replace the synthesized placeholders

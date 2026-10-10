@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { level01 } from "../levels/level01";
+import { LEVELS } from "../levels/levels";
 import { parseLevel } from "../levels/parse";
 import { CELL_BEHAVIORS } from "./cells";
 import { fire } from "./simulate";
@@ -102,7 +102,7 @@ describe("fire", () => {
 
 describe("level 1", () => {
   it("is solvable only from row 3", () => {
-    const board = parseLevel(level01);
+    const board = parseLevel(LEVELS[0].grid);
     const outcomes = Array.from(
       { length: board.height },
       (_, row) => fire(board, row).outcome,
