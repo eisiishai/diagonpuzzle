@@ -13,6 +13,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run dev` — dev server on http://localhost:8080
 - `npm run build` — lint + type-check + production build (use this to verify changes)
 - `npm run lint` — ESLint (with Prettier formatting rules)
+- `npm test` — Vitest unit tests
+- Deploy: `npm run build`, then copy the contents of `dist/` to the web host
 
 ## Code structure
 
@@ -37,6 +39,9 @@ src/
   result". New block types are added there, not as special cases in the
   simulation loop.
 - Formatting follows Prettier via ESLint; keep `npm run lint` clean.
+- The game may be hosted in a subfolder (`base: "./"` in `vite.config.ts`).
+  Refer to files in `public/` with relative paths (`assets/x.png`), never
+  root paths (`/assets/x.png`).
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
 
