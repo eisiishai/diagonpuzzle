@@ -17,6 +17,11 @@ import {
   hasAllBonuses,
   goldenStarCount,
   completesAllBonuses,
+  MAX_SKIPS,
+  spendSkip,
+  returnSkip,
+  addLevelTime,
+  SKIP_WAIT_MS,
 } from "./progress";
 
 const IDS = ["a", "b", "c"];
@@ -206,6 +211,8 @@ describe("parseProgress", () => {
       levels: { good: { bestShots: 2 } },
       skipped: [],
       bonuses: {},
+      skipsLeft: MAX_SKIPS,
+      skipWaitMs: 0,
     });
   });
 });
@@ -246,5 +253,60 @@ describe("bonus targets", () => {
     expect(completesAllBonuses(before, after, LEVELS)).toBe(true);
     expect(completesAllBonuses(after, after, LEVELS)).toBe(false);
     expect(completesAllBonuses(EMPTY_PROGRESS, before, LEVELS)).toBe(false);
+  });
+});
+
+describe("visible skips", () => {
+  it("starts with all skips and spends one per skipped level", () => {
+    expect(EMPTY_PROGRESS.skipsLeft).toBe(3);
+    const skipped = spendSkip(EMPTY_PROGRESS, "a");
+    expect(isSkipped(skipped, "a")).toBe(true);
+    expect(skipped.skipsLeft).toBe(2);
+  });
+
+  it("spends nothing on a level already passed, or with none left", () => {
+    const skipped = spendSkip(EMPTY_PROGRESS, "a");
+    expect(spendSkip(skipped, "a")).toBe(skipped);
+    const completed = recordCompletion(EMPTY_PROGRESS, "b", 1).progress;
+    expect(spendSkip(completed, "b")).toBe(completed);
+    const none = { ...EMPTY_PROGRESS, skipsLeft: 0 };
+    expect(spendSkip(none, "a")).toBe(none);
+  });
+
+  it("leaves the hidden skip free", () => {
+    expect(recordSkip(EMPTY_PROGRESS, "a").skipsLeft).toBe(MAX_SKIPS);
+  });
+
+  it("gives skips back up to the maximum", () => {
+    const one = { ...EMPTY_PROGRESS, skipsLeft: 1 };
+    expect(returnSkip(one).skipsLeft).toBe(2);
+    expect(returnSkip(EMPTY_PROGRESS)).toBe(EMPTY_PROGRESS);
+  });
+
+  it("saves skips left, clamped, and gives old saves all of them", () => {
+    const one = { ...EMPTY_PROGRESS, skipsLeft: 1 };
+    expect(parseProgress(serializeProgress(one)).skipsLeft).toBe(1);
+    const save = (skipsLeft: unknown) =>
+      parseProgress(JSON.stringify({ version: 1, levels: {}, skipsLeft }))
+        .skipsLeft;
+    expect(save(9)).toBe(MAX_SKIPS);
+    expect(save(-2)).toBe(0);
+    expect(save("2")).toBe(MAX_SKIPS);
+    expect(parseProgress('{"version":1,"levels":{}}').skipsLeft).toBe(3);
+  });
+
+  it("gives a skip back after time on level screens with none left", () => {
+    const none = { ...EMPTY_PROGRESS, skipsLeft: 0 };
+    expect(addLevelTime(EMPTY_PROGRESS, 1000)).toBe(EMPTY_PROGRESS);
+    const almost = addLevelTime(none, SKIP_WAIT_MS - 1);
+    expect(almost.skipsLeft).toBe(0);
+    const earned = addLevelTime(almost, 1);
+    expect(earned.skipsLeft).toBe(1);
+    expect(earned.skipWaitMs).toBe(0);
+  });
+
+  it("restarts the wait when the last skip is spent", () => {
+    const one = { ...EMPTY_PROGRESS, skipsLeft: 1, skipWaitMs: 99 };
+    expect(spendSkip(one, "a")).toMatchObject({ skipsLeft: 0, skipWaitMs: 0 });
   });
 });

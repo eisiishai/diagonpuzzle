@@ -24,6 +24,8 @@ const MIN_SCENE_WIDTH = 600;
 const INTRO_MESSAGE =
   "Aim with ↑/↓ and fire with Enter, or click an emitter. Mirrors turn when hit.";
 
+/** How long the Skip button waits for its confirming second press. */
+const SKIP_CONFIRM_MS = 3000;
 const BONUS_INTRO_MESSAGE =
   "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
 
@@ -41,6 +43,8 @@ export interface CompletionResult {
   previousBest?: number;
   /** True if this completion earned the last star: every level is at par. */
   allLevelsAtPar: boolean;
+  /** Skips left after one was given back for this, if one was. */
+  skipReturned?: number;
 }
 
 export interface BonusResult {
@@ -50,6 +54,8 @@ export interface BonusResult {
   collected: number;
   /** True if this was the last bonus target of the whole game. */
   allBonuses: boolean;
+  /** Skips left after one was given back for this, if one was. */
+  skipReturned?: number;
 }
 
 export interface GameSceneOptions {
@@ -63,10 +69,13 @@ export interface GameSceneOptions {
   /** Goal hits needed to complete the level, each from a separate shot. */
   goalHits: number;
   /**
-   * True if the level was completed before this visit: the next level is
-   * then offered from the start, not only after completing it again.
+   * True if the level was completed or skipped before this visit: the next
+   * level is then offered from the start, instead of the Skip button.
    */
-  completedBefore: boolean;
+  passedBefore: boolean;
+  /** Visible skips left at the start, out of `maxSkips`; see setSkipsLeft(). */
+  skipsLeft: number;
+  maxSkips: number;
   /**
    * The level's bonus targets: whether they are shown (the level was
    * completed at par before this visit; collected ones too, so they can be
@@ -82,9 +91,12 @@ export interface GameSceneOptions {
   onNext: () => void;
   /** Called when the player leaves for the title screen. */
   onMenu: () => void;
+  /** Called when the player skips the level with the Skip button. */
+  onUseSkip: () => void;
   /**
    * Called when the player uses the hidden skip (Shift+N, or pressing and
-   * holding the level name) to move on without completing the level.
+   * holding the level name) to move on without completing the level. It
+   * uses none of the visible skips.
    */
   onSkip: () => void;
 }
@@ -100,6 +112,12 @@ export class GameScene extends Container implements Scene {
   private readonly audioControls: AudioControls;
   private readonly messageText: Text;
   private readonly nextButton: Button;
+  private readonly skipButton: Button;
+  /** Time left for the Skip button's confirming press; 0 when not armed. */
+  private skipConfirmMs = 0;
+  private skipsLeft: number;
+  /** The level is completed or skipped, so the next level is offered. */
+  private passed: boolean;
   /** Bottom edge of the scene's content. */
   private readonly contentHeight: number;
   /** Width of the scene's content: the board's, or the minimum. */
@@ -113,6 +131,8 @@ export class GameScene extends Container implements Scene {
     super();
     this.options = options;
     this.bonusesCollected = options.bonus.collected;
+    this.passed = options.passedBefore;
+    this.skipsLeft = options.skipsLeft;
     const { board, levelNumber, levelCount, levelName } = options;
     this.session = new LevelSession(board, options.goalHits);
 
@@ -155,8 +175,8 @@ export class GameScene extends Container implements Scene {
     });
     this.messageText.y = HEADER_HEIGHT + this.boardView.contentHeight + 18;
 
-    // Bottom row, below room for a two-line message: next button on the
-    // left, sound buttons on the right.
+    // Bottom row, below room for a two-line message: next or skip button on
+    // the left, sound buttons on the right.
     const bottomRow = this.messageText.y + MESSAGE_HEIGHT;
     const isLastLevel = options.levelNumber === options.levelCount;
     this.nextButton = new Button({
@@ -165,6 +185,11 @@ export class GameScene extends Container implements Scene {
       onTap: () => options.onNext(),
     });
     this.nextButton.y = bottomRow;
+    this.skipButton = new Button({
+      label: this.skipLabel(),
+      onTap: () => this.pressSkip(),
+    });
+    this.skipButton.y = bottomRow;
     this.showNextButton(false);
     this.audioControls = new AudioControls(options.audio, "right");
     this.audioControls.position.set(width, bottomRow);
@@ -179,6 +204,7 @@ export class GameScene extends Container implements Scene {
       this.boardView,
       this.messageText,
       this.nextButton,
+      this.skipButton,
       this.celebration,
     );
     this.updateShots();
@@ -237,6 +263,12 @@ export class GameScene extends Container implements Scene {
   }
 
   update(deltaMs: number): void {
+    if (this.skipConfirmMs > 0) {
+      this.skipConfirmMs -= deltaMs;
+      if (this.skipConfirmMs <= 0) {
+        this.disarmSkip();
+      }
+    }
     this.boardView.update(deltaMs);
     this.celebration.update(deltaMs);
   }
@@ -286,12 +318,15 @@ export class GameScene extends Container implements Scene {
       }
       const { shots } = this.session;
       this.boardView.setSelectedRow(null);
-      const { previousBest, allLevelsAtPar } = this.options.onComplete(shots);
+      const { previousBest, allLevelsAtPar, skipReturned } =
+        this.options.onComplete(shots);
       this.celebrate(result, shots, allLevelsAtPar);
       this.showMessage(
-        completionMessage(shots, this.options.par, previousBest),
+        completionMessage(shots, this.options.par, previousBest) +
+          this.skipReturnedText(skipReturned),
         COLORS.success,
       );
+      this.passed = true;
       this.showNextButton(true);
       return;
     }
@@ -339,10 +374,8 @@ export class GameScene extends Container implements Scene {
   private collectBonus(result: ShotResult): void {
     const { audio } = this.options;
     const end = result.path[result.path.length - 1];
-    const { newlyGolden, allBonuses, collected } = this.options.onBonus(
-      end.x,
-      end.y,
-    );
+    const { newlyGolden, allBonuses, collected, skipReturned } =
+      this.options.onBonus(end.x, end.y);
     this.bonusesCollected = collected;
     this.updateShots();
     const { x, y } = this.shotEnd(result);
@@ -361,9 +394,9 @@ export class GameScene extends Container implements Scene {
       this.celebration.bonusBurst(x, y, CELL_SIZE);
     }
     this.showMessage(
-      newlyGolden
+      (newlyGolden
         ? `Bonus target hit! This level's ${STAR} is now golden.`
-        : "Bonus target hit!",
+        : "Bonus target hit!") + this.skipReturnedText(skipReturned),
       COLORS.star,
     );
   }
@@ -419,8 +452,56 @@ export class GameScene extends Container implements Scene {
    * completed before (e.g. while going for its bonus target).
    */
   private showNextButton(complete: boolean): void {
-    this.nextButton.visible = complete || this.options.completedBefore;
+    this.nextButton.visible = complete || this.passed;
     this.nextButton.setVariant(complete ? "primary" : "secondary");
+    this.skipButton.visible = !this.nextButton.visible;
+    this.disarmSkip();
+  }
+
+  /**
+   * The Skip button skips the level on a second press within a few seconds,
+   * so a stray tap doesn't use up a skip.
+   */
+  private pressSkip(): void {
+    if (this.skipsLeft <= 0) {
+      return;
+    }
+    if (this.skipConfirmMs > 0) {
+      this.options.onUseSkip();
+      return;
+    }
+    this.skipConfirmMs = SKIP_CONFIRM_MS;
+    this.skipButton.setLabel(this.skipLabel());
+  }
+
+  /** Updates the Skip button when skips change while playing. */
+  setSkipsLeft(skipsLeft: number): void {
+    this.skipsLeft = skipsLeft;
+    this.disarmSkip();
+  }
+
+  private disarmSkip(): void {
+    this.skipConfirmMs = 0;
+    this.skipButton.setLabel(this.skipLabel());
+    this.skipButton.disabled = this.skipsLeft <= 0;
+  }
+
+  private skipLabel(): string {
+    const { skipsLeft } = this;
+    const { maxSkips } = this.options;
+    if (skipsLeft <= 0) {
+      return "NO SKIPS LEFT";
+    }
+    return this.skipConfirmMs > 0
+      ? "PRESS AGAIN TO SKIP"
+      : `SKIP LEVEL · ${skipsLeft}/${maxSkips}`;
+  }
+
+  /** A note for the message when a used skip was given back. */
+  private skipReturnedText(skipsLeft: number | undefined): string {
+    return skipsLeft === undefined
+      ? ""
+      : ` Skip returned (${skipsLeft}/${this.options.maxSkips}).`;
   }
 
   private showMessage(text: string, color: number = COLORS.text): void {

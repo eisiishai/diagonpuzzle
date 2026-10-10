@@ -175,15 +175,29 @@ difficulty doesn't dip at the end.
   split start with both off.)
 - After completing a level, Enter/Space or the *Next level* button continues.
   After the last level, it returns to the title screen.
-  On a level completed before, the *Next level* button (outlined, not
-  filled) is there from the start, so a player going for the bonus target
+  On a level completed or skipped before, the *Next level* button
+  (outlined, not filled) is there from the start, so a player going for the bonus target
   can move on at any time; Enter/Space still fires until the level is
   completed again.
 - **Esc** or the *Menu* label returns to the title screen at any time.
+- **Skip button:** *Skip level · 3/3* at the bottom left skips a level
+  not yet completed or skipped, on a second press within 3 seconds ("Press
+  again to skip"), so a stray tap doesn't waste one. The player has 3
+  skips. A skipped level counts as skipped, as with the hidden skip below.
+  A used skip is given back (up to 3) the first time a level is completed
+  and the first time a bonus target is collected; the message says "Skip
+  returned (2/3)". Replaying a completed level or a collected bonus gives
+  nothing, so skips can't be farmed. With none left the button reads "No
+  skips left" until the player has spent 5 minutes on level screens
+  after using the last one (the title screen and a hidden browser tab
+  don't count); then one skip comes back and the button updates. That
+  time is saved, so it adds up across visits. On levels already completed or skipped, the *Next level*
+  button takes its place. Skips left are saved with the progress.
 - **Hidden skip:** Shift+N, or pressing and holding the level name in the
   header for about 1.2 seconds (mouse or touch), moves on to the next level
   without completing the current one (from the last level: back to the
-  title screen). Nothing in the game mentions it. A skipped level counts as
+  title screen). Nothing in the game mentions it; it is a debugging aid,
+  works on any level and uses none of the visible skips. A skipped level counts as
   not passed (no ✓, no star) and shows "skipped" in the level list, but it
   unlocks the level after it. Completing it later makes it an ordinary
   completed level. *Continue* on the title screen goes to the first level

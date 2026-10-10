@@ -15,7 +15,12 @@ import {
   completesAllPar,
   earnsStar,
   hasAllBonuses,
+  MAX_SKIPS,
+  addLevelTime,
   isCompleted,
+  isSkipped,
+  returnSkip,
+  spendSkip,
   parseProgress,
   recordBonus,
   recordCompletion,
@@ -104,10 +109,51 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
       });
     });
 
+  /**
+   * Gives back a used skip, if any were used; returns the skips left then,
+   * or undefined if none was given back.
+   */
+  const giveBackSkip = (): number | undefined => {
+    const after = returnSkip(progress);
+    if (after === progress) {
+      return undefined;
+    }
+    progress = after;
+    return progress.skipsLeft;
+  };
+
+  /**
+   * Time on level screens earns a skip back when none are left. Saved every
+   * few seconds rather than every frame.
+   */
+  const SAVE_WAIT_EVERY_MS = 5000;
+  const countLevelTime = (gameScene: GameScene, deltaMs: number) => {
+    const before = progress;
+    progress = addLevelTime(progress, deltaMs);
+    if (progress.skipsLeft !== before.skipsLeft) {
+      gameScene.setSkipsLeft(progress.skipsLeft);
+      writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
+    } else if (
+      Math.floor(progress.skipWaitMs / SAVE_WAIT_EVERY_MS) !==
+      Math.floor(before.skipWaitMs / SAVE_WAIT_EVERY_MS)
+    ) {
+      writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
+    }
+  };
+
   const startLevel = (index: number) => {
     const level = LEVELS[index];
     const summary = LEVEL_SUMMARIES[index];
     const isLastLevel = index === LEVELS.length - 1;
+    const skipLevel = (skipped: typeof progress) => {
+      progress = skipped;
+      writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
+      if (isLastLevel) {
+        showTitle();
+      } else {
+        startLevel(index + 1);
+      }
+    };
     switchTo(() => {
       audio.setMusic(level.music);
       // Bonus targets appear on visits after the level was completed at
@@ -125,7 +171,10 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
         levelName: level.name,
         par: level.minShots,
         goalHits: level.goalHits ?? 1,
-        completedBefore: isCompleted(progress, level.id),
+        passedBefore:
+          isCompleted(progress, level.id) || isSkipped(progress, level.id),
+        skipsLeft: progress.skipsLeft,
+        maxSkips: MAX_SKIPS,
         bonus: {
           shown: bonusesShown,
           total: bonuses.length,
@@ -136,9 +185,13 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
           const before = progress;
           const result = recordCompletion(progress, level.id, shots);
           progress = result.progress;
+          // The first completion of a level gives back a used skip.
+          const skipReturned =
+            result.previousBest === undefined ? giveBackSkip() : undefined;
           writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
           return {
             previousBest: result.previousBest,
+            skipReturned,
             allLevelsAtPar: completesAllPar(before, progress, LEVELS),
           };
         },
@@ -147,8 +200,11 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
           const wasGolden = hasAllBonuses(progress, summary);
           const bonus = bonuses.findIndex((p) => p.x === x && p.y === y);
           progress = recordBonus(progress, level.id, bonus);
+          // So does collecting a bonus target for the first time.
+          const skipReturned = progress !== before ? giveBackSkip() : undefined;
           writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
           return {
+            skipReturned,
             newlyGolden: !wasGolden && hasAllBonuses(progress, summary),
             collected: collectedBonuses(progress, level.id).length,
             allBonuses: completesAllBonuses(before, progress, LEVEL_SUMMARIES),
@@ -156,15 +212,9 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
         },
         onNext: () => (isLastLevel ? showTitle() : startLevel(index + 1)),
         onMenu: showTitle,
-        onSkip: () => {
-          progress = recordSkip(progress, level.id);
-          writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
-          if (isLastLevel) {
-            showTitle();
-          } else {
-            startLevel(index + 1);
-          }
-        },
+        onUseSkip: () => skipLevel(spendSkip(progress, level.id)),
+        // The hidden debug skip uses none of the visible skips.
+        onSkip: () => skipLevel(recordSkip(progress, level.id)),
       });
     });
   };
@@ -175,5 +225,8 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
   app.ticker.add((ticker) => {
     background.update(ticker.deltaMS);
     scene?.update(ticker.deltaMS);
+    if (scene instanceof GameScene) {
+      countLevelTime(scene, ticker.deltaMS);
+    }
   });
 })();

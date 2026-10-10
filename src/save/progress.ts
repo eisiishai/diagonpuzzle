@@ -1,5 +1,6 @@
 // Player progress: which levels are completed and the best shot count for
-// each, which levels were skipped, and which bonus targets were collected. Pure functions; reading and writing
+// each, which levels were skipped, which bonus targets were collected, and
+// how many visible skips are left. Pure functions; reading and writing
 // storage is done by the caller.
 
 export interface LevelProgress {
@@ -20,7 +21,23 @@ export interface Progress {
    * completion and best scores.
    */
   readonly bonuses: Readonly<Partial<Record<string, readonly number[]>>>;
+  /**
+   * Visible skips left (the Skip button), 0 to MAX_SKIPS. The hidden debug
+   * skip doesn't use them.
+   */
+  readonly skipsLeft: number;
+  /**
+   * Time spent on level screens since the last skip was used, counted only
+   * while none are left; reaching SKIP_WAIT_MS gives one back.
+   */
+  readonly skipWaitMs: number;
 }
+
+/** Visible skips a player starts with and can hold at most. */
+export const MAX_SKIPS = 3;
+
+/** Time on level screens with no skips left that earns one back. */
+export const SKIP_WAIT_MS = 5 * 60 * 1000;
 
 /** What progress needs to know about a level for stars and bonus targets. */
 export interface LevelSummary {
@@ -34,6 +51,8 @@ export const EMPTY_PROGRESS: Progress = {
   levels: {},
   skipped: [],
   bonuses: {},
+  skipsLeft: MAX_SKIPS,
+  skipWaitMs: 0,
 };
 
 const FORMAT_VERSION = 1;
@@ -71,6 +90,47 @@ export function recordSkip(progress: Progress, levelId: string): Progress {
     return progress;
   }
   return { ...progress, skipped: [...progress.skipped, levelId] };
+}
+
+/**
+ * Skips a level with the visible Skip button: marks it skipped and uses one
+ * of the skips left. Unchanged if none are left, or if the level is already
+ * completed or skipped (it needs no skip then).
+ */
+export function spendSkip(progress: Progress, levelId: string): Progress {
+  if (
+    progress.skipsLeft <= 0 ||
+    isCompleted(progress, levelId) ||
+    isSkipped(progress, levelId)
+  ) {
+    return progress;
+  }
+  return {
+    ...recordSkip(progress, levelId),
+    skipsLeft: progress.skipsLeft - 1,
+    skipWaitMs: 0,
+  };
+}
+
+/** Gives back one used skip, up to MAX_SKIPS. */
+export function returnSkip(progress: Progress): Progress {
+  return progress.skipsLeft >= MAX_SKIPS
+    ? progress
+    : { ...progress, skipsLeft: progress.skipsLeft + 1, skipWaitMs: 0 };
+}
+
+/**
+ * Counts `ms` spent on a level screen. With no skips left, SKIP_WAIT_MS of
+ * it gives one back; otherwise nothing changes.
+ */
+export function addLevelTime(progress: Progress, ms: number): Progress {
+  if (progress.skipsLeft > 0) {
+    return progress;
+  }
+  const skipWaitMs = progress.skipWaitMs + ms;
+  return skipWaitMs >= SKIP_WAIT_MS
+    ? returnSkip(progress)
+    : { ...progress, skipWaitMs };
 }
 
 export function isSkipped(progress: Progress, levelId: string): boolean {
@@ -223,6 +283,8 @@ export function serializeProgress(progress: Progress): string {
     levels: progress.levels,
     skipped: progress.skipped,
     bonuses: progress.bonuses,
+    skipsLeft: progress.skipsLeft,
+    skipWaitMs: progress.skipWaitMs,
   });
 }
 
@@ -285,5 +347,18 @@ export function parseProgress(json: string | null): Progress {
       }
     }
   }
-  return { levels, skipped, bonuses };
+  // Saves from before visible skips existed start with all of them.
+  const skipsLeft =
+    "skipsLeft" in data &&
+    typeof data.skipsLeft === "number" &&
+    Number.isInteger(data.skipsLeft)
+      ? Math.max(0, Math.min(MAX_SKIPS, data.skipsLeft))
+      : MAX_SKIPS;
+  const skipWaitMs =
+    "skipWaitMs" in data &&
+    typeof data.skipWaitMs === "number" &&
+    Number.isFinite(data.skipWaitMs)
+      ? Math.max(0, Math.min(SKIP_WAIT_MS, data.skipWaitMs))
+      : 0;
+  return { levels, skipped, bonuses, skipsLeft, skipWaitMs };
 }
