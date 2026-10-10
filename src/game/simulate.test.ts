@@ -100,6 +100,74 @@ describe("fire", () => {
   });
 });
 
+describe("mirror flipping", () => {
+  it("flips each mirror the pellet bounces off, in the returned board", () => {
+    const board = parseLevel(String.raw`
+      . \ .
+      . \ G
+    `);
+    const result = fire(board, 0);
+    expect(result.outcome).toBe("goal");
+    expect(result.path[1]).toMatchObject({
+      x: 1,
+      y: 0,
+      becomes: "mirrorSlash",
+    });
+    expect(result.path[2]).toMatchObject({
+      x: 1,
+      y: 1,
+      becomes: "mirrorSlash",
+    });
+    expect(result.board.cells).toEqual([
+      ["empty", "mirrorSlash", "empty"],
+      ["empty", "mirrorSlash", "goal"],
+    ]);
+  });
+
+  it("does not modify the board passed in", () => {
+    const board = parseLevel(String.raw`. \ G`);
+    fire(board, 0);
+    expect(board.cells[0][1]).toBe("mirrorBackslash");
+  });
+
+  it("leaves cells the pellet only passes through unchanged", () => {
+    const result = fire(parseLevel(". # G"), 0);
+    expect(result.path.every((step) => step.becomes === undefined)).toBe(true);
+  });
+
+  it("makes a second shot from the same row take a different path", () => {
+    const board = parseLevel(String.raw`
+      / . G
+      . . .
+    `);
+    const first = fire(board, 0);
+    expect(first.outcome).toBe("exit");
+    const second = fire(first.board, 0);
+    expect(second.path.map(({ x, y }) => `${x},${y}`)).toEqual(["0,0", "0,1"]);
+    expect(second.path[0].directionOut).toBe("down");
+    expect(second.outcome).toBe("exit");
+  });
+
+  it("applies a flip immediately when the same shot returns to a mirror", () => {
+    // Row 0 goes round the 2x2 block of mirrors and re-enters (0,0) moving
+    // left. Flipped to "/" by the first hit, it now turns the pellet down;
+    // the original "\" would have sent it up and out of the top.
+    const board = parseLevel(String.raw`
+      \ \ .
+      \ / .
+      . . G
+    `);
+    const result = fire(board, 0);
+    const visits = result.path.map(({ x, y }) => `${x},${y}`);
+    expect(visits).toEqual(["0,0", "0,1", "1,1", "1,0", "0,0", "0,1"]);
+    expect(result.path[4]).toMatchObject({
+      directionIn: "left",
+      directionOut: "down",
+    });
+    expect(result.outcome).toBe("exit");
+  });
+});
+
 describe("level 1", () => {
   it("is solvable only from row 3", () => {
     const board = parseLevel(LEVELS[0].grid);

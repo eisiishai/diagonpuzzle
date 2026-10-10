@@ -1,8 +1,12 @@
 import type { CellType, Direction } from "./types";
 
-/** What happens to a pellet that enters a cell. */
+/**
+ * What happens to a pellet that enters a cell. `becomes` is set when the hit
+ * changes the cell itself; the change takes effect immediately, so a pellet
+ * returning to the cell later in the same shot meets the new cell.
+ */
 export type CellEffect =
-  | { kind: "pass"; direction: Direction }
+  | { kind: "pass"; direction: Direction; becomes?: CellType }
   | { kind: "stop"; reason: "blocked" | "goal" };
 
 const BACKSLASH_TURNS: Record<Direction, Direction> = {
@@ -28,13 +32,16 @@ export const CELL_BEHAVIORS: Record<
   (direction: Direction) => CellEffect
 > = {
   empty: (direction) => ({ kind: "pass", direction }),
+  // Mirrors flip between "\" and "/" every time they are hit.
   mirrorBackslash: (direction) => ({
     kind: "pass",
     direction: BACKSLASH_TURNS[direction],
+    becomes: "mirrorSlash",
   }),
   mirrorSlash: (direction) => ({
     kind: "pass",
     direction: SLASH_TURNS[direction],
+    becomes: "mirrorBackslash",
   }),
   wall: () => ({ kind: "stop", reason: "blocked" }),
   goal: () => ({ kind: "stop", reason: "goal" }),

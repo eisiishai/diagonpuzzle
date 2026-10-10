@@ -31,9 +31,14 @@ One level, playable with the mouse, plain graphics.
 
 - [x] Title screen and level select
 - [x] Save progress and best shot counts (localStorage)
-- [ ] Decide on and design the next mechanic (see *Open questions* in DESIGN.md)
+- [x] Decide on and design the next mechanic: mirrors flip when hit
+- [x] Restart a level (R)
+- [x] Level solver; tests check each level's minimum shot count
 
 ## Later
+
+- More levels built around flipping mirrors, with rising difficulty
+- Par scores: show the minimum shot count, and reward matching it
 
 - Player-placed blocks
 - Firing from other edges

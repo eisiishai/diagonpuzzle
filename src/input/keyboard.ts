@@ -1,5 +1,5 @@
 export type GameAction =
-  "selectUp" | "selectDown" | "fire" | "back" | "toggleMute";
+  "selectUp" | "selectDown" | "fire" | "back" | "restart" | "toggleMute";
 
 const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   ArrowUp: "selectUp",
@@ -9,6 +9,7 @@ const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   Enter: "fire",
   " ": "fire",
   Escape: "back",
+  r: "restart",
   m: "toggleMute",
 };
 
@@ -16,6 +17,7 @@ const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
 const NO_REPEAT: ReadonlySet<GameAction> = new Set([
   "fire",
   "back",
+  "restart",
   "toggleMute",
 ]);
 

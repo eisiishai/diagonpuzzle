@@ -29,7 +29,7 @@ describe("pathPoints", () => {
     expect(points(grid, 0)).toEqual([
       { x: -1, y: 0, bounce: false },
       { x: 0, y: 0, bounce: false },
-      { x: 1, y: 0, bounce: true },
+      { x: 1, y: 0, bounce: true, becomes: "mirrorSlash" },
       { x: 1, y: 1, bounce: false },
     ]);
     expect(lastPoint(". . G\n. . .", 1)).toEqual({

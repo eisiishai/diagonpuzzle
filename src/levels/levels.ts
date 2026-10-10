@@ -2,6 +2,11 @@ export interface LevelDefinition {
   /** Stable identifier used for saved progress; never change it once released. */
   id: string;
   name: string;
+  /**
+   * Fewest shots that solve the level, as designed. Tests check it with the
+   * solver, so a level that is accidentally easier or harder fails.
+   */
+  minShots: number;
   /** Text grid, format in docs/DESIGN.md. */
   grid: string;
 }
@@ -11,6 +16,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "first-light",
     name: "First light",
+    minShots: 1,
     grid: String.raw`
       . . . \ . .
       # . / . . G
@@ -22,6 +28,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "up-and-over",
     name: "Up and over",
+    minShots: 1,
     grid: String.raw`
       . . \ . . . .
       . . . / . . G
@@ -32,28 +39,28 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
-    id: "staircase",
-    name: "Staircase",
+    id: "second-try",
+    name: "Second try",
+    minShots: 2,
     grid: String.raw`
-      . . \ . . . . .
-      . . . . # . . .
-      . . \ . . \ . .
-      . . . . . . / G
-      . . . . . \ / .
-      . / . . . . . .
+      . . . . . \ .
+      / . / . . . G
+      . # . . . . .
+      \ . / . . . .
+      . . . . . . .
     `,
   },
   {
-    id: "long-way-round",
-    name: "Long way round",
+    id: "set-the-stage",
+    name: "Set the stage",
+    minShots: 2,
     grid: String.raw`
-      . . . / . . \ . .
-      . \ . . . . . . .
-      . . . . . # . . .
-      . . . . . / . . .
-      . \ . / . . . # .
-      . . . . . . \ . G
-      . . / . . . . . .
+      / \ . . . . . .
+      . . . . \ . # .
+      / \ . / . . . .
+      . . . / . . . G
+      . . . . . . . .
+      . . . # . . . .
     `,
   },
 ];

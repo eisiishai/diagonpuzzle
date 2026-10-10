@@ -15,7 +15,11 @@ import type { Scene } from "./Scene";
 
 const CELL_SIZE = 64;
 const TEXT_HEIGHT = 40;
+const HEADER_ROW_HEIGHT = 30;
+const HEADER_HEIGHT = 2 * HEADER_ROW_HEIGHT + 10;
 const MESSAGE_HEIGHT = 60;
+const INTRO_MESSAGE =
+  "Aim with ↑/↓ and fire with Enter, or click an arrow. Mirrors turn when hit.";
 
 const OUTCOME_MESSAGES: Record<Exclude<ShotOutcome, "goal">, string> = {
   exit: "The pellet left the grid.",
@@ -24,6 +28,7 @@ const OUTCOME_MESSAGES: Record<Exclude<ShotOutcome, "goal">, string> = {
 };
 
 export interface GameSceneOptions {
+  /** The level's starting board. */
   board: Board;
   levelNumber: number;
   levelCount: number;
@@ -44,40 +49,56 @@ type Phase = "aiming" | "firing" | "complete";
 export class GameScene extends Container implements Scene {
   private readonly options: GameSceneOptions;
   private readonly boardView: BoardView;
-  private readonly statusText: Text;
+  private readonly shotsText: Text;
   private readonly soundToggle: SoundToggle;
   private readonly messageText: Text;
   private readonly nextButton: Text;
   private phase: Phase = "aiming";
   private shots = 0;
   private selectedRow: number;
+  /** The board as changed by the shots so far. */
+  private board: Board;
 
   constructor(options: GameSceneOptions) {
     super();
     this.options = options;
-    const { board } = options;
+    const { board, levelNumber, levelCount, levelName } = options;
+    this.board = board;
     this.selectedRow = Math.floor(board.height / 2);
 
     this.boardView = new BoardView(board, CELL_SIZE, {
       onLaunch: (row) => this.fireFrom(row),
       onHover: (row) => this.select(row),
     });
-    this.boardView.y = TEXT_HEIGHT;
+    this.boardView.y = HEADER_HEIGHT;
     const width = this.boardView.contentWidth;
 
-    this.statusText = new Text({ style: TEXT_STYLE });
+    // Header: level name and menu on the first row, shots and restart on the
+    // second, so the rows fit even on narrow boards.
+    const levelText = new Text({
+      text: `Level ${levelNumber}/${levelCount}: ${levelName}`,
+      style: TEXT_STYLE,
+    });
     const menuButton = makeClickable(
       new Text({ text: "Menu (Esc)", style: TEXT_STYLE }),
       () => options.onMenu(),
     );
     menuButton.anchor.set(1, 0);
     menuButton.x = width;
+    this.shotsText = new Text({ style: TEXT_STYLE });
+    this.shotsText.y = HEADER_ROW_HEIGHT;
+    const restartButton = makeClickable(
+      new Text({ text: "Restart (R)", style: TEXT_STYLE }),
+      () => this.restart(),
+    );
+    restartButton.anchor.set(1, 0);
+    restartButton.position.set(width, HEADER_ROW_HEIGHT);
 
     this.messageText = new Text({
-      text: "Aim with ↑/↓ and fire with Enter, or click an arrow.",
+      text: INTRO_MESSAGE,
       style: { ...TEXT_STYLE, wordWrap: true, wordWrapWidth: width },
     });
-    this.messageText.y = TEXT_HEIGHT + this.boardView.contentHeight + 16;
+    this.messageText.y = HEADER_HEIGHT + this.boardView.contentHeight + 16;
 
     const isLastLevel = options.levelNumber === options.levelCount;
     this.nextButton = new Text({
@@ -94,14 +115,16 @@ export class GameScene extends Container implements Scene {
     this.soundToggle.position.set(width, this.nextButton.y);
 
     this.addChild(
-      this.statusText,
+      levelText,
       menuButton,
+      this.shotsText,
+      restartButton,
       this.soundToggle,
       this.boardView,
       this.messageText,
       this.nextButton,
     );
-    this.updateStatus();
+    this.updateShots();
     this.boardView.setSelectedRow(this.selectedRow);
   }
 
@@ -133,6 +156,9 @@ export class GameScene extends Container implements Scene {
       case "back":
         this.options.onMenu();
         break;
+      case "restart":
+        this.restart();
+        break;
       case "toggleMute":
         this.soundToggle.toggle();
         break;
@@ -160,11 +186,12 @@ export class GameScene extends Container implements Scene {
     this.select(row);
     this.phase = "firing";
     this.shots++;
-    this.updateStatus();
+    this.updateShots();
     this.messageText.text = "";
     this.options.audio.play("fire");
 
-    const result = fire(this.options.board, row);
+    const result = fire(this.board, row);
+    this.board = result.board;
     this.boardView.playShot(result, {
       onBounce: (bounceNumber) => this.options.audio.playBounce(bounceNumber),
       onFinish: () => this.finishShot(result.outcome),
@@ -188,9 +215,20 @@ export class GameScene extends Container implements Scene {
     this.messageText.text = OUTCOME_MESSAGES[outcome];
   }
 
-  private updateStatus(): void {
-    const { levelNumber, levelCount, levelName } = this.options;
-    this.statusText.text = `Level ${levelNumber}/${levelCount}: ${levelName}  ·  Shots: ${this.shots}`;
+  /** Puts the level back to its starting board, with no shots fired. */
+  private restart(): void {
+    this.board = this.options.board;
+    this.boardView.showBoard(this.board);
+    this.phase = "aiming";
+    this.shots = 0;
+    this.updateShots();
+    this.messageText.text = INTRO_MESSAGE;
+    this.nextButton.visible = false;
+    this.boardView.setSelectedRow(this.selectedRow);
+  }
+
+  private updateShots(): void {
+    this.shotsText.text = `Shots: ${this.shots}`;
   }
 }
 

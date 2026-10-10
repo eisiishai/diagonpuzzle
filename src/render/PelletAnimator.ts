@@ -1,6 +1,8 @@
 import { Container, Graphics } from "pixi.js";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
+import type { CellType } from "../game/types";
 import { pathPoints } from "./pathPoints";
+import type { PathPoint } from "./pathPoints";
 
 const SPEED_CELLS_PER_SECOND = 9;
 const TRAIL_COLOR = 0xfbbf24;
@@ -16,14 +18,18 @@ const OUTCOME_COLORS: Record<ShotOutcome, number> = {
 export interface ShotCallbacks {
   /** Called as the pellet reaches each mirror; numbered from 1 per shot. */
   onBounce: (bounceNumber: number) => void;
+  /** Called as the pellet changes a cell, at the moment it hits it. */
+  onCellChange: (x: number, y: number, cell: CellType) => void;
   /** Called once when the pellet reaches the end of its path. */
   onFinish: () => void;
 }
 
 interface PixelPoint {
+  /** Position in pixels. */
   x: number;
   y: number;
-  bounce: boolean;
+  /** The path point in board cell coordinates. */
+  cell: PathPoint;
 }
 
 /** Moves a pellet along a shot's path, drawing its trail behind it. */
@@ -60,9 +66,9 @@ export class PelletAnimator extends Container {
   }
 
   play(result: ShotResult, callbacks: ShotCallbacks): void {
-    this.points = pathPoints(result).map((p) => ({
-      ...this.toPixels(p.x, p.y),
-      bounce: p.bounce,
+    this.points = pathPoints(result).map((cell) => ({
+      ...this.toPixels(cell.x, cell.y),
+      cell,
     }));
     this.outcome = result.outcome;
     this.callbacks = callbacks;
@@ -72,6 +78,14 @@ export class PelletAnimator extends Container {
     this.playing = true;
     this.pellet.visible = true;
     this.advance(0);
+  }
+
+  /** Stops any shot in progress and removes the trail. */
+  clear(): void {
+    this.playing = false;
+    this.callbacks = undefined;
+    this.pellet.visible = false;
+    this.trail.clear();
   }
 
   update(deltaMs: number): void {
@@ -94,7 +108,11 @@ export class PelletAnimator extends Container {
       distance -= remaining;
       this.segment++;
       this.segmentProgress = 0;
-      if (to.bounce) {
+      const { bounce, becomes, x, y } = to.cell;
+      if (becomes) {
+        this.callbacks?.onCellChange(x, y, becomes);
+      }
+      if (bounce) {
         this.callbacks?.onBounce(++this.bounces);
       }
     }

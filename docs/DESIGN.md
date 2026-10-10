@@ -13,20 +13,36 @@ especially 45° diagonal mirrors. The aim is to get the pellet to the goal.
    of the grid (for now). The pellet always starts moving **right**.
 2. The pellet travels through the grid until something ends its flight (see
    *Outcomes*).
-3. The shot counter increases by one.
-4. If the pellet reached the goal, the level is complete. Otherwise the next
+3. Every mirror the pellet bounces off flips (see *Flipping mirrors*), so the
+   board is different for the next shot.
+4. The shot counter increases by one.
+5. If the pellet reached the goal, the level is complete. Otherwise the next
    turn begins.
 
 There is no limit on the number of shots for now. The shot counter is shown to
 the player and is the level's score (fewer is better).
+
+**Restart** (R, or the *Restart* label) puts the level back to its starting
+board and resets the shot counter. Since every shot changes the board, a
+player can otherwise get into a state they can't solve from.
+
+## Flipping mirrors
+
+Each time the pellet bounces off a mirror, the mirror flips: `\` becomes `/`
+and `/` becomes `\`. The flip happens at the moment of the hit, so if the same
+shot comes back to that mirror, it meets the flipped mirror. Each hit is one
+flip, so a mirror hit twice in one shot ends up as it started.
+
+This is the core puzzle: a shot that misses the goal still changes the board,
+and the player plans shots that set up the board for a later shot.
 
 ## Cell types
 
 | Symbol | Name | Behavior |
 |---|---|---|
 | `.` | Empty | Pellet passes through unchanged. |
-| `\` | Mirror (backslash) | Turns the pellet 90°: right → down, down → right, left → up, up → left. |
-| `/` | Mirror (slash) | Turns the pellet 90°: right → up, up → right, left → down, down → left. |
+| `\` | Mirror (backslash) | Turns the pellet 90°: right → down, down → right, left → up, up → left. Then flips to `/`. |
+| `/` | Mirror (slash) | Turns the pellet 90°: right → up, up → right, left → down, down → left. Then flips to `\`. |
 | `#` | Wall | Stops the pellet. |
 | `G` | Goal | Pellet reaches the goal; level complete. |
 
@@ -39,7 +55,7 @@ Mirrors are two-sided: a pellet is deflected from either side.
 | `goal` | Pellet enters the goal cell | Level complete |
 | `exit` | Pellet leaves the grid through any edge | Next turn |
 | `blocked` | Pellet hits a wall | Next turn |
-| `loop` | Pellet returns to a cell it has already visited, moving in the same direction | Stop the shot; next turn (cannot happen with mirrors alone, but guards against future block types) |
+| `loop` | Pellet returns to a cell it has already visited, moving in the same direction, with the board in the same state | Stop the shot; next turn. Cannot happen with the current cells: every step can be traced back uniquely, so a shot that enters from the edge must end. Guards against future block types. |
 
 ## Levels
 
@@ -53,6 +69,17 @@ Levels are stored as text grids using the symbols above, for example:
 
 The goal is typically placed toward the right side of the grid, opposite the
 launch edge.
+
+Each level declares `minShots`, the fewest shots that solve it. A solver
+(`src/game/solver.ts`) searches every sequence of shots, and the tests check
+each level's `minShots` against it.
+
+| # | Level | Min shots | Idea |
+|---|---|---|---|
+| 1 | First light | 1 | Find the one row that reaches the goal. |
+| 2 | Up and over | 1 | As above, on a bigger board. |
+| 3 | Second try | 2 | The first shot from row 2 flips the mirror at the edge; the same row then reaches the goal. Teaches flipping. |
+| 4 | Set the stage | 2 | A shot from row 4 flips two mirrors in column 4, which the next shot from row 3 needs. A different row must set up the board. |
 
 ## Controls
 
@@ -100,8 +127,5 @@ launch edge.
 
 ## Open questions
 
-- Does the board change between turns (e.g. mirrors rotate when hit), or does
-  every shot from the same row always produce the same result? If the board
-  never changes, firing more than once from the same row gives no new
-  information, so the puzzle will need something that makes later shots
-  different — such as player-placed blocks.
+- None at the moment. (Resolved: the board changes between shots because
+  mirrors flip when hit.)

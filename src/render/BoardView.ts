@@ -14,6 +14,8 @@ const COLORS = {
   launcher: 0xf59e0b,
 };
 
+const MIRROR_TURN_MS = 150;
+
 export interface BoardViewHandlers {
   /** A launcher was clicked or tapped. */
   onLaunch: (row: number) => void;
@@ -21,28 +23,58 @@ export interface BoardViewHandlers {
   onHover: (row: number) => void;
 }
 
+/** A mirror rotating by 90° after a flip. */
+interface MirrorTurn {
+  view: Graphics;
+  from: number;
+  to: number;
+  elapsedMs: number;
+}
+
 /**
  * Draws the board with a column of launchers on its left. Board cell (x, y)
  * is drawn at column x + 1, leaving column 0 for the launchers.
+ *
+ * Each cell has its own view, centred in the cell, so cells can change while
+ * playing. Mirrors are all drawn as "\" and rotated 90° to show "/".
  */
 export class BoardView extends Container {
-  private readonly board: Board;
+  private readonly boardWidth: number;
+  private readonly boardHeight: number;
   private readonly cellSize: number;
   private readonly rowHighlight = new Graphics();
+  private readonly cellViews: Graphics[][] = [];
+  private readonly cells: CellType[][];
   private readonly launchers: Graphics[] = [];
   private readonly animator: PelletAnimator;
+  private turns: MirrorTurn[] = [];
 
   constructor(board: Board, cellSize: number, handlers: BoardViewHandlers) {
     super();
-    this.board = board;
+    this.boardWidth = board.width;
+    this.boardHeight = board.height;
     this.cellSize = cellSize;
+    this.cells = board.cells.map((row) => [...row]);
 
     this.rowHighlight
       .rect(cellSize, 0, board.width * cellSize, cellSize)
       .fill({ color: COLORS.rowHighlight, alpha: 0.06 });
     this.rowHighlight.visible = false;
+    this.addChild(this.drawGrid(), this.rowHighlight);
 
-    this.addChild(this.drawBoard(), this.rowHighlight);
+    for (let y = 0; y < board.height; y++) {
+      const row: Graphics[] = [];
+      for (let x = 0; x < board.width; x++) {
+        const view = new Graphics();
+        const center = this.cellCenter(x, y);
+        view.position.set(center.x, center.y);
+        row.push(view);
+        this.addChild(view);
+      }
+      this.cellViews.push(row);
+    }
+    this.redrawCells();
+
     for (let row = 0; row < board.height; row++) {
       const launcher = this.createLauncher(row, handlers);
       this.launchers.push(launcher);
@@ -57,11 +89,21 @@ export class BoardView extends Container {
 
   /** Width in pixels: launcher column, board and a margin column on the right. */
   get contentWidth(): number {
-    return (this.board.width + 2) * this.cellSize;
+    return (this.boardWidth + 2) * this.cellSize;
   }
 
   get contentHeight(): number {
-    return this.board.height * this.cellSize;
+    return this.boardHeight * this.cellSize;
+  }
+
+  /** Shows `board` immediately, stopping any shot and animation in progress. */
+  showBoard(board: Board): void {
+    this.animator.clear();
+    this.turns = [];
+    board.cells.forEach((row, y) =>
+      row.forEach((cell, x) => (this.cells[y][x] = cell)),
+    );
+    this.redrawCells();
   }
 
   /** Highlights the launcher and board row of `row`, or nothing if null. */
@@ -77,12 +119,61 @@ export class BoardView extends Container {
     }
   }
 
-  playShot(result: ShotResult, callbacks: ShotCallbacks): void {
-    this.animator.play(result, callbacks);
+  /** Animates a shot, changing cells as the pellet hits them. */
+  playShot(
+    result: ShotResult,
+    callbacks: Omit<ShotCallbacks, "onCellChange">,
+  ): void {
+    this.animator.play(result, {
+      ...callbacks,
+      onCellChange: (x, y, cell) => this.changeCell(x, y, cell),
+    });
   }
 
   update(deltaMs: number): void {
     this.animator.update(deltaMs);
+    this.updateTurns(deltaMs);
+  }
+
+  /** Changes a cell; a mirror flipping to the other mirror rotates into place. */
+  private changeCell(x: number, y: number, cell: CellType): void {
+    const view = this.cellViews[y][x];
+    const previous = this.cells[y][x];
+    this.cells[y][x] = cell;
+    if (!(isMirror(previous) && isMirror(cell))) {
+      this.drawCell(view, cell);
+      return;
+    }
+
+    // Always turn clockwise. If the mirror is still turning from an earlier
+    // flip, continue from where it is towards one more quarter turn.
+    const existing = this.turns.find((turn) => turn.view === view);
+    const target = (existing ? existing.to : view.rotation) + Math.PI / 2;
+    this.turns = this.turns.filter((turn) => turn !== existing);
+    this.turns.push({ view, from: view.rotation, to: target, elapsedMs: 0 });
+  }
+
+  private updateTurns(deltaMs: number): void {
+    for (const turn of this.turns) {
+      turn.elapsedMs += deltaMs;
+      const t = Math.min(1, turn.elapsedMs / MIRROR_TURN_MS);
+      const eased = 1 - (1 - t) ** 3;
+      turn.view.rotation = turn.from + (turn.to - turn.from) * eased;
+    }
+    this.turns = this.turns.filter((turn) => {
+      if (turn.elapsedMs < MIRROR_TURN_MS) {
+        return true;
+      }
+      // Keep rotations small; a half turn looks the same for a mirror.
+      turn.view.rotation = turn.to % Math.PI;
+      return false;
+    });
+  }
+
+  private redrawCells(): void {
+    this.cells.forEach((row, y) =>
+      row.forEach((cell, x) => this.drawCell(this.cellViews[y][x], cell)),
+    );
   }
 
   /** Pixel centre of board cell (x, y); x = -1 is the launcher column. */
@@ -93,61 +184,55 @@ export class BoardView extends Container {
     };
   }
 
-  private drawBoard(): Graphics {
-    const { board, cellSize } = this;
+  private drawGrid(): Graphics {
+    const { boardWidth: width, boardHeight: height, cellSize } = this;
     const g = new Graphics();
 
-    g.rect(cellSize, 0, board.width * cellSize, board.height * cellSize).fill(
+    g.rect(cellSize, 0, width * cellSize, height * cellSize).fill(
       COLORS.boardBackground,
     );
-    for (let x = 0; x <= board.width; x++) {
+    for (let x = 0; x <= width; x++) {
       g.moveTo((x + 1) * cellSize, 0).lineTo(
         (x + 1) * cellSize,
-        board.height * cellSize,
+        height * cellSize,
       );
     }
-    for (let y = 0; y <= board.height; y++) {
+    for (let y = 0; y <= height; y++) {
       g.moveTo(cellSize, y * cellSize).lineTo(
-        (board.width + 1) * cellSize,
+        (width + 1) * cellSize,
         y * cellSize,
       );
     }
     g.stroke({ width: 1, color: COLORS.gridLine });
-
-    for (let y = 0; y < board.height; y++) {
-      for (let x = 0; x < board.width; x++) {
-        this.drawCell(g, board.cells[y][x], (x + 1) * cellSize, y * cellSize);
-      }
-    }
     return g;
   }
 
-  private drawCell(g: Graphics, cell: CellType, left: number, top: number) {
-    const size = this.cellSize;
-    const pad = size * 0.15;
-    const right = left + size;
-    const bottom = top + size;
+  /** Draws `cell` into `g`, centred on g's origin. */
+  private drawCell(g: Graphics, cell: CellType): void {
+    const half = this.cellSize / 2;
+    const reach = half * 0.7;
+    g.clear();
+    g.rotation = 0;
 
     switch (cell) {
       case "empty":
         break;
       case "mirrorBackslash":
-        g.moveTo(left + pad, top + pad)
-          .lineTo(right - pad, bottom - pad)
-          .stroke({ width: 5, color: COLORS.mirror, cap: "round" });
-        break;
       case "mirrorSlash":
-        g.moveTo(left + pad, bottom - pad)
-          .lineTo(right - pad, top + pad)
+        g.moveTo(-reach, -reach)
+          .lineTo(reach, reach)
           .stroke({ width: 5, color: COLORS.mirror, cap: "round" });
+        g.rotation = cell === "mirrorSlash" ? Math.PI / 2 : 0;
         break;
       case "wall":
-        g.rect(left + 2, top + 2, size - 4, size - 4).fill(COLORS.wall);
+        g.rect(-half + 2, -half + 2, half * 2 - 4, half * 2 - 4).fill(
+          COLORS.wall,
+        );
         break;
       case "goal":
-        g.circle(left + size / 2, top + size / 2, size * 0.3)
+        g.circle(0, 0, half * 0.6)
           .stroke({ width: 4, color: COLORS.goal })
-          .circle(left + size / 2, top + size / 2, size * 0.12)
+          .circle(0, 0, half * 0.24)
           .fill(COLORS.goal);
         break;
     }
@@ -167,4 +252,8 @@ export class BoardView extends Container {
     g.on("pointertap", () => handlers.onLaunch(row));
     return g;
   }
+}
+
+function isMirror(cell: CellType): boolean {
+  return cell === "mirrorBackslash" || cell === "mirrorSlash";
 }

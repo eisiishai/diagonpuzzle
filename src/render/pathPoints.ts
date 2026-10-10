@@ -1,5 +1,6 @@
 import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
+import type { CellType } from "../game/types";
 
 export interface PathPoint {
   /** Board coordinates in cells; may be fractional or outside the board. */
@@ -7,6 +8,8 @@ export interface PathPoint {
   y: number;
   /** True if the pellet changes direction at this point. */
   bounce: boolean;
+  /** Set if the cell at this point changes when hit (e.g. a mirror flips). */
+  becomes?: CellType;
 }
 
 /**
@@ -27,6 +30,7 @@ export function pathPoints(result: ShotResult): PathPoint[] {
       x: step.x,
       y: step.y,
       bounce: step.directionIn !== step.directionOut,
+      ...(step.becomes && { becomes: step.becomes }),
     })),
   ];
 

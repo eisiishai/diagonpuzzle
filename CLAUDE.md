@@ -21,7 +21,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 ```
 src/
   main.ts       PixiJS bootstrap, starts the first scene
-  game/         game rules: types, board, cell behaviors, pellet simulation
+  game/         game rules: types, board, cell behaviors, pellet simulation,
+                solver (fewest shots for a level)
   levels/       level list (levels.ts, text grids) and the parser
   render/       PixiJS views and animations
   input/        mouse/keyboard → game actions
@@ -47,8 +48,11 @@ src/
   once released.
 - Access localStorage only through `src/save/storage.ts`, which tolerates
   storage being unavailable.
-- Every level must be solvable; `src/levels/levels.test.ts` checks this for
-  all levels in `LEVELS`.
+- Shots change the board (mirrors flip when hit): `fire()` returns the new
+  board and never modifies the one passed in.
+- Every level declares `minShots`; `src/levels/levels.test.ts` checks it with
+  the solver. When designing a level, run the solver to confirm the intended
+  minimum and that no shorter solution exists.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
 
