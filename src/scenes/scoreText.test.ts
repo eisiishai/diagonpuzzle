@@ -34,5 +34,8 @@ describe("levelListLabel", () => {
     expect(levelListLabel(3, "Second try", 2, true, 2)).toBe(
       "✓ 3. Second try  ·  best 2 / par 2  ★",
     );
+    expect(levelListLabel(3, "Second try", 2, true, undefined, true)).toBe(
+      "3. Second try  ·  skipped  ·  par 2",
+    );
   });
 });

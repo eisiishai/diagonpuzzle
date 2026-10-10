@@ -37,13 +37,16 @@ export function levelListLabel(
   par: number,
   unlocked: boolean,
   best: number | undefined,
+  skipped = false,
 ): string {
   const title = `${number}. ${name}`;
   if (!unlocked) {
     return `🔒 ${title}`;
   }
   if (best === undefined) {
-    return `${title}  ·  par ${par}`;
+    return skipped
+      ? `${title}  ·  skipped  ·  par ${par}`
+      : `${title}  ·  par ${par}`;
   }
   const star = earnsStar(best, par) ? `  ${STAR}` : "";
   return `✓ ${title}  ·  best ${best} / par ${par}${star}`;

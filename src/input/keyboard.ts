@@ -5,7 +5,8 @@ export type GameAction =
   | "back"
   | "restart"
   | "toggleMusic"
-  | "toggleEffects";
+  | "toggleEffects"
+  | "skipLevel";
 
 const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   ArrowUp: "selectUp",
@@ -20,6 +21,11 @@ const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   f: "toggleEffects",
 };
 
+/** Actions for Shift + key. Shift+N is the hidden level skip. */
+const SHIFT_KEY_ACTIONS: Partial<Record<string, GameAction>> = {
+  n: "skipLevel",
+};
+
 /** Actions that should not repeat while the key is held down. */
 const NO_REPEAT: ReadonlySet<GameAction> = new Set([
   "fire",
@@ -27,6 +33,7 @@ const NO_REPEAT: ReadonlySet<GameAction> = new Set([
   "restart",
   "toggleMusic",
   "toggleEffects",
+  "skipLevel",
 ]);
 
 /**
@@ -41,7 +48,8 @@ export function bindKeyboard(
       return;
     }
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
-    const action = KEY_ACTIONS[key];
+    const action =
+      (event.shiftKey ? SHIFT_KEY_ACTIONS[key] : undefined) ?? KEY_ACTIONS[key];
     if (action === undefined) {
       return;
     }

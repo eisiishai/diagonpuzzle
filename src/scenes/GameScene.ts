@@ -50,6 +50,11 @@ export interface GameSceneOptions {
   onNext: () => void;
   /** Called when the player leaves for the title screen. */
   onMenu: () => void;
+  /**
+   * Called when the player uses the hidden skip (Shift+N, or a triple
+   * click on the level name) to move on without completing the level.
+   */
+  onSkip: () => void;
 }
 
 /**
@@ -88,6 +93,7 @@ export class GameScene extends Container implements Scene {
       style: textStyle("heading"),
     });
     levelText.y = Math.round((ROW_HEIGHT - levelText.height) / 2);
+    this.addHiddenSkip(levelText);
     const menuButton = new Button({
       label: "MENU · ESC",
       onTap: () => options.onMenu(),
@@ -175,6 +181,9 @@ export class GameScene extends Container implements Scene {
         break;
       case "restart":
         this.restart();
+        break;
+      case "skipLevel":
+        this.options.onSkip();
         break;
       case "toggleMusic":
         this.audioControls.toggle("music");
@@ -266,6 +275,25 @@ export class GameScene extends Container implements Scene {
       audio.play("par");
       this.celebration.parBurst(x, y, CELL_SIZE);
     }
+  }
+
+  /**
+   * The hidden skip: three clicks or taps on the level name within a short
+   * time. No cursor change or other hint, on purpose.
+   */
+  private addHiddenSkip(levelText: Text): void {
+    const TAPS = 3;
+    const WITHIN_MS = 800;
+    let taps: number[] = [];
+    levelText.eventMode = "static";
+    levelText.on("pointertap", () => {
+      const now = performance.now();
+      taps = [...taps.filter((time) => now - time < WITHIN_MS), now];
+      if (taps.length >= TAPS) {
+        taps = [];
+        this.options.onSkip();
+      }
+    });
   }
 
   /** Puts the level back to its starting board, with no shots fired. */

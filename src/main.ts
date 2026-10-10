@@ -12,6 +12,7 @@ import {
   completesAllPar,
   parseProgress,
   recordCompletion,
+  recordSkip,
   serializeProgress,
 } from "./save/progress";
 import { BackgroundGrid } from "./render/BackgroundGrid";
@@ -109,6 +110,15 @@ const PROGRESS_STORAGE_KEY = "progress";
         },
         onNext: () => (isLastLevel ? showTitle() : startLevel(index + 1)),
         onMenu: showTitle,
+        onSkip: () => {
+          progress = recordSkip(progress, level.id);
+          writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
+          if (isLastLevel) {
+            showTitle();
+          } else {
+            startLevel(index + 1);
+          }
+        },
       });
     });
   };

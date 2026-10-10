@@ -8,6 +8,7 @@ import { COLORS, createBloom, createGlow, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
 import {
   isCompleted,
+  isSkipped,
   isUnlocked,
   nextLevelIndex,
   starCount,
@@ -105,6 +106,7 @@ export class TitleScene extends Container implements Scene {
         level.minShots,
         isUnlocked(progress, levelIds, index),
         progress.levels[level.id]?.bestShots,
+        isSkipped(progress, level.id),
       );
       const itemIndex = this.items.length;
       const item = this.addItem(
@@ -194,6 +196,7 @@ export class TitleScene extends Container implements Scene {
         this.audioControls.toggle("effects");
         break;
       case "back":
+      case "skipLevel":
         break;
     }
   }
