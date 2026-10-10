@@ -1,4 +1,5 @@
 import { Container, Text } from "pixi.js";
+import { columnPan } from "../audio/effects";
 import type { GameAudio } from "../audio/GameAudio";
 import { LevelSession } from "../game/LevelSession";
 import { canPlaceAt, placementPositions } from "../game/placement";
@@ -323,7 +324,11 @@ export class GameScene extends Container implements Scene {
     this.showMessage("");
     this.options.audio.play("fire");
     this.boardView.playShot(result, {
-      onBounce: (bounceNumber) => this.options.audio.playBounce(bounceNumber),
+      onBounce: (bounceNumber, at) =>
+        this.options.audio.playBounce(
+          bounceNumber,
+          columnPan(at.x, this.session.board.width),
+        ),
       onFinish: () => this.finishShot(result),
     });
   }
@@ -484,12 +489,19 @@ export class GameScene extends Container implements Scene {
       return;
     }
 
-    if (outcome === "blocked" && result.path[result.path.length - 1].becomes) {
-      audio.play("break");
+    // Wall hits and breaks sound from where they happen.
+    const last = result.path[result.path.length - 1];
+    const pan = columnPan(last.x, this.session.board.width);
+    if (outcome === "blocked" && last.becomes) {
+      audio.play("break", pan);
       this.showMessage("The pellet broke a cracked wall.");
       return;
     }
-    audio.play(outcome === "blocked" ? "wall" : outcome);
+    if (outcome === "blocked") {
+      audio.play("wall", pan);
+    } else {
+      audio.play(outcome);
+    }
     this.showMessage(OUTCOME_MESSAGES[outcome]);
   }
 

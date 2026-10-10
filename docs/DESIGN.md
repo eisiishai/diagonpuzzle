@@ -432,15 +432,15 @@ came from sound lab 2.
 | Event | Sound |
 |---|---|
 | Fire | *Soft pulse*: a gentle falling tone with a breath of air |
-| Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is two semitones higher (capped) |
+| Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is one note higher on the music's scale, from E5 (capped after ten), so long shots stay in key |
 | Wall | *Soft knock* |
 | Breakable wall | A crunch over a low thud, with small pieces clattering after it (not from the sound lab) |
 | Mirror placed | A glassy click, then two short bells (not from the sound lab) |
 | Level start | A soft, quiet swoosh of air with the beam wipe, without a tone, so it doesn't wear on the ear over many levels (sound lab 2's *Rising sweep* was too noticeable) |
 | Off the board | *Two-tone drop*: two notes stepping down |
 | Loop | *Question chime*: two bells rising |
-| Goal (above par) | *Crystal chime*: glassy notes rising |
-| Par | *Chime and sparkle* |
+| Goal (above par) | *Crystal chime*: glassy notes rising: root, third, fifth and octave of the chord the music is playing (root and fifths when neither the chord nor the scale has a third) |
+| Par | *Chime and sparkle*: the same chime on the music's chord, then high sparkles |
 | Final star | *Synth fanfare*: brassy chords stepping up into a bright chord |
 | Bonus target | A quick glissando of bells up a pentatonic scale, then high sparkles (not from the sound lab) |
 | Last bonus target | Like the final-star fanfare, with brighter major-seventh chords and bells on each chord (not from the sound lab) |
@@ -450,9 +450,17 @@ came from sound lab 2.
 | Where | Track |
 |---|---|
 | Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
-| Levels 1–4 | **Pulse**: driving synthwave with a soft beat, 104 BPM |
-| Levels 5–8 | **Glass garden**: a slow, dark ambient drone only (no melody), so it stays out of the way on the harder levels |
-| Levels 9–17 | **Night lab**, as on the title screen |
+| Levels 1–4 (basics) | **Afterglow**: warm pads whose filter slowly opens and closes, a soft sine bass, an occasional echoing pluck. Am9 – Fmaj7 – Cmaj7 – G6, a chord every 8 s |
+| Levels 5–10 (multi-hit goals, harder flips) | **Glass garden**: a slow, dark drone with a soft bell now and then; the calmest track, for the hardest levels before breakable walls |
+| Levels 11–14 (breakable walls) | **Prism drift**: two swaying chords (Fmaj7♯11 – Cmaj9), a faint high shimmer, glassy bells now and then with a long tail |
+| Levels 15–17 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
+
+Level music is background to think to: no drums and no tune to follow,
+chords that change only every 8–9 seconds, and small details (plucks,
+bells, glides) placed at random so the loop is hard to notice. The title
+screen can be livelier. A track change marks a new mechanic, so new levels
+take the track of their mechanic's group. (Livelier drafts with beats and
+tunes were tried on sound lab 2 and found too distracting.)
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different
@@ -465,6 +473,8 @@ track crossfades in over about a second.
   (ducking), so they stand out.
 - At most six effects play at once; extra ones are skipped (goal, par and
   final-star sounds always play).
+- Bounces, wall hits and breaks come from where they happen: they are
+  panned by board column, up to 40 % to either side.
 - Fire, wall, breaking, off-the-board and level-start sounds vary in pitch
   by up to a quarter of a semitone, so repeats don't sound mechanical.
 - Music and effects can each be switched off; their reverb and echo tails go

@@ -1,8 +1,8 @@
 import { readStorage, writeStorage } from "../save/storage";
 import { BOUNCE_SECONDS, EFFECTS, playBounce } from "./effects";
 import type { SoundEffect } from "./effects";
-import { MUSIC_TRACKS } from "./music";
-import type { MusicTrack, MusicTrackId } from "./music";
+import { DEFAULT_HARMONY, MUSIC_TRACKS } from "./music";
+import type { Harmony, MusicTrack, MusicTrackId } from "./music";
 import { Synth } from "./synth";
 import { VoiceLimiter } from "./VoiceLimiter";
 
@@ -158,7 +158,11 @@ export class GameAudio {
     }
   }
 
-  play(effect: SoundEffect): void {
+  /**
+   * Plays a sound effect, centred or at stereo position `pan` (-1 left …
+   * 1 right; see columnPan()).
+   */
+  play(effect: SoundEffect, pan = 0): void {
     const graph = this.graph;
     if (!graph || !this.enabled.effects) {
       return;
@@ -169,22 +173,66 @@ export class GameAudio {
       return;
     }
     const pitch = definition.important ? 1 : randomPitch();
-    definition.play(graph.effectsSynth, graph.channels.effects, t, pitch);
+    definition.play(
+      graph.effectsSynth,
+      this.effectsOutput(graph, pan, definition.seconds),
+      t,
+      pitch,
+      this.harmonyAt(t),
+    );
     if (definition.duckSeconds) {
       this.duckMusic(graph, t, definition.duckSeconds);
     }
   }
 
-  /** Mirror bounce; each further bounce in the same shot is a step higher. */
-  playBounce(bounceNumber: number): void {
+  /**
+   * Mirror bounce at stereo position `pan`; each further bounce in the same
+   * shot is a note higher on the music's scale.
+   */
+  playBounce(bounceNumber: number, pan = 0): void {
     const graph = this.graph;
     if (!graph || !this.enabled.effects) {
       return;
     }
     const t = graph.ctx.currentTime;
     if (this.limiter.tryStart(t, BOUNCE_SECONDS)) {
-      playBounce(graph.effectsSynth, graph.channels.effects, t, bounceNumber);
+      playBounce(
+        graph.effectsSynth,
+        this.effectsOutput(graph, pan, BOUNCE_SECONDS),
+        t,
+        bounceNumber,
+        this.harmonyAt(t),
+      );
     }
+  }
+
+  /**
+   * Where an effect plays: the effects channel, through a stereo panner
+   * (removed once the sound is over) when it is off centre.
+   */
+  private effectsOutput(graph: Graph, pan: number, seconds: number): AudioNode {
+    if (pan === 0) {
+      return graph.channels.effects;
+    }
+    const panner = graph.ctx.createStereoPanner();
+    panner.pan.value = pan;
+    panner.connect(graph.channels.effects);
+    setTimeout(() => panner.disconnect(), (seconds + 1) * 1000);
+    return panner;
+  }
+
+  /** The harmony of the music playing at time `t`, for tuned effects. */
+  private harmonyAt(t: number): Harmony {
+    const playing = this.playing;
+    if (!playing) {
+      return DEFAULT_HARMONY;
+    }
+    // playing.nextTime is when step playing.step starts.
+    const { track } = playing;
+    const stepSeconds = 60 / track.bpm / track.stepsPerBeat;
+    const step =
+      playing.step + Math.floor((t - playing.nextTime) / stepSeconds);
+    return track.harmony(Math.max(0, step));
   }
 
   private startTrack(graph: Graph, id: MusicTrackId): void {

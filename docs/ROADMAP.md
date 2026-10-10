@@ -144,9 +144,9 @@ the polyline rule and is checked on a phone. In suggested order:
 - [x] Goal hits. Chosen: a crystal flash and one diamond-shaped ring on
   every goal hit, not only at par (stars stay for par); on multi-hit goals
   the crystal's core fills from the bottom, a part per hit
-- [ ] Stereo position: bounces, wall hits and breaks panned by column.
+- [x] Stereo position: bounces, wall hits and breaks panned by column.
   Chosen: light panning, up to 40 % to either side
-- [ ] Calmer level music: ambient tracks that don't distract from puzzling
+- [x] Calmer level music: ambient tracks that don't distract from puzzling
   (no drums or tune to follow, slow chord changes, sparse random details),
   keeping the laser lab feel. First drafts with beats and tunes
   (2026-10-11) were too distracting. Chosen from the sound lab: title
@@ -154,8 +154,9 @@ the polyline rule and is checked on a phone. In suggested order:
   slowly moving filter, occasional plucks); 5–10 *Glass garden* with
   sparse bells; 11–14 *Prism drift* (two swaying chords, shimmer, glassy
   bells); 15–17 *Photon* (dark pads crossed by soft gliding tones).
-  *Pulse* is no longer used
-- [ ] Effects in tune with the music. Chosen: bounce pings climb the
+  *Pulse* was removed. Groups follow the mechanics, so new levels take
+  their mechanic's track
+- [x] Effects in tune with the music. Chosen: bounce pings climb the
   current track's scale; the goal chime uses the chord playing at the time
 - [ ] Beam head and light. Chosen: a short comet tail behind the moving
   front (about ¾ of a cell), and faint light on the panel under the

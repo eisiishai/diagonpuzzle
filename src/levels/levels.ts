@@ -39,7 +39,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "First light",
     minShots: 1,
     bonusShots: 1,
-    music: "pulse",
+    music: "afterglow",
     grid: String.raw`
       . . . \ . .
       # . / . . G
@@ -53,7 +53,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Up and over",
     minShots: 1,
     bonusShots: 2,
-    music: "pulse",
+    music: "afterglow",
     grid: String.raw`
       . . \ . * . \
       . . . / . . G
@@ -68,7 +68,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Second try",
     minShots: 2,
     bonusShots: 3,
-    music: "pulse",
+    music: "afterglow",
     grid: String.raw`
       . . . . . \ .
       / . / . . . G
@@ -82,7 +82,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Set the stage",
     minShots: 2,
     bonusShots: 3,
-    music: "pulse",
+    music: "afterglow",
     grid: String.raw`
       / \ . . \ . . *
       . . . . \ . # .
@@ -156,7 +156,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Back and forth",
     minShots: 3,
     bonusShots: 4,
-    music: "nightLab",
+    music: "glassGarden",
     grid: String.raw`
       # . # . . . . . .
       . . . . . \ . . *
@@ -172,7 +172,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Two-step",
     minShots: 4,
     bonusShots: 6,
-    music: "nightLab",
+    music: "glassGarden",
     grid: String.raw`
       . \ . . \ . . . .
       . . . . . . . / G
@@ -189,7 +189,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Breakthrough",
     minShots: 3,
     bonusShots: 4,
-    music: "nightLab",
+    music: "prism",
     grid: String.raw`
       / . . / \ . . .
       . . % . \ . . .
@@ -204,7 +204,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Stone by stone",
     minShots: 4,
     bonusShots: 5,
-    music: "nightLab",
+    music: "prism",
     grid: String.raw`
       . / . . . \ . . .
       \ % # . . . . % .
@@ -221,7 +221,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 3,
     goalHits: 2,
     bonusShots: 4,
-    music: "nightLab",
+    music: "prism",
     grid: String.raw`
       \ / . # . .
       . \ . . . .
@@ -236,7 +236,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 5,
     goalHits: 2,
     bonusShots: 6,
-    music: "nightLab",
+    music: "prism",
     grid: String.raw`
       / . . . # . .
       / . . \ . . G
@@ -252,7 +252,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 1,
     bonusShots: 2,
     playerMirror: "mirrorSlash",
-    music: "nightLab",
+    music: "photon",
     grid: String.raw`
       \ . * . G
       . . # / .
@@ -266,7 +266,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 3,
     bonusShots: 4,
     playerMirror: "mirrorSlash",
-    music: "nightLab",
+    music: "photon",
     grid: String.raw`
       . . . / . .
       . / . . \ \
@@ -282,7 +282,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     goalHits: 2,
     bonusShots: 5,
     playerMirror: "mirrorSlash",
-    music: "nightLab",
+    music: "photon",
     grid: String.raw`
       # . % * / .
       \ . # / % .

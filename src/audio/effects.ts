@@ -1,6 +1,7 @@
 // The sound effects, as picked on the sound lab page (variant in brackets).
 // See docs/DESIGN.md, Sound.
 
+import type { Harmony } from "./music";
 import type { Synth } from "./synth";
 import { midi } from "./synth";
 
@@ -27,9 +28,16 @@ export interface EffectDefinition {
   duckSeconds?: number;
   /**
    * Plays the sound at time `t` into `dest`. `pitch` is a small random
-   * factor near 1 for effects that vary a little each time.
+   * factor near 1 for effects that vary a little each time; `harmony` is
+   * the music's at that moment, for sounds tuned to it.
    */
-  play: (synth: Synth, dest: AudioNode, t: number, pitch: number) => void;
+  play: (
+    synth: Synth,
+    dest: AudioNode,
+    t: number,
+    pitch: number,
+    harmony: Harmony,
+  ) => void;
 }
 
 export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
@@ -160,12 +168,13 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         s.bell({ f, t: tt, d: 0.7, vol: 0.1, dest, wet: 0.4 }),
       ),
   },
-  // Goal (A, "Crystal chime"): glassy notes rising, with overtones.
+  // Goal (A, "Crystal chime"): glassy notes rising, with overtones, on the
+  // chord the music is playing.
   goal: {
     seconds: 1,
     important: true,
-    play: (s, dest, t) =>
-      s.notes([84, 88, 91, 96], t, 0.08, (f, tt) => {
+    play: (s, dest, t, _pitch, harmony) =>
+      s.notes(goalChimeNotes(harmony), t, 0.08, (f, tt) => {
         s.tone({ f, t: tt, d: 0.7, vol: 0.13, dest, wet: 0.45 });
         s.tone({ f: f * 2.76, t: tt, d: 0.25, vol: 0.03, dest, wet: 0.45 });
       }),
@@ -175,8 +184,8 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
     seconds: 1.4,
     important: true,
     duckSeconds: 1.6,
-    play: (s, dest, t) => {
-      s.notes([84, 88, 91, 96], t, 0.08, (f, tt) =>
+    play: (s, dest, t, _pitch, harmony) => {
+      s.notes(goalChimeNotes(harmony), t, 0.08, (f, tt) =>
         s.tone({ f, t: tt, d: 0.8, vol: 0.13, dest, wet: 0.5 }),
       );
       s.notes([103, 100, 108, 105, 112, 108], t + 0.34, 0.055, (f, tt) =>
@@ -292,18 +301,19 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
 export const BOUNCE_SECONDS = 0.5;
 
 /**
- * Mirror bounce (B, "Crystal ping"): a small bell, two semitones higher for
- * each further bounce in the same shot (capped).
+ * Mirror bounce (B, "Crystal ping"): a small bell, one note higher on the
+ * music's scale for each further bounce in the same shot (capped), so long
+ * shots stay in key.
  */
 export function playBounce(
   s: Synth,
   dest: AudioNode,
   t: number,
   bounceNumber: number,
+  harmony: Harmony,
 ): void {
-  const step = 2 ** ((Math.min(bounceNumber - 1, 10) * 2) / 12);
   s.bell({
-    f: 784 * step,
+    f: midi(bounceNote(bounceNumber, harmony.scale)),
     t,
     d: 0.5,
     vol: 0.12,
@@ -312,4 +322,64 @@ export function playBounce(
     dest,
     wet: 0.3,
   });
+}
+
+/** Lowest note of the bounce ladder (E5). */
+const BOUNCE_LADDER_START = 76;
+/** Bounces after this many climb no higher. */
+const BOUNCE_LADDER_STEPS = 10;
+
+/**
+ * The MIDI note of bounce number `bounceNumber` (from 1): the ladder climbs
+ * the notes of `scale` (pitch classes) from E5 upwards, one per bounce.
+ */
+export function bounceNote(
+  bounceNumber: number,
+  scale: readonly number[],
+): number {
+  const steps = Math.min(Math.max(bounceNumber - 1, 0), BOUNCE_LADDER_STEPS);
+  let note = BOUNCE_LADDER_START;
+  while (!scale.includes(note % 12)) {
+    note++;
+  }
+  for (let i = 0; i < steps; i++) {
+    do {
+      note++;
+    } while (!scale.includes(note % 12));
+  }
+  return note;
+}
+
+/**
+ * The goal chime's four notes (MIDI) on the music's chord: its root from F5
+ * up, the third and fifth above it, and the root an octave higher, like a
+ * major or minor arpeggio. The third is major or minor as the chord or scale
+ * has it; with neither, the chime uses root, fifth, root and fifth.
+ */
+export function goalChimeNotes(harmony: Harmony): number[] {
+  let root = 77;
+  while (root % 12 !== harmony.root % 12) {
+    root++;
+  }
+  const has = (interval: number) =>
+    [...harmony.chord.map((note) => note % 12), ...harmony.scale].includes(
+      (root + interval) % 12,
+    );
+  const third = has(4) ? 4 : has(3) ? 3 : undefined;
+  return third === undefined
+    ? [root, root + 7, root + 12, root + 19]
+    : [root, root + third, root + 7, root + 12];
+}
+
+/** How far to either side panned sounds go (1 would be fully left/right). */
+const MAX_PAN = 0.4;
+
+/**
+ * Stereo position for a sound at board column `x` (fractional; -1 is the
+ * launcher column) on a board `width` columns wide: from the left (-0.4) to
+ * the right (0.4).
+ */
+export function columnPan(x: number, width: number): number {
+  const position = (x + 0.5) / width;
+  return Math.max(-MAX_PAN, Math.min(MAX_PAN, (position * 2 - 1) * MAX_PAN));
 }

@@ -44,6 +44,22 @@ export interface HeldOptions extends Routing {
   detunes?: number[];
 }
 
+export interface PadOptions extends Routing {
+  type?: OscillatorType;
+  f: number;
+  t: number;
+  /** Total length, attack and release, in seconds. */
+  dur: number;
+  a?: number;
+  r?: number;
+  vol?: number;
+  /** Lowpass cutoff (Hz) at the start, gliding to `to` over the length. */
+  from: number;
+  to: number;
+  /** Detuning of the layered oscillators, in cents. */
+  detunes?: number[];
+}
+
 export interface NoiseOptions extends Routing {
   t: number;
   a?: number;
@@ -132,6 +148,46 @@ export class Synth {
     const filter = this.ctx.createBiquadFilter();
     filter.type = "lowpass";
     filter.frequency.value = cutoff;
+    filter.connect(gain);
+    gain.connect(this.route(o));
+    for (const detune of detunes) {
+      const osc = this.ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = f;
+      osc.detune.value = detune;
+      osc.connect(filter);
+      osc.start(t);
+      osc.stop(t + dur + 0.05);
+    }
+  }
+
+  /**
+   * A slow pad: layered, detuned oscillators whose lowpass filter glides
+   * from `from` to `to` over the note, so the sound slowly opens or closes.
+   */
+  pad(o: PadOptions): void {
+    const {
+      type = "sawtooth",
+      f,
+      t,
+      dur,
+      a = 2,
+      r = 3,
+      vol = 0.02,
+      from,
+      to,
+      detunes = [-8, 8],
+    } = o;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(vol, t + a);
+    gain.gain.setValueAtTime(vol, t + Math.max(a, dur - r));
+    gain.gain.linearRampToValueAtTime(0.0001, t + dur);
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.Q.value = 0.7;
+    filter.frequency.setValueAtTime(from, t);
+    filter.frequency.linearRampToValueAtTime(to, t + dur);
     filter.connect(gain);
     gain.connect(this.route(o));
     for (const detune of detunes) {
