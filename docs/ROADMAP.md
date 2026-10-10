@@ -203,6 +203,52 @@ the polyline rule and is checked on a phone. In suggested order:
   solution, setup routes and first-shot outcome per row (runs with `tsx`)
 - [x] Level generator, `npm run generate`: searches random boards for a given
   par and size, preferring a unique shortest solution
+- [ ] Move the progress rules out of `main.ts` into a pure class in
+  `src/save/` with tests, as `LevelSession` did for `GameScene`: when a
+  skip is given back (first completion, first bonus target), when bonus
+  targets are shown (after an earlier visit reached par), "newly golden",
+  "all levels at par" and "all bonuses", counting level time for skips
+  and how often it is saved. `main.ts` then only connects scenes and
+  storage
+  - First write tests for the current behaviour, then move the code
+    until they pass: skip returned on a first completion but not on a
+    replay, a bonus target collected twice, the last star triggering
+    "all at par", bonus targets hidden until an earlier visit reached
+    par, the hidden skip using none of the visible skips, and the save
+    interval for the skip timer
+  - Keep the before/after order of the checks: "all at par", "all
+    bonuses" and "newly golden" compare the progress from before the
+    event with the progress after it
+  - The class is the only owner of the progress, reset included, so no
+    stale copy is left in `main.ts`; it tells `main.ts` what happened
+    and whether to save (every 5 s for the skip timer, at once when a
+    skip comes back; never every frame)
+  - Don't change the saved format (`serializeProgress`,
+    `parseProgress`) or level ids
+  - The class defines the completion and bonus result types, replacing
+    `GameScene`'s `CompletionResult`, whose name clashes with the one in
+    `progress.ts`
+- [ ] Split `src/render/BoardView.ts` (over 1000 lines) before adding
+  block types: cell drawing into its own module, one draw function per
+  cell type (mirroring `src/game/cells.ts`), and the particle effects
+  (sparks, debris, sparkles) into another. No visible change; check it
+  in the browser and on a phone afterwards
+  - Move code rather than rewrite drawing, so the phone-only line bugs
+    can't come back
+  - Keep the layer order (effects between the cells and the beam) and
+    the single bloom filter on `BoardView`: no new filters, nothing
+    moved above the beam
+  - Keep a mirror hit again while still turning continuing from its
+    current angle (`changeCell`), the reduced-motion checks, and
+    destroying every effect's graphics when the level ends
+  - Map every cell type to its draw function (`Record<CellType, …>`),
+    so a new block type without drawing fails `npm run build`; the same
+    exhaustive check in `src/game/cells.ts` and the parser
+  - List in `docs/WORKFLOW.md` what a new block type needs: `types.ts`,
+    `cells.ts`, `parse.ts`, cell drawing, its sound in
+    `audio/effects.ts`, `pathPoints.ts`, and `docs/DESIGN.md`
+  - Optional: separate the particles' motion from their drawing and
+    test it, as `ambient.ts` and `intro.ts` are
 
 ### Later
 
