@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { arcPoints, distinctPoints } from "./polyline";
+import { arcPoints, distinctPoints, pointsAlong } from "./polyline";
 
 describe("distinctPoints", () => {
   it("removes points that repeat the previous one", () => {
@@ -27,5 +27,31 @@ describe("arcPoints", () => {
     expect(points[4].x).toBeCloseTo(0);
     expect(points[4].y).toBeCloseTo(10);
     expect(distinctPoints(points)).toHaveLength(5);
+  });
+});
+
+describe("pointsAlong", () => {
+  it("places points at even spacing around corners, with their direction", () => {
+    const path = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ];
+    const points = pointsAlong(path, 5, 10);
+    expect(points.map((p) => [p.x, p.y])).toEqual([
+      [5, 0],
+      [10, 5],
+    ]);
+    expect(points[0].angle).toBeCloseTo(0);
+    expect(points[1].angle).toBeCloseTo(Math.PI / 2);
+  });
+
+  it("skips repeated points", () => {
+    const path = [
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 4, y: 0 },
+    ];
+    expect(pointsAlong(path, 0, 2)).toHaveLength(3);
   });
 });

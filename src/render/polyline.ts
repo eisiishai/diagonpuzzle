@@ -45,3 +45,37 @@ export function arcPoints(
     };
   });
 }
+
+/**
+ * Points every `spacing` pixels along the path through `points`, starting
+ * `start` pixels in, each with the direction of travel there (radians).
+ */
+export function pointsAlong(
+  points: readonly Point[],
+  start: number,
+  spacing: number,
+): (Point & { angle: number })[] {
+  const result: (Point & { angle: number })[] = [];
+  let next = start;
+  let travelled = 0;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const length = Math.hypot(b.x - a.x, b.y - a.y);
+    if (length === 0) {
+      continue;
+    }
+    const angle = Math.atan2(b.y - a.y, b.x - a.x);
+    while (next <= travelled + length) {
+      const t = (next - travelled) / length;
+      result.push({
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        angle,
+      });
+      next += spacing;
+    }
+    travelled += length;
+  }
+  return result;
+}

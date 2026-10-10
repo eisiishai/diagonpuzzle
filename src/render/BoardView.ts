@@ -176,7 +176,12 @@ export class BoardView extends Container {
     this.animator = new PelletAnimator(cellSize, (x, y) =>
       this.cellCenter(x, y),
     );
-    this.addChild(this.panel, this.rowHighlight, this.animator.light);
+    this.addChild(
+      this.panel,
+      this.rowHighlight,
+      this.animator.ghost,
+      this.animator.light,
+    );
 
     for (let y = 0; y < board.height; y++) {
       const row: Graphics[] = [];

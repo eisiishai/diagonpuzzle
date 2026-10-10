@@ -183,7 +183,7 @@ the polyline rule and is checked on a phone. In suggested order:
   heard on every shot or level can wear on the ear. Chosen on sound lab 3:
   the *Softer* version of each (30–40 % quieter, a little rounder), with
   the overall effects level kept at 80 %
-- [ ] Ghost of the previous shot: when the next shot fires, the previous
+- [x] Ghost of the previous shot: when the next shot fires, the previous
   path stays until the shot after. Wanted, although it changes how puzzles
   play (shows what flipped). Chosen: a very dim band with small chevrons
   showing which way it went

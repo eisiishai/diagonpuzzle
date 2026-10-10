@@ -447,6 +447,15 @@ Text colours keep at least 4.5:1 contrast on the background.
   loop.
 - Glow never replaces outlines: every piece is recognisable with the bloom
   turned off.
+- **Ghost of the previous shot**: when a new shot fires, the one before it
+  stays as a ghost until the shot after: a very dim band in the beam's
+  colour under the pieces, with small chevrons every 1.5 cells pointing the
+  way it went. It has no bright core or end marker, so it reads as the
+  past shot, not the current one. It fades in over 0.25 s and stays at
+  half strength while the new beam travels, so the beam leads; it is
+  cleared on restart. It helps players see what the last shot did and
+  which mirrors it turned, which makes puzzles a little easier to reason
+  about; that was accepted.
 
 ## Sound
 

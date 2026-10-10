@@ -1,12 +1,20 @@
 import { Container, Graphics } from "pixi.js";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
 import type { CellType } from "../game/types";
+import { prefersReducedMotion } from "./ambient";
 import { pathPoints } from "./pathPoints";
-import { distinctPoints } from "./polyline";
+import { distinctPoints, pointsAlong } from "./polyline";
 import type { PathPoint } from "./pathPoints";
 import { COLORS } from "./theme";
 
 const SPEED_CELLS_PER_SECOND = 9;
+/** The ghost of the previous shot fades in over this long. */
+const GHOST_FADE_MS = 250;
+/** While a new shot travels, the ghost dims to this, so the beam leads. */
+const GHOST_IN_FLIGHT = 0.5;
+/** Chevrons along the ghost: spacing and first one's distance, in cells. */
+const GHOST_CHEVRON_SPACING = 1.5;
+const GHOST_CHEVRON_START = 0.75;
 /** The comet tail behind the moving front: its length in cells and dots. */
 const TAIL_CELLS = 0.75;
 const TAIL_DOTS = 12;
@@ -47,6 +55,14 @@ export class PelletAnimator extends Container {
    * front. Not a child: the board view places it under the cells.
    */
   readonly light = new Graphics();
+  /**
+   * The previous shot's path while the next one plays and after it: a very
+   * dim band with chevrons showing its direction. Not a child either: the
+   * board view places it under the cells, with the light.
+   */
+  readonly ghost = new Graphics();
+  /** Time since the ghost appeared, for its fade-in. */
+  private ghostMs = 0;
 
   private points: PixelPoint[] = [];
   private outcome: ShotOutcome = "exit";
@@ -79,6 +95,9 @@ export class PelletAnimator extends Container {
   }
 
   play(result: ShotResult, callbacks: ShotCallbacks): void {
+    // The shot before this one stays as a ghost until the next shot.
+    this.drawGhost(this.points);
+    this.ghostMs = 0;
     this.points = pathPoints(result).map((cell) => ({
       ...this.toPixels(cell.x, cell.y),
       cell,
@@ -104,12 +123,76 @@ export class PelletAnimator extends Container {
     this.pellet.visible = false;
     this.trail.clear();
     this.light.clear();
+    this.ghost.clear();
+    this.points = [];
   }
 
   update(deltaMs: number): void {
     if (this.playing) {
       this.advance((SPEED_CELLS_PER_SECOND * this.cellSize * deltaMs) / 1000);
     }
+    this.ghostMs += deltaMs;
+    const fade = prefersReducedMotion()
+      ? 1
+      : Math.min(1, this.ghostMs / GHOST_FADE_MS);
+    this.ghost.alpha = fade * (this.playing ? GHOST_IN_FLIGHT : 1);
+  }
+
+  /**
+   * The ghost of a shot along `allPoints`: a very dim band in the beam's
+   * colour with small chevrons pointing the way it went, without the beam's
+   * bright core or end marker, so it reads as the past shot. Nothing if
+   * there was no shot.
+   */
+  private drawGhost(allPoints: { x: number; y: number }[]): void {
+    const g = this.ghost.clear();
+    const points = distinctPoints(allPoints);
+    if (points.length < 2) {
+      return;
+    }
+    g.moveTo(points[0].x, points[0].y);
+    for (const p of points.slice(1)) {
+      g.lineTo(p.x, p.y);
+    }
+    g.stroke({
+      width: this.cellSize * 0.2,
+      color: COLORS.beam,
+      alpha: 0.1,
+      cap: "round",
+      join: "round",
+    });
+    const size = this.cellSize * 0.07;
+    const total = points
+      .slice(1)
+      .reduce(
+        (sum, p, i) => sum + Math.hypot(p.x - points[i].x, p.y - points[i].y),
+        0,
+      );
+    const start = this.cellSize * GHOST_CHEVRON_START;
+    const spacing = this.cellSize * GHOST_CHEVRON_SPACING;
+    const chevrons = pointsAlong(points, start, spacing).filter(
+      // Leave the last stretch bare, where the shot ended.
+      (_, i) => start + i * spacing < total - this.cellSize * 0.3,
+    );
+    for (const p of chevrons) {
+      const cos = Math.cos(p.angle);
+      const sin = Math.sin(p.angle);
+      const at = (along: number, across: number) => ({
+        x: p.x + along * cos - across * sin,
+        y: p.y + along * sin + across * cos,
+      });
+      const back1 = at(-size * 0.75, -size);
+      const tip = at(size * 0.5, 0);
+      const back2 = at(-size * 0.75, size);
+      g.moveTo(back1.x, back1.y).lineTo(tip.x, tip.y).lineTo(back2.x, back2.y);
+    }
+    g.stroke({
+      width: 1.5,
+      color: COLORS.beam,
+      alpha: 0.5,
+      cap: "round",
+      join: "round",
+    });
   }
 
   private advance(distance: number): void {
