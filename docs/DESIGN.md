@@ -110,6 +110,8 @@ levels 1 and 2 have one.
 - Progress is saved in the browser (localStorage), keyed by each level's
   stable id, so levels can be reordered or added without breaking saves.
   *Reset progress* erases it after a second confirming click or Enter.
+- The game's version (e.g. `v0.9`) is shown in small text at the bottom of the
+  title screen.
 
 ## Presentation
 

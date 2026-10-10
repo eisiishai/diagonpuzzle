@@ -128,11 +128,15 @@ commits.
 
 ## 5. Release to the website
 
-1. Build. The build runs every check and stops before creating `dist/` if one
-   fails.
+1. Commit everything first, then build. The build runs every check and stops
+   before creating `dist/` if one fails.
    ```bash
+   git status                   # must show no changes
    npm run build
    ```
+   Always build again after committing, even though the pre-commit check
+   already built `dist/`: that build ran before the commit and its version
+   tag existed, so it shows the previous version as "-dirty" (see below).
 2. Optionally test the built version locally:
    ```bash
    npx vite preview             # http://localhost:4173
@@ -155,16 +159,23 @@ The game works from any folder on the host (`base: "./"` in
 
 ### Which version is online
 
-The release is the version of the commit you built: check it with
-`git describe --tags` before uploading, and only upload from a clean working
-tree (`git status` shows no changes), so the build matches the tagged commit.
+The title screen shows the version the game was built from, so opening the
+website shows which version is online. It comes from `git describe --tags`
+at build time (`vite.config.ts`):
+
+| Shown | Meaning |
+|---|---|
+| `v0.9` | Built from the commit tagged v0.9, with no uncommitted changes: a proper release. |
+| `v0.8-dirty` | Built with uncommitted changes. Not a release; don't upload it. |
+| `v0.8-2-g1a2b3c4` | Built from a commit 2 commits after v0.8 (e.g. on a branch). |
+
+`git describe --tags` in the terminal shows the same value for the current
+working tree.
 
 ## Possible additions
 
 Not set up, and not needed at the current size:
 
-- **Version shown in the game**, e.g. on the title screen, from
-  `git describe --tags` at build time.
 - **`npm run deploy`** uploading `dist/` from WSL (e.g. with `rsync` or
   `lftp`), if releases become frequent. Depends on what the host supports.
 - **Browser smoke tests** (e.g. Playwright), if manual checks of the screens

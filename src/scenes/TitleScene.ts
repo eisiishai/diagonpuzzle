@@ -10,6 +10,7 @@ import {
 } from "../render/ui";
 import { isCompleted, isUnlocked, nextLevelIndex } from "../save/progress";
 import type { Progress } from "../save/progress";
+import { GAME_VERSION } from "../version";
 import type { Scene } from "./Scene";
 
 const GAME_TITLE = "Diagon Puzzle";
@@ -114,7 +115,16 @@ export class TitleScene extends Container implements Scene {
     y += reset.height + 28;
 
     this.soundToggle = this.addCentered(new SoundToggle(audio), y);
-    this.contentHeight = y + this.soundToggle.height;
+    y += this.soundToggle.height + 24;
+
+    const version = this.addCentered(
+      new Text({
+        text: GAME_VERSION,
+        style: { ...TEXT_STYLE, fontSize: 14, fill: UI_COLORS.dim },
+      }),
+      y,
+    );
+    this.contentHeight = y + version.height;
 
     this.refresh();
   }

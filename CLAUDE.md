@@ -20,8 +20,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   first-shot outcomes for every level (`scripts/levels.ts`, runs with tsx)
 - `npm run version:major` — make the next commit on main start a new major
   version (only when the user asks for a major version bump)
-- Deploy: `npm run build`, then copy the contents of `dist/` to the web host
-  (details in `docs/WORKFLOW.md`)
+- Deploy: commit, then `npm run build` from a clean working tree, then copy
+  the contents of `dist/` to the web host (details in `docs/WORKFLOW.md`).
+  The build embeds `git describe --tags` as the version shown on the title
+  screen; a build with uncommitted changes shows "-dirty".
 
 ## Code structure
 
