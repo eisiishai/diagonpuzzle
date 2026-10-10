@@ -86,6 +86,14 @@ levels 1 and 2 have one.
 | 2 | Up and over | 1 | Row 5 reaches the goal directly. Alternative: row 1 runs down column 3 and flips the mirrors at both ends; row 6 then runs back up it and round to the goal. |
 | 3 | Second try | 2 | The first shot from row 2 flips the mirror at the edge; the same row then reaches the goal. Teaches flipping. |
 | 4 | Set the stage | 2 | A shot from row 4 flips two mirrors in column 4, which the next shot from row 3 needs. A different row must set up the board. |
+| 5 | Down and around | 2 | Row 6 climbs column 1 and flips its corner mirrors; row 2 then runs down and around the board. |
+| 6 | Third time lucky | 3 | Row 5 twice turns the pellet a step further each time; row 2 then loops to the goal. First level needing three shots. |
+| 7 | Back and forth | 3 | Rows 4, 6, 4: two different setup shots, and a final shot that crosses its own path. |
+| 8 | Two-step | 4 | Rows 3, 5, 3, 5: each shot flips mirrors the other row's next shot needs. |
+
+Levels 5–8 were found by searching random boards with the solver, keeping
+ones with exactly one shortest solution, and choosing by readability and
+variety of solutions.
 
 ## Controls
 
@@ -107,6 +115,11 @@ levels 1 and 2 have one.
   is completed. Locked levels are shown but can't be selected.
 - Completed levels show the best (lowest) shot count. Completing a level again
   reports a new best or the existing one.
+- **Par** is a level's minimum shot count (`minShots`). It is shown in the
+  game header and in the level list. Completing a level in par earns a star
+  (★), shown in the level list; the list header shows stars earned out of the
+  total. The completion message says whether par was reached. Stars are
+  worked out from the saved best scores, so they need no extra saved data.
 - Progress is saved in the browser (localStorage), keyed by each level's
   stable id, so levels can be reordered or added without breaking saves.
   *Reset progress* erases it after a second confirming click or Enter.
@@ -122,6 +135,10 @@ levels 1 and 2 have one.
   background music.
 - Sound and music are currently placeholders synthesized in code (Web Audio
   API), to be replaced with real audio files later.
+- Screens shrink to fit the window, keeping a 16 px margin, so large levels
+  work on small screens and phones; they are never enlarged, which would blur
+  text. The game renders at the screen's pixel density, so text is sharp on
+  high-resolution displays. On touch screens, tapping an arrow fires.
 
 ## Future ideas (not yet designed)
 

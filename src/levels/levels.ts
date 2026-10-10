@@ -63,4 +63,60 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . # . . . .
     `,
   },
+  {
+    id: "down-and-around",
+    name: "Down and around",
+    minShots: 2,
+    grid: String.raw`
+      # . . . . . . .
+      / # . . . . / G
+      . . . . . / . .
+      . . . . / . . .
+      . . \ . . . . .
+      / . . . . . / .
+    `,
+  },
+  {
+    id: "third-time-lucky",
+    name: "Third time lucky",
+    minShots: 3,
+    grid: String.raw`
+      . / . . . . / .
+      \ . . # . . . .
+      . . . . . . . .
+      . . \ . . . . .
+      . . . . . . \ G
+      \ / . . . . . .
+      # . . . . / . .
+    `,
+  },
+  {
+    id: "back-and-forth",
+    name: "Back and forth",
+    minShots: 3,
+    grid: String.raw`
+      # . # . . . . . .
+      . . . . . . . . .
+      \ # . . . / \ / .
+      . . . \ . . . . .
+      . . . . . \ . \ .
+      . . . \ . . \ \ G
+      . . . . . . . . .
+    `,
+  },
+  {
+    id: "two-step",
+    name: "Two-step",
+    minShots: 4,
+    grid: String.raw`
+      . \ . . \ . . . .
+      . . . . . . . / G
+      . . . \ . / . . .
+      . . . . . \ / . .
+      . . . \ . . \ / .
+      . . . . # . / . .
+      . . . . . # . . .
+      . # . . . . . . .
+    `,
+  },
 ];

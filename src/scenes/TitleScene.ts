@@ -2,6 +2,7 @@ import { Container, Text } from "pixi.js";
 import type { GameAudio } from "../audio/GameAudio";
 import type { GameAction } from "../input/keyboard";
 import type { LevelDefinition } from "../levels/levels";
+import { fitToScreen } from "../render/fitToScreen";
 import {
   SoundToggle,
   TEXT_STYLE,
@@ -12,6 +13,7 @@ import { isCompleted, isUnlocked, nextLevelIndex } from "../save/progress";
 import type { Progress } from "../save/progress";
 import { GAME_VERSION } from "../version";
 import type { Scene } from "./Scene";
+import { STAR, earnsStar, levelListLabel } from "./scoreText";
 
 const GAME_TITLE = "Diagon Puzzle";
 const LEVEL_ROW_HEIGHT = 36;
@@ -74,9 +76,13 @@ export class TitleScene extends Container implements Scene {
     this.addItem(play, true, () => options.onStartLevel(next));
     y += play.height + 36;
 
+    const stars = levels.filter((level) => {
+      const best = progress.levels[level.id]?.bestShots;
+      return best !== undefined && earnsStar(best, level.minShots);
+    }).length;
     const header = this.addCentered(
       new Text({
-        text: "LEVELS",
+        text: `LEVELS  ·  ${STAR} ${stars}/${levels.length}`,
         style: { ...TEXT_STYLE, fontSize: 16, fill: UI_COLORS.dim },
       }),
       y,
@@ -86,11 +92,13 @@ export class TitleScene extends Container implements Scene {
     levels.forEach((level, index) => {
       const unlocked = isUnlocked(progress, levelIds, index);
       const best = progress.levels[level.id]?.bestShots;
-      const label = !unlocked
-        ? `🔒 ${index + 1}. ${level.name}`
-        : best === undefined
-          ? `${index + 1}. ${level.name}`
-          : `✓ ${index + 1}. ${level.name}  ·  best ${best} ${best === 1 ? "shot" : "shots"}`;
+      const label = levelListLabel(
+        index + 1,
+        level.name,
+        level.minShots,
+        unlocked,
+        best,
+      );
       const text = this.addCentered(
         new Text({ text: label, style: TEXT_STYLE }),
         y,
@@ -129,11 +137,17 @@ export class TitleScene extends Container implements Scene {
     this.refresh();
   }
 
+  /** Centres the scene in a screen of the given size, shrinking it to fit. */
   layout(screenWidth: number, screenHeight: number): void {
-    this.position.set(
-      Math.round(screenWidth / 2),
-      Math.max(16, Math.round((screenHeight - this.contentHeight) / 2)),
+    // Items are centred on x = 0, so the bounds start at a negative x.
+    const bounds = this.getLocalBounds();
+    const { scale, x, y } = fitToScreen(
+      { x: bounds.x, y: 0, width: bounds.width, height: this.contentHeight },
+      screenWidth,
+      screenHeight,
     );
+    this.scale.set(scale);
+    this.position.set(x, y);
   }
 
   handleAction(action: GameAction): void {

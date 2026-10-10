@@ -51,9 +51,11 @@ One level, playable with the mouse, plain graphics.
 
 ### Next
 
-- [ ] More levels built around flipping mirrors, with rising difficulty
-- [ ] Par scores: show each level's minimum shot count and reward matching it
-- [ ] Scale the game to fit the window, so larger levels work on small
+- [x] More levels built around flipping mirrors, with rising difficulty
+  (levels 5–8: 2, 3, 3 and 4 shots)
+- [x] Par scores: show each level's minimum shot count and reward matching it
+  with a star
+- [x] Scale the game to fit the window, so larger levels work on small
   screens and phones (touch input already works through pointer events)
 
 ### Mechanic ideas

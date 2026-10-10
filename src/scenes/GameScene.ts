@@ -5,6 +5,7 @@ import type { ShotOutcome } from "../game/simulate";
 import type { Board } from "../game/types";
 import type { GameAction } from "../input/keyboard";
 import { BoardView } from "../render/BoardView";
+import { fitToScreen } from "../render/fitToScreen";
 import {
   SoundToggle,
   TEXT_STYLE,
@@ -12,6 +13,7 @@ import {
   makeClickable,
 } from "../render/ui";
 import type { Scene } from "./Scene";
+import { completionMessage } from "./scoreText";
 
 const CELL_SIZE = 64;
 const TEXT_HEIGHT = 40;
@@ -33,6 +35,8 @@ export interface GameSceneOptions {
   levelNumber: number;
   levelCount: number;
   levelName: string;
+  /** Shots needed for a star: the level's minimum shot count. */
+  par: number;
   audio: GameAudio;
   /** Records a completion; returns the level's best shot count before it, if any. */
   onComplete: (shots: number) => { previousBest?: number };
@@ -123,14 +127,20 @@ export class GameScene extends Container implements Scene {
     this.boardView.setSelectedRow(this.session.selectedRow);
   }
 
-  /** Centres the scene in a screen of the given size. */
+  /** Centres the scene in a screen of the given size, shrinking it to fit. */
   layout(screenWidth: number, screenHeight: number): void {
-    const width = this.boardView.contentWidth;
-    const height = this.nextButton.y + TEXT_HEIGHT;
-    this.position.set(
-      Math.round((screenWidth - width) / 2),
-      Math.round((screenHeight - height) / 2),
+    const { scale, x, y } = fitToScreen(
+      {
+        x: 0,
+        y: 0,
+        width: this.boardView.contentWidth,
+        height: this.nextButton.y + TEXT_HEIGHT,
+      },
+      screenWidth,
+      screenHeight,
     );
+    this.scale.set(scale);
+    this.position.set(x, y);
   }
 
   handleAction(action: GameAction): void {
@@ -195,7 +205,11 @@ export class GameScene extends Container implements Scene {
       audio.play("goal");
       this.boardView.setSelectedRow(null);
       const { previousBest } = this.options.onComplete(shots);
-      this.messageText.text = `Level complete in ${shotCount(shots)}!${bestText(shots, previousBest)} Press Enter to continue.`;
+      this.messageText.text = completionMessage(
+        shots,
+        this.options.par,
+        previousBest,
+      );
       this.nextButton.visible = true;
       return;
     }
@@ -215,20 +229,6 @@ export class GameScene extends Container implements Scene {
   }
 
   private updateShots(): void {
-    this.shotsText.text = `Shots: ${this.session.shots}`;
+    this.shotsText.text = `Shots: ${this.session.shots}  ·  Par: ${this.options.par}`;
   }
-}
-
-function shotCount(shots: number): string {
-  return shots === 1 ? "1 shot" : `${shots} shots`;
-}
-
-function bestText(shots: number, previousBest: number | undefined): string {
-  if (previousBest === undefined) {
-    return "";
-  }
-  if (shots < previousBest) {
-    return ` New best! (was ${previousBest})`;
-  }
-  return ` Best: ${shotCount(previousBest)}.`;
 }

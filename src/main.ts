@@ -18,7 +18,15 @@ const PROGRESS_STORAGE_KEY = "progress";
 
 (async () => {
   const app = new Application();
-  await app.init({ background: "#161a24", resizeTo: window, antialias: true });
+  await app.init({
+    background: "#161a24",
+    resizeTo: window,
+    antialias: true,
+    // Render at the screen's pixel density, so text stays sharp on phones and
+    // high-resolution displays.
+    resolution: window.devicePixelRatio,
+    autoDensity: true,
+  });
   document.getElementById("pixi-container")!.appendChild(app.canvas);
 
   // Browsers only allow audio after a user gesture. Registered before the
@@ -67,6 +75,7 @@ const PROGRESS_STORAGE_KEY = "progress";
           levelNumber: index + 1,
           levelCount: LEVELS.length,
           levelName: level.name,
+          par: level.minShots,
           audio,
           onComplete: (shots) => {
             const result = recordCompletion(progress, level.id, shots);
