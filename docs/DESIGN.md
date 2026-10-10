@@ -199,15 +199,18 @@ levels 1 and 2 have one.
 | 14 | Rubble run | 5 | Goal needs 2 hits. Rows 4, 2, 3, 4, 3: a miss sets up the mirrors, row 2 breaks a cracked wall, and rows 3 and 4 take turns reaching the goal. |
 | 15 | Your move | 1 | Introduces the player-placed mirror (`/`). Row 4 runs along the bottom; the mirror in the corner below the goal turns it up into it. The bonus target needs the mirror somewhere else: row 1, then the mirror at (1,2), then row 2. |
 | 16 | Double duty | 3 | Player mirror `/`, used twice. Row 2 first flips the mirror at (2,2); with the mirror placed at (3,4), row 2 then runs down and round, bouncing off it and flipping it; row 4 turns down at the flipped mirror and runs to the goal. The bonus target needs the mirror placed later: rows 5, 5, then the mirror at (5,3), then rows 1, 1. |
+| 17 | Rebuild | 4 | Breakable walls, player mirror (`/`) and a two-hit goal together. Row 3 breaks the cracked wall at (4,5), and the mirror goes into the gap it leaves; row 5 then climbs to the goal, row 3 swings the mirrors back, and row 5 hits the goal again. The bonus target sits behind the cracked walls at the top: rows 3, 3, 5, 5, then the mirror at (5,4) and row 2. |
 
 Levels 15–16 were found with `npm run generate -- --player-mirror slash`
 (16 with `--place-later`), which keeps only boards that can't reach par
-without the mirror; the tests check that too. Both have a unique shortest
-solution.
+without the mirror; the tests check that too. Level 17 was found with
+`--player-mirror slash --breakable 2 --goal-hits 2`, which also needs a
+cracked wall broken. All three have a unique shortest solution.
 
 Levels 11–14 were found with `npm run generate -- --breakable N`, which
-keeps only boards that can't be solved with their breakable walls made
-solid; the tests check that too.
+keeps only boards that can't reach par with their breakable walls made
+solid; the tests check that too. Levels 11–14 can't be solved at all that
+way; level 17 can, in 6 shots, using the player mirror.
 
 Levels 5–10 were found by searching random boards with the solver, keeping
 ones with exactly one shortest solution, and choosing by readability and
@@ -415,7 +418,7 @@ every variant), so the names below are its variant names.
 | Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
 | Levels 1–4 | **Pulse**: driving synthwave with a soft beat, 104 BPM |
 | Levels 5–8 | **Glass garden**: a slow, dark ambient drone only (no melody), so it stays out of the way on the harder levels |
-| Levels 9–16 | **Night lab**, as on the title screen |
+| Levels 9–17 | **Night lab**, as on the title screen |
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different

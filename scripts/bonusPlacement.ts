@@ -176,14 +176,6 @@ export function findPlacements(
   const placements: Placement[] = [];
 
   const evaluate = (board: Board, changes: CellChange[]) => {
-    if (changes.length > 0) {
-      if (solve(board, minShots - 1, goalHits, playerMirror) !== null) {
-        return;
-      }
-      if (solutionCount(board) > parSolutions) {
-        return;
-      }
-    }
     // The par solution must still complete the level; note where it goes.
     const used = new Set<string>();
     let current = board;
@@ -206,32 +198,49 @@ export function findPlacements(
       return;
     }
 
+    // Cells for the bonus target first: most changed boards have none, and
+    // checking that a change keeps par is the slow part.
     const entries = firstEntries(board, bonusShots, goalHits, playerMirror);
+    const cells: (Position & { routes: number })[] = [];
     board.cells.forEach((row, y) =>
       row.forEach((cell, x) => {
         const entry = entries.get(`${x},${y}`);
         if (
-          cell !== "empty" ||
-          used.has(`${x},${y}`) ||
-          entry?.shots !== bonusShots
+          cell === "empty" &&
+          !used.has(`${x},${y}`) &&
+          entry?.shots === bonusShots
         ) {
-          return;
+          cells.push({ x, y, routes: entry.routes });
         }
-        const withBonus = withCell(board, { x, y, cell: "bonus" });
-        placements.push({
-          changes,
-          bonus: { x, y },
-          board: withBonus,
-          routes: entry.routes,
-          route:
-            solveBonusMoves(
-              withBonus,
-              { x, y },
-              { maxShots: bonusShots, goalHits, playerMirror },
-            ) ?? [],
-        });
       }),
     );
+    if (cells.length === 0) {
+      return;
+    }
+    if (changes.length > 0) {
+      if (solve(board, minShots - 1, goalHits, playerMirror) !== null) {
+        return;
+      }
+      if (solutionCount(board) > parSolutions) {
+        return;
+      }
+    }
+
+    for (const { x, y, routes } of cells) {
+      const withBonus = withCell(board, { x, y, cell: "bonus" });
+      placements.push({
+        changes,
+        bonus: { x, y },
+        board: withBonus,
+        routes,
+        route:
+          solveBonusMoves(
+            withBonus,
+            { x, y },
+            { maxShots: bonusShots, goalHits, playerMirror },
+          ) ?? [],
+      });
+    }
   };
 
   const changeable: Position[] = [];

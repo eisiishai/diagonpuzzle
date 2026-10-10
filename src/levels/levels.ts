@@ -275,4 +275,20 @@ export const LEVELS: readonly LevelDefinition[] = [
       . \ / . . G
     `,
   },
+  {
+    id: "rebuild",
+    name: "Rebuild",
+    minShots: 4,
+    goalHits: 2,
+    bonusShots: 5,
+    playerMirror: "mirrorSlash",
+    music: "nightLab",
+    grid: String.raw`
+      # . % * / .
+      \ . # / % .
+      . . . \ . G
+      \ . . . . .
+      . . . % \ .
+    `,
+  },
 ];

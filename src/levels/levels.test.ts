@@ -17,12 +17,14 @@ it.each(LEVELS_WITH_SETUP_ROUTE)("%s has a two-shot setup route", (id) => {
 });
 
 // Levels built around breakable walls: with every breakable wall solid,
-// they can't be solved at all (within a generous number of shots).
+// par is out of reach (levels 11-14 can't be solved at all that way; a
+// player mirror makes a longer way round possible on level 17).
 const LEVELS_NEEDING_BREAKS = [
   "breakthrough",
   "stone-by-stone",
   "crack-and-double",
   "rubble-run",
+  "rebuild",
 ];
 
 it.each(LEVELS_NEEDING_BREAKS)("%s needs a breakable wall broken", (id) => {
@@ -35,9 +37,9 @@ it.each(LEVELS_NEEDING_BREAKS)("%s needs a breakable wall broken", (id) => {
       row.map((cell) => (cell === "breakable" ? "wall" : cell)),
     ),
   };
-  const goalHits = level!.goalHits ?? 1;
-  expect(solve(board, level!.minShots, goalHits)).not.toBeNull();
-  expect(solve(solid, 8, goalHits)).toBeNull();
+  const { goalHits = 1, playerMirror } = level!;
+  expect(solve(board, level!.minShots, goalHits, playerMirror)).not.toBeNull();
+  expect(solve(solid, level!.minShots, goalHits, playerMirror)).toBeNull();
 });
 
 // Levels that give the player a mirror are built around it: without it,
