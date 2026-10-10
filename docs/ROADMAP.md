@@ -91,7 +91,7 @@ with flipping mirrors, before it is built.
     mechanical
 - [x] Show shot outcomes by shape or icon as well as colour (colour-blind
   players)
-- [ ] Small ambient animations (e.g. a gently pulsing goal crystal, a faint
+- [x] Small ambient animations (e.g. a gently pulsing goal crystal, a faint
   moving background grid)
 
 ## Engineering track

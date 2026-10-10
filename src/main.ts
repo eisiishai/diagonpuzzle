@@ -14,6 +14,7 @@ import {
   recordCompletion,
   serializeProgress,
 } from "./save/progress";
+import { BackgroundGrid } from "./render/BackgroundGrid";
 import { BACKGROUND_CSS, FONT_FACES } from "./render/theme";
 import { readStorage, removeStorage, writeStorage } from "./save/storage";
 import { GameScene } from "./scenes/GameScene";
@@ -50,7 +51,13 @@ const PROGRESS_STORAGE_KEY = "progress";
 
   let progress = parseProgress(readStorage(PROGRESS_STORAGE_KEY));
   let scene: Scene | undefined;
-  const layout = () => scene?.layout(window.innerWidth, window.innerHeight);
+  // The drifting grid stays at the back; scenes are added on top of it.
+  const background = new BackgroundGrid(app.renderer.resolution);
+  app.stage.addChild(background);
+  const layout = () => {
+    background.resize(window.innerWidth, window.innerHeight);
+    scene?.layout(window.innerWidth, window.innerHeight);
+  };
 
   // Deferred: a switch is usually requested from the old scene's own pointer
   // or key event, which should finish before that scene is destroyed.
@@ -109,5 +116,8 @@ const PROGRESS_STORAGE_KEY = "progress";
   showTitle();
   window.addEventListener("resize", layout);
   bindKeyboard((action) => scene?.handleAction(action));
-  app.ticker.add((ticker) => scene?.update(ticker.deltaMS));
+  app.ticker.add((ticker) => {
+    background.update(ticker.deltaMS);
+    scene?.update(ticker.deltaMS);
+  });
 })();

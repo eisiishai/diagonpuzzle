@@ -3,6 +3,7 @@ import type { ShotResult } from "../game/simulate";
 import type { Board, CellType } from "../game/types";
 import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
+import { prefersReducedMotion, pulse } from "./ambient";
 import { COLORS, createBloom } from "./theme";
 
 const MIRROR_TURN_MS = 150;
@@ -42,6 +43,9 @@ export class BoardView extends Container {
   private readonly launchers: Graphics[] = [];
   private readonly animator: PelletAnimator;
   private turns: MirrorTurn[] = [];
+  private selectedRow: number | null = null;
+  /** Time for the ambient pulses of the goal and the selected emitter. */
+  private ambientMs = 0;
 
   constructor(board: Board, cellSize: number, handlers: BoardViewHandlers) {
     super();
@@ -103,9 +107,11 @@ export class BoardView extends Container {
 
   /** Highlights the launcher and board row of `row`, or nothing if null. */
   setSelectedRow(row: number | null): void {
-    this.launchers.forEach((launcher, index) =>
-      this.drawLauncher(launcher, index === row),
-    );
+    this.selectedRow = row;
+    this.launchers.forEach((launcher, index) => {
+      this.drawLauncher(launcher, index === row);
+      launcher.alpha = 1;
+    });
     this.rowHighlight.visible = row !== null;
     if (row !== null) {
       this.rowHighlight.y = row * this.cellSize;
@@ -126,6 +132,31 @@ export class BoardView extends Container {
   update(deltaMs: number): void {
     this.animator.update(deltaMs);
     this.updateTurns(deltaMs);
+    this.updateAmbient(deltaMs);
+  }
+
+  /**
+   * Goal crystals breathe (grow slightly and glow), and the selected
+   * emitter's glow pulses. Still when the player prefers reduced motion.
+   */
+  private updateAmbient(deltaMs: number): void {
+    if (prefersReducedMotion()) {
+      return;
+    }
+    this.ambientMs += deltaMs;
+    const breath = pulse(this.ambientMs);
+    this.cells.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        if (cell === "goal") {
+          const view = this.cellViews[y][x];
+          view.scale.set(1 + 0.07 * breath);
+          view.alpha = 0.8 + 0.2 * breath;
+        }
+      }),
+    );
+    if (this.selectedRow !== null) {
+      this.launchers[this.selectedRow].alpha = 0.75 + 0.25 * breath;
+    }
   }
 
   /** Changes a cell; a mirror flipping to the other mirror rotates into place. */
@@ -204,6 +235,8 @@ export class BoardView extends Container {
     const half = this.cellSize / 2;
     g.clear();
     g.rotation = 0;
+    g.scale.set(1);
+    g.alpha = 1;
 
     switch (cell) {
       case "empty":

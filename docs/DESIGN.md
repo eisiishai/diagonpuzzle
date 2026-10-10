@@ -197,6 +197,16 @@ Text colours keep at least 4.5:1 contrast on the background.
 - Mirrors turn 90° in 150 ms when hit; the beam travels about 9 cells a
   second.
 - Celebrations use star-shaped particles in the star and success colours.
+- Ambient motion, kept slow and subtle so it never distracts from puzzling:
+  the goal crystal breathes (grows about 7 % and brightens, every 2.4 s), the
+  selected emitter's glow pulses at the same pace, the crystal under the
+  title pulses like the goal, and a faint grid behind every screen drifts
+  very slowly down and to the right (1.5 px a second: one grid square in
+  about half a minute). Its lines are one screen pixel wide, on the screen's
+  pixel grid, and it moves in whole screen pixels, so it stays crisp without
+  shimmering.
+- When the player's system asks for reduced motion, all ambient motion stops;
+  the pieces stay at rest.
 
 ### Readability
 

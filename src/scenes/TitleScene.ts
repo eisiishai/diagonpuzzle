@@ -2,6 +2,7 @@ import { Container, Graphics, Text } from "pixi.js";
 import type { GameAudio } from "../audio/GameAudio";
 import type { GameAction } from "../input/keyboard";
 import type { LevelDefinition } from "../levels/levels";
+import { prefersReducedMotion, pulse } from "../render/ambient";
 import { fitToScreen } from "../render/fitToScreen";
 import { COLORS, createBloom, createGlow, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
@@ -39,6 +40,8 @@ export class TitleScene extends Container implements Scene {
   private readonly resetItem: MenuItem;
   private readonly audioControls: AudioControls;
   private readonly contentHeight: number;
+  private readonly titleCrystal: Graphics;
+  private ambientMs = 0;
   private selected = 0;
   private resetArmed = false;
 
@@ -53,7 +56,9 @@ export class TitleScene extends Container implements Scene {
     title.filters = [createGlow(COLORS.beam, 1.5)];
     this.addChild(title);
     y += title.height + 10;
-    this.addChild(titleBeam(title.width, y));
+    const beam = titleBeam(title.width, y);
+    this.titleCrystal = beam.crystal;
+    this.addChild(beam.view);
     y += 40;
 
     const next = nextLevelIndex(progress, levelIds);
@@ -193,7 +198,16 @@ export class TitleScene extends Container implements Scene {
     }
   }
 
-  update(): void {}
+  /** The title crystal pulses like the goal in the game. */
+  update(deltaMs: number): void {
+    if (prefersReducedMotion()) {
+      return;
+    }
+    this.ambientMs += deltaMs;
+    const breath = pulse(this.ambientMs);
+    this.titleCrystal.scale.set(1 + 0.1 * breath);
+    this.titleCrystal.alpha = 0.8 + 0.2 * breath;
+  }
 
   /** Adds a centred menu button at `y`; keyboard selection follows the list. */
   private addItem(button: Button, y: number, activate: () => void): MenuItem {
@@ -243,30 +257,29 @@ export class TitleScene extends Container implements Scene {
 
 /**
  * A short laser beam under the title, ending in a goal crystal: the game's
- * idea in one line. Centred on x = 0 at height `y`.
+ * idea in one line. Centred on x = 0 at height `y`. The crystal is returned
+ * separately so it can pulse like the goal in the game.
  */
-function titleBeam(width: number, y: number): Container {
+function titleBeam(
+  width: number,
+  y: number,
+): { view: Container; crystal: Graphics } {
   const half = width / 2;
-  const crystal = 11;
-  const end = half - crystal * 2;
-  const g = new Graphics()
+  const size = 11;
+  const end = half - size * 2;
+  const beam = new Graphics()
     .moveTo(-half, y)
     .lineTo(end, y)
     .stroke({ width: 10, color: COLORS.beam, alpha: 0.4, cap: "round" })
     .moveTo(-half, y)
     .lineTo(end, y)
-    .stroke({ width: 2, color: COLORS.beamCore, cap: "round" })
-    .poly([
-      half - crystal,
-      y - crystal,
-      half,
-      y,
-      half - crystal,
-      y + crystal,
-      half - crystal * 2,
-      y,
-    ])
+    .stroke({ width: 2, color: COLORS.beamCore, cap: "round" });
+  const crystal = new Graphics()
+    .poly([0, -size, size, 0, 0, size, -size, 0])
     .fill(COLORS.success);
-  g.filters = [createBloom()];
-  return g;
+  crystal.position.set(half - size, y);
+  const view = new Container();
+  view.addChild(beam, crystal);
+  view.filters = [createBloom()];
+  return { view, crystal };
 }
