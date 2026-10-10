@@ -50,7 +50,9 @@ src/
   input/        mouse/keyboard → game actions
   audio/        synthesized sound (Web Audio): synth.ts building blocks,
                 effects.ts, music.ts tracks, GameAudio.ts mixing and playback
-  save/         saved progress (pure rules) and localStorage helpers
+  save/         saved progress: pure rules (progress.ts), GameProgress (the
+                game's progress and how play changes it, tested) and
+                localStorage helpers
   scenes/       TitleScene and GameScene; main.ts switches between them
 scripts/        development tools run with tsx (not part of the game)
 ```
@@ -63,6 +65,9 @@ scripts/        development tools run with tsx (not part of the game)
   renderer only animates that result.
 - Scenes hold no game rules: a level's state and what the player may do live
   in `LevelSession` (tested); `GameScene` calls it and displays the result.
+  Likewise `main.ts` holds no progress rules: what completions, bonus
+  targets, skips and level time change lives in `GameProgress` (tested);
+  `main.ts` builds scenes and saves.
 - Each cell type defines its behavior as "pellet enters moving in direction D →
   result". New block types are added there, not as special cases in the
   simulation loop.

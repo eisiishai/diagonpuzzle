@@ -4,6 +4,7 @@ import type { GameAudio } from "../audio/GameAudio";
 import { LevelSession } from "../game/LevelSession";
 import { canPlaceAt, placementPositions } from "../game/placement";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
+import type { BonusReport, CompletionReport } from "../save/GameProgress";
 import { earnsStar } from "../save/progress";
 import type { Board, MirrorType, Position } from "../game/types";
 import type { GameAction } from "../input/keyboard";
@@ -47,26 +48,6 @@ const OUTCOME_MESSAGES: Record<
   loop: "The pellet got stuck in a loop.",
 };
 
-export interface CompletionResult {
-  /** The level's best shot count before this completion, if any. */
-  previousBest?: number;
-  /** True if this completion earned the last star: every level is at par. */
-  allLevelsAtPar: boolean;
-  /** Skips left after one was given back for this, if one was. */
-  skipReturned?: number;
-}
-
-export interface BonusResult {
-  /** True if this hit collected the level's last bonus target for the first time. */
-  newlyGolden: boolean;
-  /** The level's bonus targets collected so far, including this one. */
-  collected: number;
-  /** True if this was the last bonus target of the whole game. */
-  allBonuses: boolean;
-  /** Skips left after one was given back for this, if one was. */
-  skipReturned?: number;
-}
-
 export interface GameSceneOptions {
   /** The level's starting board. */
   board: Board;
@@ -94,10 +75,10 @@ export interface GameSceneOptions {
    */
   bonus: { shown: boolean; total: number; collected: number };
   audio: GameAudio;
-  /** Records a completion; returns the level's best shot count before it, if any. */
-  onComplete: (shots: number) => CompletionResult;
-  /** Records a bonus target hit at board cell (x, y). */
-  onBonus: (x: number, y: number) => BonusResult;
+  /** Records a completion in `shots`; returns what it earned. */
+  onComplete: (shots: number) => CompletionReport;
+  /** Records a bonus target hit at board cell (x, y); returns what it earned. */
+  onBonus: (x: number, y: number) => BonusReport;
   /** Called when the player continues after completing the level. */
   onNext: () => void;
   /** Called when the player leaves for the title screen. */

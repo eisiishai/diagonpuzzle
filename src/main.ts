@@ -8,25 +8,8 @@ import { bonusPositions, withBonuses } from "./game/bonus";
 import { bindKeyboard } from "./input/keyboard";
 import { LEVELS } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
-import {
-  EMPTY_PROGRESS,
-  collectedBonuses,
-  completesAllBonuses,
-  completesAllPar,
-  earnsStar,
-  hasAllBonuses,
-  MAX_SKIPS,
-  addLevelTime,
-  isCompleted,
-  isSkipped,
-  returnSkip,
-  spendSkip,
-  parseProgress,
-  recordBonus,
-  recordCompletion,
-  recordSkip,
-  serializeProgress,
-} from "./save/progress";
+import { GameProgress } from "./save/GameProgress";
+import { MAX_SKIPS, parseProgress, serializeProgress } from "./save/progress";
 import type { LevelSummary } from "./save/progress";
 import { BackgroundGrid } from "./render/BackgroundGrid";
 import { vignetteTexture } from "./render/glow";
@@ -77,7 +60,12 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
   window.addEventListener("keydown", () => audio.unlock());
   setButtonTapSound(() => audio.play("click"));
 
-  let progress = parseProgress(readStorage(PROGRESS_STORAGE_KEY));
+  const game = new GameProgress(
+    LEVEL_SUMMARIES,
+    parseProgress(readStorage(PROGRESS_STORAGE_KEY)),
+  );
+  const save = () =>
+    writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(game.progress));
   let scene: Scene | undefined;
   // The drifting grid stays at the back; scenes are added on top of it.
   const background = new BackgroundGrid(app.renderer.resolution);
@@ -120,124 +108,77 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
       return new TitleScene({
         levels: LEVELS,
         summaries: LEVEL_SUMMARIES,
-        progress,
+        progress: game.progress,
         audio,
         onStartLevel: startLevel,
         onResetProgress: () => {
-          progress = EMPTY_PROGRESS;
+          game.reset();
           removeStorage(PROGRESS_STORAGE_KEY);
           showTitle();
         },
       });
     }, "left");
 
-  /**
-   * Gives back a used skip, if any were used; returns the skips left then,
-   * or undefined if none was given back.
-   */
-  const giveBackSkip = (): number | undefined => {
-    const after = returnSkip(progress);
-    if (after === progress) {
-      return undefined;
-    }
-    progress = after;
-    return progress.skipsLeft;
-  };
-
-  /**
-   * Time on level screens earns a skip back when none are left. Saved every
-   * few seconds rather than every frame.
-   */
-  const SAVE_WAIT_EVERY_MS = 5000;
+  /** Time on level screens counts towards earning a skip back. */
   const countLevelTime = (gameScene: GameScene, deltaMs: number) => {
-    const before = progress;
-    progress = addLevelTime(progress, deltaMs);
-    if (progress.skipsLeft !== before.skipsLeft) {
-      gameScene.setSkipsLeft(progress.skipsLeft);
-      writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
-    } else if (
-      Math.floor(progress.skipWaitMs / SAVE_WAIT_EVERY_MS) !==
-      Math.floor(before.skipWaitMs / SAVE_WAIT_EVERY_MS)
-    ) {
-      writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
+    const { skipsChanged, save: shouldSave } = game.addLevelTime(deltaMs);
+    if (skipsChanged) {
+      gameScene.setSkipsLeft(game.progress.skipsLeft);
+    }
+    if (shouldSave) {
+      save();
     }
   };
 
   const startLevel = (index: number) => {
     const level = LEVELS[index];
-    const summary = LEVEL_SUMMARIES[index];
     const isLastLevel = index === LEVELS.length - 1;
-    const skipLevel = (skipped: typeof progress) => {
-      progress = skipped;
-      writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
-      if (isLastLevel) {
-        showTitle();
-      } else {
-        startLevel(index + 1);
-      }
-    };
+    const goToNext = () => (isLastLevel ? showTitle() : startLevel(index + 1));
     switchTo(() => {
       audio.setMusic(level.music);
-      // Bonus targets appear on visits after the level was completed at
-      // par, never on the visit that first reaches par.
       const fullBoard = parseLevel(level.grid);
       const bonuses = bonusPositions(fullBoard);
-      const best = progress.levels[level.id]?.bestShots;
-      const bonusesShown =
-        best !== undefined && earnsStar(best, level.minShots);
+      const start = game.levelStart(index);
       return new GameScene({
-        // Collected bonus targets are shown too, so they can be replayed.
-        board: withBonuses(fullBoard, () => bonusesShown),
+        board: withBonuses(fullBoard, () => start.bonusesShown),
         levelNumber: index + 1,
         levelCount: LEVELS.length,
         levelName: level.name,
         par: level.minShots,
         goalHits: level.goalHits ?? 1,
         playerMirror: level.playerMirror,
-        passedBefore:
-          isCompleted(progress, level.id) || isSkipped(progress, level.id),
-        skipsLeft: progress.skipsLeft,
+        passedBefore: start.passedBefore,
+        skipsLeft: start.skipsLeft,
         maxSkips: MAX_SKIPS,
         bonus: {
-          shown: bonusesShown,
+          shown: start.bonusesShown,
           total: bonuses.length,
-          collected: collectedBonuses(progress, level.id).length,
+          collected: start.bonusesCollected,
         },
         audio,
         onComplete: (shots) => {
-          const before = progress;
-          const result = recordCompletion(progress, level.id, shots);
-          progress = result.progress;
-          // The first completion of a level gives back a used skip.
-          const skipReturned =
-            result.previousBest === undefined ? giveBackSkip() : undefined;
-          writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
-          return {
-            previousBest: result.previousBest,
-            skipReturned,
-            allLevelsAtPar: completesAllPar(before, progress, LEVELS),
-          };
+          const report = game.complete(index, shots);
+          save();
+          return report;
         },
         onBonus: (x, y) => {
-          const before = progress;
-          const wasGolden = hasAllBonuses(progress, summary);
           const bonus = bonuses.findIndex((p) => p.x === x && p.y === y);
-          progress = recordBonus(progress, level.id, bonus);
-          // So does collecting a bonus target for the first time.
-          const skipReturned = progress !== before ? giveBackSkip() : undefined;
-          writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(progress));
-          return {
-            skipReturned,
-            newlyGolden: !wasGolden && hasAllBonuses(progress, summary),
-            collected: collectedBonuses(progress, level.id).length,
-            allBonuses: completesAllBonuses(before, progress, LEVEL_SUMMARIES),
-          };
+          const report = game.collectBonus(index, bonus);
+          save();
+          return report;
         },
-        onNext: () => (isLastLevel ? showTitle() : startLevel(index + 1)),
+        onNext: goToNext,
         onMenu: showTitle,
-        onUseSkip: () => skipLevel(spendSkip(progress, level.id)),
-        // The hidden debug skip uses none of the visible skips.
-        onSkip: () => skipLevel(recordSkip(progress, level.id)),
+        onUseSkip: () => {
+          game.useSkip(index);
+          save();
+          goToNext();
+        },
+        onSkip: () => {
+          game.hiddenSkip(index);
+          save();
+          goToNext();
+        },
       });
     });
   };

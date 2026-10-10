@@ -203,7 +203,7 @@ the polyline rule and is checked on a phone. In suggested order:
   solution, setup routes and first-shot outcome per row (runs with `tsx`)
 - [x] Level generator, `npm run generate`: searches random boards for a given
   par and size, preferring a unique shortest solution
-- [ ] Move the progress rules out of `main.ts` into a pure class in
+- [x] Move the progress rules out of `main.ts` into a pure class in
   `src/save/` with tests, as `LevelSession` did for `GameScene`: when a
   skip is given back (first completion, first bonus target), when bonus
   targets are shown (after an earlier visit reached par), "newly golden",
