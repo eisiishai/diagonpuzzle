@@ -1,7 +1,8 @@
 # Workflow
 
-How to develop, check, commit, back up and release the game. Every step is a
-command run by hand; nothing runs automatically.
+How to develop, check, commit, back up and release the game. Committing on
+`main` runs the checks, tags the version and pushes to the backup through git
+hooks; every other step is a command run by hand.
 
 ## Setup on a new machine
 
@@ -86,8 +87,9 @@ git commit -m "Short summary of the change"
   ```
 - Update `docs/ROADMAP.md` checkboxes and `docs/DESIGN.md` in the same commit
   as the change they describe.
-- Each commit on `main` is tagged with the next version automatically; git
-  prints e.g. `Tagged v0.6.` See *Versions* below.
+- Each commit on `main` is tagged with the next version and pushed to the
+  backup automatically; git prints e.g. `Tagged v0.6.` and `Pushed to
+  backup.` See *Versions* and *4. Back up* below.
 
 ## Versions
 
@@ -106,8 +108,8 @@ Every commit on `main` gets a version tag, `vMAJOR.MINOR`, from the
 - Merging an experiment branch into `main` tags the result like a commit.
   Commits on other branches are not tagged.
 - `git commit --amend` moves the tag to the amended commit instead of using a
-  new version. If that tag was already pushed, update the backup with
-  `git push --force backup vX.Y`.
+  new version. If the commit was already pushed, see "Amending a pushed
+  commit" in section 4.
 - Rebasing does not tag anything, and existing tags stay on the old commits.
   Avoid rewriting history on `main`.
 - `git describe --tags` shows the version of the current commit.
@@ -122,15 +124,65 @@ Tags v0.1–v0.4 were created by hand before this, as lightweight tags, which
 
 ## 4. Back up
 
+Each commit on `main` is pushed to the backup automatically, right after it
+is tagged (the `post-commit` and `post-merge` hooks run
+`.githooks/push-backup`). The `backup` remote is a bare repository on another
+disk: `<backup repo>`. Version tags are pushed
+along with the commits. Commits on other branches are not pushed.
+
+The automatic push never forces and never stops a commit. If it can't push,
+it prints a warning starting with `⚠ Backup not updated` and the commit stays
+local:
+
+- **Disk not available** (the backup disk not connected or not mounted): push later with
+  `git push`, or just make the next commit once the disk is back.
+- **Push rejected**: the backup has a commit that local `main` doesn't, which
+  happens after amending a pushed commit (see below). Every later commit
+  repeats the warning until this is fixed.
+
+`git status` shows how many commits are not yet pushed ("ahead N").
+
+To turn the automatic push off, for example when working without the backup
+disk for a while: `git config diagonpuzzle.autoPush false` (back on with
+`git config --unset diagonpuzzle.autoPush`). Then push by hand at the end of
+every work session with `git push`.
+
+### Amending a pushed commit
+
+Prefer to amend only commits that are not pushed yet. After amending a pushed
+commit, the backup still has the old commit and the old tag position, and
+the automatic push is rejected. Replace them in the backup by hand, naming
+the moved tag:
+
 ```bash
-git push                         # to the backup remote
+git push --force backup main vX.Y
 ```
 
-The `backup` remote is a bare repository on another disk:
-`<backup repo>`. Only pushed commits are backed
-up; push at the end of every work session. `git status` shows how many commits
-are not yet pushed ("ahead N"). Version tags are pushed along with the
-commits.
+### Checking the backup
+
+```bash
+# 1. Nothing unpushed: shows "## main...backup/main" without [ahead N].
+git fetch backup && git status -sb
+
+# 2. All branches and tags match the backup: no output.
+diff <(git for-each-ref --format='%(objectname) %(refname)' refs/heads refs/tags | sort) \
+     <(git ls-remote --heads --tags backup | grep -v '\^{}' | awk '{print $1, $2}' | sort)
+
+# 3. The backup's files are intact: no output.
+git -C <backup repo> fsck --full
+```
+
+Now and then, test a real restore: clone the backup into a temporary folder
+and build it.
+
+```bash
+git clone <backup repo> /tmp/restore-test
+cd /tmp/restore-test && npm ci && npm run build
+cd ~ && rm -rf /tmp/restore-test
+```
+
+The backup doesn't include uncommitted work, stashes, local git settings
+(`.git/config`) or git-ignored files.
 
 ## 5. Release to the website
 

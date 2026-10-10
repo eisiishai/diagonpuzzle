@@ -1,0 +1,44 @@
+#!/bin/sh
+# Run by post-commit: pushes main and its version tags to the backup remote.
+# Never forces and never stops anything: if the push can't be done, it prints
+# a warning and the commit stays local until the next push.
+# Turn off with `git config diagonpuzzle.autoPush false`. See docs/WORKFLOW.md.
+
+RELEASE_BRANCH=main
+REMOTE=backup
+
+[ "$(git config --bool diagonpuzzle.autoPush)" = "false" ] && exit 0
+
+# Same rules as tagging: only main, and not in the middle of a rebase.
+[ "$(git symbolic-ref --quiet --short HEAD)" = "$RELEASE_BRANCH" ] || exit 0
+git_dir=$(git rev-parse --git-dir)
+[ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ] && exit 0
+
+warn() {
+  echo "⚠ Backup not updated: $1" >&2
+  echo "  ${2:-The commit is safe locally. Push later with: git push}" >&2
+}
+
+url=$(git remote get-url "$REMOTE" 2>/dev/null)
+if [ -z "$url" ]; then
+  warn "no '$REMOTE' remote is set up."
+  exit 0
+fi
+# A local backup on a disk that isn't connected or mounted.
+case "$url" in
+  /*)
+    if [ ! -d "$url" ]; then
+      warn "$url is not available (is the disk connected?)."
+      exit 0
+    fi
+    ;;
+esac
+
+if output=$(git push --follow-tags --porcelain "$REMOTE" "$RELEASE_BRANCH" 2>&1); then
+  echo "Pushed to $REMOTE."
+else
+  echo "$output" | grep '^!' >&2
+  warn "the push was rejected." \
+    "If you amended an already pushed commit, see \"Amending\" in docs/WORKFLOW.md."
+fi
+exit 0

@@ -86,6 +86,9 @@ scripts/        development tools run with tsx (not part of the game)
 - Every commit on `main` is tagged with the next version (`vMAJOR.MINOR`) by
   the git hooks in `.githooks/`. Don't create version tags by hand, and don't
   rewrite history on `main` (rebase), which leaves tags on the old commits.
+- The `post-commit` hook then pushes `main` and its tags to the `backup`
+  remote (never forced; it only warns if that fails). Don't push or
+  force-push by hand unless the user asks.
 
 ## Environment
 

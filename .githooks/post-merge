@@ -1,4 +1,4 @@
 #!/bin/sh
 # A merge into main (e.g. keeping an experiment branch) gets the next version,
-# like a commit. The same rules apply; see post-commit.
+# like a commit, and pushes it to the backup. See post-commit.
 exec "$(dirname "$0")/post-commit"
