@@ -66,6 +66,17 @@ with flipping mirrors, before it is built.
 - [ ] Player-placed blocks
 - [ ] Firing from other edges
 - [ ] New block types
+- [ ] Optional bonus targets: extra targets in some levels that are not
+  needed to finish and not counted in par. A level can still be completed at
+  par without them; hitting them as well (also in later tries of the level)
+  earns a hidden achievement. To decide: whether bonus targets must all be
+  hit in one playthrough or can be collected across tries, whether they are
+  visible from the start, what the achievement is and where it shows (e.g.
+  a separate mark in the level list), and how they are saved in progress
+- [ ] Multi-hit goal: a goal that must be hit several times to complete the
+  level, showing the hits remaining. To decide: whether several hits can
+  come from one shot (the beam passing it twice) or must be separate shots,
+  and how it combines with flipping mirrors and par
 
 ### Presentation
 
