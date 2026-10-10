@@ -82,6 +82,32 @@ with flipping mirrors, before it is built.
   mirror flips stay between hits, and par counts all shots. Levels 5–6
   teach it
 
+### Difficulty curve
+
+Measured on 2026-10-10 (v0.34) by `npm run levels`, which ends with this
+curve: the chance that random play completes a level within par (a random
+row each shot; in player-mirror levels a random cell for the mirror, or
+keeping it). Lower is harder. It dips at each new mechanic (5, 11,
+13, 15), as intended:
+
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 in | 5 | 6 | 25 | 36 | 16 | 64 | 36 | 343 | 343 |
+
+| Level | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 |
+|---|---|---|---|---|---|---|---|---|
+| 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 47,500 |
+
+Random odds understate how easy level 15 feels (the mirror's cell is easy
+to see) and overstate levels that repeat a row (8, 11).
+
+- [ ] Smooth the step to level 17, about 14 times harder than 16 and 6
+  times harder than 14: add a par-3 level between them (player mirror with
+  a two-hit goal or breakable walls; `npm run generate` with
+  `--player-mirror slash --breakable 2 --goal-hits 2 --shots 3` found
+  several), or make 17 par 3
+- [ ] Optional: level 7 is a slight dip after levels 5–6 (as hard as 4)
+
 ### Presentation
 
 - [x] Graphics and art pass: "Laser lab" direction (style guide in
@@ -121,6 +147,14 @@ with flipping mirrors, before it is built.
 - [x] Upgrade Vite 6 → 8 (test the game in the browser afterwards)
 - [ ] Upgrade TypeScript 5.7 → 7, once typescript-eslint supports it
   (currently TypeScript < 6.1)
+- [x] Difficulty measure in `npm run levels`: the random-play odds of
+  *Difficulty curve* above, per level and as a curve at the end
+  (`scripts/difficulty.ts`)
+  - [ ] Likely needs adjusting later: it measures how many ways there are
+    to play, not how much insight a level needs, so it overrates levels
+    whose key move is easy to see (15) and those repeating a row (8, 11).
+    Compare it with how testers actually do, then refine it (e.g. weight
+    moves a player would try first) or add a second measure
 - [ ] Automated browser smoke tests (e.g. Playwright), if the UI grows enough
   that manual checks become a burden
 

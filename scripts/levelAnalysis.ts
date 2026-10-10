@@ -13,6 +13,7 @@ import {
 } from "../src/game/solver";
 import type { Move, Placement } from "../src/game/solver";
 import { CELL_SYMBOLS } from "../src/levels/parse";
+import { randomWinChance } from "./difficulty";
 import { shortestSolutions } from "./levelGenerator";
 import type { Board, Position } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
@@ -54,6 +55,8 @@ export interface LevelAnalysis {
   solutionShots: SolutionShot[];
   /** How many different shortest solutions there are; 1 is best. */
   shortestCount: number;
+  /** Chance that random play completes the level within par (difficulty.ts). */
+  randomWinChance: number;
   setupRoutes: [number, number][];
   firstShots: ShotOutcome[];
   /** True if the solver confirms the level's declared minShots. */
@@ -121,6 +124,12 @@ export function analyzeLevels(): LevelAnalysis[] {
               goalHits,
               playerMirror,
             ).length,
+      randomWinChance: randomWinChance(
+        board,
+        level.minShots,
+        goalHits,
+        playerMirror,
+      ),
       // Setup routes are about a single goal hit.
       setupRoutes: (level.goalHits ?? 1) === 1 ? setupRoutes(board) : [],
       firstShots: Array.from(

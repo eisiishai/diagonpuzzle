@@ -16,8 +16,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   verify changes)
 - `npm run lint` — ESLint (with Prettier formatting rules)
 - `npm test` — Vitest unit tests
-- `npm run levels` — level design report: shortest solution, setup routes and
-  first-shot outcomes for every level (`scripts/levels.ts`, runs with tsx)
+- `npm run levels` — level design report: shortest solution, setup routes,
+  difficulty (random play's odds of finishing at par) and first-shot
+  outcomes for every level, then the difficulty curve (`scripts/levels.ts`,
+  runs with tsx)
 - `npm run generate -- [options]` — searches random boards for new levels
   with a given par, best (unique shortest solution) first, printed ready to
   paste into `levels.ts`; `--help` lists the options

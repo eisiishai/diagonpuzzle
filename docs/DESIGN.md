@@ -79,8 +79,8 @@ puzzle on top of the level for players who have mastered it.
   other, but never take away a par star already earned: only a better
   score replaces the best.
 - **Golden star.** Once a level's bonus target is collected, its par star
-  turns golden in the level list, which also shows `GOLDEN ★ n/10` once
-  there is at least one. The header shows `BONUS 0/1` while playing a
+  turns golden in the level list, which also shows `GOLDEN ★ n/N` (N: levels
+  with a bonus target, currently all 17) once there is at least one. The header shows `BONUS 0/1` while playing a
   level whose bonus target has appeared.
 - **Last bonus target of the game:** a celebration like the one for the
   last par star, in the bonus colours, with an "All bonus targets found!"
@@ -92,8 +92,8 @@ puzzle on top of the level for players who have mastered it.
   bonus target removed (it is hidden until par), and check that par is
   still possible with the target showing. At most one per level for now.
 - **Harder than par.** A bonus target needs more shots than par: one
-  more on levels 2–9, two more on level 10. Only level 1's takes as few
-  as par (1). A test checks `bonusShots` > `minShots` beyond level 1.
+  more on levels 2–9 and 11–17, two more on level 10. Only level 1's
+  takes as few as par (1). A test checks `bonusShots` > `minShots` beyond level 1.
   To get there, levels 3, 4 and 6–10 each got one extra mirror (on level
   10 in place of a wall), chosen so that par and the par solution stay
   the same. Targets sit where they don't block the par solution, and
@@ -267,6 +267,8 @@ difficulty doesn't dip at the end.
   a *Play* button and the level list. Navigate with ↑/↓ and Enter, or the mouse.
 - The browser tab shows the same name, with the goal crystal as its icon
   (`public/favicon.svg`, and a 32×32 PNG for browsers without SVG icons).
+  The PNG was drawn from the same shapes by a one-off script that was not
+  kept: if the icon changes, export the SVG to PNG again.
 - *Play* starts the first uncompleted level and reads *Continue: level N* once
   some levels are completed, or *Play again from level 1* when all are.
 - Level 1 is always unlocked; each further level unlocks when the previous one

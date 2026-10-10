@@ -1,12 +1,16 @@
 // Level design report: `npm run levels`. For each level, prints the shortest
-// solution, two-shot setup routes, the shortest way to hit the bonus target
-// and what each row's first shot does (bonus targets hidden, as before par).
+// solution, two-shot setup routes, the shortest way to hit the bonus target,
+// how likely random play is to finish within par (a rough difficulty
+// measure) and what each row's first shot does (bonus targets hidden, as
+// before par). Ends with the difficulty of every level in a row.
 // Rows are numbered from 1 at the top, as the player counts them.
 
 import { CELL_SYMBOLS } from "../src/levels/parse";
+import { oneIn } from "./difficulty";
 import { analyzeLevels, rowList, shotCount } from "./levelAnalysis";
 
-for (const analysis of analyzeLevels()) {
+const analyses = analyzeLevels();
+for (const analysis of analyses) {
   const { number, level, board, solution, setupRoutes, firstShots } = analysis;
   const status = analysis.minShotsConfirmed
     ? "✓"
@@ -44,6 +48,18 @@ for (const analysis of analyzeLevels()) {
       `  Bonus:        ${bonusSolution ? `${rowList(bonusSolution)} (${shotCount(bonusSolution)})` : "none found"}  ${bonusStatus}`,
     );
   }
+  console.log(
+    `  Difficulty:   random play wins at par ${oneIn(analysis.randomWinChance)}`,
+  );
   console.log(`  First shots:  ${first}`);
   console.log();
+}
+
+// The difficulty curve: random play's chance of finishing within par.
+console.log("Difficulty curve (random play wins at par, 1 in N):");
+for (const { number, level, randomWinChance } of analyses) {
+  const odds = oneIn(randomWinChance).replace("1 in ", "");
+  console.log(
+    `  ${String(number).padStart(2)} ${level.name.padEnd(20)} par ${level.minShots}  ${odds.padStart(8)}`,
+  );
 }
