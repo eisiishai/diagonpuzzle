@@ -31,8 +31,13 @@ export interface LevelTestState {
   message: string;
   /** Centre of each row's launcher, top row first. */
   launchers: Point[];
-  /** `cells[y][x]`: board cell (x, y) and its centre. */
+  /** `cells[y][x]`: board cell (x, y) by the rules, and its centre. */
   cells: { type: CellType; center: Point }[][];
+  /**
+   * `shown[y][x]`: board cell (x, y) as drawn, a mirror's direction read
+   * from its rotation; null for a mirror still turning.
+   */
+  shown: (CellType | null)[][];
 }
 
 export interface TestState {

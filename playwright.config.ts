@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// Browser smoke tests (e2e/): `npm run e2e`, screenshots with
-// `npm run screenshots`. See docs/WORKFLOW.md.
+// Browser smoke tests (e2e/): `npm run e2e` for the quick set (also run
+// before commits that change the game), `npm run e2e:full` adding every
+// level played through, and `npm run screenshots`. See docs/WORKFLOW.md.
 export default defineConfig({
   testDir: "e2e",
   testMatch: "*.e2e.ts",
@@ -22,7 +23,12 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
-      testIgnore: ["phone.e2e.ts", "screenshots.e2e.ts"],
+      testIgnore: ["phone.e2e.ts", "levels.e2e.ts", "screenshots.e2e.ts"],
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "levels",
+      testMatch: "levels.e2e.ts",
       use: { ...devices["Desktop Chrome"] },
     },
     {

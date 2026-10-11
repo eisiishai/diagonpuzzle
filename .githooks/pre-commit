@@ -1,6 +1,7 @@
 #!/bin/sh
 # Runs the full check (lint, type check, tests, production build) before each
-# commit, and stops the commit if anything fails. Skip in an emergency with
+# commit, and the quick browser smoke tests when the game changes; stops the
+# commit if anything fails. Skip in an emergency with
 # `git commit --no-verify`. See docs/WORKFLOW.md.
 
 # Hooks started from an editor may not have nvm's Node on the PATH.
@@ -27,6 +28,28 @@ if ! npm run build --silent >"$log" 2>&1; then
   echo "pre-commit: checks failed. Commit stopped." >&2
   exit 1
 fi
+
+# The quick browser smoke tests (npm run e2e, about 30 s), only when the
+# commit changes the game or how it is built: doc-only commits stay fast.
+if git diff --cached --name-only | grep -qE '^(src/|public/|e2e/|index\.html$|vite\.config\.ts$|playwright\.config\.ts$|package(-lock)?\.json$)'; then
+  if ! node --input-type=module -e "
+    import { chromium } from '@playwright/test';
+    import { existsSync } from 'node:fs';
+    process.exit(existsSync(chromium.executablePath()) ? 0 : 1);
+  " >/dev/null 2>&1; then
+    echo "pre-commit: warning: Playwright's Chromium is not installed, so the" >&2
+    echo "browser smoke tests were skipped (setup in docs/WORKFLOW.md)." >&2
+  else
+    echo "pre-commit: running browser smoke tests (npm run e2e)..."
+    if ! npm run e2e --silent >"$log" 2>&1; then
+      cat "$log" >&2
+      echo >&2
+      echo "pre-commit: browser smoke tests failed. Commit stopped." >&2
+      exit 1
+    fi
+  fi
+fi
+
 echo "pre-commit: all checks passed."
 # For build-release (after the commit): the tree these checks were for.
 git write-tree >"$(git rev-parse --git-dir)/checked-tree"

@@ -7,7 +7,7 @@ import type { Page } from "@playwright/test";
 import { withBonuses } from "../src/game/bonus";
 import { solveMoves } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
-import type { Position } from "../src/game/types";
+import type { Board, Position } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import { EMPTY_PROGRESS, serializeProgress } from "../src/save/progress";
@@ -43,10 +43,15 @@ export const test = base.extend<{ game: Game }>({
 
 export { expect };
 
+/** Level `index`'s (0-based) starting board on a first visit: no bonus targets. */
+export function startBoard(index: number): Board {
+  return withBonuses(parseLevel(LEVELS[index].grid));
+}
+
 /** The shortest solution of level `index` (0-based), as on a first visit. */
 export function solution(index: number): Move[] {
   const level = LEVELS[index];
-  const moves = solveMoves(withBonuses(parseLevel(level.grid)), {
+  const moves = solveMoves(startBoard(index), {
     goalHits: level.goalHits,
     playerMirror: level.playerMirror,
   });

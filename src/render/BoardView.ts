@@ -539,6 +539,28 @@ export class BoardView extends Container {
     this.cells.forEach((row, y) => row.forEach((_, x) => this.drawCell(x, y)));
   }
 
+  /**
+   * The cells as they look now, for the browser smoke tests: a mirror's
+   * direction is read from its drawing's rotation (drawn as `\`, a quarter
+   * turn shows `/`), so a turn ending at the wrong angle shows. Null for a
+   * mirror still turning.
+   */
+  shownCells(): (CellType | null)[][] {
+    return this.cells.map((row, y) =>
+      row.map((cell, x) => {
+        if (!isMirror(cell)) {
+          return cell;
+        }
+        const quarters = this.cellViews[y][x].rotation / (Math.PI / 2);
+        const nearest = Math.round(quarters);
+        if (Math.abs(quarters - nearest) > 0.01) {
+          return null;
+        }
+        return nearest % 2 === 0 ? "mirrorBackslash" : "mirrorSlash";
+      }),
+    );
+  }
+
   /** Pixel centre of board cell (x, y); x = -1 is the launcher column. */
   cellCenter(x: number, y: number): { x: number; y: number } {
     return {

@@ -292,8 +292,9 @@ the polyline rule and is checked on a phone. In suggested order:
     random shots found no loop). The check stays as a guard; no test can
     build a loop
   - Left for later: the pellet animation's timing (`PelletAnimator`:
-    cells change as the pellet reaches them, then the shot finishes),
-    best covered by the browser smoke tests or when it next changes;
+    cells change as the pellet reaches them, then the shot finishes);
+    the board it leaves is now checked after every move by the browser
+    smoke tests' level play-through;
     `placementPositions()`, the formatting helpers in
     `scripts/levelAnalysis.ts` and the title screen's menu choices are
     small enough to leave
@@ -320,7 +321,8 @@ the polyline rule and is checked on a phone. In suggested order:
   shot, and the tests check every level with the solver. All tests take
   under 1 s at v1.0, so not a problem yet
 - [x] Automated browser smoke tests with Playwright (`npm run e2e`,
-  `e2e/`), and `npm run screenshots` for looking over the main screens.
+  `npm run e2e:full`, `e2e/`), and `npm run screenshots` for looking
+  over the main screens.
   Run and details in `docs/WORKFLOW.md`, *2. Check*. Built on 2026-10-11:
   - 13 tests at desktop and phone size, about 30 s: the title screen and
     level list, *Play*, *Continue* and level buttons, completing level 1
@@ -328,6 +330,11 @@ the polyline rule and is checked on a phone. In suggested order:
     with the mouse, keyboard and two taps, both skips, progress after a
     reload, localStorage blocked, and everything fitting a phone screen.
     Any console error or uncaught exception fails a test
+  - Every level played through by its shortest solution, checking after
+    every move that the board matches the rules both as the level's state
+    and as drawn (a mirror's direction read from its rotation; a turn
+    left a quarter short was caught). In `npm run e2e:full` only: 30
+    tests in all, about 2 minutes
   - A test hook (`src/testHook.ts`, a separate file loaded only with
     `?e2e`) reports the scene, its buttons and the level's state with
     screen positions; tests play levels by the solver's solutions, so they
@@ -339,8 +346,10 @@ the polyline rule and is checked on a phone. In suggested order:
     rendering is slow: the tests run 4 browsers at once and the phone at
     pixel density 1 (2.6 ran the title screen at 4–5 frames a second,
     which slows the game's own time)
-  - Not part of `npm run build`: run them before a release and after
-    changes to scenes, input or dependencies, or they can go stale
+  - The quick set (13 tests, about 30 s) runs in the pre-commit hook when
+    a commit changes the game; doc-only commits skip it. The full set
+    runs by hand before a release and after changes to drawing, levels or
+    block types
 
 ## Discarded ideas
 

@@ -114,7 +114,8 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm test` | Unit tests (Vitest) |
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
-| `npm run e2e` | Browser smoke tests (Playwright, headless Chromium): every screen and flow, at desktop and phone size. About 30 s. Not part of `npm run build`. |
+| `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 30 s. Run before commits that change the game (see *3. Commit*). |
+| `npm run e2e:full` | The quick set plus every level played through. About 2 minutes. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
 `npm run build` is the full check. **It runs automatically before every
@@ -130,14 +131,19 @@ alone), serve it with `vite preview` and play it in headless Chromium: the
 title screen and level list, completing levels with the mouse, keyboard and
 touch, restart, the player's mirror, both skips, progress kept after a
 reload, the game with localStorage blocked, and everything fitting on a
-phone screen. Any console error or uncaught exception fails a test. They
+phone screen. `npm run e2e:full` also plays every level through by its
+shortest solution (`e2e/levels.e2e.ts`), which runs the drawing and effects of
+every block type, and after every move the board must match the rules,
+both as the level's state and as drawn (a mirror's direction read from
+its rotation). Any console error or uncaught exception fails a test. They
 find buttons, launchers and cells through a test hook (`src/testHook.ts`),
 loaded only when the URL has `?e2e`, and play levels by the solver's
 solutions. They run with reduced motion, and at pixel density 1 on the
 phone: the browser draws in software, and the phone's real density made it
-too slow. Run them before a release and after changes to scenes, input or
-dependencies; a failure leaves a trace to open with `npx playwright
-show-trace` (the path is printed).
+too slow. Run `npm run e2e:full` before a release and after changes to
+drawing, levels or block types; the quick set runs with each commit that
+changes the game. A failure leaves a trace to open with
+`npx playwright show-trace` (the path is printed).
 
 What is checked only by hand: how drawing, animation and sound look and
 sound, and anything only a real phone shows (such as the GPU line bugs in
@@ -156,9 +162,14 @@ git commit -m "Short summary of the change"
 
 - Work directly on `main`. Commit small, working steps.
 - **Checks before each commit:** the `pre-commit` hook runs `npm run build`
-  (lint, type check, tests, production build; about 5 seconds). If anything
-  fails, the commit is stopped and the errors are shown; fix them and commit
-  again. Merge commits are checked the same way.
+  (lint, type check, tests, production build; about 5 seconds). When the
+  commit changes the game (`src/`, `public/`, `e2e/`, `index.html`, the
+  Vite or Playwright config, or `package.json` and its lock file), it also
+  runs the quick browser smoke tests, `npm run e2e` (about 30 s); commits
+  of only docs skip them. If Playwright's Chromium isn't installed, the
+  hook warns and skips them. If anything fails, the commit is stopped and
+  the errors are shown; fix them and commit again. Merge commits are
+  checked the same way.
 - The checks run on the files in the working tree. If some changes are not
   staged for the commit, the hook prints a note, since the checked files then
   differ from the commit. With `git add -A` they are the same.

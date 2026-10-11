@@ -25,10 +25,12 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run bonus -- --level N [options]` — finds cells for a level's bonus
   target `*` that take the wanted number of shots, optionally after small
   board changes that keep par; `--help` lists the options
-- `npm run e2e` — browser smoke tests (Playwright, headless Chromium,
-  `e2e/`): every screen and flow at desktop and phone size, about 30 s;
-  not part of `npm run build`. Run after changes to scenes, input or
-  dependencies
+- `npm run e2e` — quick browser smoke tests (Playwright, headless
+  Chromium, `e2e/`): every screen and flow at desktop and phone size,
+  about 30 s. The pre-commit hook runs it when a commit changes the game
+- `npm run e2e:full` — the quick set plus every level played through,
+  about 2 minutes. Run before a release and after changes to drawing,
+  levels or block types
 - `npm run screenshots` — pictures of the main screens in `screenshots/`
   (git-ignored). Look at them after a visual change; they don't show
   phone-only GPU bugs, so phone checks stay
@@ -121,8 +123,9 @@ e2e/            browser smoke tests (Playwright) and their helpers
   sessions.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
-- Every commit runs `npm run build` first (pre-commit hook) and is stopped if
-  it fails: fix the problem rather than bypassing it. Use `--no-verify` only
+- Every commit runs `npm run build` first (pre-commit hook), plus
+  `npm run e2e` when it changes `src/`, `public/`, `e2e/`, the build
+  config or dependencies, and is stopped if either fails: fix the problem rather than bypassing it. Use `--no-verify` only
   when the user asks for it.
 - Every commit on `main` is tagged with the next version (`vMAJOR.MINOR`) by
   the git hooks in `.githooks/`. Don't create version tags by hand, and don't

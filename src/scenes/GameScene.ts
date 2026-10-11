@@ -331,6 +331,7 @@ export class GameScene extends Container implements Scene {
       cells: session.board.cells.map((row, y) =>
         row.map((type, x) => ({ type, center: center(x, y) })),
       ),
+      shown: boardView.shownCells(),
     };
   }
 
