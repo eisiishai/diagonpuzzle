@@ -8,6 +8,31 @@ import type { Game } from "./game";
 const FIRST = 0;
 const YOUR_MOVE = 14; // the first level with the player's mirror
 
+test("the main page plays the game from its version folder", async ({
+  game,
+}) => {
+  // Built as for the website (vite.config.ts): the main page, and the
+  // game in a folder named after its version, which a <base> points to.
+  const files: string[] = [];
+  game.page.on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (/\.(js|css|woff2?|png|svg)$/.test(path)) {
+      files.push(path);
+    }
+  });
+  await game.open();
+  expect(new URL(game.page.url()).pathname).toBe("/");
+  const page = await (await game.page.request.get("./")).text();
+  const folder = /<base href="\.\/([^/"]+)\/"/.exec(page)?.[1];
+  expect(folder, "the main page's <base> folder").toBeTruthy();
+  expect(files.length).toBeGreaterThan(0);
+  expect(files.filter((path) => !path.startsWith(`/${folder}/`))).toEqual([]);
+
+  // The folder's own page plays it too, as an older snapshot does.
+  await game.page.goto(`./${folder}/?e2e`);
+  await game.waitForScene("title");
+});
+
 test("the title screen lists every level, only the first unlocked", async ({
   game,
 }) => {

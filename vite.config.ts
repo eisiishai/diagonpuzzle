@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 import { configDefaults } from "vitest/config";
 
@@ -23,35 +23,39 @@ function gitVersion(): string {
 const version = gitVersion();
 
 /**
- * Lays out dist/ as it is uploaded: the game in dist/<version>/, and
- * dist/index.html, a copy of its page whose <base> points into that folder,
- * so the site's main address plays the newest version while older version
- * folders stay online as snapshots. Clears dist/ first, so it holds only
- * this build. Builds to another --outDir (the smoke tests) are left as is.
+ * Lays out the build as it is uploaded: the game in <outDir>/<version>/,
+ * and <outDir>/index.html, a copy of its page whose <base> points into
+ * that folder, so the site's main address plays the newest version while
+ * older version folders stay online as snapshots. <outDir> is dist/, or
+ * dist-e2e/ for the smoke tests, which so play through the main page as
+ * players do. Clears <outDir> first, so it holds only this build.
  */
 function versionFolder(): Plugin {
-  let outDir = "";
-  let dist = "";
+  let root = "";
+  let gameDir = "";
   return {
     name: "version-folder",
     apply: "build",
+    config(config) {
+      const outDir = config.build?.outDir ?? "dist";
+      return { build: { outDir: join(outDir, version) } };
+    },
     configResolved(config) {
-      outDir = resolve(config.root, config.build.outDir);
-      dist = resolve(config.root, "dist");
+      gameDir = resolve(config.root, config.build.outDir);
+      root = dirname(gameDir);
+      // Never clear the project itself, or anything outside it.
+      if (!root.startsWith(config.root + sep)) {
+        throw new Error(`--outDir must be a folder inside the project`);
+      }
     },
     buildStart() {
-      if (dirname(outDir) === dist) {
-        rmSync(dist, { recursive: true, force: true });
-      }
+      rmSync(root, { recursive: true, force: true });
     },
     closeBundle() {
-      if (dirname(outDir) !== dist) {
-        return;
-      }
-      const page = readFileSync(join(outDir, "index.html"), "utf8");
-      const base = `<base href="./${basename(outDir)}/" />`;
+      const page = readFileSync(join(gameDir, "index.html"), "utf8");
+      const base = `<base href="./${basename(gameDir)}/" />`;
       writeFileSync(
-        join(dist, "index.html"),
+        join(root, "index.html"),
         page.replace(/<head>/, `<head>\n    ${base}`),
       );
     },
@@ -64,9 +68,6 @@ export default defineConfig({
   base: "./",
   define: {
     __GAME_VERSION__: JSON.stringify(version),
-  },
-  build: {
-    outDir: `dist/${version}`,
   },
   plugins: [versionFolder()],
   server: {

@@ -157,10 +157,10 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm run coverage` | The unit tests, and which code they run (below). |
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
-| `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 70 s. Run before commits that change the game (see *3. Commit*). |
-| `npm run e2e:full` | The quick set plus every level played through. About 2 minutes. |
+| `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 2 minutes. Run before commits that change the game (see *3. Commit*). |
+| `npm run e2e:full` | The quick set plus every level played through. About 3½ minutes. |
 | `npm run mutation` | Mutation testing of the rules: how well the unit tests check them (below). Minutes; run by hand. |
-| `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). About 3 minutes. |
+| `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). About 4 minutes. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
 `npm run build` is the full check. **It runs automatically before every
@@ -238,7 +238,10 @@ reports.
   checks.
 
 The smoke tests (`e2e/`) build the game into `dist-e2e/` (leaving `dist/`
-alone), serve it with `vite preview` and play it in headless Chromium: the
+alone) with the same layout as `dist/` for the website, serve it with
+`vite preview` and play it in headless Chromium through the main page,
+as players do: the main page loading everything from its version folder
+(and that folder's own page working, as an older snapshot's does), the
 title screen and level list, completing levels with the mouse, keyboard and
 touch, restart, the player's mirror, both skips, progress kept after a
 reload, the game with localStorage blocked, everything fitting on a
@@ -322,7 +325,7 @@ git commit -m "Short summary of the change"
   (lint, type check, tests, production build; about 5 seconds). When the
   commit changes the game (`src/`, `public/`, `e2e/`, `index.html`, the
   Vite or Playwright config, or `package.json` and its lock file), it also
-  runs the quick browser smoke tests, `npm run e2e` (about 70 s); commits
+  runs the quick browser smoke tests, `npm run e2e` (about 2 minutes); commits
   of only docs skip them. If Playwright's Chromium isn't installed, the
   hook warns and skips them. If anything fails, the commit is stopped and
   the errors are shown; fix them and commit again. Merge commits are
@@ -463,7 +466,7 @@ The backup doesn't include uncommitted work, stashes, local git settings
    `git config diagonpuzzle.autoBuild false`.
 2. Optionally test the built version locally, as the site's main page:
    ```bash
-   npx vite preview --outDir dist   # http://localhost:4173
+   npx vite preview             # http://localhost:4173
    ```
    (Opening `dist/index.html` directly from disk does not work: browsers block
    module scripts loaded from `file://`.)
@@ -509,8 +512,10 @@ The backup doesn't include uncommitted work, stashes, local git settings
 
 The game works from any folder on the host (`base: "./"` in
 `vite.config.ts`). The version folder and the main page are made by the
-`versionFolder` plugin there; builds to another `--outDir`, such as the
-smoke tests' `dist-e2e/`, are just the game.
+`versionFolder` plugin there, for any build: `dist/`, and the smoke
+tests' `dist-e2e/`, which so check the layout that gets uploaded. It
+clears that folder first, and refuses an `--outDir` that isn't a folder
+inside the project.
 
 ### Which version is online
 

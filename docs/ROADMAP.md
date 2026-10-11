@@ -434,6 +434,21 @@ lab page on 2026-10-11:
     the 54 survivors known to be equivalent
   - [ ] Optional: coverage thresholds for `src/game/`, `src/levels/` and
     `src/save/` in `npm run build`, so a drop stops the commit
+- [x] A smoke test of the website's layout: the smoke tests' build
+  (`dist-e2e/`) gets the same main page and version folder as `dist/`,
+  so every test plays through the main page, and one checks that it
+  loads everything from the version folder and that the folder's own
+  page works too
+- [ ] Smoke tests in WebKit, Safari's engine, which iPhones and iPads
+  use for every browser: the quick set run as a Playwright project with
+  WebKit next to Chromium, desktop and phone (e.g. Playwright's
+  `iPhone 14`). It would catch Safari-only problems with the canvas,
+  touch and Web Audio that Chromium can't show. Needs WebKit and its
+  system libraries installed in WSL (`npx playwright install webkit`,
+  then the apt packages it names: with nvm, `sudo` can't find `npx` for
+  `install-deps`, as in *Setup on a new machine* in `docs/WORKFLOW.md`),
+  and adds to the commit checks' time unless run only by hand.
+  Still not a real iPhone: phone GPU bugs stay a manual check
 - [ ] Watch the solver's and `npm run generate`'s run times as placeable
   blocks grow: each placement option multiplies the choices before every
   shot, and the tests check every level with the solver. All tests take
