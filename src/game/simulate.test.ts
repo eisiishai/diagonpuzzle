@@ -254,3 +254,22 @@ describe("glass mirrors", () => {
     expect(cells(grid, 0)).toEqual(["0,0", "1,0", "1,1", "1,0"]);
   });
 });
+
+describe("shots on the game's levels", () => {
+  // Every step can be traced back uniquely (docs/DESIGN.md, Outcomes), so
+  // no shot loops, reflectors included. Random play checks it on every
+  // level: 40 shots from the start, a fixed sequence per level.
+  it.each(LEVELS.map((level, i) => [i + 1, level] as const))(
+    "never loop on level %i",
+    (_, level) => {
+      let board = withBonuses(parseLevel(level.grid));
+      let seed = level.id.length * 7919;
+      for (let shot = 0; shot < 40; shot++) {
+        seed = (seed * 1103515245 + 12345) % 2147483648;
+        const result = fire(board, seed % board.height);
+        expect(result.outcome).not.toBe("loop");
+        board = result.board;
+      }
+    },
+  );
+});

@@ -3,6 +3,7 @@ import { MUSIC_TRACKS } from "../audio/music";
 import { bonusPositions, withBonuses } from "../game/bonus";
 import { setupRoutes, solve, solveBonus } from "../game/solver";
 import { CHAPTERS, LEVELS, chapterRanges } from "./levels";
+import type { CellType } from "../game/types";
 import { parseLevel } from "./parse";
 
 // Levels that can be solved in one shot, but also by a two-shot route where
@@ -16,32 +17,60 @@ it.each(LEVELS_WITH_SETUP_ROUTE)("%s has a two-shot setup route", (id) => {
   expect(setupRoutes(board).length).toBeGreaterThan(0);
 });
 
-// Levels built around breakable walls: with every breakable wall solid,
-// par is out of reach (levels 11-14 can't be solved at all that way; a
-// player mirror makes a longer way round possible on levels 17-18).
-const LEVELS_NEEDING_BREAKS = [
-  "breakthrough",
-  "stone-by-stone",
-  "crack-and-double",
-  "rubble-run",
-  "clear-the-way",
-  "rebuild",
-];
-
-it.each(LEVELS_NEEDING_BREAKS)("%s needs a breakable wall broken", (id) => {
-  const level = LEVELS.find((candidate) => candidate.id === id);
-  expect(level).toBeDefined();
-  const board = withBonuses(parseLevel(level!.grid));
-  const solid = {
-    ...board,
-    cells: board.cells.map((row) =>
-      row.map((cell) => (cell === "breakable" ? "wall" : cell)),
-    ),
+/** The level's starting board with every `from` cell made `to`. */
+function replaced(
+  id: string,
+  from: CellType[],
+  to: (cell: CellType) => CellType,
+) {
+  const level = LEVELS.find((candidate) => candidate.id === id)!;
+  const board = withBonuses(parseLevel(level.grid));
+  return {
+    level,
+    board: {
+      ...board,
+      cells: board.cells.map((row) =>
+        row.map((cell) => (from.includes(cell) ? to(cell) : cell)),
+      ),
+    },
   };
-  const { goalHits = 1, playerMirror } = level!;
-  expect(solve(board, level!.minShots, goalHits, playerMirror)).not.toBeNull();
-  expect(solve(solid, level!.minShots, goalHits, playerMirror)).toBeNull();
+}
+const idsWith = (...cells: CellType[]) =>
+  LEVELS.filter((level) =>
+    cells.some((cell) => parseLevel(level.grid).cells.flat().includes(cell)),
+  ).map((level) => level.id);
+
+// Levels with breakable walls are built around them: with every breakable
+// wall solid, par is out of reach (levels 11-14 can't be solved at all that
+// way; a player mirror makes a longer way round possible on levels 17-18).
+it.each(idsWith("breakable"))("%s needs a breakable wall broken", (id) => {
+  const { level, board } = replaced(id, ["breakable"], () => "wall");
+  const { minShots, goalHits = 1, playerMirror } = level;
+  expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
 });
+
+// Levels with reflectors are built around them: with every reflector a
+// wall, par is out of reach.
+it.each(idsWith("reflector"))("%s needs a reflector", (id) => {
+  const { level, board } = replaced(id, ["reflector"], () => "wall");
+  const { minShots, goalHits = 1, playerMirror } = level;
+  expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
+});
+
+// Levels with glass mirrors are built around their shattering: with every
+// glass mirror an ordinary one, par is out of reach.
+it.each(idsWith("glassBackslash", "glassSlash"))(
+  "%s needs a glass mirror shattered",
+  (id) => {
+    const { level, board } = replaced(
+      id,
+      ["glassBackslash", "glassSlash"],
+      (cell) => (cell === "glassBackslash" ? "mirrorBackslash" : "mirrorSlash"),
+    );
+    const { minShots, goalHits = 1, playerMirror } = level;
+    expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
+  },
+);
 
 // Levels that give the player a mirror are built around it: without it,
 // par is out of reach (a longer way round may exist).

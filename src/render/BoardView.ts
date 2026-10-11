@@ -676,21 +676,25 @@ export class BoardView extends Container {
   }
 
   /**
-   * The cells as they look now, for the browser smoke tests: a mirror's
-   * direction is read from its drawing's rotation (drawn as `\`, a quarter
-   * turn shows `/`), so a turn ending at the wrong angle shows. Null for a
-   * mirror still turning.
+   * The cells as they look now, for the browser smoke tests: a mirror's or
+   * glass mirror's direction is read from its drawing's rotation (drawn as
+   * `\`, a quarter turn shows `/`), so a turn ending at the wrong angle
+   * shows. Null for a mirror still turning.
    */
   shownCells(): (CellType | null)[][] {
     return this.cells.map((row, y) =>
       row.map((cell, x) => {
-        if (!isMirror(cell)) {
+        const glass = isGlassMirror(cell);
+        if (!isMirror(cell) && !glass) {
           return cell;
         }
         const quarters = this.cellViews[y][x].rotation / (Math.PI / 2);
         const nearest = Math.round(quarters);
         if (Math.abs(quarters - nearest) > 0.01) {
           return null;
+        }
+        if (glass) {
+          return nearest % 2 === 0 ? "glassBackslash" : "glassSlash";
         }
         return nearest % 2 === 0 ? "mirrorBackslash" : "mirrorSlash";
       }),

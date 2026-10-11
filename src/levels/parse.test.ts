@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatLevel, parseLevel } from "./parse";
+import type { CellType } from "../game/types";
+import { CELL_SYMBOLS, formatLevel, parseLevel } from "./parse";
 
 describe("parseLevel", () => {
   it("maps every symbol to its cell type", () => {
@@ -13,6 +14,15 @@ describe("parseLevel", () => {
       "wall",
       "goal",
     ]);
+  });
+
+  it("reads every cell type's symbol, and writes it back", () => {
+    const types = Object.keys(CELL_SYMBOLS) as CellType[];
+    const grid = types.map((type) => CELL_SYMBOLS[type]).join(" ");
+    const board = parseLevel(grid);
+    expect(board.cells[0]).toEqual(types);
+    expect(formatLevel(board)).toBe(grid);
+    expect(new Set(Object.values(CELL_SYMBOLS)).size).toBe(types.length);
   });
 
   it("ignores indentation, spacing and blank lines", () => {
