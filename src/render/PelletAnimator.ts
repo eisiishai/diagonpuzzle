@@ -21,10 +21,11 @@ const TAIL_DOTS = 12;
 
 export interface ShotCallbacks {
   /**
-   * Called as the pellet reaches each mirror, at board cell `at`; bounces
-   * are numbered from 1 per shot.
+   * Called as the pellet reaches each mirror, reflector or glass mirror, at
+   * point `at` of its path (board cell coordinates, and what turned it);
+   * bounces are numbered from 1 per shot.
    */
-  onBounce: (bounceNumber: number, at: { x: number; y: number }) => void;
+  onBounce: (bounceNumber: number, at: PathPoint) => void;
   /** Called as the pellet changes a cell, at the moment it hits it. */
   onCellChange: (x: number, y: number, cell: CellType) => void;
   /** Called once when the pellet reaches the end of its path. */

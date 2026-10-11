@@ -1,6 +1,6 @@
 import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
-import type { CellType } from "../game/types";
+import type { BounceKind, CellType } from "../game/types";
 
 /**
  * Where a reflector sends the beam back: this far from its cell's centre, in
@@ -14,6 +14,8 @@ export interface PathPoint {
   y: number;
   /** True if the pellet changes direction at this point. */
   bounce: boolean;
+  /** What turned it, where it changes direction. */
+  bounceKind?: BounceKind;
   /** Set if the cell at this point changes when hit (e.g. a mirror flips). */
   becomes?: CellType;
   /**
@@ -43,10 +45,18 @@ export function pathPoints(result: ShotResult): PathPoint[] {
       const back = DIRECTION_DELTAS[step.directionOut];
       const reversed = delta.x === -back.x && delta.y === -back.y;
       const offset = reversed ? REFLECTOR_RADIUS : 0;
+      const bounce = step.directionIn !== step.directionOut;
+      // A mirror flips when hit; a glass mirror becomes empty.
+      const bounceKind: BounceKind = reversed
+        ? "reflector"
+        : step.becomes === "empty"
+          ? "glass"
+          : "mirror";
       return {
         x: step.x - delta.x * offset,
         y: step.y - delta.y * offset,
-        bounce: step.directionIn !== step.directionOut,
+        bounce,
+        ...(bounce && { bounceKind }),
         ...(step.becomes && { becomes: step.becomes }),
       };
     }),

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { bounceNote, columnPan, endingNotes, goalChimeNotes } from "./effects";
+import {
+  bounceNote,
+  columnPan,
+  endingNotes,
+  goalChimeNotes,
+  shardNotes,
+} from "./effects";
 import { MUSIC_TRACKS, mirrorPhrase, scaleNotes } from "./music";
 
 const A_MINOR_PENTATONIC = [9, 0, 2, 4, 7];
@@ -116,6 +122,24 @@ describe("mirrorPhrase", () => {
         expect(phrase[1] - phrase[0]).toBeGreaterThan(0);
         expect(answer[1] - answer[0]).toBeLessThan(0);
       }
+    }
+  });
+});
+
+describe("shardNotes", () => {
+  it("falls six notes down the scale from its top, in every track's key", () => {
+    // A minor pentatonic below B♭7: A7 (105), then 1, 2, 1, 1, 2 steps down.
+    expect(shardNotes(A_MINOR_PENTATONIC)).toEqual([105, 103, 98, 96, 93, 88]);
+    for (const track of Object.values(MUSIC_TRACKS)) {
+      const { scale } = track.harmony(0);
+      const notes = shardNotes(scale);
+      expect(notes).toHaveLength(6);
+      notes.forEach((note, i) => {
+        expect(scale).toContain(note % 12);
+        if (i > 0) {
+          expect(note).toBeLessThan(notes[i - 1]);
+        }
+      });
     }
   });
 });

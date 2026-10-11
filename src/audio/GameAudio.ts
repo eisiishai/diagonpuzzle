@@ -1,3 +1,4 @@
+import type { BounceKind } from "../game/types";
 import { readStorage, writeStorage } from "../save/storage";
 import { BOUNCE_SECONDS, EFFECTS, playBounce } from "./effects";
 import type { SoundEffect } from "./effects";
@@ -193,22 +194,25 @@ export class GameAudio {
   }
 
   /**
-   * Mirror bounce at stereo position `pan`; each further bounce in the same
-   * shot is a note higher on the music's scale.
+   * A bounce off a mirror, reflector or glass mirror (`kind`) at stereo
+   * position `pan`; each further bounce in the same shot is a note higher
+   * on the music's scale.
    */
-  playBounce(bounceNumber: number, pan = 0): void {
+  playBounce(bounceNumber: number, pan = 0, kind: BounceKind = "mirror"): void {
     const graph = this.graph;
     if (!graph || !this.enabled.effects) {
       return;
     }
     const t = graph.ctx.currentTime;
-    if (this.limiter.tryStart(t, BOUNCE_SECONDS)) {
+    if (this.limiter.tryStart(t, BOUNCE_SECONDS[kind])) {
       playBounce(
         graph.effectsSynth,
-        this.effectsOutput(graph, pan, BOUNCE_SECONDS),
+        graph.channels.effects,
         t,
         bounceNumber,
         this.harmonyAt(t),
+        kind,
+        pan,
       );
     }
   }

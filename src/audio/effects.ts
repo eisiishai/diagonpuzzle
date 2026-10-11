@@ -1,6 +1,7 @@
 // The sound effects, as picked on the sound lab page (variant in brackets).
 // See docs/DESIGN.md, Sound.
 
+import type { BounceKind } from "../game/types";
 import type { Harmony } from "./music";
 import type { Synth } from "./synth";
 import { midi } from "./synth";
@@ -374,13 +375,26 @@ export function endingNotes(tonic: number): {
   };
 }
 
-/** Seconds a mirror bounce lasts, for limiting overlapping sounds. */
-export const BOUNCE_SECONDS = 0.45;
+/** Seconds a bounce sound lasts, for limiting overlapping sounds. */
+export const BOUNCE_SECONDS: Record<BounceKind, number> = {
+  mirror: 0.45,
+  reflector: 0.65,
+  glass: 0.5,
+};
 
 /**
- * Mirror bounce (B, "Crystal ping"): a small bell, one note higher on the
- * music's scale for each further bounce in the same shot (capped), so long
- * shots stay in key, with a soft glassy swish as the mirror turns.
+ * A bounce at stereo position `pan`, on the bounce ladder: a note higher on
+ * the music's scale for each further bounce in the same shot (capped), so
+ * long shots stay in key. What turned the pellet decides the sound:
+ * - mirror (B, "Crystal ping"): a small bell with a soft glassy swish as
+ *   the mirror turns;
+ * - reflector (sound lab 5, "Echo ping"): the bell answered by two quick,
+ *   quieter repeats that move back towards the centre, as the beam goes
+ *   back;
+ * - glass (sound lab 5, "Crack and tinkle"): the bell cut off by a short
+ *   bright crack and small clicks, then a soft shower of tiny high notes
+ *   in the music's scale, falling like the shards.
+ * The reflector and glass sounds are a little quieter than on the lab page.
  */
 export function playBounce(
   s: Synth,
@@ -388,19 +402,96 @@ export function playBounce(
   t: number,
   bounceNumber: number,
   harmony: Harmony,
+  kind: BounceKind = "mirror",
+  pan = 0,
 ): void {
+  const f = midi(bounceNote(bounceNumber, harmony.scale));
+  if (kind === "reflector") {
+    [0, 0.11, 0.22].forEach((delay, k) =>
+      s.bell({
+        f,
+        t: t + delay,
+        d: 0.4,
+        vol: 0.065 * 0.45 ** k,
+        ratio: 3.5,
+        index: 1.1 - k * 0.3,
+        dest,
+        pan: pan * (1 - k * 0.6),
+        wet: 0.3 + k * 0.1,
+      }),
+    );
+    return;
+  }
   s.bell({
-    f: midi(bounceNote(bounceNumber, harmony.scale)),
+    f,
     t,
     d: 0.45,
-    vol: 0.075,
+    vol: kind === "glass" ? 0.06 : 0.075,
     ratio: 3.5,
     index: 1.1,
     dest,
+    pan,
     wet: 0.3,
   });
   // The mirror turning (sound lab 2, "Glass swish"), kept quiet.
-  s.noise({ t, d: 0.09, vol: 0.02, f: 5500, f2: 3000, q: 2, dest });
+  s.noise({ t, d: 0.09, vol: 0.02, f: 5500, f2: 3000, q: 2, dest, pan });
+  if (kind !== "glass") {
+    return;
+  }
+  s.noise({
+    t: t + 0.03,
+    d: 0.05,
+    vol: 0.05,
+    type: "highpass",
+    f: 5000,
+    dest,
+    pan,
+    wet: 0.2,
+  });
+  for (const [delay, freq] of [
+    [0.09, 7000],
+    [0.14, 6000],
+    [0.21, 7800],
+  ]) {
+    s.noise({ t: t + delay, d: 0.02, vol: 0.02, f: freq, q: 4, dest, pan });
+  }
+  shardNotes(harmony.scale).forEach((note, k) =>
+    s.tone({
+      type: "triangle",
+      f: midi(note),
+      t: t + 0.1 + k * 0.055,
+      a: 0.002,
+      d: 0.16,
+      vol: 0.017 * 0.82 ** k,
+      dest,
+      pan: Math.max(-1, Math.min(1, pan + (k % 2 ? 0.2 : -0.2))),
+      wet: 0.4,
+    }),
+  );
+}
+
+/** Steps down the scale between the falling shard notes. */
+const SHARD_STEPS = [1, 2, 1, 1, 2];
+
+/**
+ * The glass shatter's six falling notes (MIDI): from the highest note of
+ * `scale` up to B♭7, down the scale by one or two notes at a time.
+ */
+export function shardNotes(scale: readonly number[]): number[] {
+  let note = 106;
+  while (!scale.includes(note % 12)) {
+    note--;
+  }
+  const notes = [note];
+  for (const steps of SHARD_STEPS) {
+    for (let i = 0; i < steps; i++) {
+      do {
+        note--;
+      } while (!scale.includes(note % 12));
+    }
+    notes.push(note);
+  }
+  return notes;
 }
 
 /** Lowest note of the bounce ladder (E5). */

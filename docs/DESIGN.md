@@ -168,7 +168,7 @@ passed it.
   pellet leaving a reflector moving left entered it moving right), so no
   loop is possible.
 - The beam turns back at the reflector's ring, not its centre, with the
-  mirror bounce's flash and sound.
+  mirror bounce's flash and its own *Echo ping* (see Sound).
 - Levels 19–22 teach it (chapter *Reflectors*), 21 with breakable walls
   and 22 with the player's mirror; level 25 combines it with glass
   mirrors.
@@ -184,7 +184,8 @@ asks which shot should spend it.
   cell in the same shot (e.g. from a reflector) passes straight through.
 - Shots stay finite: every step can still be traced back uniquely.
 - When it shatters, it bursts into glass shards that fall away (like a
-  breaking wall's stone pieces), with the mirror bounce's flash and sound.
+  breaking wall's stone pieces), with the mirror bounce's flash and a
+  *Crack and tinkle* (see Sound).
 - Levels 23–26 teach it (chapter *Glass mirrors*), 25 with a reflector
   and 26 with a two-hit goal.
 
@@ -614,6 +615,8 @@ celebrations (final star, bonus targets) keep their full level.
 |---|---|
 | Fire | *Soft pulse*: a gentle falling tone with a breath of air |
 | Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is one note higher on the music's scale, from E5 (capped after ten), so long shots stay in key. With a quiet glassy swish as the mirror turns (sound lab 2) |
+| Reflector hit | *Echo ping* (sound lab 5): the bounce's bell on the same ladder note, answered by two quick, quieter repeats that move back towards the centre, as the beam goes back; no swish, as nothing turns |
+| Glass mirror shatters | *Crack and tinkle* (sound lab 5): the bounce's ping on its ladder note, cut off by a short bright crack and three small clicks, then six tiny high notes falling down the music's scale, like the shards |
 | Wall | *Soft knock* |
 | Breakable wall | A crunch over a low thud, with small pieces clattering after it (not from the sound lab) |
 | Mirror placed | A glassy click, then two short bells (not from the sound lab) |

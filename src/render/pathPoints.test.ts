@@ -29,7 +29,13 @@ describe("pathPoints", () => {
     expect(points(grid, 0)).toEqual([
       { x: -1, y: 0, bounce: false },
       { x: 0, y: 0, bounce: false },
-      { x: 1, y: 0, bounce: true, becomes: "mirrorSlash" },
+      {
+        x: 1,
+        y: 0,
+        bounce: true,
+        bounceKind: "mirror",
+        becomes: "mirrorSlash",
+      },
       { x: 1, y: 1, bounce: false },
     ]);
     expect(lastPoint(". . G\n. . .", 1)).toEqual({
@@ -43,10 +49,20 @@ describe("pathPoints", () => {
     expect(points(". @ G", 0)).toEqual([
       { x: -1, y: 0, bounce: false },
       { x: 0, y: 0, bounce: false },
-      { x: 0.7, y: 0, bounce: true },
+      { x: 0.7, y: 0, bounce: true, bounceKind: "reflector" },
       { x: 0, y: 0, bounce: false },
       { x: -1, y: 0, bounce: false },
     ]);
+  });
+
+  it("marks a glass mirror's bounce, where it shatters", () => {
+    expect(points(". N\n. G", 0)[2]).toEqual({
+      x: 1,
+      y: 0,
+      bounce: true,
+      bounceKind: "glass",
+      becomes: "empty",
+    });
   });
 
   it("stops at the near edge of a wall", () => {

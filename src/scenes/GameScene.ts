@@ -372,6 +372,7 @@ export class GameScene extends Container implements Scene {
         this.options.audio.playBounce(
           bounceNumber,
           columnPan(at.x, this.session.board.width),
+          at.bounceKind,
         ),
       onFinish: () => this.finishShot(result),
     });
