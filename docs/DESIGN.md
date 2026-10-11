@@ -80,7 +80,7 @@ puzzle on top of the level for players who have mastered it.
   score replaces the best.
 - **Golden star.** Once a level's bonus target is collected, its par star
   turns golden in the level list, which also shows `GOLDEN ★ n/N` (N: levels
-  with a bonus target, currently all 17) once there is at least one. The header shows `BONUS 0/1` while playing a
+  with a bonus target, currently all 18) once there is at least one. The header shows `BONUS 0/1` while playing a
   level whose bonus target has appeared.
 - **Last bonus target of the game:** a celebration like the one for the
   last par star, in the bonus colours, with an "All bonus targets found!"
@@ -92,7 +92,7 @@ puzzle on top of the level for players who have mastered it.
   bonus target removed (it is hidden until par), and check that par is
   still possible with the target showing. At most one per level for now.
 - **Harder than par.** A bonus target needs more shots than par: one
-  more on levels 2–9 and 11–17, two more on level 10. Only level 1's
+  more on levels 2–9 and 11–18, two more on level 10. Only level 1's
   takes as few as par (1). A test checks `bonusShots` > `minShots` beyond level 1.
   To get there, levels 3, 4 and 6–10 each got one extra mirror (on level
   10 in place of a wall), chosen so that par and the par solution stay
@@ -199,18 +199,21 @@ levels 1 and 2 have one.
 | 14 | Rubble run | 5 | Goal needs 2 hits. Rows 4, 2, 3, 4, 3: a miss sets up the mirrors, row 2 breaks a cracked wall, and rows 3 and 4 take turns reaching the goal. |
 | 15 | Your move | 1 | Introduces the player-placed mirror (`/`). Row 4 runs along the bottom; the mirror in the corner below the goal turns it up into it. The bonus target needs the mirror somewhere else: row 1, then the mirror at (1,2), then row 2. |
 | 16 | Double duty | 3 | Player mirror `/`, used twice. Row 2 first flips the mirror at (2,2); with the mirror placed at (3,4), row 2 then runs down and round, bouncing off it and flipping it; row 4 turns down at the flipped mirror and runs to the goal. The bonus target needs the mirror placed later: rows 5, 5, then the mirror at (5,3), then rows 1, 1. |
-| 17 | Rebuild | 4 | Breakable walls, player mirror (`/`) and a two-hit goal together. Row 3 breaks the cracked wall at (4,5), and the mirror goes into the gap it leaves; row 5 then climbs to the goal, row 3 swings the mirrors back, and row 5 hits the goal again. The bonus target sits behind the cracked walls at the top: rows 3, 3, 5, 5, then the mirror at (5,4) and row 2. |
+| 17 | Clear the way | 3 | Breakable walls, player mirror (`/`) and a two-hit goal together, in an easy first combination before level 18. Row 1 breaks the cracked wall in front of it; with the mirror placed at (5,2), row 1 then runs down and along into the mirror, which turns it up into the goal; the mirrors it flipped now take row 2 up and along to the goal. The bonus target needs the mirror at (4,2): rows 1, 5, 5, 1, the second row 5 setting up the mirrors that turn row 1 down to it. |
+| 18 | Rebuild | 4 | Breakable walls, player mirror (`/`) and a two-hit goal together. Row 3 breaks the cracked wall at (4,5), and the mirror goes into the gap it leaves; row 5 then climbs to the goal, row 3 swings the mirrors back, and row 5 hits the goal again. The bonus target sits behind the cracked walls at the top: rows 3, 3, 5, 5, then the mirror at (5,4) and row 2. |
 
 Levels 15–16 were found with `npm run generate -- --player-mirror slash`
 (16 with `--place-later`), which keeps only boards that can't reach par
-without the mirror; the tests check that too. Level 17 was found with
+without the mirror; the tests check that too. Levels 17–18 were found with
 `--player-mirror slash --breakable 2 --goal-hits 2`, which also needs a
-cracked wall broken. All three have a unique shortest solution.
+cracked wall broken (17 with `--shots 3` on a 5×5 board with 5 mirrors
+and 1 wall, added after v1.0 to ease the step to 18). All four have a
+unique shortest solution.
 
 Levels 11–14 were found with `npm run generate -- --breakable N`, which
 keeps only boards that can't reach par with their breakable walls made
 solid; the tests check that too. Levels 11–14 can't be solved at all that
-way; level 17 can, in 6 shots, using the player mirror.
+way; levels 17 and 18 can, in 8 and 6 shots, using the player mirror.
 
 Levels 5–10 were found by searching random boards with the solver, keeping
 ones with exactly one shortest solution, and choosing by readability and
@@ -510,7 +513,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 1–4 (basics) | **Afterglow**: warm pads whose filter slowly opens and closes, a soft sine bass, an occasional echoing pluck. Am9 – Fmaj7 – Cmaj7 – G6, a chord every 8 s |
 | Levels 5–10 (multi-hit goals, harder flips) | **Glass garden**: a slow, dark drone with a soft bell now and then; the calmest track, for the hardest levels before breakable walls |
 | Levels 11–14 (breakable walls) | **Prism drift**: two swaying chords (Fmaj7♯11 – Cmaj9), a faint high shimmer, glassy bells now and then with a long tail |
-| Levels 15–17 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
+| Levels 15–18 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,

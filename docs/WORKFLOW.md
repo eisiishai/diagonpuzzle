@@ -77,8 +77,9 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   `npm run levels`.
 - In player-mirror levels the mirror can make nearly every cell reachable
   in the first shot, so a bonus target needing more shots than par is
-  rare without board changes. Level 17 needed `--changes 2`, which took
-  about 7 minutes; with `--changes 1` about 13 seconds. Run long searches
+  rare without board changes. Level 18 needed `--changes 2`, which took
+  about 7 minutes; with `--changes 1` about 13 seconds (level 17 got its
+  target that way, with one mirror added). Run long searches
   in the background.
 - A new block type (cell type) touches these places, after its design in
   `docs/DESIGN.md` (rule, grid symbol, look). Only the first four are

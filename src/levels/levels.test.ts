@@ -18,12 +18,13 @@ it.each(LEVELS_WITH_SETUP_ROUTE)("%s has a two-shot setup route", (id) => {
 
 // Levels built around breakable walls: with every breakable wall solid,
 // par is out of reach (levels 11-14 can't be solved at all that way; a
-// player mirror makes a longer way round possible on level 17).
+// player mirror makes a longer way round possible on levels 17-18).
 const LEVELS_NEEDING_BREAKS = [
   "breakthrough",
   "stone-by-stone",
   "crack-and-double",
   "rubble-run",
+  "clear-the-way",
   "rebuild",
 ];
 

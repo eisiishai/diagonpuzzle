@@ -276,6 +276,22 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "clear-the-way",
+    name: "Clear the way",
+    minShots: 3,
+    goalHits: 2,
+    bonusShots: 4,
+    playerMirror: "mirrorSlash",
+    music: "photon",
+    grid: String.raw`
+      % . \ . G
+      . . \ . .
+      . . # . .
+      . . / / *
+      % . / \ .
+    `,
+  },
+  {
     id: "rebuild",
     name: "Rebuild",
     minShots: 4,

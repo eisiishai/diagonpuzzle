@@ -75,7 +75,7 @@ with flipping mirrors, before it is built.
     placed between shots without taking one; levels 15–16 use it. Design
     in `docs/DESIGN.md`, *Player-placed mirror*
   - [ ] Option to rotate the placed mirror (choose `\` or `/`). The
-    design should say whether released levels 15–17 get it: if it
+    design should say whether released levels 15–18 get it: if it
     lowers their par, their `minShots` must stay as released (or the
     levels be replaced by new ones), since changing par changes saved
     stars
@@ -94,32 +94,36 @@ with flipping mirrors, before it is built.
 
 ### Difficulty curve
 
-Measured on 2026-10-10 (v0.34) by `npm run levels`, which ends with this
+Measured on 2026-10-10 (v0.34) by `npm run levels`, level 17 added on
+2026-10-11, which ends with this
 curve: the chance that random play completes a level within par (a random
 row each shot; in player-mirror levels a random cell for the mirror, or
 keeping it). Lower is harder. It dips at each new mechanic (5, 11,
-13, 15), as intended:
+13, 15, 17), as intended:
 
 | Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 in | 5 | 6 | 25 | 36 | 16 | 64 | 36 | 343 | 343 |
 
-| Level | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 |
-|---|---|---|---|---|---|---|---|---|
-| 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 47,500 |
+| Level | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 2,553 | 47,500 |
 
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
 
-- [ ] Smooth the step to level 17, about 14 times harder than 16 and 6
-  times harder than 14: add a par-3 level between them (player mirror with
-  a two-hit goal or breakable walls; `npm run generate` with
-  `--player-mirror slash --breakable 2 --goal-hits 2 --shots 3` found
-  several), or make 17 par 3 (as a new level with a new id: lowering a
-  released level's par removes stars players already have). The step is
-  measured by random-play odds only; whether it feels too steep is a
-  subjective call, best made after playing it (or seeing testers play it)
-  rather than from the numbers
+- [x] Smooth the step to *Rebuild* (then level 17), about 14 times
+  harder than 16 and 6 times harder than 14: a bridge level,
+  *Clear the way* (par 3), now level 17, combines the same three
+  mechanics (breakable walls, player mirror, two-hit goal) in an easy
+  first form. Found with `npm run generate -- --player-mirror slash
+  --breakable 2 --goal-hits 2 --shots 3 --width 5 --height 5 --mirrors 5
+  --walls 1`; its bonus target with `npm run bonus -- --changes 1`
+  - [ ] By random-play odds the bridge level is about as hard as 16, so
+    the step from it to *Rebuild* (18) is now about 19 times. The
+    bridge teaches the combination rather than the difficulty; whether
+    18 still feels too steep is best judged by playing it (or seeing
+    testers play it)
 - [ ] Optional: level 7 is a slight dip after levels 5–6 (as hard as 4)
 
 ### Presentation
@@ -175,7 +179,7 @@ the polyline rule and is checked on a phone. In suggested order:
   screen keeps *Night lab*; levels 1–4 *Afterglow* (warm pads with a
   slowly moving filter, occasional plucks); 5–10 *Glass garden* with
   sparse bells; 11–14 *Prism drift* (two swaying chords, shimmer, glassy
-  bells); 15–17 *Photon* (dark pads crossed by soft gliding tones).
+  bells); 15–18 *Photon* (dark pads crossed by soft gliding tones).
   *Pulse* was removed. Groups follow the mechanics, so new levels take
   their mechanic's track
 - [x] Effects in tune with the music. Chosen: bounce pings climb the
