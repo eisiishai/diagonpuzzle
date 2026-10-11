@@ -96,10 +96,8 @@ with flipping mirrors, before it is built.
     but never flips (drawn in matte steel, bolted down). Gives levels
     fixed points to plan around. Levels 27–28 teach it (chapter *Fixed
     mirrors*). Design in `docs/DESIGN.md`, *Fixed mirrors*
-    - [ ] Its own music track (the chapter plays *Glass garden* for now),
-      chosen on a sound lab page
-    - [ ] Its own hit sound, if the mirror bell without the swish isn't
-      enough, chosen on a sound lab page
+    - [x] Its own music track: *Anchor*, chosen on sound lab 6
+    - [x] Its own hit sound: *Anvil ring*, chosen on sound lab 6
     - [ ] More fixed mirror levels, combined with earlier pieces
   - [x] Glass mirror (`N` `\`, `Z` `/`): turns the pellet once, then
     shatters and leaves an empty cell, the mirror version of the

@@ -203,8 +203,9 @@ while the glass mirrors around it flip.
   reach (the tests check it).
 - It has no state of its own, so it doesn't add to the solver's search.
 - Shots stay finite: every step can still be traced back uniquely.
-- Its bounce sounds and flashes like a mirror's (*Crystal ping*); with
-  nothing turning, there is no glint along it and no swish.
+- Its bounce flashes like a mirror's, with its own *Anvil ring* (see
+  Sound) on the bounce ladder; with nothing turning, there is no glint
+  along it and no swish.
 - Levels 27–28 teach it (chapter *Fixed mirrors*).
 
 ## Cell types
@@ -649,7 +650,7 @@ celebrations (final star, bonus targets) keep their full level.
 |---|---|
 | Fire | *Soft pulse*: a gentle falling tone with a breath of air |
 | Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is one note higher on the music's scale, from E5 (capped after ten), so long shots stay in key. With a quiet glassy swish as the mirror turns (sound lab 2) |
-| Fixed mirror bounce | The mirror bounce's bell on the same ladder note, without the swish, as nothing turns (not from a sound lab) |
+| Fixed mirror bounce | *Anvil ring* (sound lab 6): a round note on the bounce's ladder note with a bright metallic overtone above it, like a small steel bar; no swish, as nothing turns. A little quieter than on the lab page |
 | Reflector hit | *Echo ping* (sound lab 5): the bounce's bell on the same ladder note, answered by two quick, quieter repeats that move back towards the centre, as the beam goes back; no swish, as nothing turns |
 | Glass mirror shatters | *Crack and tinkle* (sound lab 5): the bounce's ping on its ladder note, cut off by a short bright crack and three small clicks, then six tiny high notes falling down the music's scale, like the shards |
 | Wall | *Soft knock* |
@@ -677,7 +678,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 15–18 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
 | Levels 19–22 (reflectors) | **Return**: pads and bass on Dm9 – B♭maj7♯11. Now and then a two-note pluck phrase on the left is answered from the right by its mirror image (the step turned upside down), quieter and further away, like a shot coming back from a reflector, changed |
 | Levels 23–26 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
-| Levels 27–28 (fixed mirrors) | **Glass garden** for now, until the chapter has its own track |
+| Levels 27–28 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,
@@ -687,7 +688,8 @@ take the track of their mechanic's group. (Livelier drafts with beats and
 tunes were tried on sound lab 2 and found too distracting.)
 
 Return and Glass harp were chosen on sound lab 4 (2026-10-11), and play a
-little quieter and rarer than on the lab page. Return's answering phrase
+little quieter and rarer than on the lab page; Anchor on sound lab 6
+(2026-10-11), its tine a little quieter and rarer too. Return's answering phrase
 is the only music placed off centre (35 % to either side).
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving

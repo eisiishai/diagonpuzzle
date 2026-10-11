@@ -424,7 +424,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Bolted down",
     minShots: 2,
     bonusShots: 3,
-    music: "glassGarden",
+    music: "anchor",
     grid: String.raw`
       . \ . \ G
       . . \ . *
@@ -437,7 +437,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Cold steel",
     minShots: 3,
     bonusShots: 4,
-    music: "glassGarden",
+    music: "anchor",
     grid: String.raw`
       \ . . . \ .
       . \ . J \ /

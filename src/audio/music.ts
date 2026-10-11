@@ -12,7 +12,8 @@ export type MusicTrackId =
   | "prism"
   | "photon"
   | "return"
-  | "glassHarp";
+  | "glassHarp"
+  | "anchor";
 
 /** The notes that fit the music at a moment, for tuning effects to it. */
 export interface Harmony {
@@ -173,6 +174,19 @@ const GLASS_HARP = {
   scale: [6, 9, 11, 1, 4],
   tonic: 6,
   tones: { last: -Infinity },
+};
+const ANCHOR = {
+  chords: [
+    [55, 58, 62, 69],
+    [51, 55, 58, 62],
+  ],
+  // Gm9 – E♭maj7 over a bass that stays on G, G minor.
+  roots: [43, 43],
+  scale: [7, 10, 0, 2, 5],
+  tonic: 7,
+  // The steel tine's one note: D, the fifth of G and the seventh of E♭.
+  tine: 74,
+  tines: { last: -Infinity },
 };
 const GLASS_BELLS = [69, 72, 74, 76, 79, 81, 84];
 const glassBells = { last: -Infinity };
@@ -538,6 +552,51 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
             wet: 0.6,
           });
         }
+      }
+    },
+  },
+
+  // Ambient on Gm9 – E♭maj7, for the fixed mirror levels: the bass stays
+  // on G under both chords, and now and then a soft steel tine rings,
+  // always the same note from the same place, like the one piece on the
+  // board that doesn't change (sound lab 6).
+  anchor: {
+    name: "Anchor",
+    bpm: 60,
+    stepsPerBeat: 2,
+    harmony: (i) => ({
+      root: ANCHOR.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      chord: ANCHOR.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      scale: ANCHOR.scale,
+      tonic: ANCHOR.tonic,
+    }),
+    step: (s, dest, i, t, step) => {
+      const k = Math.floor(i / AMBIENT_CHORD_STEPS);
+      if (i % AMBIENT_CHORD_STEPS === 0) {
+        const seconds = step * AMBIENT_CHORD_STEPS;
+        ambientBed(
+          s,
+          dest,
+          t,
+          seconds,
+          ANCHOR.chords[k % 2],
+          ANCHOR.roots[k % 2],
+          k,
+        );
+      }
+      if (sparse(ANCHOR.tines, i, 8, 0.13)) {
+        s.bell({
+          f: midi(ANCHOR.tine),
+          t,
+          d: 2.6,
+          vol: 0.02,
+          ratio: 1.41,
+          index: 0.6,
+          dest,
+          pan: 0.2,
+          wet: 0.6,
+          echo: 0.3,
+        });
       }
     },
   },

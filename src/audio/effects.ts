@@ -378,7 +378,7 @@ export function endingNotes(tonic: number): {
 /** Seconds a bounce sound lasts, for limiting overlapping sounds. */
 export const BOUNCE_SECONDS: Record<BounceKind, number> = {
   mirror: 0.45,
-  fixed: 0.45,
+  fixed: 0.6,
   reflector: 0.65,
   glass: 0.5,
 };
@@ -389,7 +389,9 @@ export const BOUNCE_SECONDS: Record<BounceKind, number> = {
  * long shots stay in key. What turned the pellet decides the sound:
  * - mirror (B, "Crystal ping"): a small bell with a soft glassy swish as
  *   the mirror turns;
- * - fixed mirror: the same bell without the swish, as nothing turns;
+ * - fixed (sound lab 6, "Anvil ring"): a round note with a bright metallic
+ *   overtone above it, like a small steel bar, and no swish, as nothing
+ *   turns;
  * - reflector (sound lab 5, "Echo ping"): the bell answered by two quick,
  *   quieter repeats that move back towards the centre, as the beam goes
  *   back;
@@ -408,6 +410,30 @@ export function playBounce(
   pan = 0,
 ): void {
   const f = midi(bounceNote(bounceNumber, harmony.scale));
+  if (kind === "fixed") {
+    s.bell({
+      f,
+      t,
+      d: 0.6,
+      vol: 0.05,
+      ratio: 1,
+      index: 0.3,
+      dest,
+      pan,
+      wet: 0.3,
+    });
+    s.tone({
+      f: f * 2.76,
+      t,
+      a: 0.002,
+      d: 0.25,
+      vol: 0.016,
+      dest,
+      pan,
+      wet: 0.3,
+    });
+    return;
+  }
   if (kind === "reflector") {
     [0, 0.11, 0.22].forEach((delay, k) =>
       s.bell({
@@ -435,9 +461,6 @@ export function playBounce(
     pan,
     wet: 0.3,
   });
-  if (kind === "fixed") {
-    return;
-  }
   // The mirror turning (sound lab 2, "Glass swish"), kept quiet.
   s.noise({ t, d: 0.09, vol: 0.02, f: 5500, f2: 3000, q: 2, dest, pan });
   if (kind !== "glass") {
