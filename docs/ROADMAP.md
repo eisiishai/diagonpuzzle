@@ -87,21 +87,21 @@ with flipping mirrors, before it is built.
     larger levels stay readable; makes the solver's search smaller
   - [x] Glass mirror (`N` `\`, `Z` `/`): turns the pellet once, then
     shatters and leaves an empty cell, the mirror version of the
-    breakable wall. Levels 21–22 teach it (chapter *Glass mirrors*).
+    breakable wall. Levels 23–26 teach it (chapter *Glass mirrors*).
     Design in `docs/DESIGN.md`, *Glass mirrors*
-    - [ ] Harder glass mirror levels, e.g. combined with reflectors or
-      flips that must happen before the glass is spent
+    - [x] Harder glass mirror levels: 25 with a reflector, 26 with a
+      two-hit goal
     - [ ] Optional: a shattering sound (it plays the mirror's ping),
       chosen on a sound lab page with the reflector's
   - [ ] Reinforced wall: a breakable wall that needs two hits, showing a
     crack after the first
   - [x] Reflector (`@`): sends the pellet straight back the way it came.
     The return trip meets the mirrors it already flipped, so it goes
-    somewhere new. Levels 19–20 teach it (chapter *Reflectors*). Design
+    somewhere new. Levels 19–22 teach it (chapter *Reflectors*). Design
     in `docs/DESIGN.md`, *Reflectors*
-    - [ ] Harder reflector levels, e.g. combined with breakable walls or
-      the player's mirror
-    - [ ] Optional: its own music track (levels 19–20 play *Afterglow*)
+    - [x] Harder reflector levels: 21 with breakable walls, 22 with the
+      player's mirror
+    - [ ] Optional: its own music track (levels 19–26 play *Afterglow*)
       and hit sound (it plays the mirror's ping), chosen on a sound lab
       page
   - [ ] Portal pair: the pellet enters one and leaves the other in the

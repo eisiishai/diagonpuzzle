@@ -335,6 +335,35 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "ricochet",
+    name: "Ricochet",
+    minShots: 3,
+    bonusShots: 4,
+    music: "afterglow",
+    grid: String.raw`
+      . \ @ . . .
+      / . . % * .
+      \ # . . . .
+      . . . % . .
+      \ . / % . G
+    `,
+  },
+  {
+    id: "mirror-image",
+    name: "Mirror image",
+    minShots: 3,
+    bonusShots: 4,
+    playerMirror: "mirrorBackslash",
+    music: "afterglow",
+    grid: String.raw`
+      . . \ . . .
+      . / . \ / *
+      . . . @ . G
+      . / . . . .
+      . . # . . .
+    `,
+  },
+  {
     id: "glass-house",
     name: "Glass house",
     minShots: 2,
@@ -359,6 +388,35 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . / . Z G
       . \ . # . .
       . . / . . .
+    `,
+  },
+  {
+    id: "glass-echo",
+    name: "Glass echo",
+    minShots: 3,
+    bonusShots: 4,
+    music: "afterglow",
+    grid: String.raw`
+      . # \ N . *
+      / . . / . .
+      / . . . . .
+      / . \ . . .
+      @ . . Z . G
+    `,
+  },
+  {
+    id: "double-glazing",
+    name: "Double glazing",
+    minShots: 4,
+    goalHits: 2,
+    bonusShots: 5,
+    music: "afterglow",
+    grid: String.raw`
+      . . . \ . G
+      . . Z \ . .
+      . . / # . .
+      \ . . . . .
+      / Z . * . .
     `,
   },
 ];
