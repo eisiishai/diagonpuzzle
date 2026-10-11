@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bounceNote, columnPan, endingNotes, goalChimeNotes } from "./effects";
-import { MUSIC_TRACKS } from "./music";
+import { MUSIC_TRACKS, mirrorPhrase, scaleNotes } from "./music";
 
 const A_MINOR_PENTATONIC = [9, 0, 2, 4, 7];
 
@@ -86,6 +86,36 @@ describe("endingNotes", () => {
     for (const track of Object.values(MUSIC_TRACKS)) {
       const { tonic } = track.harmony(0);
       expect(endingNotes(tonic).root % 12).toBe(tonic);
+    }
+  });
+});
+
+describe("mirrorPhrase", () => {
+  const D_MINOR_PENTATONIC = [2, 5, 7, 9, 0];
+
+  it("answers a phrase with its mirror image around the first note", () => {
+    // Near A4 (69): two scale steps up is D5 (74), two down is F4 (65).
+    expect(mirrorPhrase(D_MINOR_PENTATONIC, 69, 2)).toEqual({
+      phrase: [69, 74],
+      answer: [69, 65],
+    });
+  });
+
+  it("keeps both phrases inside the range near its ends", () => {
+    const notes = scaleNotes(D_MINOR_PENTATONIC, 62, 90);
+    for (const near of [50, 62, 90, 100]) {
+      for (const steps of [1, 2, 3]) {
+        const { phrase, answer } = mirrorPhrase(
+          D_MINOR_PENTATONIC,
+          near,
+          steps,
+        );
+        for (const note of [...phrase, ...answer]) {
+          expect(notes).toContain(note);
+        }
+        expect(phrase[1] - phrase[0]).toBeGreaterThan(0);
+        expect(answer[1] - answer[0]).toBeLessThan(0);
+      }
     }
   });
 });

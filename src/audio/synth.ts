@@ -13,6 +13,8 @@ interface Routing {
   wet?: number;
   /** Amount sent to the shared echo, 0–1. */
   echo?: number;
+  /** Stereo position, -1 (left) to 1 (right); the sends stay centred. */
+  pan?: number;
 }
 
 export interface ToneOptions extends Routing {
@@ -69,6 +71,16 @@ export interface NoiseOptions extends Routing {
   f?: number;
   f2?: number;
   q?: number;
+}
+
+export interface GlassOptions extends Routing {
+  f: number;
+  t: number;
+  /** Total length, swell (attack) and release, in seconds. */
+  dur: number;
+  a?: number;
+  r?: number;
+  vol?: number;
 }
 
 export interface BellOptions extends Routing {
@@ -247,6 +259,42 @@ export class Synth {
     modulator.stop(t + d + 0.05);
   }
 
+  /**
+   * A glass-harmonica tone: a sine with soft second and third partials and
+   * a slow vibrato, swelling in and fading out.
+   */
+  glass(o: GlassOptions): void {
+    const { f, t, dur, a = 1.2, r = 1.8, vol = 0.02 } = o;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(vol, t + a);
+    gain.gain.setValueAtTime(vol, t + Math.max(a, dur - r));
+    gain.gain.linearRampToValueAtTime(0.0001, t + dur);
+    gain.connect(this.route(o));
+    const vibrato = this.ctx.createOscillator();
+    vibrato.frequency.value = 4.8;
+    const depth = this.ctx.createGain();
+    depth.gain.value = f * 0.0035;
+    vibrato.connect(depth);
+    for (const [partial, level] of [
+      [1, 1],
+      [2, 0.18],
+      [3, 0.05],
+    ]) {
+      const osc = this.ctx.createOscillator();
+      osc.frequency.value = f * partial;
+      depth.connect(osc.frequency);
+      const partialGain = this.ctx.createGain();
+      partialGain.gain.value = level;
+      osc.connect(partialGain);
+      partialGain.connect(gain);
+      osc.start(t);
+      osc.stop(t + dur + 0.05);
+    }
+    vibrato.start(t);
+    vibrato.stop(t + dur + 0.05);
+  }
+
   /** Plays MIDI `notes` one after another, `spacing` seconds apart. */
   notes(
     notes: number[],
@@ -272,10 +320,20 @@ export class Synth {
     return gain;
   }
 
-  /** A node feeding `dest`, with reverb and echo sends when asked for. */
-  private route({ dest, wet = 0, echo = 0 }: Routing): AudioNode {
+  /**
+   * A node feeding `dest`, at stereo position `pan` if given, with reverb
+   * and echo sends when asked for.
+   */
+  private route({ dest, wet = 0, echo = 0, pan = 0 }: Routing): AudioNode {
     const out = this.ctx.createGain();
-    out.connect(dest);
+    if (pan === 0) {
+      out.connect(dest);
+    } else {
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.value = pan;
+      out.connect(panner);
+      panner.connect(dest);
+    }
     const send = (amount: number, to: AudioNode) => {
       const gain = this.ctx.createGain();
       gain.gain.value = amount;

@@ -91,8 +91,8 @@ with flipping mirrors, before it is built.
     Design in `docs/DESIGN.md`, *Glass mirrors*
     - [x] Harder glass mirror levels: 25 with a reflector, 26 with a
       two-hit goal
-    - [ ] Optional: a shattering sound (it plays the mirror's ping),
-      chosen on a sound lab page with the reflector's
+    - [x] Its own music track: *Glass harp*, chosen on sound lab 4
+    - [ ] Optional: a shattering sound (it plays the mirror's ping)
   - [ ] Reinforced wall: a breakable wall that needs two hits, showing a
     crack after the first
   - [x] Reflector (`@`): sends the pellet straight back the way it came.
@@ -101,9 +101,8 @@ with flipping mirrors, before it is built.
     in `docs/DESIGN.md`, *Reflectors*
     - [x] Harder reflector levels: 21 with breakable walls, 22 with the
       player's mirror
-    - [ ] Optional: its own music track (levels 19–26 play *Afterglow*)
-      and hit sound (it plays the mirror's ping), chosen on a sound lab
-      page
+    - [x] Its own music track: *Return*, chosen on sound lab 4
+    - [ ] Optional: its own hit sound (it plays the mirror's ping)
   - [ ] Portal pair: the pellet enters one and leaves the other in the
     same direction. No state of its own, so no cost to the solver;
     reaches rows and routes the left edge can't. The loop guard covers

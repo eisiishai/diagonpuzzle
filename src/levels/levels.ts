@@ -312,7 +312,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Return trip",
     minShots: 1,
     bonusShots: 2,
-    music: "afterglow",
+    music: "return",
     grid: String.raw`
       . \ / . .
       . @ * # .
@@ -325,7 +325,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "There and back",
     minShots: 2,
     bonusShots: 3,
-    music: "afterglow",
+    music: "return",
     grid: String.raw`
       \ . . . \ *
       . / . . . .
@@ -339,7 +339,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Ricochet",
     minShots: 3,
     bonusShots: 4,
-    music: "afterglow",
+    music: "return",
     grid: String.raw`
       . \ @ . . .
       / . . % * .
@@ -354,7 +354,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 3,
     bonusShots: 4,
     playerMirror: "mirrorBackslash",
-    music: "afterglow",
+    music: "return",
     grid: String.raw`
       . . \ . . .
       . / . \ / *
@@ -368,7 +368,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Glass house",
     minShots: 2,
     bonusShots: 4,
-    music: "afterglow",
+    music: "glassHarp",
     grid: String.raw`
       \ . \ . .
       . . Z . G
@@ -381,7 +381,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Clean break",
     minShots: 3,
     bonusShots: 4,
-    music: "afterglow",
+    music: "glassHarp",
     grid: String.raw`
       . . . / . .
       . / . . N *
@@ -395,7 +395,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Glass echo",
     minShots: 3,
     bonusShots: 4,
-    music: "afterglow",
+    music: "glassHarp",
     grid: String.raw`
       . # \ N . *
       / . . / . .
@@ -410,7 +410,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 4,
     goalHits: 2,
     bonusShots: 5,
-    music: "afterglow",
+    music: "glassHarp",
     grid: String.raw`
       . . . \ . G
       . . Z \ . .

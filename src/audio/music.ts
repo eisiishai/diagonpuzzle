@@ -6,7 +6,13 @@ import type { Synth } from "./synth";
 import { midi } from "./synth";
 
 export type MusicTrackId =
-  "nightLab" | "afterglow" | "glassGarden" | "prism" | "photon";
+  | "nightLab"
+  | "afterglow"
+  | "glassGarden"
+  | "prism"
+  | "photon"
+  | "return"
+  | "glassHarp";
 
 /** The notes that fit the music at a moment, for tuning effects to it. */
 export interface Harmony {
@@ -57,7 +63,7 @@ const pick = <T>(items: readonly T[]): T =>
 /**
  * The ambient tracks' bed for one chord: four slow pads whose filter opens
  * on even chords and closes on odd ones, and a soft sine bass, overlapping
- * into the next chord.
+ * into the next chord, at `level` times the usual volume.
  */
 function ambientBed(
   s: Synth,
@@ -67,6 +73,7 @@ function ambientBed(
   chord: readonly number[],
   root: number,
   chordNumber: number,
+  level = 1,
 ): void {
   const dur = seconds + 2.5;
   const opening = chordNumber % 2 === 0;
@@ -77,7 +84,7 @@ function ambientBed(
       dur,
       a: 2.5,
       r: 3,
-      vol: 0.016,
+      vol: 0.016 * level,
       from: opening ? 450 : 1300,
       to: opening ? 1300 : 450,
       dest,
@@ -91,7 +98,7 @@ function ambientBed(
     dur,
     a: 2,
     r: 2.5,
-    vol: 0.09,
+    vol: 0.09 * level,
     cutoff: 300,
     detunes: [0],
     dest,
@@ -145,8 +152,69 @@ const PHOTON = {
   scale: [4, 7, 9, 11, 2],
   tonic: 4,
 };
+const RETURN = {
+  chords: [
+    [50, 57, 60, 64],
+    [53, 57, 58, 64],
+  ],
+  roots: [38, 34],
+  // Dm9 – B♭maj7♯11, D minor; the phrases use its pentatonic scale.
+  scale: [2, 5, 7, 9, 0],
+  tonic: 2,
+  phrases: { last: -Infinity },
+};
+const GLASS_HARP = {
+  chords: [
+    [54, 56, 57, 61],
+    [54, 57, 61, 62],
+  ],
+  roots: [42, 38],
+  // F♯m(add9) – Dmaj7, F♯ minor.
+  scale: [6, 9, 11, 1, 4],
+  tonic: 6,
+  tones: { last: -Infinity },
+};
 const GLASS_BELLS = [69, 72, 74, 76, 79, 81, 84];
 const glassBells = { last: -Infinity };
+
+/** The MIDI notes from `low` to `high` whose pitch class is in `scale`. */
+export function scaleNotes(
+  scale: readonly number[],
+  low: number,
+  high: number,
+): number[] {
+  const notes: number[] = [];
+  for (let note = low; note <= high; note++) {
+    if (scale.includes(note % 12)) {
+      notes.push(note);
+    }
+  }
+  return notes;
+}
+
+/**
+ * Return's phrase: two notes stepping `steps` notes up `scale` from near
+ * `near`, and its mirror image, the same first note stepping as far down.
+ * The first note is kept far enough from the ends of the range for both.
+ */
+export function mirrorPhrase(
+  scale: readonly number[],
+  near: number,
+  steps: number,
+): { phrase: [number, number]; answer: [number, number] } {
+  const notes = scaleNotes(scale, 62, 90);
+  const nearest = notes.reduce((best, note) =>
+    Math.abs(note - near) < Math.abs(best - near) ? note : best,
+  );
+  const i = Math.max(
+    steps,
+    Math.min(notes.length - 1 - steps, notes.indexOf(nearest)),
+  );
+  return {
+    phrase: [notes[i], notes[i + steps]],
+    answer: [notes[i], notes[i - steps]],
+  };
+}
 
 /** Steps per chord in the ambient tracks: a chord every 8–9 seconds. */
 const AMBIENT_CHORD_STEPS = 16;
@@ -384,6 +452,92 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
           dest,
           wet: 0.5,
         });
+      }
+    },
+  },
+
+  // Ambient on Dm9 – B♭maj7♯11, for the reflector levels. Now and then a
+  // two-note pluck phrase on the left is answered from the right by its
+  // mirror image (the step turned upside down), quieter and further away,
+  // like a shot coming back from a reflector, changed.
+  return: {
+    name: "Return",
+    bpm: 60,
+    stepsPerBeat: 2,
+    harmony: (i) => ({
+      root: RETURN.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      chord: RETURN.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      scale: RETURN.scale,
+      tonic: RETURN.tonic,
+    }),
+    step: (s, dest, i, t, step) => {
+      const k = Math.floor(i / AMBIENT_CHORD_STEPS);
+      const chord = RETURN.chords[k % 2];
+      if (i % AMBIENT_CHORD_STEPS === 0) {
+        const seconds = step * AMBIENT_CHORD_STEPS;
+        ambientBed(s, dest, t, seconds, chord, RETURN.roots[k % 2], k);
+      }
+      if (sparse(RETURN.phrases, i, 8, 0.17)) {
+        const { phrase, answer } = mirrorPhrase(
+          RETURN.scale,
+          pick(chord) + 12,
+          pick([1, 2, 3]),
+        );
+        const pluck = (note: number, at: number, vol: number, far: boolean) =>
+          s.tone({
+            type: "triangle",
+            f: midi(note),
+            t: at,
+            a: 0.02,
+            d: 1.4,
+            vol,
+            dest,
+            pan: far ? 0.35 : -0.35,
+            echo: 0.3,
+            wet: far ? 0.7 : 0.45,
+          });
+        phrase.forEach((note, j) => pluck(note, t + j * step, 0.024, false));
+        answer.forEach((note, j) =>
+          pluck(note, t + (4 + j) * step, 0.014, true),
+        );
+      }
+    },
+  },
+
+  // Ambient on F♯m(add9) – Dmaj7, for the glass mirror levels: softer pads,
+  // with slow glass-harmonica tones rising out of them now and then,
+  // sometimes two at once.
+  glassHarp: {
+    name: "Glass harp",
+    bpm: 60,
+    stepsPerBeat: 2,
+    harmony: (i) => ({
+      root: GLASS_HARP.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      chord: GLASS_HARP.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      scale: GLASS_HARP.scale,
+      tonic: GLASS_HARP.tonic,
+    }),
+    step: (s, dest, i, t, step) => {
+      const k = Math.floor(i / AMBIENT_CHORD_STEPS);
+      const chord = GLASS_HARP.chords[k % 2];
+      if (i % AMBIENT_CHORD_STEPS === 0) {
+        const seconds = step * AMBIENT_CHORD_STEPS;
+        ambientBed(s, dest, t, seconds, chord, GLASS_HARP.roots[k % 2], k, 0.8);
+      }
+      if (sparse(GLASS_HARP.tones, i, 7, 0.17)) {
+        const note = pick(chord);
+        s.glass({ f: midi(note + 12), t, dur: 4.5, vol: 0.02, dest, wet: 0.6 });
+        if (Math.random() < 0.4) {
+          const other = pick(chord.filter((n) => n !== note));
+          s.glass({
+            f: midi(other + 12),
+            t: t + 0.8,
+            dur: 4,
+            vol: 0.014,
+            dest,
+            wet: 0.6,
+          });
+        }
       }
     },
   },

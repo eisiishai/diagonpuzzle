@@ -637,7 +637,8 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 5–10 (multi-hit goals, harder flips) | **Glass garden**: a slow, dark drone with a soft bell now and then; the calmest track, for the hardest levels before breakable walls |
 | Levels 11–14 (breakable walls) | **Prism drift**: two swaying chords (Fmaj7♯11 – Cmaj9), a faint high shimmer, glassy bells now and then with a long tail |
 | Levels 15–18 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
-| Levels 19–26 (reflectors, glass mirrors) | **Afterglow** again for now, the calm track of the basics, as these levels teach new pieces from the start; tracks of their own may follow |
+| Levels 19–22 (reflectors) | **Return**: pads and bass on Dm9 – B♭maj7♯11. Now and then a two-note pluck phrase on the left is answered from the right by its mirror image (the step turned upside down), quieter and further away, like a shot coming back from a reflector, changed |
+| Levels 23–26 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,
@@ -645,6 +646,10 @@ bells, glides) placed at random so the loop is hard to notice. The title
 screen can be livelier. A track change marks a new mechanic, so new levels
 take the track of their mechanic's group. (Livelier drafts with beats and
 tunes were tried on sound lab 2 and found too distracting.)
+
+Return and Glass harp were chosen on sound lab 4 (2026-10-11), and play a
+little quieter and rarer than on the lab page. Return's answering phrase
+is the only music placed off centre (35 % to either side).
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different
