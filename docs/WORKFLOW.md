@@ -154,6 +154,7 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | Command | Checks |
 |---|---|
 | `npm test` | Unit tests (Vitest) |
+| `npm run coverage` | The unit tests, and which code they run (below). |
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
 | `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 70 s. Run before commits that change the game (see *3. Commit*). |
@@ -167,6 +168,23 @@ What the tests cover: game rules, simulation, solver, `LevelSession`, level
 parser, saved progress and path geometry. Every level is checked against its
 declared `minShots` with the solver, and levels 1–2 must keep their two-shot
 setup route.
+
+`npm run coverage` prints, for each file with code the unit tests don't
+run, the share of statements, branches (each side of an `if`, `? :`,
+`??`), functions and lines they do run, and the uncovered line numbers.
+Fully covered files are left out of the table. Open
+`coverage/index.html` in a browser for every file with each line marked
+covered or not: in the Windows browser,
+`\\wsl.localhost\<distro>\home\<user>\…\diagonpuzzle\coverage\index.html`.
+
+On 2026-10-11 (v1.17) the rules were nearly fully covered: `src/levels/`
+and `src/save/` 100%, `src/game/` 99% of statements and 97% of
+branches. The PixiJS views, scenes and audio playback are mostly
+uncovered, as expected: the browser smoke tests run them, and the
+coverage report doesn't see those. Neither do the level design tools'
+command-line parts (`scripts/levels.ts`, `generate.ts` and the like),
+which are run by hand. Branch coverage is the most telling figure: a
+line can run while one of its cases never does.
 
 The smoke tests (`e2e/`) build the game into `dist-e2e/` (leaving `dist/`
 alone), serve it with `vite preview` and play it in headless Chromium: the

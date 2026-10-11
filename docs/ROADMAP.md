@@ -393,6 +393,16 @@ lab page on 2026-10-11:
   - [x] Second measure, foresight: the changes the par solution makes
     for its later shots (*Difficulty curve* above), next to the odds in
     `npm run levels`
+- [x] Unit test coverage, `npm run coverage` (`@vitest/coverage-v8`):
+  the rules are nearly fully covered (`src/game/` 97% of branches,
+  `src/levels/` and `src/save/` 100%); drawing, scenes and audio are
+  covered by the browser smoke tests instead
+  - [ ] Optional: coverage from the browser smoke tests too (Chromium's
+    coverage through Playwright, mapped to the sources with e.g.
+    `monocart-coverage-reports`), to see drawing, scene and audio code
+    no test runs
+  - [ ] Optional: coverage thresholds for `src/game/`, `src/levels/` and
+    `src/save/` in `npm run build`, so a drop stops the commit
 - [ ] Watch the solver's and `npm run generate`'s run times as placeable
   blocks grow: each placement option multiplies the choices before every
   shot, and the tests check every level with the solver. All tests take

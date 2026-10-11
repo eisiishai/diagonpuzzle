@@ -15,6 +15,9 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   verify changes)
 - `npm run lint` — ESLint (with Prettier formatting rules)
 - `npm test` — Vitest unit tests
+- `npm run coverage` — the unit tests with code coverage: a table of files
+  with uncovered code, and a line-by-line report in `coverage/index.html`
+  (git-ignored)
 - `npm run levels` — level design report: shortest solution, an
   alternative solution above par, setup routes,
   difficulty (random play's odds of finishing at par, and foresight: the
