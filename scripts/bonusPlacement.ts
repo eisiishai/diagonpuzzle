@@ -11,6 +11,7 @@ import {
   placementPositions,
 } from "../src/game/placement";
 import {
+  playMoves,
   shotRows,
   solve,
   solveBonusMoves,
@@ -30,6 +31,12 @@ export interface PlacementOptions {
   changes: number;
   /** The mirror the player may place, if the level gives one. */
   playerMirror?: MirrorType;
+  /**
+   * Keep only placements whose route passes through a cell holding one of
+   * these pieces on the placement's board (e.g. a reflector, or a glass
+   * mirror or the gap it leaves), so the bonus target uses them too.
+   */
+  uses?: readonly CellType[];
 }
 
 export interface CellChange extends Position {
@@ -157,7 +164,10 @@ export function firstEntries(
  * board changes. Every placement keeps par, the
  * level's current par solution and its number of shortest solutions, and
  * puts the bonus target in an empty cell that the par solution never passes
- * through. Bonus targets already on the board are removed first.
+ * through. Board changes only touch cells the par solution never reaches
+ * (neither its paths nor where it places the player's mirror), so it plays
+ * out exactly as before, cell by cell. Bonus targets already on the board
+ * are removed first.
  */
 export function findPlacements(
   levelBoard: Board,
@@ -174,6 +184,11 @@ export function findPlacements(
     shortestSolutions(board, minShots, goalHits, playerMirror).length;
   const parSolutions = solutionCount(start);
   const placements: Placement[] = [];
+  const usesPiece = (board: Board, route: Move[]) =>
+    options.uses === undefined ||
+    playMoves(board, route).shots.some((shot) =>
+      shot.path.some(({ x, y }) => options.uses!.includes(board.cells[y][x])),
+    );
 
   const evaluate = (board: Board, changes: CellChange[]) => {
     // The par solution must still complete the level; note where it goes.
@@ -228,25 +243,41 @@ export function findPlacements(
 
     for (const { x, y, routes } of cells) {
       const withBonus = withCell(board, { x, y, cell: "bonus" });
-      placements.push({
-        changes,
-        bonus: { x, y },
-        board: withBonus,
-        routes,
-        route:
-          solveBonusMoves(
-            withBonus,
-            { x, y },
-            { maxShots: bonusShots, goalHits, playerMirror },
-          ) ?? [],
-      });
+      const route =
+        solveBonusMoves(
+          withBonus,
+          { x, y },
+          { maxShots: bonusShots, goalHits, playerMirror },
+        ) ?? [];
+      if (usesPiece(withBonus, route)) {
+        placements.push({
+          changes,
+          bonus: { x, y },
+          board: withBonus,
+          routes,
+          route,
+        });
+      }
     }
   };
 
+  // Cells the par solution reaches: its paths and the player's mirror.
+  const parCells = new Set<string>();
+  let parBoard = start;
+  for (const move of par) {
+    if (typeof move === "number") {
+      const result = fire(parBoard, move);
+      result.path.forEach(({ x, y }) => parCells.add(`${x},${y}`));
+      parBoard = result.board;
+    } else {
+      parCells.add(`${move.x},${move.y}`);
+      parBoard = placeMirror(parBoard, move, move.mirror);
+    }
+  }
   const changeable: Position[] = [];
   start.cells.forEach((row, y) =>
     row.forEach((cell, x) => {
-      if (cell !== "goal") {
+      if (cell !== "goal" && !parCells.has(`${x},${y}`)) {
         changeable.push({ x, y });
       }
     }),

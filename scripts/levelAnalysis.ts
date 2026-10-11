@@ -38,10 +38,18 @@ export function describeShot(result: ShotResult): string {
   const { path, outcome } = result;
   const flips = path.filter((step) => step.becomes?.startsWith("mirror"));
   const broke = outcome === "blocked" && path[path.length - 1].becomes;
+  // A glass mirror turns the pellet and becomes empty.
+  const shattered = path.filter(
+    (step) =>
+      step.becomes === "empty" && step.directionIn !== step.directionOut,
+  ).length;
   const n = flips.length;
   return (
     `${outcome}${broke ? ", breaks a wall" : ""}` +
-    `, flips ${n} mirror${n === 1 ? "" : "s"}`
+    `, flips ${n} mirror${n === 1 ? "" : "s"}` +
+    (shattered > 0
+      ? `, shatters ${shattered} glass mirror${shattered === 1 ? "" : "s"}`
+      : "")
   );
 }
 

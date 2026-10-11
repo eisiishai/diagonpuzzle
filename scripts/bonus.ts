@@ -4,6 +4,7 @@
 // board ready to paste into src/levels/levels.ts. Rows and columns are
 // numbered from 1, as the player counts them. `--help` lists the options.
 
+import type { CellType } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
 import { CELL_SYMBOLS, formatLevel, parseLevel } from "../src/levels/parse";
 import { findPlacements } from "./bonusPlacement";
@@ -13,6 +14,14 @@ import { cellName, rowList } from "./levelAnalysis";
 // Node's process, without depending on @types/node.
 declare const process: { argv: string[]; exitCode?: number };
 
+/** Piece names for --uses, and the cell types they stand for. */
+const PIECES: Record<string, CellType[]> = {
+  mirror: ["mirrorBackslash", "mirrorSlash"],
+  glass: ["glassBackslash", "glassSlash"],
+  reflector: ["reflector"],
+  breakable: ["breakable"],
+};
+
 const HELP = `Usage: npm run bonus -- --level N [options]
 
   --level N|ID      the level, by number (from 1) or id
@@ -21,14 +30,22 @@ const HELP = `Usage: npm run bonus -- --level N [options]
   --changes N       board cells that may change first, 0-2 (default 0);
                     2 can take minutes on a big board
   --show N          placements to list (default 20)
+  --uses P[,P...]   only routes that pass through one of these pieces:
+                    ${Object.keys(PIECES).join(", ")} (glass counts the gap
+                    a shattered one leaves too)
 
-Example: npm run bonus -- --level 13 --shots 4 --changes 1`;
+Changes never touch a cell the par solution reaches, so it plays out
+exactly as before.
+
+Example: npm run bonus -- --level 13 --shots 4 --changes 1
+         npm run bonus -- --level 25 --changes 1 --uses reflector,glass`;
 
 interface Args {
   level: string;
   shots?: number;
   changes: number;
   show: number;
+  uses?: CellType[];
 }
 
 const NUMBER_FLAGS: Record<string, "shots" | "changes" | "show"> = {
@@ -43,6 +60,18 @@ function parseArgs(args: string[]): Args | null {
     const flag = args[i];
     if (flag === "--level") {
       parsed.level = args[++i];
+      continue;
+    }
+    if (flag === "--uses") {
+      const names = (args[++i] ?? "").split(",");
+      const unknown = names.find((name) => PIECES[name] === undefined);
+      if (unknown !== undefined) {
+        console.error(
+          `Unknown piece "${unknown}"; use ${Object.keys(PIECES).join(", ")}`,
+        );
+        return null;
+      }
+      parsed.uses = names.flatMap((name) => PIECES[name]);
       continue;
     }
     const key = NUMBER_FLAGS[flag];
@@ -102,6 +131,7 @@ if (args === null) {
     playerMirror: level.playerMirror,
     bonusShots,
     changes: args.changes,
+    uses: args.uses,
   });
 
   console.log(
@@ -112,7 +142,9 @@ if (args === null) {
     console.log(`  ${i + 1}. ${describe(placement)}`);
   });
   if (placements.length === 0) {
-    console.log("  None found: try --changes 1 or another --shots.");
+    console.log(
+      "  None found: try --changes 1, another --shots or fewer --uses.",
+    );
   } else {
     console.log(`${placements.length} placements found. The first one:`);
     console.log("    grid: String.raw`");

@@ -32,6 +32,19 @@ describe("describeShot", () => {
   });
 });
 
+describe("describeShot with glass mirrors", () => {
+  it("counts glass mirrors shattered apart from mirrors flipped", () => {
+    // Row 0 turns down at the glass "\" (shattering it) and left at the "/".
+    const board = parseLevel(String.raw`
+      N .
+      / G
+    `);
+    expect(describeShot(fire(board, 0))).toBe(
+      "exit, flips 1 mirror, shatters 1 glass mirror",
+    );
+  });
+});
+
 describe("rowList", () => {
   it("counts rows and cells from 1, as the player does", () => {
     expect(rowList([3, { x: 2, y: 0, mirror: "mirrorSlash" }, 0])).toBe(

@@ -141,6 +141,12 @@ keeping it). Lower is harder. It dips at each new mechanic (5, 11,
 |---|---|---|---|---|---|---|---|---|---|
 | 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 2,553 | 45,000 |
 
+Levels 19–26 (reflectors, then glass mirrors; added 2026-10-11, v1.26–v1.28):
+
+| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 |
+|---|---|---|---|---|---|---|---|---|
+| 1 in | 4 | 25 | 125 | 3,143 | 16 | 125 | 125 | 625 |
+
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
 
@@ -154,10 +160,24 @@ the solver's par solution only, and not the second goal hit:
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Foresight | 0 | 0 | 1 | 2 | 1 | 2 | 2 | 2 | 3 | 5 | 3 | 3 | 2 | 5 | 1 | 3 | 4 | 2 |
 
+| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 |
+|---|---|---|---|---|---|---|---|---|
+| Foresight | 0 | 2 | 4 | 5 | 1 | 3 | 3 | 3 |
+
+Each new chapter starts easy again (19 and 23 are among the easiest levels
+in the game) and climbs. The steepest step is to *Mirror image* (22),
+reflectors with the player's mirror: about 25 times harder than 21 by
+odds, with the highest foresight of 19–26, about as hard as *Double duty*
+(16).
+
 The two agree that 10 and 14 are the hardest of 1–14. They disagree on
 *Rebuild* (18): the hardest by odds, but a foresight of only 2, so its
 difficulty is in finding the moves, not in planning their effects.
 
+- [ ] Check by playing (or watching testers) whether the step to *Mirror
+  image* (22) is too steep. If it is, `npm run generate -- --reflectors 1
+  --player-mirror backslash --place-later --shots 3` can find an easier
+  board (or a bridge level before it, as *Clear the way* is for 18)
 - [x] Smooth the step to *Rebuild* (then level 17), about 14 times
   harder than 16 and 6 times harder than 14: a bridge level,
   *Clear the way* (par 3), now level 17, combines the same three
@@ -211,6 +231,11 @@ difficulty is in finding the moves, not in planning their effects.
   Chapters: 1–4 *Basics*, 5–10 *Flip tricks*, 11–14 *Breakable walls*,
   15–18 *Your mirror*; a new mechanic adds a chapter. Levels still
   unlock one by one, as now
+  - [ ] Room for more chapters: with six chapter rows (v1.28, 26 levels)
+    the phone's title screen still fits, but has room for about one more
+    row. Any new piece's chapter needs a layout that takes more first
+    (e.g. two chapters per row, collapsible chapters, or a scrolling
+    list; the level list lab page has some of these)
 
 ### Presentation, second pass
 
@@ -304,6 +329,13 @@ lab page on 2026-10-11:
 
 ### Next
 
+- [x] Level design tools for the new pieces (2026-10-11, v1.31):
+  `npm run bonus` no longer changes cells the par solution reaches (it
+  kept only the rows of par, and once suggested removing the mirror
+  level 19's par shot turns on), and its `--uses` option keeps bonus
+  routes that pass a given piece (reflector, glass, breakable, mirror);
+  `npm run trace` prints a shot sequence's paths cell by cell on a level
+  or any board; the generator's shot descriptions count shattered glass
 - [x] Run the tests as part of `npm run build`, so a deployed build has always
   passed them
 - [x] Move level state (phase, current board, shot count, restart, whether a

@@ -30,7 +30,12 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   `levels.ts`; `--help` lists the options
 - `npm run bonus -- --level N [options]` — finds cells for a level's bonus
   target `*` that take the wanted number of shots, optionally after small
-  board changes that keep par; `--help` lists the options
+  board changes that keep par and leave the par route's cells alone, and
+  (`--uses reflector,glass`) only with routes through given pieces;
+  `--help` lists the options
+- `npm run trace -- --level N MOVES...` — plays rows (and `x,y` for the
+  player's mirror) on a level or a `--grid` and prints each shot's cells
+  and the board after it, to check a route by hand
 - `npm run alternatives -- [options]` — the different solutions of each
   level at par and a shot or two above it; with `--level N --changes 1`,
   board changes that add alternatives while keeping par, the par

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { withBonuses } from "../src/game/bonus";
 import {
   playMoves,
   shotRows,
   solve,
   solveBonusMoves,
+  solveMoves,
 } from "../src/game/solver";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
@@ -75,4 +77,54 @@ describe("findPlacements", () => {
       );
     },
   );
+
+  it("never changes a cell the par solution reaches", () => {
+    // Level 19's par shot turns at (2,3) and the reflector; removing the
+    // mirror at (2,3) used to pass, as row 3 still reached the goal.
+    const level = LEVELS.find((candidate) => candidate.id === "return-trip")!;
+    const board = parseLevel(level.grid);
+    const par = solveMoves(withBonuses(board), { maxShots: 1, goalHits: 1 })!;
+    const reached = new Set(
+      playMoves(withBonuses(board), par).shots.flatMap((shot) =>
+        shot.path.map(({ x, y }) => `${x},${y}`),
+      ),
+    );
+    const placements = findPlacements(board, {
+      minShots: 1,
+      goalHits: 1,
+      bonusShots: 2,
+      changes: 1,
+    });
+    expect(placements.length).toBeGreaterThan(0);
+    for (const { changes } of placements) {
+      for (const { x, y } of changes) {
+        expect(reached.has(`${x},${y}`)).toBe(false);
+      }
+    }
+  });
+
+  it("keeps only routes through the pieces asked for", () => {
+    const level = LEVELS.find((candidate) => candidate.id === "return-trip")!;
+    const options = { minShots: 1, goalHits: 1, bonusShots: 2, changes: 0 };
+    const all = findPlacements(parseLevel(level.grid), options);
+    const through = findPlacements(parseLevel(level.grid), {
+      ...options,
+      uses: ["reflector"],
+    });
+    expect(through.length).toBeGreaterThan(0);
+    expect(through.length).toBeLessThanOrEqual(all.length);
+    // The level has no cracked walls, so no route passes one.
+    expect(
+      findPlacements(parseLevel(level.grid), {
+        ...options,
+        uses: ["breakable"],
+      }),
+    ).toEqual([]);
+    for (const { board, route } of through) {
+      const cells = playMoves(board, route).shots.flatMap((shot) =>
+        shot.path.map(({ x, y }) => board.cells[y][x]),
+      );
+      expect(cells).toContain("reflector");
+    }
+  });
 });
