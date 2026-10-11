@@ -56,10 +56,9 @@ One level, playable with the mouse, plain graphics.
 
 ## Game track
 
-Suggested order from here (2026-10-11, v1.15): the option to rotate the
-placed mirror with new levels for it. In parallel, playtesters' feedback
-would settle the items that wait on how people play: the step to
-*Rebuild*, level 7's dip and the difficulty measure.
+Suggested order from here (2026-10-11): playtesters' feedback would
+settle the items that wait on how people play: the step to *Rebuild*,
+level 7's dip and the difficulty measure.
 
 ### Next
 
@@ -79,11 +78,6 @@ with flipping mirrors, before it is built.
   - [x] One player-placed mirror of a fixed direction, on any empty cell,
     placed between shots without taking one; levels 15–16 use it. Design
     in `docs/DESIGN.md`, *Player-placed mirror*
-  - [ ] Option to rotate the placed mirror (choose `\` or `/`). The
-    design should say whether released levels 15–18 get it: if it
-    lowers their par, their `minShots` must stay as released (or the
-    levels be replaced by new ones), since changing par changes saved
-    stars
   - [ ] More mirrors per level, or other placeable blocks
 - [ ] New block types
   - [x] Breakable walls (`%`): stop the pellet once and break; levels
@@ -568,3 +562,8 @@ could come back if the reason no longer holds.
   Reason: the left edge already offers enough options; more edges would
   add complexity and difficulty in ways that aren't seen as useful, at
   least for now.
+- **Rotating the placed mirror** (2026-10-11): letting the player choose
+  `\` or `/` for their placed mirror. Never designed or built. Reason:
+  the fixed-direction mirror is already difficult enough for players
+  without rotation, and rotation would be hard to make intuitive if some
+  levels allowed it and others didn't.

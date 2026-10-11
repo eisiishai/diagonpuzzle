@@ -123,7 +123,8 @@ level list), to place once, anywhere it fits:
 
 - **Fixed direction, free cell.** The level decides which mirror the
   player gets, `\` or `/`; the player decides *where* it goes, and *when*.
-  It can't be turned (a rotate option may come later).
+  It can't be turned (a rotate option was discarded: see *Discarded
+  ideas* in `docs/ROADMAP.md`).
 - **Where:** any empty cell. Not on another piece, the goal or a showing
   bonus target; a cell emptied by a broken wall or a collected bonus target
   is empty, so it counts.
@@ -589,9 +590,8 @@ track crossfades in over about a second.
 
 - More block types (e.g. one-way blocks, splitters, rotating or breakable
   mirrors).
-- More player-placed blocks: several mirrors, choosing or rotating the
-  mirror's direction, or other kinds of blocks (see *Player-placed
-  mirror*).
+- More player-placed blocks: several mirrors, or other kinds of blocks
+  (see *Player-placed mirror*).
 - Shot limits or par scores per level.
 - Level select and progress saving.
 
