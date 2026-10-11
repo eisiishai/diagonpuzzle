@@ -4,18 +4,21 @@ import { easeInOutCubic, easeOutCubic } from "./easing";
 import { BONUS_COLORS, COLORS } from "./theme";
 
 /**
- * A short flash of light at a point in pixels: where the beam reflects, or
- * a goal crystal hit (which also sends out a diamond ring).
+ * A short flash of light at a point in pixels: where the beam reflects, a
+ * goal crystal hit (which also sends out a diamond ring), or a piece the
+ * ending's wave passes over, in `color`.
  */
 interface Flash {
   x: number;
   y: number;
-  kind: "mirror" | "goal";
+  kind: "mirror" | "goal" | "wave";
+  color?: number;
   ageMs: number;
 }
 
 const MIRROR_FLASH_MS = 170;
 const GOAL_FLASH_MS = 450;
+const WAVE_FLASH_MS = 600;
 
 /** A bright spot running along a mirror's glass as it turns. */
 interface Glint {
@@ -88,8 +91,8 @@ export class BoardEffects {
    * A flash where the beam reflects off a mirror, or on a goal crystal hit
    * (with a diamond ring, unless the player prefers reduced motion).
    */
-  addFlash(x: number, y: number, kind: Flash["kind"]): void {
-    this.flashes.push({ x, y, kind, ageMs: 0 });
+  addFlash(x: number, y: number, kind: Flash["kind"], color?: number): void {
+    this.flashes.push({ x, y, kind, color, ageMs: 0 });
   }
 
   /**
@@ -195,6 +198,18 @@ export class BoardEffects {
 
     this.flashes = this.flashes.filter((flash) => {
       flash.ageMs += deltaMs;
+      if (flash.kind === "wave") {
+        const t = flash.ageMs / WAVE_FLASH_MS;
+        if (t >= 1) {
+          return false;
+        }
+        const fade = (1 - t) ** 2;
+        g.circle(flash.x, flash.y, size * 0.5).fill({
+          color: flash.color ?? COLORS.glass,
+          alpha: 0.4 * fade,
+        });
+        return true;
+      }
       const goal = flash.kind === "goal";
       const t = flash.ageMs / (goal ? GOAL_FLASH_MS : MIRROR_FLASH_MS);
       if (t >= 1) {

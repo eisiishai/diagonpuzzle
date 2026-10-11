@@ -17,7 +17,7 @@ import {
   introLengthMs,
   introPanelAlpha,
 } from "./intro";
-import { COLORS, createBloom } from "./theme";
+import { BONUS_COLORS, COLORS, createBloom } from "./theme";
 
 const MIRROR_TURN_MS = 150;
 /** How long a placed mirror takes to drop into place. */
@@ -44,13 +44,31 @@ interface Placing {
   elapsedMs: number;
 }
 
-/** A mirror rotating by 90° after a flip. */
+/** A mirror rotating by 90° after a flip, or a half turn in the ending. */
 interface MirrorTurn {
   view: Graphics;
   from: number;
   to: number;
   elapsedMs: number;
+  durationMs: number;
 }
+
+/**
+ * The game's ending: a ring in the bonus colours spreading over the board
+ * from `origin` (pixels), `radius` pixels out so far. Pieces it has
+ * reached are in `reached` ("x,y").
+ */
+interface FinaleWave {
+  origin: { x: number; y: number };
+  radius: number;
+  reached: Set<string>;
+}
+
+/** The ending's wave: speed in cells a second, ring spacing in pixels. */
+const WAVE_SPEED = 9.5;
+const WAVE_BAND = 5;
+/** A mirror the wave passes makes a half turn in this time. */
+const WAVE_TURN_MS = 300;
 
 /** The board shakes this many pixels, fading out, when stone breaks. */
 const SHAKE_PIXELS = 2;
@@ -91,6 +109,9 @@ export class BoardView extends Container {
   private selectedRow: number | null = null;
   /** Time for the ambient pulses of the goal and the selected emitter. */
   private ambientMs = 0;
+  private wave: FinaleWave | null = null;
+  /** The ending's rings, under the cells, cut to the panel's shape. */
+  private readonly waveLayer = new Graphics();
   /** Time into the level-start intro while it plays; see playIntro(). */
   private introMs: number | null = null;
   private introIgnited = false;
@@ -112,9 +133,21 @@ export class BoardView extends Container {
     this.animator = new PelletAnimator(cellSize, (x, y) =>
       this.cellCenter(x, y),
     );
+    const waveMask = new Graphics()
+      .roundRect(
+        cellSize,
+        0,
+        board.width * cellSize,
+        board.height * cellSize,
+        10,
+      )
+      .fill(0xffffff);
+    this.waveLayer.mask = waveMask;
     this.addChild(
       this.panel,
       this.rowHighlight,
+      waveMask,
+      this.waveLayer,
       this.animator.ghost,
       this.animator.light,
     );
@@ -196,10 +229,29 @@ export class BoardView extends Container {
     this.boardEffects.addFlash(center.x, center.y, "goal");
   }
 
+  /**
+   * The game's ending, from the bonus target at board cell (x, y): a ring
+   * in the bonus colours spreads over the board, and each piece it passes
+   * flashes in the colour passing over it; mirrors make a half turn, so
+   * they end as they were. Nothing when the player prefers reduced motion.
+   */
+  playFinaleWave(x: number, y: number): void {
+    if (prefersReducedMotion()) {
+      return;
+    }
+    this.wave = {
+      origin: this.cellCenter(x, y),
+      radius: 0,
+      reached: new Set(),
+    };
+  }
+
   /** Shows `board` immediately, stopping any shot and animation in progress. */
   showBoard(board: Board): void {
     this.finishIntro();
     this.animator.clear();
+    this.wave = null;
+    this.waveLayer.clear();
     this.turns = [];
     this.placings = [];
     this.boardEffects.clearLight();
@@ -339,6 +391,7 @@ export class BoardView extends Container {
 
   update(deltaMs: number): void {
     this.animator.update(deltaMs);
+    this.updateWave(deltaMs);
     this.updateTurns(deltaMs);
     this.updatePlacings(deltaMs);
     this.updateAmbient(deltaMs);
@@ -503,7 +556,83 @@ export class BoardView extends Container {
     const existing = this.turns.find((turn) => turn.view === view);
     const target = (existing ? existing.to : view.rotation) + Math.PI / 2;
     this.turns = this.turns.filter((turn) => turn !== existing);
-    this.turns.push({ view, from: view.rotation, to: target, elapsedMs: 0 });
+    this.turns.push({
+      view,
+      from: view.rotation,
+      to: target,
+      elapsedMs: 0,
+      durationMs: MIRROR_TURN_MS,
+    });
+    this.boardEffects.addGlint(view);
+  }
+
+  /** Spreads the ending's wave and lights the pieces it reaches. */
+  private updateWave(deltaMs: number): void {
+    const wave = this.wave;
+    const g = this.waveLayer.clear();
+    if (!wave) {
+      return;
+    }
+    wave.radius += (this.cellSize * WAVE_SPEED * deltaMs) / 1000;
+    const { origin, radius } = wave;
+    const far = Math.hypot(
+      (this.boardWidth + 1) * this.cellSize,
+      this.boardHeight * this.cellSize,
+    );
+    if (radius > far + WAVE_BAND * BONUS_COLORS.length) {
+      this.wave = null;
+      return;
+    }
+    this.cells.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        const key = `${x},${y}`;
+        if (cell === "empty" || wave.reached.has(key)) {
+          return;
+        }
+        const center = this.cellCenter(x, y);
+        const distance = Math.hypot(center.x - origin.x, center.y - origin.y);
+        if (distance > radius) {
+          return;
+        }
+        wave.reached.add(key);
+        const color =
+          BONUS_COLORS[
+            Math.floor(distance / (this.cellSize * 0.7)) % BONUS_COLORS.length
+          ];
+        this.boardEffects.addFlash(center.x, center.y, "wave", color);
+        if (isMirror(cell)) {
+          this.halfTurn(this.cellViews[y][x]);
+        }
+      }),
+    );
+    const fade = Math.max(0, 1 - radius / far);
+    BONUS_COLORS.forEach((color, i) => {
+      const r = radius - i * WAVE_BAND;
+      if (r > 0) {
+        g.circle(origin.x, origin.y, r).stroke({
+          width: 3,
+          color,
+          alpha: 0.55 * fade,
+        });
+      }
+    });
+  }
+
+  /**
+   * A mirror turns half way round, ending as it was; one still turning
+   * from a flip keeps that flip.
+   */
+  private halfTurn(view: Graphics): void {
+    const existing = this.turns.find((turn) => turn.view === view);
+    const target = (existing ? existing.to : view.rotation) + Math.PI;
+    this.turns = this.turns.filter((turn) => turn !== existing);
+    this.turns.push({
+      view,
+      from: view.rotation,
+      to: target,
+      elapsedMs: 0,
+      durationMs: WAVE_TURN_MS,
+    });
     this.boardEffects.addGlint(view);
   }
 
@@ -521,12 +650,12 @@ export class BoardView extends Container {
   private updateTurns(deltaMs: number): void {
     for (const turn of this.turns) {
       turn.elapsedMs += deltaMs;
-      const t = Math.min(1, turn.elapsedMs / MIRROR_TURN_MS);
+      const t = Math.min(1, turn.elapsedMs / turn.durationMs);
       const eased = 1 - (1 - t) ** 3;
       turn.view.rotation = turn.from + (turn.to - turn.from) * eased;
     }
     this.turns = this.turns.filter((turn) => {
-      if (turn.elapsedMs < MIRROR_TURN_MS) {
+      if (turn.elapsedMs < turn.durationMs) {
         return true;
       }
       // Keep rotations small; a half turn looks the same for a mirror.

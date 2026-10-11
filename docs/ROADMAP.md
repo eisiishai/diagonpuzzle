@@ -214,6 +214,29 @@ the polyline rule and is checked on a phone. In suggested order:
   play (shows what flipped). Chosen: a very dim band with small chevrons
   showing which way it went
 
+### Game ending
+
+The last bonus target is always the end of the game: bonus targets
+appear only once a level is at par, so by then every star is earned.
+Until v1.9 it got the par finale in other colours. Chosen on the finale
+lab page on 2026-10-11:
+
+- [x] The moment: the gem splits the beam into a fan of six coloured
+  rays, one by one, that sweeps slowly across the screen (*Prism fan*),
+  while a six-colour ring spreads over the board, giving each mirror it
+  passes a half turn (so the board is unchanged) and flashing the other
+  pieces (*Board wave*). Instead of falling stars, specks of coloured
+  light drift upwards (*Light dust*)
+- [x] Banner: its letters light up in the bonus colours as a white light
+  sweeps across them, and it stays a little longer, with a quiet second
+  line, THANK YOU FOR PLAYING
+- [x] Sound: six bells, one with each ray of the fan, then a swelling
+  chord on the music's key made major (*Prism bells*); the music fades
+  out while the ending rings and comes back slowly (*Rests*)
+- [x] Title screen afterwards: the header adds ALL FOUND! in the bonus
+  colours, and the title beam ends in the bonus gem, which splits it
+  into a small, still fan of the six colours (*Prism crystal*)
+
 ## Engineering track
 
 ### Next

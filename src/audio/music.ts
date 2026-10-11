@@ -16,6 +16,8 @@ export interface Harmony {
   chord: readonly number[];
   /** The track's scale, as pitch classes (0 = C … 11 = B). */
   scale: readonly number[];
+  /** The track's home key (its tonic), as a pitch class. */
+  tonic: number;
 }
 
 export interface MusicTrack {
@@ -43,6 +45,8 @@ const CHORDS = [
 ];
 const ROOTS = [45, 41, 48, 43];
 const A_MINOR_PENTATONIC = [9, 0, 2, 4, 7];
+/** Pitch class of A, the home key of the A minor tracks. */
+const A = 9;
 
 /** Chord tones plus the root an octave up, for arpeggios. */
 const arpTones = (chord: number[]) => [...chord, chord[0] + 12];
@@ -128,6 +132,8 @@ const PRISM = {
   ],
   roots: [41, 36],
   scale: [5, 7, 9, 11, 0, 2, 4],
+  // Fmaj7♯11 – Cmaj9 sways between F and C; it comes home to C.
+  tonic: 0,
   bells: { last: -Infinity },
 };
 const PHOTON = {
@@ -137,6 +143,7 @@ const PHOTON = {
   ],
   roots: [40, 36],
   scale: [4, 7, 9, 11, 2],
+  tonic: 4,
 };
 const GLASS_BELLS = [69, 72, 74, 76, 79, 81, 84];
 const glassBells = { last: -Infinity };
@@ -155,6 +162,7 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
       root: ROOTS[Math.floor(i / 8) % 4],
       chord: CHORDS[Math.floor(i / 8) % 4],
       scale: A_MINOR_PENTATONIC,
+      tonic: A,
     }),
     step: (s, dest, i, t, step) => {
       const bar = Math.floor(i / 8);
@@ -210,6 +218,7 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
       root: AFTERGLOW.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 4],
       chord: AFTERGLOW.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 4],
       scale: A_MINOR_PENTATONIC,
+      tonic: A,
     }),
     step: (s, dest, i, t, step) => {
       const k = Math.floor(i / AMBIENT_CHORD_STEPS);
@@ -244,6 +253,7 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
       root: ROOTS[Math.floor(i / 16) % 4],
       chord: CHORDS[Math.floor(i / 16) % 4],
       scale: A_MINOR_PENTATONIC,
+      tonic: A,
     }),
     step: (s, dest, i, t, step) => {
       const chord = CHORDS[Math.floor(i / 16) % 4];
@@ -287,6 +297,7 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
       root: PRISM.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
       chord: PRISM.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
       scale: PRISM.scale,
+      tonic: PRISM.tonic,
     }),
     step: (s, dest, i, t, step) => {
       const k = Math.floor(i / AMBIENT_CHORD_STEPS);
@@ -335,6 +346,7 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
       root: PHOTON.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
       chord: PHOTON.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
       scale: PHOTON.scale,
+      tonic: PHOTON.tonic,
     }),
     step: (s, dest, i, t, step) => {
       const k = Math.floor(i / AMBIENT_CHORD_STEPS);
@@ -385,4 +397,5 @@ export const DEFAULT_HARMONY: Harmony = {
   root: ROOTS[0],
   chord: CHORDS[0],
   scale: A_MINOR_PENTATONIC,
+  tonic: A,
 };

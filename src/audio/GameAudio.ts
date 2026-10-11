@@ -30,6 +30,10 @@ const MAX_EFFECT_VOICES = 6;
 const PITCH_VARIATION_CENTS = 25;
 /** Music level while a celebration plays (ducking). */
 const DUCKED_LEVEL = 0.25;
+/** Resting music (see restMusic()): fade out, silence after the sound, return. */
+const MUSIC_REST_FADE_SECONDS = 0.5;
+const MUSIC_REST_PAUSE_SECONDS = 2;
+const MUSIC_REST_RETURN_SECONDS = 4;
 const CROSSFADE_SECONDS = 1.2;
 const SCHEDULE_AHEAD_SECONDS = 0.15;
 const SCHEDULER_INTERVAL_MS = 25;
@@ -183,6 +187,9 @@ export class GameAudio {
     if (definition.duckSeconds) {
       this.duckMusic(graph, t, definition.duckSeconds);
     }
+    if (definition.restMusicSeconds) {
+      this.restMusic(graph, t, definition.restMusicSeconds);
+    }
   }
 
   /**
@@ -287,6 +294,22 @@ export class GameAudio {
       playing.step++;
       playing.nextTime += stepSeconds;
     }
+  }
+
+  /**
+   * Silences the music from `t` while a sound of `seconds` rings out, then
+   * brings it back slowly.
+   */
+  private restMusic(graph: Graph, t: number, seconds: number): void {
+    const level = graph.duck.gain;
+    level.cancelScheduledValues(t);
+    level.setValueAtTime(level.value, t);
+    level.linearRampToValueAtTime(0.0001, t + MUSIC_REST_FADE_SECONDS);
+    level.setValueAtTime(0.0001, t + seconds + MUSIC_REST_PAUSE_SECONDS);
+    level.linearRampToValueAtTime(
+      1,
+      t + seconds + MUSIC_REST_PAUSE_SECONDS + MUSIC_REST_RETURN_SECONDS,
+    );
   }
 
   /** Lowers the music for `seconds` from `t`, then brings it back. */

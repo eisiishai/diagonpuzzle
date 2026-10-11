@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bounceNote, columnPan, goalChimeNotes } from "./effects";
+import { bounceNote, columnPan, endingNotes, goalChimeNotes } from "./effects";
 import { MUSIC_TRACKS } from "./music";
 
 const A_MINOR_PENTATONIC = [9, 0, 2, 4, 7];
@@ -32,6 +32,7 @@ describe("goalChimeNotes", () => {
       root: 45,
       chord: [57, 60, 64],
       scale: A_MINOR_PENTATONIC,
+      tonic: 9,
     };
     expect(goalChimeNotes(harmony)).toEqual([81, 84, 88, 93]);
   });
@@ -41,6 +42,7 @@ describe("goalChimeNotes", () => {
       root: 48,
       chord: [48, 52, 55],
       scale: A_MINOR_PENTATONIC,
+      tonic: 9,
     };
     expect(goalChimeNotes(harmony)).toEqual([84, 88, 91, 96]);
   });
@@ -50,6 +52,7 @@ describe("goalChimeNotes", () => {
       root: 43,
       chord: [55, 57, 62, 64],
       scale: A_MINOR_PENTATONIC,
+      tonic: 9,
     };
     expect(goalChimeNotes(harmony)).toEqual([79, 86, 91, 98]);
   });
@@ -61,5 +64,28 @@ describe("columnPan", () => {
     expect(columnPan(3, 7)).toBeCloseTo(0);
     expect(columnPan(6, 7)).toBeCloseTo((6.5 / 7) * 0.8 - 0.4);
     expect(columnPan(10, 7)).toBeCloseTo(0.4);
+  });
+});
+
+describe("endingNotes", () => {
+  it("ends A minor music on A major with an added ninth", () => {
+    expect(endingNotes(9)).toEqual({
+      root: 45,
+      chord: [57, 61, 64, 71],
+      bells: [69, 73, 76, 81, 83, 85],
+    });
+  });
+
+  it("keeps the bass root between C2 and B2", () => {
+    expect(endingNotes(0).root).toBe(36);
+    expect(endingNotes(4).root).toBe(40);
+    expect(endingNotes(11).root).toBe(47);
+  });
+
+  it("is in the key of every track", () => {
+    for (const track of Object.values(MUSIC_TRACKS)) {
+      const { tonic } = track.harmony(0);
+      expect(endingNotes(tonic).root % 12).toBe(tonic);
+    }
   });
 });

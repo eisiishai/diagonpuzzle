@@ -82,9 +82,25 @@ puzzle on top of the level for players who have mastered it.
   turns golden in the level list, which also shows `GOLDEN ★ n/N` (N: levels
   with a bonus target, currently all 18) once there is at least one. The header shows `BONUS 0/1` while playing a
   level whose bonus target has appeared.
-- **Last bonus target of the game:** a celebration like the one for the
-  last par star, in the bonus colours, with an "All bonus targets found!"
-  banner and its own fanfare.
+- **Last bonus target of the game: the ending.** Bonus targets appear only
+  once a level is at par, so the last one is always the end of the game.
+  Chosen on the finale lab page (2026-10-11):
+  - The gem splits the beam into a fan of six rays in the bonus colours,
+    appearing one by one with the fanfare's bells, turning slowly across
+    the screen and fading after about 3.5 s. At the same time a ring in
+    the six colours spreads over the board from the gem; every piece it
+    passes flashes in the colour passing over it, and mirrors make a half
+    turn, so the board is unchanged and play can go on.
+  - Specks of coloured light drift up the screen instead of falling stars.
+  - The banner "★ ALL BONUS TARGETS FOUND! ★" pops in white; a light sweeps
+    across it, lighting each letter in a bonus colour, and a quiet second
+    line, THANK YOU FOR PLAYING, fades in under it. It stays about 5 s,
+    longer than the par banner.
+  - With reduced motion the fan stands still, the wave and the drifting
+    light are left out and the banner is lit at once.
+  - Afterwards the title screen's header adds `ALL FOUND!` in the bonus
+    colours, and the title beam ends in the bonus gem, which splits it
+    into a small, still fan of the six colours.
 - **Design checks.** Each level declares `bonusShots`, the fewest shots
   that hit its bonus target from the starting board without completing the
   level first (a non-final hit of a multi-hit goal is allowed). The tests
@@ -445,6 +461,8 @@ Text colours keep at least 4.5:1 contrast on the background.
   flares as it passes under it, and the crystal at its end flashes on
   arrival; then it stays still. (Firing every few seconds was too
   distracting.) With reduced motion the beam is simply drawn in full.
+  Once every bonus target is found, the crystal is the bonus gem, and its
+  fan of colours grows out of it as the beam arrives.
 - The bonus target is livelier than the goal, so it is noticed when it
   appears: it turns slowly (once every 9 s, so its colours swirl), pulses
   faster and deeper (grows 16 % every 1.5 s) and gives off small
@@ -503,7 +521,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Par | *Chime and sparkle*: the same chime on the music's chord, then high sparkles |
 | Final star | *Synth fanfare*: brassy chords stepping up into a bright chord |
 | Bonus target | A quick glissando of bells up a pentatonic scale, then high sparkles (not from the sound lab) |
-| Last bonus target | Like the final-star fanfare, with brighter major-seventh chords and bells on each chord (not from the sound lab) |
+| Last bonus target, the ending | *Prism bells* (finale lab): six bells rising through the music's key made major, one with each ray of the prism fan, then a chord on that major tonic that swells and opens up, with a few high notes. The music rests under it (see Mix) |
 
 ### Music
 
@@ -530,7 +548,10 @@ track crossfades in over about a second.
 
 - Effects at 80 %, music at 45 % of their full level (balanced by ear).
 - The music drops to a quarter during the par, final-star and bonus sounds
-  (ducking), so they stand out.
+  (ducking), so they stand out. Under the ending (last bonus target) it
+  rests instead: it fades out, stays silent until two seconds after the
+  fanfare, and comes back over four seconds, so the ending sounds like the
+  end of a piece.
 - At most six effects play at once; extra ones are skipped (goal, par and
   final-star sounds always play).
 - Bounces, wall hits and breaks come from where they happen: they are

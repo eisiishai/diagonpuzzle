@@ -77,7 +77,7 @@ test("the last bonus target plays the All bonus targets celebration", async ({
   const title = await backToTitle(game);
   expect(title.levels.every((level) => level.state === "golden")).toBe(true);
   expect(title.header).toContain(
-    `GOLDEN ${STAR} ${LEVELS.length}/${LEVELS.length}`,
+    `GOLDEN ${STAR} ${LEVELS.length}/${LEVELS.length}  ·  ALL FOUND!`,
   );
 });
 

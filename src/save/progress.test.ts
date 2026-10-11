@@ -17,6 +17,7 @@ import {
   hasAllBonuses,
   goldenStarCount,
   completesAllBonuses,
+  hasFoundAllBonuses,
   MAX_SKIPS,
   spendSkip,
   returnSkip,
@@ -253,6 +254,21 @@ describe("bonus targets", () => {
     expect(completesAllBonuses(before, after, LEVELS)).toBe(true);
     expect(completesAllBonuses(after, after, LEVELS)).toBe(false);
     expect(completesAllBonuses(EMPTY_PROGRESS, before, LEVELS)).toBe(false);
+  });
+
+  it("knows when every bonus target of the game is found", () => {
+    const all = recordBonus(
+      recordBonus(recordBonus(EMPTY_PROGRESS, "a", 0), "b", 0),
+      "b",
+      1,
+    );
+    expect(hasFoundAllBonuses(all, LEVELS)).toBe(true);
+    expect(
+      hasFoundAllBonuses(recordBonus(EMPTY_PROGRESS, "a", 0), LEVELS),
+    ).toBe(false);
+    // A game without bonus targets has none to find.
+    const none = [{ id: "x", minShots: 1, bonusCount: 0 }];
+    expect(hasFoundAllBonuses(EMPTY_PROGRESS, none)).toBe(false);
   });
 });
 

@@ -4,16 +4,25 @@ import type { GameAudio } from "../audio/GameAudio";
 import type { GameAction } from "../input/keyboard";
 import type { LevelDefinition } from "../levels/levels";
 import { prefersReducedMotion, pulse } from "../render/ambient";
-import { easeInOutCubic } from "../render/easing";
+import { easeInOutCubic, easeOutCubic } from "../render/easing";
+import { drawCell } from "../render/cellGraphics";
 import { arcPoints } from "../render/polyline";
+import { SpectrumText } from "../render/spectrumText";
 import { fitToScreen } from "../render/fitToScreen";
-import { COLORS, createBloom, createGlow, textStyle } from "../render/theme";
+import {
+  BONUS_COLORS,
+  COLORS,
+  createBloom,
+  createGlow,
+  textStyle,
+} from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
 import type { IconDrawer } from "../render/ui";
 import {
   bonusLevelCount,
   goldenStarCount,
   hasAllBonuses,
+  hasFoundAllBonuses,
   isCompleted,
   isSkipped,
   isUnlocked,
@@ -82,7 +91,11 @@ export class TitleScene extends Container implements Scene {
     title.filters = [this.titleGlow];
     this.addChild(title);
     y += title.height + 10;
-    this.titleBeam = new TitleBeam(title.width, y);
+    this.titleBeam = new TitleBeam(
+      title.width,
+      y,
+      hasFoundAllBonuses(progress, summaries),
+    );
     this.titleBeam.draw(prefersReducedMotion() ? 1 : 0);
     this.addChild(this.titleBeam);
     y += 40;
@@ -187,9 +200,7 @@ export class TitleScene extends Container implements Scene {
   /** What the smoke tests' test hook reports (src/testHook.ts). */
   testState(): TitleTestState {
     return {
-      header: this.header.children
-        .map((child) => (child instanceof Text ? child.text : ""))
-        .join(""),
+      header: allText(this.header),
       levels: this.levelRows,
     };
   }
@@ -251,8 +262,11 @@ export class TitleScene extends Container implements Scene {
     // The shot is over once the crystal's flash and the title's flare are.
     const shotMs = Math.max(TITLE_FLARE_MS, BEAM_TRAVEL_MS + CRYSTAL_FLASH_MS);
     if (cycle >= 0 && cycle < shotMs + deltaMs) {
-      this.titleBeam.draw(easeInOutCubic(cycle / BEAM_TRAVEL_MS));
       const arrived = cycle - BEAM_TRAVEL_MS;
+      this.titleBeam.draw(
+        easeInOutCubic(cycle / BEAM_TRAVEL_MS),
+        arrived < 0 ? 0 : easeOutCubic(Math.min(1, arrived / CRYSTAL_FLASH_MS)),
+      );
       if (arrived >= 0 && arrived < CRYSTAL_FLASH_MS) {
         flash = 1 - arrived / CRYSTAL_FLASH_MS;
       }
@@ -343,6 +357,16 @@ function levelListHeader(
     });
     goldenText.x = par.width;
     header.addChild(goldenText);
+    if (hasFoundAllBonuses(progress, summaries)) {
+      const separator = new Text({
+        text: "  ·  ",
+        style: textStyle("label", { fill: COLORS.star }),
+      });
+      separator.x = goldenText.x + goldenText.width;
+      const mark = new SpectrumText("ALL FOUND!", textStyle("label"));
+      mark.x = separator.x + separator.width + mark.width / 2;
+      header.addChild(separator, mark);
+    }
   }
   header.pivot.x = Math.round(header.width / 2);
   return header;
@@ -352,31 +376,47 @@ function levelListHeader(
  * A short laser beam under the title, ending in a goal crystal: the game's
  * idea in one line. Centred on x = 0 at height `y`. The beam can be drawn
  * part of the way, so it can fire across; the crystal pulses and flashes.
+ * Once every bonus target is found (`prism`), the beam ends in the bonus
+ * gem instead, which splits it into a small, still fan of the bonus
+ * colours.
  */
 class TitleBeam extends Container {
   readonly crystal: Graphics;
   private readonly beam = new Graphics();
+  private readonly fan: Graphics | null;
   private readonly start: number;
   private readonly end: number;
   private readonly y0: number;
 
-  constructor(width: number, y: number) {
+  constructor(width: number, y: number, prism: boolean) {
     super();
     const half = width / 2;
     const size = 11;
     this.start = -half;
-    this.end = half - size * 2;
+    this.end = half - size * (prism ? 1.6 : 2);
     this.y0 = y;
-    this.crystal = new Graphics()
-      .poly([0, -size, size, 0, 0, size, -size, 0])
-      .fill(COLORS.success);
+    this.crystal = new Graphics();
+    if (prism) {
+      // The gem as on the board, about the crystal's size.
+      drawCell(this.crystal, "bonus", size * 3.4, { hits: 0, required: 1 });
+    } else {
+      this.crystal
+        .poly([0, -size, size, 0, 0, size, -size, 0])
+        .fill(COLORS.success);
+    }
     this.crystal.position.set(half - size, y);
-    this.addChild(this.beam, this.crystal);
+    this.fan = prism ? new Graphics() : null;
+    this.fan?.position.set(half - size, y);
+    this.addChild(this.beam, ...(this.fan ? [this.fan] : []), this.crystal);
     this.filters = [createBloom()];
   }
 
-  /** Draws the beam from the left up to `fraction` (0–1) of its length. */
-  draw(fraction: number): void {
+  /**
+   * Draws the beam from the left up to `fraction` (0–1) of its length, and
+   * the prism's fan grown to `fan` (0–1) of its length.
+   */
+  draw(fraction: number, fan = fraction >= 1 ? 1 : 0): void {
+    this.drawFan(fan);
     const g = this.beam.clear();
     const x = this.start + (this.end - this.start) * fraction;
     // Nothing until it has length: a line needs two distinct points.
@@ -390,6 +430,35 @@ class TitleBeam extends Container {
       .lineTo(x, this.y0)
       .stroke({ width: 2, color: COLORS.beamCore, cap: "round" });
   }
+
+  private drawFan(fraction: number): void {
+    const g = this.fan?.clear();
+    const length = 46 * fraction;
+    if (!g || length < 0.5) {
+      return;
+    }
+    BONUS_COLORS.forEach((color, i) => {
+      const angle = (i - 2.5) * 0.085;
+      g.moveTo(0, 0)
+        .lineTo(Math.cos(angle) * length, Math.sin(angle) * length)
+        .stroke({ width: 1.8, color, alpha: 0.75, cap: "round" });
+    });
+  }
+}
+
+/** All the text in `container` and its children, in drawing order. */
+function allText(container: Container): string {
+  return container.children
+    .map((child) =>
+      child instanceof Text
+        ? child.visible
+          ? child.text
+          : ""
+        : child instanceof Container
+          ? allText(child)
+          : "",
+    )
+    .join("");
 }
 
 /** The level list's icon for a level's state. */

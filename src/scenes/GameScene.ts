@@ -496,7 +496,8 @@ export class GameScene extends Container implements Scene {
 
   /**
    * A bonus target hit: saved at once, with a burst in the bonus colours,
-   * or a bigger celebration when it was the last one of the game.
+   * or the game's ending when it was the last one (see docs/DESIGN.md,
+   * Bonus targets).
    */
   private collectBonus(result: ShotResult): void {
     const { audio } = this.options;
@@ -508,14 +509,16 @@ export class GameScene extends Container implements Scene {
     const { x, y } = this.shotEnd(result);
     if (allBonuses) {
       audio.play("allBonus");
-      this.celebration.allBonusCelebration(
+      this.celebration.finale(
         x,
         y,
         CELL_SIZE,
         this.sceneWidth,
         this.contentHeight,
         `${STAR} ALL BONUS TARGETS FOUND! ${STAR}`,
+        "THANK YOU FOR PLAYING",
       );
+      this.boardView.playFinaleWave(end.x, end.y);
     } else {
       audio.play("bonus");
       this.celebration.bonusBurst(x, y, CELL_SIZE);

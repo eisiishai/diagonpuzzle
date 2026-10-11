@@ -260,6 +260,15 @@ export function bonusLevelCount(levels: readonly LevelSummary[]): number {
   return levels.filter((level) => level.bonusCount > 0).length;
 }
 
+/** True once every bonus target of the game is collected (and there are some). */
+export function hasFoundAllBonuses(
+  progress: Progress,
+  levels: readonly LevelSummary[],
+): boolean {
+  const total = bonusLevelCount(levels);
+  return total > 0 && goldenStarCount(progress, levels) === total;
+}
+
 /**
  * True when going from `before` to `after` collected the last bonus target
  * of the whole game.
@@ -269,11 +278,8 @@ export function completesAllBonuses(
   after: Progress,
   levels: readonly LevelSummary[],
 ): boolean {
-  const total = bonusLevelCount(levels);
   return (
-    total > 0 &&
-    goldenStarCount(before, levels) < total &&
-    goldenStarCount(after, levels) === total
+    !hasFoundAllBonuses(before, levels) && hasFoundAllBonuses(after, levels)
   );
 }
 

@@ -29,6 +29,11 @@ export interface EffectDefinition {
   /** Lowers the music for this many seconds, so the sound stands out. */
   duckSeconds?: number;
   /**
+   * Instead of lowering it, silences the music for this many seconds and
+   * brings it back slowly afterwards, so the sound ends a piece.
+   */
+  restMusicSeconds?: number;
+  /**
    * Plays the sound at time `t` into `dest`. `pitch` is a small random
    * factor near 1 for effects that vary a little each time; `harmony` is
    * the music's at that moment, for sounds tuned to it.
@@ -283,50 +288,91 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
       );
     },
   },
-  // Last bonus target of the game: like the final-star fanfare, with
-  // brighter major-seventh chords, bells on each chord and a long shimmer.
+  // Last bonus target of the game, the ending (finale lab, "Prism bells"):
+  // six bells, one with each ray of the prism fan, then a chord swelling
+  // and opening up on the music's key made major. The music rests under it.
   allBonus: {
-    seconds: 3,
+    seconds: 5.5,
     important: true,
-    duckSeconds: 3.8,
-    play: (s, dest, t) => {
-      const chords = [
-        [60, 64, 67, 71],
-        [62, 65, 69, 72],
-        [65, 69, 72, 76],
-        [67, 71, 74, 79],
-      ];
-      chords.forEach((chord, i) => {
-        const last = i === chords.length - 1;
-        chord.forEach((note, j) => {
-          s.tone({
-            type: "sawtooth",
-            f: midi(note),
-            t: t + i * 0.24,
-            a: 0.02,
-            d: last ? 1.8 : 0.22,
-            vol: 0.04,
-            filter: { f: 1000 },
-            filterEnd: last ? 5000 : 2000,
-            dest,
-            wet: 0.4,
-          });
-          s.bell({
-            f: midi(note + 24),
-            t: t + i * 0.24 + j * 0.04,
-            d: 0.5,
-            vol: 0.035,
-            dest,
-            wet: 0.5,
-          });
-        });
+    restMusicSeconds: 5.5,
+    play: (s, dest, t, _pitch, harmony) => {
+      const { root, chord, bells } = endingNotes(harmony.tonic);
+      bells.forEach((note, i) =>
+        s.bell({
+          f: midi(note + 12),
+          t: t + i * FINALE_BELL_SECONDS,
+          d: 1.6,
+          vol: 0.06,
+          ratio: 3.5,
+          index: 1.1,
+          dest,
+          wet: 0.6,
+          echo: 0.3,
+        }),
+      );
+      const swell = t + bells.length * FINALE_BELL_SECONDS;
+      chord.forEach((note, j) =>
+        s.pad({
+          f: midi(note),
+          t: swell + j * 0.06,
+          dur: 5.5,
+          a: 0.8,
+          r: 3.5,
+          vol: 0.035,
+          from: 600,
+          to: 3200,
+          dest,
+          wet: 0.5,
+        }),
+      );
+      s.held({
+        type: "sine",
+        f: midi(root),
+        t: swell,
+        dur: 5,
+        a: 0.5,
+        r: 3,
+        vol: 0.12,
+        cutoff: 300,
+        detunes: [0],
+        dest,
       });
-      s.notes([96, 98, 100, 103, 105, 108, 110, 112], t + 1, 0.06, (f, tt) =>
-        s.tone({ f, t: tt, d: 0.3, vol: 0.045, dest, wet: 0.6 }),
+      const [, third, fifth, ninth] = chord;
+      s.notes(
+        [ninth + 24, third + 36, fifth + 36, ninth + 36],
+        swell + 0.3,
+        0.11,
+        (f, tt) =>
+          s.tone({ f, t: tt, d: 0.5, vol: 0.03, dest, wet: 0.7, echo: 0.4 }),
       );
     },
   },
 };
+
+/**
+ * Time between the ending's six bells; the prism fan's rays appear at the
+ * same pace (src/render/Celebration.ts).
+ */
+export const FINALE_BELL_SECONDS = 0.14;
+
+/**
+ * The ending's notes in the key whose tonic is pitch class `tonic`, made
+ * major: a bass root (MIDI 36–47), a chord of root, third, fifth and ninth
+ * an octave above it, and six bells rising from two octaves above it
+ * (root, third, fifth, octave, ninth, tenth).
+ */
+export function endingNotes(tonic: number): {
+  root: number;
+  chord: number[];
+  bells: number[];
+} {
+  const root = 36 + (((tonic % 12) + 12) % 12);
+  return {
+    root,
+    chord: [12, 16, 19, 26].map((interval) => root + interval),
+    bells: [0, 4, 7, 12, 14, 16].map((interval) => root + 24 + interval),
+  };
+}
 
 /** Seconds a mirror bounce lasts, for limiting overlapping sounds. */
 export const BOUNCE_SECONDS = 0.45;
