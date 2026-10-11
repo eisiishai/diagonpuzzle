@@ -102,6 +102,11 @@ export class Celebration extends Container {
     this.addBanner(width / 2, height / 2, width, bannerText);
   }
 
+  /** The banner's text while one shows (for the smoke tests' test hook). */
+  get bannerText(): string | null {
+    return this.banner?.view.text ?? null;
+  }
+
   update(deltaMs: number): void {
     const seconds = deltaMs / 1000;
 

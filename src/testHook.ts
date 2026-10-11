@@ -6,6 +6,7 @@
 import type { Container, Ticker } from "pixi.js";
 import { Button } from "./render/ui";
 import { GameScene } from "./scenes/GameScene";
+import { TitleScene } from "./scenes/TitleScene";
 import type { Scene } from "./scenes/Scene";
 import type { ButtonTestState, TestState } from "./testState";
 
@@ -45,6 +46,7 @@ export function installTestHook(
               : "title",
         buttons: scene ? visibleButtons(scene) : [],
         level: scene instanceof GameScene ? scene.testState() : undefined,
+        title: scene instanceof TitleScene ? scene.testState() : undefined,
       };
     },
   };

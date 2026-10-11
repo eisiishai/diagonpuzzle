@@ -4,13 +4,14 @@
 
 import { expect, test as base } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { withBonuses } from "../src/game/bonus";
-import { solveMoves } from "../src/game/solver";
+import { bonusPositions, withBonuses } from "../src/game/bonus";
+import { solveBonusMoves, solveMoves } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
 import type { Board, Position } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import { EMPTY_PROGRESS, serializeProgress } from "../src/save/progress";
+import type { Progress } from "../src/save/progress";
 import type {
   ButtonTestState,
   LevelTestState,
@@ -61,6 +62,36 @@ export function solution(index: number): Move[] {
   return moves;
 }
 
+/**
+ * The shortest route to level `index`'s (0-based) bonus target, from its
+ * starting board with the target showing.
+ */
+export function bonusRoute(index: number): Move[] {
+  const level = LEVELS[index];
+  const full = parseLevel(level.grid);
+  const moves = solveBonusMoves(full, bonusPositions(full)[0], {
+    goalHits: level.goalHits,
+    playerMirror: level.playerMirror,
+  });
+  if (!moves) {
+    throw new Error(`Level ${index + 1} has no bonus route`);
+  }
+  return moves;
+}
+
+/** Progress with the levels at `indices` (0-based) completed at par. */
+export function atPar(indices: readonly number[]): Progress {
+  return {
+    ...EMPTY_PROGRESS,
+    levels: Object.fromEntries(
+      indices.map((index) => [
+        LEVELS[index].id,
+        { bestShots: LEVELS[index].minShots },
+      ]),
+    ),
+  };
+}
+
 export class Game {
   readonly page: Page;
 
@@ -73,22 +104,18 @@ export class Game {
    * levels are completed at par, unless the page already has progress.
    */
   async seedCompleted(levels: number): Promise<void> {
-    const progress = serializeProgress({
-      ...EMPTY_PROGRESS,
-      levels: Object.fromEntries(
-        LEVELS.slice(0, levels).map((level) => [
-          level.id,
-          { bestShots: level.minShots },
-        ]),
-      ),
-    });
+    await this.seedProgress(atPar(LEVELS.slice(0, levels).map((_, i) => i)));
+  }
+
+  /** Starts the page with `progress` saved, unless it already has progress. */
+  async seedProgress(progress: Progress): Promise<void> {
     await this.page.addInitScript(
       ([key, value]) => {
         if (localStorage.getItem(key) === null) {
           localStorage.setItem(key, value);
         }
       },
-      [PROGRESS_KEY, progress],
+      [PROGRESS_KEY, serializeProgress(progress)],
     );
   }
 
@@ -123,6 +150,34 @@ export class Game {
       throw new Error("Not on a level screen");
     }
     return level;
+  }
+
+  /** The saved progress as stored in localStorage, or null if none. */
+  async storedProgress(): Promise<string | null> {
+    return this.page.evaluate((key) => localStorage.getItem(key), PROGRESS_KEY);
+  }
+
+  /**
+   * Checks that every button and, on a level screen, every launcher and
+   * cell is inside the window, where it can be clicked or tapped.
+   */
+  async expectAllOnScreen(): Promise<void> {
+    const size = this.page.viewportSize()!;
+    const inside = (point: Point) =>
+      point.x > 0 &&
+      point.x < size.width &&
+      point.y > 0 &&
+      point.y < size.height;
+    const { buttons, level } = await this.state();
+    for (const button of buttons) {
+      expect(inside(button.center), button.label).toBe(true);
+    }
+    const points = level
+      ? [...level.launchers, ...level.cells.flat().map((cell) => cell.center)]
+      : [];
+    for (const point of points) {
+      expect(inside(point), `(${point.x}, ${point.y})`).toBe(true);
+    }
   }
 
   /** Sets how fast the game's time runs: 1 as usual, below 1 slower. */

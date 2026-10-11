@@ -4,6 +4,7 @@
 
 import type { LevelPhase } from "./game/LevelSession";
 import type { CellType, Position } from "./game/types";
+import type { LevelRowState } from "./scenes/scoreText";
 
 export interface Point {
   x: number;
@@ -38,6 +39,15 @@ export interface LevelTestState {
    * from its rotation; null for a mirror still turning.
    */
   shown: (CellType | null)[][];
+  /** The big celebration's banner text while it shows, else null. */
+  banner: string | null;
+}
+
+export interface TitleTestState {
+  /** The level list's header, e.g. "LEVELS  ·  ★ 2/18". */
+  header: string;
+  /** Each level's row in the list, first level first. */
+  levels: { state: LevelRowState; detail: string }[];
 }
 
 export interface TestState {
@@ -46,4 +56,6 @@ export interface TestState {
   buttons: ButtonTestState[];
   /** Only on a level screen. */
   level?: LevelTestState;
+  /** Only on the title screen. */
+  title?: TitleTestState;
 }

@@ -379,8 +379,8 @@ the polyline rule and is checked on a phone. In suggested order:
     to a tenth while interrupted. A restart that left the shot running
     was caught (wrong mirrors and console errors). Taken off the manual
     checklist
-- [ ] More browser tests, not yet planned in detail. Suggested on
-  2026-10-11 while adding the others:
+- [x] More browser tests, suggested on 2026-10-11 while adding the
+  others:
   - Bonus targets: hidden on a first visit, shown after completing the
     level at par, collected by the solver's bonus route
     (`solveBonusMoves()`), the level's star turning golden in the list
@@ -392,6 +392,12 @@ the polyline rule and is checked on a phone. In suggested order:
     that it erases the saved progress), music and sound settings kept
     after a reload, and resizing the window or turning a phone mid-level
     (everything still fits and responds to taps)
+  - Done: 7 tests in the quick set (`e2e/progress.e2e.ts`, and turning
+    the phone in `e2e/phone.e2e.ts`), all on level 1, whose solution and
+    bonus route take one shot each; the celebrations start from seeded
+    progress. The test hook now also reports the title screen's level
+    rows and header and the celebration's banner. Each test was checked
+    to fail with its feature broken (celebrations, reset)
 
 ## Discarded ideas
 

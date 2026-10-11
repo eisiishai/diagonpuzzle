@@ -332,6 +332,7 @@ export class GameScene extends Container implements Scene {
         row.map((type, x) => ({ type, center: center(x, y) })),
       ),
       shown: boardView.shownCells(),
+      banner: this.celebration.bannerText,
     };
   }
 

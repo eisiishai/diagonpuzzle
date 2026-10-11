@@ -22,6 +22,7 @@ import {
 } from "../save/progress";
 import type { LevelSummary, Progress } from "../save/progress";
 import { GAME_VERSION } from "../version";
+import type { TitleTestState } from "../testState";
 import type { Scene } from "./Scene";
 import { STAR, levelListRow } from "./scoreText";
 import type { LevelRowState } from "./scoreText";
@@ -62,6 +63,8 @@ export class TitleScene extends Container implements Scene {
   private readonly titleBeam: TitleBeam;
   private readonly titleGlow: GlowFilter;
   private readonly audio: GameAudio;
+  private readonly header: Container;
+  private readonly levelRows: { state: LevelRowState; detail: string }[] = [];
   private ambientMs = 0;
   private selected = 0;
   private resetArmed = false;
@@ -111,6 +114,7 @@ export class TitleScene extends Container implements Scene {
     const header = levelListHeader(progress, summaries);
     header.y = y;
     this.addChild(header);
+    this.header = header;
     y += header.height + 12;
 
     levels.forEach((level, index) => {
@@ -123,6 +127,7 @@ export class TitleScene extends Container implements Scene {
         isSkipped(progress, level.id),
         hasAllBonuses(progress, summaries[index]),
       );
+      this.levelRows.push({ state: row.state, detail: row.detail });
       const itemIndex = this.items.length;
       const item = this.addItem(
         new Button({
@@ -177,6 +182,16 @@ export class TitleScene extends Container implements Scene {
     this.contentHeight = y + version.height;
 
     this.refresh();
+  }
+
+  /** What the smoke tests' test hook reports (src/testHook.ts). */
+  testState(): TitleTestState {
+    return {
+      header: this.header.children
+        .map((child) => (child instanceof Text ? child.text : ""))
+        .join(""),
+      levels: this.levelRows,
+    };
   }
 
   /** Centres the scene in a screen of the given size, shrinking it to fit. */
