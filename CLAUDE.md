@@ -41,6 +41,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run e2e:full` — the quick set plus every level played through,
   about 2 minutes. Run before a release and after changes to drawing,
   levels or block types
+- `npm run e2e:coverage` — the full browser set with code coverage of the
+  game in the browser: a table of files with uncovered code, and a
+  line-by-line report in `coverage-e2e/index.html` (git-ignored). About
+  3 minutes; run now and then, not with each commit
 - `npm run screenshots` — pictures of the main screens in `screenshots/`
   (git-ignored). Look at them after a visual change; they don't show
   phone-only GPU bugs, so phone checks stay

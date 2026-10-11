@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { COVERAGE } from "./e2e/coverage";
 
 // Browser smoke tests (e2e/): `npm run e2e` for the quick set (also run
 // before commits that change the game), `npm run e2e:full` adding every
@@ -44,10 +45,13 @@ export default defineConfig({
       testMatch: "screenshots.e2e.ts",
     },
   ],
-  // A build of its own, so dist/ (what gets deployed) is left alone.
+  // `npm run e2e:coverage` (e2e/coverage.ts) clears and writes the report.
+  globalSetup: COVERAGE ? "./e2e/coverageSetup.ts" : undefined,
+  // A build of its own, so dist/ (what gets deployed) is left alone. Its
+  // source maps let the coverage report show the TypeScript sources.
   webServer: {
     command:
-      "vite build --outDir dist-e2e --emptyOutDir --logLevel warn && vite preview --outDir dist-e2e --port 4173 --strictPort",
+      "vite build --outDir dist-e2e --emptyOutDir --sourcemap --logLevel warn && vite preview --outDir dist-e2e --port 4173 --strictPort",
     url: "http://localhost:4173",
     reuseExistingServer: false,
   },

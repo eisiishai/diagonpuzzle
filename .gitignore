@@ -26,8 +26,9 @@ dist-ssr
 # Generated level solutions (npm run solutions); local only
 docs/solutions.local.md
 
-# Unit test coverage report (npm run coverage); local only
+# Coverage reports (npm run coverage, npm run e2e:coverage); local only
 coverage
+coverage-e2e
 
 # Browser smoke tests (npm run e2e, npm run screenshots); local only
 dist-e2e

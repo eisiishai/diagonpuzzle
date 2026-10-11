@@ -405,10 +405,16 @@ lab page on 2026-10-11:
     `rowList()`. Left uncovered on purpose: Web Audio synthesis, the
     unreachable `loop` guard and empty path, and the reduced-motion
     query read once on loading
-  - [ ] Optional: coverage from the browser smoke tests too (Chromium's
-    coverage through Playwright, mapped to the sources with e.g.
-    `monocart-coverage-reports`), to see drawing, scene and audio code
-    no test runs
+  - [x] Coverage from the browser smoke tests too, `npm run
+    e2e:coverage`: Chromium's coverage through Playwright, mapped to the
+    sources with `monocart-coverage-reports`. 85% of statements and 78%
+    of branches at v1.19; most of the rest is motion that reduced motion
+    turns off
+    - [ ] Optional: run a few smoke tests with motion on (the intro,
+      a shot with sparks and glints, a scene transition, the finale), so
+      that motion code runs in a test and its errors fail it
+    - [ ] Optional: a smoke test of the title screen's keyboard controls
+      (arrows, Enter, the music and sound keys), which no test uses
   - [ ] Optional: coverage thresholds for `src/game/`, `src/levels/` and
     `src/save/` in `npm run build`, so a drop stops the commit
 - [ ] Watch the solver's and `npm run generate`'s run times as placeable

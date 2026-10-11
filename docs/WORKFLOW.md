@@ -159,6 +159,7 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
 | `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 70 s. Run before commits that change the game (see *3. Commit*). |
 | `npm run e2e:full` | The quick set plus every level played through. About 2 minutes. |
+| `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). About 3 minutes. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
 `npm run build` is the full check. **It runs automatically before every
@@ -185,6 +186,28 @@ coverage report doesn't see those. Neither do the level design tools'
 command-line parts (`scripts/levels.ts`, `generate.ts` and the like),
 which are run by hand. Branch coverage is the most telling figure: a
 line can run while one of its cases never does.
+
+`npm run e2e:coverage` does the same for the browser smoke tests: it
+runs the full set while Chromium records which code the game runs, and
+maps that back to the TypeScript sources through the e2e build's source
+maps (`monocart-coverage-reports`, set up in `e2e/coverage.ts` and the
+`game` fixture in `e2e/game.ts`). It prints a table of the files with
+uncovered code and writes `coverage-e2e/index.html`, to open in the
+Windows browser like the unit test report. It covers the drawing, scenes
+and audio that the unit tests can't reach; together the two show which
+code no test runs. Run it now and then, e.g. before a larger release or
+after big changes to scenes or drawing, not with every commit. The two
+reports stay separate: Vitest's and Chromium's coverage can't be merged
+into one.
+
+On 2026-10-11 (v1.19) it ran 85% of statements and 78% of branches of
+the game's code. Most of what is left is motion the smoke tests turn
+off by running with reduced motion: the board's intro, scene
+transitions, ambient motion, sparks and glints, and the finale's wave
+(`intro.ts`, `easing.ts`, `SceneTransition.ts`, `BoardEffects.ts`,
+parts of `BoardView.ts` and `Celebration.ts`). Also unreached: the title
+screen's keyboard controls, and the level parser's errors for malformed
+grids (unit-tested).
 
 The smoke tests (`e2e/`) build the game into `dist-e2e/` (leaving `dist/`
 alone), serve it with `vite preview` and play it in headless Chromium: the

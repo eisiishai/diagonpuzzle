@@ -10,6 +10,7 @@ export default defineConfig(
     "playwright-report",
     "test-results",
     "coverage",
+    "coverage-e2e",
   ]),
   {
     extends: [
