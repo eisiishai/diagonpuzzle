@@ -81,6 +81,19 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   about 7 minutes; with `--changes 1` about 13 seconds (level 17 got its
   target that way, with one mirror added). Run long searches
   in the background.
+- A new level touches these places besides its entry in
+  `src/levels/levels.ts` (a new `id`; `music` from its mechanic's group,
+  see *Sound* in `docs/DESIGN.md`). It may go anywhere in the list, also
+  between released levels: progress is saved by `id`, and a level after
+  it stays unlocked once passed.
+  - `src/levels/levels.test.ts`: the lists of levels with a setup route
+    or needing a breakable wall broken, if it belongs in one
+  - `docs/DESIGN.md`: the level table (and renumber the levels after it),
+    the counts and ranges that mention level numbers (bonus targets,
+    music groups, how levels were found)
+  - `docs/ROADMAP.md`: the difficulty curve table, from `npm run levels`
+  - The console snippet in *Seeing the game's ending by hand* below
+  - Run `npm run e2e:full`, which plays every level through
 - A new block type (cell type) touches these places, after its design in
   `docs/DESIGN.md` (rule, grid symbol, look). Only the first four are
   checked by the build; go through the rest by hand:

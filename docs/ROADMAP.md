@@ -56,6 +56,13 @@ One level, playable with the mouse, plain graphics.
 
 ## Game track
 
+Suggested order from here (2026-10-11, v1.11): decide the level list
+layout (the open question under *Presentation*, best chosen from variants
+on a lab page) before levels are added, then the option to rotate the
+placed mirror with new levels for it. In parallel, playtesters' feedback
+would settle the items that wait on how people play: the step to
+*Rebuild*, level 7's dip and the difficulty measure.
+
 ### Next
 
 - [x] More levels built around flipping mirrors, with rising difficulty
