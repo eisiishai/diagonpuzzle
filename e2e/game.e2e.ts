@@ -1,5 +1,7 @@
+import { fire } from "../src/game/simulate";
 import { LEVELS } from "../src/levels/levels";
-import { expect, solution, test } from "./game";
+import { expect, solution, startBoard, test } from "./game";
+import type { Game } from "./game";
 
 // Level indices (0-based) used below.
 const FIRST = 0;
@@ -122,4 +124,107 @@ test("the game runs with localStorage blocked", async ({ game }) => {
   await game.waitForLevel(1);
   await game.play(solution(FIRST), "mouse");
   expect((await game.level()).phase).toBe("complete");
+});
+
+test.describe("interrupting a shot", () => {
+  // Level 1's top row: a shot that flips mirrors and leaves the board
+  // without reaching the goal, so a restart has something to undo. The
+  // game's time is slowed while it flies, so the test's input surely
+  // arrives before it ends (input to a browser drawing in software takes
+  // a large part of a second).
+  const ROW = 0;
+  const start = startBoard(FIRST);
+  const shot = fire(start, ROW);
+  const SLOW = 0.1;
+  // At normal speed, longer than the shot takes, so anything it would
+  // still have done shows.
+  const SHOT_TIME_MS = 2500;
+
+  test.beforeEach(async ({ game }) => {
+    expect(shot.outcome).toBe("exit");
+    expect(shot.board).not.toEqual(start);
+    await game.open();
+    await game.press("PLAY");
+    await game.waitForLevel(1);
+  });
+
+  /** Fires the slowed shot; returns once it is on its way. */
+  async function startSlowShot(game: Game) {
+    await game.setSpeed(SLOW);
+    await game.startShot(ROW, "mouse");
+  }
+
+  /** Checks the shot was still on its way, then lets time run again. */
+  async function endSlowShot(game: Game) {
+    const { scene, level } = await game.state();
+    if (scene === "level" && level?.number === 1) {
+      expect(level.shots === 0 || level.phase === "firing").toBe(true);
+    }
+    await game.setSpeed(1);
+    await game.page.waitForTimeout(SHOT_TIME_MS);
+  }
+
+  const restarts: [string, (game: Game) => Promise<void>][] = [
+    ["R", (game) => game.page.keyboard.press("r")],
+    ["the button", (game) => game.press("RESTART")],
+  ];
+  for (const [name, restart] of restarts) {
+    test(`restart with ${name} puts the starting board back`, async ({
+      game,
+    }) => {
+      await startSlowShot(game);
+      await restart(game);
+      await endSlowShot(game);
+      await game.expectBoard(start, "after the restart");
+      const { phase, shots, hits } = await game.level();
+      expect({ phase, shots, hits }).toEqual({
+        phase: "aiming",
+        shots: 0,
+        hits: 0,
+      });
+      // The level then plays on as usual.
+      await game.play(solution(FIRST), "mouse");
+      expect((await game.level()).phase).toBe("complete");
+    });
+  }
+
+  const leaves: [string, (game: Game) => Promise<void>][] = [
+    ["Esc", (game) => game.page.keyboard.press("Escape")],
+    ["the Menu button", (game) => game.press("MENU")],
+  ];
+  for (const [name, leave] of leaves) {
+    test(`leaving with ${name} goes to the title screen`, async ({ game }) => {
+      await startSlowShot(game);
+      await leave(game);
+      await game.waitForScene("title");
+      await endSlowShot(game);
+      expect((await game.state()).scene).toBe("title");
+      // Coming back starts the level afresh.
+      await game.press("PLAY");
+      await game.waitForLevel(1);
+      await game.expectBoard(start, "on coming back");
+      expect((await game.level()).shots).toBe(0);
+    });
+  }
+
+  test("the hidden skip goes on to the next level", async ({ game }) => {
+    await startSlowShot(game);
+    await game.page.keyboard.press("Shift+N");
+    await game.waitForLevel(2);
+    await endSlowShot(game);
+    await game.expectBoard(startBoard(1), "of the next level");
+    expect((await game.level()).shots).toBe(0);
+  });
+
+  test("firing again is ignored until the shot finishes", async ({ game }) => {
+    await startSlowShot(game);
+    // The winning row, by click and by keyboard: neither may fire.
+    const [winning] = solution(FIRST) as number[];
+    await game.pointAt((await game.level()).launchers[winning], "mouse");
+    await game.page.keyboard.press("Enter");
+    await endSlowShot(game);
+    const { phase, shots } = await game.level();
+    expect({ phase, shots }).toEqual({ phase: "aiming", shots: 1 });
+    await game.expectBoard(shot.board, "after the one shot");
+  });
 });

@@ -114,7 +114,7 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm test` | Unit tests (Vitest) |
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
-| `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 30 s. Run before commits that change the game (see *3. Commit*). |
+| `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 50 s. Run before commits that change the game (see *3. Commit*). |
 | `npm run e2e:full` | The quick set plus every level played through. About 2 minutes. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
@@ -130,8 +130,10 @@ The smoke tests (`e2e/`) build the game into `dist-e2e/` (leaving `dist/`
 alone), serve it with `vite preview` and play it in headless Chromium: the
 title screen and level list, completing levels with the mouse, keyboard and
 touch, restart, the player's mirror, both skips, progress kept after a
-reload, the game with localStorage blocked, and everything fitting on a
-phone screen. `npm run e2e:full` also plays every level through by its
+reload, the game with localStorage blocked, everything fitting on a
+phone screen, and interrupting a shot in flight (restart, Menu/Esc, the
+hidden skip, firing again), for which the test hook slows the game's
+time so the pellet is surely still moving. `npm run e2e:full` also plays every level through by its
 shortest solution (`e2e/levels.e2e.ts`), which runs the drawing and effects of
 every block type, and after every move the board must match the rules,
 both as the level's state and as drawn (a mirror's direction read from
@@ -148,8 +150,8 @@ changes the game. A failure leaves a trace to open with
 What is checked only by hand: how drawing, animation and sound look and
 sound, and anything only a real phone shows (such as the GPU line bugs in
 CLAUDE.md). Before committing a change that affects them, play it in
-`npm run dev`: fire a few shots, restart (also while the pellet is moving),
-complete a level, and return to the title screen.
+`npm run dev`: fire a few shots, restart, complete a level, and return to
+the title screen.
 
 ## 3. Commit
 
@@ -165,7 +167,7 @@ git commit -m "Short summary of the change"
   (lint, type check, tests, production build; about 5 seconds). When the
   commit changes the game (`src/`, `public/`, `e2e/`, `index.html`, the
   Vite or Playwright config, or `package.json` and its lock file), it also
-  runs the quick browser smoke tests, `npm run e2e` (about 30 s); commits
+  runs the quick browser smoke tests, `npm run e2e` (about 50 s); commits
   of only docs skip them. If Playwright's Chromium isn't installed, the
   hook warns and skips them. If anything fails, the commit is stopped and
   the errors are shown; fix them and commit again. Merge commits are

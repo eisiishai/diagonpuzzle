@@ -27,7 +27,7 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   board changes that keep par; `--help` lists the options
 - `npm run e2e` — quick browser smoke tests (Playwright, headless
   Chromium, `e2e/`): every screen and flow at desktop and phone size,
-  about 30 s. The pre-commit hook runs it when a commit changes the game
+  about 50 s. The pre-commit hook runs it when a commit changes the game
 - `npm run e2e:full` — the quick set plus every level played through,
   about 2 minutes. Run before a release and after changes to drawing,
   levels or block types
@@ -65,7 +65,8 @@ src/
                 localStorage helpers
   scenes/       TitleScene and GameScene; main.ts switches between them
   testHook.ts   the smoke tests' view of the game (scene, buttons, level
-                state with screen positions), loaded only with ?e2e
+                state with screen positions) and control of the game's
+                speed, loaded only with ?e2e
 scripts/        development tools run with tsx (not part of the game)
 e2e/            browser smoke tests (Playwright) and their helpers
 ```

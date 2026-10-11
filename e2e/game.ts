@@ -125,6 +125,27 @@ export class Game {
     return level;
   }
 
+  /** Sets how fast the game's time runs: 1 as usual, below 1 slower. */
+  async setSpeed(speed: number): Promise<void> {
+    await this.page.evaluate((s) => window.__diagonTest?.setSpeed(s), speed);
+  }
+
+  /** Waits until the level's board, by the rules and as drawn, is `board`. */
+  async expectBoard(board: Board, when: string): Promise<void> {
+    await expect
+      .poll(
+        async () => {
+          const level = await this.level();
+          return {
+            rules: level.cells.map((row) => row.map((cell) => cell.type)),
+            shown: level.shown,
+          };
+        },
+        { message: `the board ${when}` },
+      )
+      .toEqual({ rules: board.cells, shown: board.cells });
+  }
+
   /** Waits for level `number` (1 for the first) to be on screen. */
   async waitForLevel(number: number): Promise<void> {
     await expect
@@ -165,6 +186,23 @@ export class Game {
 
   /** Fires from `row` and waits for the shot to finish. */
   async fire(row: number, input: InputMethod): Promise<void> {
+    const before = await this.startShot(row, input);
+    await expect
+      .poll(
+        async () => {
+          const { shots, phase } = await this.level();
+          return shots === before.shots + 1 && phase !== "firing";
+        },
+        { message: `the shot from row ${row} to finish` },
+      )
+      .toBe(true);
+  }
+
+  /**
+   * Fires from `row` without waiting for the shot: when this returns, the
+   * pellet is on its way. Returns the level's state from before the shot.
+   */
+  async startShot(row: number, input: InputMethod): Promise<LevelTestState> {
     const before = await this.level();
     if (input === "keyboard") {
       const step = row > before.selectedRow ? "ArrowDown" : "ArrowUp";
@@ -176,14 +214,11 @@ export class Game {
       await this.pointAt(before.launchers[row], input);
     }
     await expect
-      .poll(
-        async () => {
-          const { shots, phase } = await this.level();
-          return shots === before.shots + 1 && phase !== "firing";
-        },
-        { message: `the shot from row ${row} to finish` },
-      )
-      .toBe(true);
+      .poll(async () => (await this.level()).shots, {
+        message: `the shot from row ${row} to be fired`,
+      })
+      .toBe(before.shots + 1);
+    return before;
   }
 
   /**

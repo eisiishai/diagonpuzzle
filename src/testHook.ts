@@ -1,9 +1,9 @@
 // A view of the running game for the browser smoke tests in e2e/: the game
 // is drawn on one canvas, so tests can't find buttons or cells in the page.
 // Loaded only when the page's URL has the parameter ?e2e (see main.ts);
-// it changes nothing in the game.
+// it changes nothing in the game unless a test sets the game's speed.
 
-import type { Container } from "pixi.js";
+import type { Container, Ticker } from "pixi.js";
 import { Button } from "./render/ui";
 import { GameScene } from "./scenes/GameScene";
 import type { Scene } from "./scenes/Scene";
@@ -11,13 +11,29 @@ import type { ButtonTestState, TestState } from "./testState";
 
 declare global {
   interface Window {
-    __diagonTest?: { state(): TestState };
+    __diagonTest?: {
+      state(): TestState;
+      /**
+       * How fast the game's time runs: 1 as usual, below 1 slower. A test
+       * slows a shot down to act while the pellet is moving.
+       */
+      setSpeed(speed: number): void;
+    };
   }
 }
 
-/** Makes the current scene's state readable as `window.__diagonTest`. */
-export function installTestHook(currentScene: () => Scene | undefined): void {
+/**
+ * Makes the current scene's state readable as `window.__diagonTest`, and
+ * the speed of the game's time (`ticker`, which drives the scenes) settable.
+ */
+export function installTestHook(
+  currentScene: () => Scene | undefined,
+  ticker: Ticker,
+): void {
   window.__diagonTest = {
+    setSpeed: (speed) => {
+      ticker.speed = speed;
+    },
     state: () => {
       const scene = currentScene();
       return {

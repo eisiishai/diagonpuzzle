@@ -346,11 +346,11 @@ the polyline rule and is checked on a phone. In suggested order:
     rendering is slow: the tests run 4 browsers at once and the phone at
     pixel density 1 (2.6 ran the title screen at 4–5 frames a second,
     which slows the game's own time)
-  - The quick set (13 tests, about 30 s) runs in the pre-commit hook when
+  - The quick set (19 tests, about 50 s) runs in the pre-commit hook when
     a commit changes the game; doc-only commits skip it. The full set
     runs by hand before a release and after changes to drawing, levels or
     block types
-- [ ] Browser tests for interrupting a shot, in the quick set
+- [x] Browser tests for interrupting a shot, in the quick set
   (`e2e/game.e2e.ts`): while the pellet is still moving, restart (R and
   the button), leave with Menu/Esc, use the hidden skip (Shift+N), and
   fire again (ignored until the shot finishes). Switching scenes or
@@ -362,6 +362,12 @@ the polyline rule and is checked on a phone. In suggested order:
     the test hook), with no shot or goal hit counted
   - Restarting mid-shot is on the manual checklist in
     `docs/WORKFLOW.md`, *2. Check*; take it off once covered here
+  - Done: 6 tests. The pellet's flight took about 1.6 s while the test's
+    input took about 1.35 s, so it sometimes arrived too late; the test
+    hook now sets the game's speed (`setSpeed`), and the shot is slowed
+    to a tenth while interrupted. A restart that left the shot running
+    was caught (wrong mirrors and console errors). Taken off the manual
+    checklist
 
 ## Discarded ideas
 
