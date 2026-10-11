@@ -50,6 +50,17 @@ export const CELL_BEHAVIORS: Record<
     direction: SLASH_TURNS[direction],
     becomes: "mirrorBackslash",
   }),
+  // Glass mirrors turn the pellet like mirrors, once: then they shatter.
+  glassBackslash: (direction) => ({
+    kind: "pass",
+    direction: BACKSLASH_TURNS[direction],
+    becomes: "empty",
+  }),
+  glassSlash: (direction) => ({
+    kind: "pass",
+    direction: SLASH_TURNS[direction],
+    becomes: "empty",
+  }),
   wall: () => ({ kind: "stop", reason: "blocked" }),
   // A reflector sends the pellet straight back the way it came; it never
   // changes, but the mirrors behind it may have flipped on the way in.

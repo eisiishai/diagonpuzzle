@@ -7,7 +7,7 @@ import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
 import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
 import { BoardEffects } from "./BoardEffects";
-import { drawCell, isMirror } from "./cellGraphics";
+import { drawCell, isGlassMirror, isMirror } from "./cellGraphics";
 import type { GoalHits } from "./cellGraphics";
 import {
   introCell,
@@ -537,16 +537,23 @@ export class BoardView extends Container {
     }
   }
 
-  /** Changes a cell; a mirror flipping to the other mirror rotates into place. */
+  /**
+   * Changes a cell; a mirror flipping to the other mirror rotates into
+   * place, and a broken wall or shattered glass mirror bursts into pieces.
+   */
   private changeCell(x: number, y: number, cell: CellType): void {
     const view = this.cellViews[y][x];
     const previous = this.cells[y][x];
     this.cells[y][x] = cell;
     if (!(isMirror(previous) && isMirror(cell))) {
       this.drawCell(x, y);
-      if (previous === "breakable") {
+      if (previous === "breakable" || isGlassMirror(previous)) {
         const center = this.cellCenter(x, y);
-        this.boardEffects.addDebris(center.x, center.y);
+        this.boardEffects.addDebris(
+          center.x,
+          center.y,
+          previous === "breakable" ? "stone" : "glass",
+        );
       }
       return;
     }

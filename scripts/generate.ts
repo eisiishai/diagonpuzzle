@@ -20,6 +20,7 @@ const DEFAULTS: GeneratorOptions & { show: number; alternatives: number } = {
   walls: 2,
   breakable: 0,
   reflectors: 0,
+  glass: 0,
   playerMirror: undefined,
   placeLater: false,
   shots: 2,
@@ -42,6 +43,8 @@ const HELP = `Usage: npm run generate -- [options]
                     (default ${DEFAULTS.breakable})
   --reflectors N    reflectors; boards must need one for par
                     (default ${DEFAULTS.reflectors})
+  --glass N         glass mirrors; boards must need one shattered for par
+                    (default ${DEFAULTS.glass})
   --player-mirror M the player may place one mirror M (slash or backslash)
                     on any empty cell; boards must need it for par
   --place-later     no shortest solution places the mirror before the first shot
@@ -73,6 +76,7 @@ const FLAGS: Record<string, keyof typeof DEFAULTS> = {
   "--walls": "walls",
   "--breakable": "breakable",
   "--reflectors": "reflectors",
+  "--glass": "glass",
   "--place-later": "placeLater",
   "--shots": "shots",
   "--goal-hits": "goalHits",

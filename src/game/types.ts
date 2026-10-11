@@ -21,6 +21,8 @@ export type CellType =
   | "wall"
   | "breakable"
   | "reflector"
+  | "glassBackslash"
+  | "glassSlash"
   | "goal"
   | "bonus";
 

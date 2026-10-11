@@ -85,8 +85,14 @@ with flipping mirrors, before it is built.
   - [ ] Fixed mirror: turns the pellet like a mirror but never flips
     (drawn in dull metal). Gives levels fixed points to plan around, so
     larger levels stay readable; makes the solver's search smaller
-  - [ ] Glass mirror: turns the pellet once, then shatters and leaves an
-    empty cell, the mirror version of the breakable wall
+  - [x] Glass mirror (`N` `\`, `Z` `/`): turns the pellet once, then
+    shatters and leaves an empty cell, the mirror version of the
+    breakable wall. Levels 21–22 teach it (chapter *Glass mirrors*).
+    Design in `docs/DESIGN.md`, *Glass mirrors*
+    - [ ] Harder glass mirror levels, e.g. combined with reflectors or
+      flips that must happen before the glass is spent
+    - [ ] Optional: a shattering sound (it plays the mirror's ping),
+      chosen on a sound lab page with the reflector's
   - [ ] Reinforced wall: a breakable wall that needs two hits, showing a
     crack after the first
   - [x] Reflector (`@`): sends the pellet straight back the way it came.

@@ -668,6 +668,9 @@ export class GameScene extends Container implements Scene {
       goalHits,
       hasBreakable: board.cells.some((row) => row.includes("breakable")),
       hasReflector: board.cells.some((row) => row.includes("reflector")),
+      hasGlass: board.cells.some(
+        (row) => row.includes("glassBackslash") || row.includes("glassSlash"),
+      ),
     });
   }
 }

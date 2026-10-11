@@ -52,7 +52,7 @@ interface Sparkle {
 
 const SPARKLE_LIFE_MS = 750;
 
-/** A piece of a breakable wall flying off as it breaks. */
+/** A piece of a breakable wall or a glass mirror flying off as it breaks. */
 interface Debris {
   view: Graphics;
   vx: number;
@@ -147,14 +147,22 @@ export class BoardEffects {
     this.sparkles.push({ view, ageMs: 0 });
   }
 
-  /** A breakable wall centred at (x, y) bursts into stone pieces that fall away. */
-  addDebris(x: number, y: number): void {
+  /**
+   * A breakable wall centred at (x, y) bursts into stone pieces that fall
+   * away; a glass mirror into thin glass shards.
+   */
+  addDebris(x: number, y: number, material: "stone" | "glass" = "stone"): void {
     const size = this.cellSize;
     for (let i = 0; i < 10; i++) {
       const r = size * (0.06 + Math.random() * 0.07);
-      const view = new Graphics()
-        .poly([-r, -r * 0.6, r * 0.8, -r, r, r * 0.7, -r * 0.5, r])
-        .fill(i % 3 === 0 ? COLORS.stoneEdge : COLORS.stone);
+      const view =
+        material === "stone"
+          ? new Graphics()
+              .poly([-r, -r * 0.6, r * 0.8, -r, r, r * 0.7, -r * 0.5, r])
+              .fill(i % 3 === 0 ? COLORS.stoneEdge : COLORS.stone)
+          : new Graphics()
+              .poly([-r, -r * 0.25, r, 0, -r * 0.6, r * 0.3])
+              .fill(i % 3 === 0 ? COLORS.glassHighlight : COLORS.glass);
       view.position.set(
         x + (Math.random() - 0.5) * size * 0.6,
         y + (Math.random() - 0.5) * size * 0.6,

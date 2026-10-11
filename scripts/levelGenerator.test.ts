@@ -8,6 +8,7 @@ import {
   shortestSolutions,
   withAlternatives,
   withSolidWalls,
+  withSolidGlass,
   withWalls,
 } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
@@ -19,6 +20,7 @@ const OPTIONS: GeneratorOptions = {
   walls: 1,
   breakable: 0,
   reflectors: 0,
+  glass: 0,
   placeLater: false,
   shots: 2,
   goalHits: 1,
@@ -73,6 +75,7 @@ describe("randomBoard", () => {
           walls: 1,
           breakable: 0,
           reflectors: 0,
+          glass: 0,
         },
         Math.random,
       ),
@@ -150,6 +153,14 @@ describe("findCandidates", () => {
     for (const { board } of candidates) {
       expect(board.cells.flat()).toContain("reflector");
       expect(solve(withWalls(board, "reflector"), 2)).toBeNull();
+    }
+  });
+
+  it("keeps only boards that need a glass mirror shattered for par", () => {
+    const candidates = findCandidates({ ...OPTIONS, glass: 2 });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board } of candidates) {
+      expect(solve(withSolidGlass(board), 2)).toBeNull();
     }
   });
 

@@ -57,6 +57,7 @@ describe("introMessage", () => {
     goalHits: 1,
     hasBreakable: false,
     hasReflector: false,
+    hasGlass: false,
   };
 
   it("explains how to play on a plain level", () => {
@@ -71,8 +72,12 @@ describe("introMessage", () => {
         goalHits: 2,
         hasBreakable: true,
         hasReflector: true,
+        hasGlass: true,
       }),
     ).toContain("bonus target");
+    expect(
+      introMessage({ ...plain, hasReflector: true, hasGlass: true }),
+    ).toContain("Glass mirrors");
     expect(
       introMessage({
         ...plain,

@@ -221,3 +221,36 @@ describe("reflectors", () => {
     expect(fire(parseLevel(grid), 0).outcome).toBe("goal");
   });
 });
+
+describe("glass mirrors", () => {
+  it("turn the pellet like mirrors, then shatter", () => {
+    for (const [glass, mirror] of [
+      ["glassBackslash", "mirrorBackslash"],
+      ["glassSlash", "mirrorSlash"],
+    ] as const) {
+      for (const d of ["right", "down", "left", "up"] as Direction[]) {
+        expect(CELL_BEHAVIORS[glass](d)).toEqual({
+          ...CELL_BEHAVIORS[mirror](d),
+          becomes: "empty",
+        });
+      }
+    }
+    const board = parseLevel(String.raw`
+      . N .
+      . . G
+    `);
+    const first = fire(board, 0);
+    expect(first.outcome).toBe("exit");
+    expect(first.board.cells[0][1]).toBe("empty");
+    expect(fire(first.board, 0).outcome).toBe("exit");
+  });
+
+  it("are gone if the pellet comes back to them in the same shot", () => {
+    // Down off the glass, back up from the reflector, straight through.
+    const grid = String.raw`
+      . N G
+      . @ .
+    `;
+    expect(cells(grid, 0)).toEqual(["0,0", "1,0", "1,1", "1,0"]);
+  });
+});

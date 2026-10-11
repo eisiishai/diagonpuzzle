@@ -13,6 +13,7 @@ const SIZES = {
 };
 const YOUR_MOVE = 14; // the first level with the player's mirror
 const RETURN_TRIP = 18; // the first level with a reflector
+const GLASS_HOUSE = 20; // the first level with a glass mirror
 
 for (const [device, size] of Object.entries(SIZES)) {
   const shoot = (game: Game, name: string) =>
@@ -56,6 +57,17 @@ for (const [device, size] of Object.entries(SIZES)) {
       await shoot(game, "level-19-start");
       await game.play(solution(RETURN_TRIP), "mouse");
       await shoot(game, "level-19-complete");
+    });
+
+    test("glass mirror", async ({ game }) => {
+      await game.seedCompleted(GLASS_HOUSE);
+      await game.open();
+      await game.press(`${GLASS_HOUSE + 1}. `);
+      await game.waitForLevel(GLASS_HOUSE + 1);
+      await shoot(game, "level-21-start");
+      const [first] = solution(GLASS_HOUSE);
+      await game.play([first], "mouse");
+      await shoot(game, "level-21-first-shot");
     });
 
     test("last level", async ({ game }) => {

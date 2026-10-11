@@ -16,14 +16,16 @@ export interface GoalHits {
 type CellDrawer = (g: Graphics, half: number, goalHits: GoalHits) => void;
 
 /**
- * How each cell type looks. Mirrors are both drawn as "\"; drawCell()
- * rotates "/" by 90°. New block types are added here (the type check fails
+ * How each cell type looks. Mirrors (and glass mirrors) are both drawn as
+ * "\"; drawCell() rotates "/" by 90°. New block types are added here (the type check fails
  * until they are).
  */
 const CELL_DRAWERS: Record<CellType, CellDrawer> = {
   empty: () => {},
   mirrorBackslash: drawMirror,
   mirrorSlash: drawMirror,
+  glassBackslash: drawGlassMirror,
+  glassSlash: drawGlassMirror,
   wall: (g, half) => {
     // A dark block with diagonal hatching.
     const edge = half * 0.87;
@@ -144,6 +146,28 @@ function drawMirror(g: Graphics, half: number): void {
 }
 
 /**
+ * A glass mirror, drawn as "\": the mirror's bar broken into three panes
+ * with gaps between them, so it reads as fragile.
+ */
+function drawGlassMirror(g: Graphics, half: number): void {
+  const reach = half * 0.7;
+  const pane = (2 * reach) / 3;
+  const gap = half * 0.09;
+  for (let i = 0; i < 3; i++) {
+    const from = -reach + i * pane + (i > 0 ? gap / 2 : 0);
+    const to = -reach + (i + 1) * pane - (i < 2 ? gap / 2 : 0);
+    g.moveTo(from, from).lineTo(to, to);
+  }
+  g.stroke({ width: 7, color: COLORS.glass, alpha: 0.75 });
+  for (let i = 0; i < 3; i++) {
+    const from = -reach + i * pane + gap;
+    const to = -reach + (i + 1) * pane - gap;
+    g.moveTo(from, from).lineTo(to, to);
+  }
+  g.stroke({ width: 1.5, color: COLORS.glassHighlight, cap: "round" });
+}
+
+/**
  * Draws `cell` into `g`, centred on g's origin, resetting any rotation,
  * scale and fade left from animations.
  */
@@ -154,10 +178,15 @@ export function drawCell(
   goalHits: GoalHits,
 ): void {
   g.clear();
-  g.rotation = cell === "mirrorSlash" ? Math.PI / 2 : 0;
+  g.rotation =
+    cell === "mirrorSlash" || cell === "glassSlash" ? Math.PI / 2 : 0;
   g.scale.set(1);
   g.alpha = 1;
   CELL_DRAWERS[cell](g, cellSize / 2, goalHits);
+}
+
+export function isGlassMirror(cell: CellType): boolean {
+  return cell === "glassBackslash" || cell === "glassSlash";
 }
 
 export function isMirror(cell: CellType): boolean {

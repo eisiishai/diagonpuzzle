@@ -26,6 +26,11 @@ export interface GeneratorOptions {
    */
   reflectors: number;
   /**
+   * Glass mirrors. With any, only boards that need one shattered for par
+   * are kept (as ordinary mirrors, par would be higher).
+   */
+  glass: number;
+  /**
    * A mirror the player may place on any empty cell. With one, only boards
    * that need it placed for par are kept.
    */
@@ -75,18 +80,26 @@ export function createRandom(seed: number): () => number {
 
 /**
  * A random board: the goal somewhere in the rightmost column, mirrors,
- * walls, breakable walls and reflectors in random empty cells left of it.
+ * walls, breakable walls, reflectors and glass mirrors in random empty
+ * cells left of it.
  * Asks for no more pieces than fit.
  */
 export function randomBoard(
   options: Pick<
     GeneratorOptions,
-    "width" | "height" | "mirrors" | "walls" | "breakable" | "reflectors"
+    | "width"
+    | "height"
+    | "mirrors"
+    | "walls"
+    | "breakable"
+    | "reflectors"
+    | "glass"
   >,
   random: () => number,
 ): Board {
-  const { width, height, mirrors, walls, breakable, reflectors = 0 } = options;
-  if (mirrors + walls + breakable + reflectors > (width - 1) * height) {
+  const { width, height, mirrors, walls, breakable } = options;
+  const { reflectors, glass } = options;
+  if (mirrors + walls + breakable + reflectors + glass > (width - 1) * height) {
     throw new Error("Too many pieces for the board size");
   }
   const cells: CellType[][] = Array.from({ length: height }, () =>
@@ -108,6 +121,7 @@ export function randomBoard(
   place(() => "wall", walls);
   place(() => "breakable", breakable);
   place(() => "reflector", reflectors);
+  place(() => (random() < 0.5 ? "glassBackslash" : "glassSlash"), glass);
   return { width, height, cells };
 }
 
@@ -116,6 +130,18 @@ export function withWalls(board: Board, cell: CellType): Board {
   return {
     ...board,
     cells: board.cells.map((row) => row.map((c) => (c === cell ? "wall" : c))),
+  };
+}
+
+/** The board with every glass mirror made an ordinary mirror. */
+export function withSolidGlass(board: Board): Board {
+  const solid: Partial<Record<CellType, CellType>> = {
+    glassBackslash: "mirrorBackslash",
+    glassSlash: "mirrorSlash",
+  };
+  return {
+    ...board,
+    cells: board.cells.map((row) => row.map((c) => solid[c] ?? c)),
   };
 }
 
@@ -211,6 +237,12 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
       options.reflectors > 0 &&
       solve(withWalls(board, "reflector"), shots, goalHits, playerMirror) !==
         null
+    ) {
+      continue;
+    }
+    if (
+      options.glass > 0 &&
+      solve(withSolidGlass(board), shots, goalHits, playerMirror) !== null
     ) {
       continue;
     }
