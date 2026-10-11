@@ -588,8 +588,9 @@ track crossfades in over about a second.
 
 ## Future ideas (not yet designed)
 
-- More block types (e.g. one-way blocks, splitters, rotating or breakable
-  mirrors).
+- More block types (e.g. fixed, glass or linked mirrors, reflectors,
+  portals, one-way gates, switches and doors; listed in
+  `docs/ROADMAP.md`).
 - More player-placed blocks: several mirrors, or other kinds of blocks
   (see *Player-placed mirror*).
 - Shot limits or par scores per level.

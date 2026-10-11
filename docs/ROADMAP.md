@@ -82,6 +82,28 @@ with flipping mirrors, before it is built.
 - [ ] New block types
   - [x] Breakable walls (`%`): stop the pellet once and break; levels
     11–14 use them (13–14 with two-hit goals)
+  - [ ] Fixed mirror: turns the pellet like a mirror but never flips
+    (drawn in dull metal). Gives levels fixed points to plan around, so
+    larger levels stay readable; makes the solver's search smaller
+  - [ ] Glass mirror: turns the pellet once, then shatters and leaves an
+    empty cell, the mirror version of the breakable wall
+  - [ ] Reinforced wall: a breakable wall that needs two hits, showing a
+    crack after the first
+  - [ ] Reflector: sends the pellet straight back the way it came. The
+    return trip meets the mirrors it already flipped, so it goes
+    somewhere new; the strongest link to flipping mirrors of these ideas
+  - [ ] Portal pair: the pellet enters one and leaves the other in the
+    same direction. No state of its own, so no cost to the solver;
+    reaches rows and routes the left edge can't. The loop guard covers
+    any loops it makes
+  - [ ] One-way gate: the pellet passes in one direction and is stopped
+    from the others (shown with an arrow). Closes off routes, which helps
+    keep a level's alternatives in check
+  - [ ] Switch and doors: hitting a switch stops the pellet and toggles
+    every door on the board between open and closed. Needs cell
+    behaviours that can change other cells, not only their own
+  - [ ] Linked mirrors: mirrors of one colour that all flip when any of
+    them is hit. Same model change as switches; may get hard to read
 - [x] Optional bonus targets: one extra target per level, not needed to
   finish and not counted in par, shown once the level has been completed
   at par; collecting it turns the level's star golden. Design in
@@ -567,3 +589,10 @@ could come back if the reason no longer holds.
   the fixed-direction mirror is already difficult enough for players
   without rotation, and rotation would be hard to make intuitive if some
   levels allowed it and others didn't.
+- **Splitter** (2026-10-11): a half-silvered mirror that splits the
+  pellet into two beams. Never designed or built. Reason: too complex.
+  The simulation, animation and solver all assume one beam, and it
+  raises rule questions such as which beam flips a shared mirror first.
+- **Pushable block** (2026-10-11): a block the pellet pushes one cell
+  along. Never designed or built. Reason: too complex: it would greatly
+  enlarge the solver's search and be hard to animate cleanly.
