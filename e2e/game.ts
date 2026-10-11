@@ -4,7 +4,6 @@
 
 import { expect, test as base } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import MCR from "monocart-coverage-reports";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
 import { solveBonusMoves, solveMoves } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
@@ -13,7 +12,7 @@ import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import { EMPTY_PROGRESS, serializeProgress } from "../src/save/progress";
 import type { Progress } from "../src/save/progress";
-import { COVERAGE, coverageOptions } from "./coverage";
+import { addCoverage, startCoverage } from "./coverage";
 import type {
   ButtonTestState,
   LevelTestState,
@@ -33,9 +32,7 @@ const PROGRESS_KEY = "diagonpuzzle.progress";
  */
 export const test = base.extend<{ game: Game }>({
   game: async ({ page }, use) => {
-    if (COVERAGE) {
-      await page.coverage.startJSCoverage({ resetOnNavigation: false });
-    }
+    await startCoverage(page);
     const errors: string[] = [];
     page.on("console", (message) => {
       if (message.type() === "error") {
@@ -44,9 +41,7 @@ export const test = base.extend<{ game: Game }>({
     });
     page.on("pageerror", (error) => errors.push(error.message));
     await use(new Game(page));
-    if (COVERAGE) {
-      await MCR(coverageOptions).add(await page.coverage.stopJSCoverage());
-    }
+    await addCoverage(page);
     expect(errors, "console errors and uncaught exceptions").toEqual([]);
   },
 });
@@ -135,6 +130,8 @@ export class Game {
   }
 
   async reload(): Promise<void> {
+    await addCoverage(this.page);
+    await startCoverage(this.page);
     await this.page.reload();
     await this.waitForScene("title");
   }

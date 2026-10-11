@@ -200,14 +200,11 @@ after big changes to scenes or drawing, not with every commit. The two
 reports stay separate: Vitest's and Chromium's coverage can't be merged
 into one.
 
-On 2026-10-11 (v1.19) it ran 85% of statements and 78% of branches of
-the game's code. Most of what is left is motion the smoke tests turn
-off by running with reduced motion: the board's intro, scene
-transitions, ambient motion, sparks and glints, and the finale's wave
-(`intro.ts`, `easing.ts`, `SceneTransition.ts`, `BoardEffects.ts`,
-parts of `BoardView.ts` and `Celebration.ts`). Also unreached: the title
-screen's keyboard controls, and the level parser's errors for malformed
-grids (unit-tested).
+On 2026-10-11 (v1.20) it ran 97% of statements and 91% of branches of
+the game's code. What is left is mostly defensive fallbacks and errors
+for malformed data (unit-tested). A page that reloads loses the coverage
+of what it ran before, so `Game.reload()` in `e2e/game.ts` adds it to
+the report first; reload through it, not `page.reload()`.
 
 The smoke tests (`e2e/`) build the game into `dist-e2e/` (leaving `dist/`
 alone), serve it with `vite preview` and play it in headless Chromium: the
@@ -218,16 +215,23 @@ phone screen and after resizing the window or turning the phone
 mid-level, bonus targets (hidden until par, collected, the star turning
 golden), the once-per-player celebrations (*All levels at par*, *All
 bonus targets found*) from seeded progress, *Reset progress*, the sound
-settings kept after a reload, and interrupting a shot in flight (restart, Menu/Esc, the
+settings kept after a reload and switched with M and F, Esc cancelling
+the choice of the mirror's cell, the hidden skip by holding the level's
+name, a skip given back after time on levels with none left, and
+interrupting a shot in flight (restart, Menu/Esc, the
 hidden skip, firing again), for which the test hook slows the game's
-time so the pellet is surely still moving. `npm run e2e:full` also plays every level through by its
+time so the pellet is surely still moving. Two tests
+(`e2e/motion.e2e.ts`) play with motion on: a level with mirrors and a
+breakable wall from the title and back (the title's beam, transitions,
+the board's intro, sparks, glints and shake), and the finale. `npm run e2e:full` also plays every level through by its
 shortest solution (`e2e/levels.e2e.ts`), which runs the drawing and effects of
 every block type, and after every move the board must match the rules,
 both as the level's state and as drawn (a mirror's direction read from
 its rotation). Any console error or uncaught exception fails a test. They
 find buttons, launchers and cells through a test hook (`src/testHook.ts`),
 loaded only when the URL has `?e2e`, and play levels by the solver's
-solutions. They run with reduced motion, and at pixel density 1 on the
+solutions. Apart from the motion tests they run with reduced motion,
+which keeps them fast and steady, and at pixel density 1 on the
 phone: the browser draws in software, and the phone's real density made it
 too slow. Run `npm run e2e:full` before a release and after changes to
 drawing, levels or block types; the quick set runs with each commit that

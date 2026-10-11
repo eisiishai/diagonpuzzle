@@ -3,6 +3,8 @@
 // in game.ts), and the report maps it back to the TypeScript sources through
 // the e2e build's source maps. See docs/WORKFLOW.md, "2. Check".
 
+import type { Page } from "@playwright/test";
+import MCR from "monocart-coverage-reports";
 import type { CoverageReportOptions } from "monocart-coverage-reports";
 
 // Node's process, without depending on @types/node.
@@ -21,3 +23,20 @@ export const coverageOptions: CoverageReportOptions = {
     sourcePath.startsWith("src/") && !sourcePath.endsWith(".test.ts"),
   sourcePath: (filePath) => filePath.replace(/^(\.\.\/)+/, ""),
 };
+
+/** Starts recording the code `page` runs, when this run collects coverage. */
+export async function startCoverage(page: Page): Promise<void> {
+  if (COVERAGE) {
+    await page.coverage.startJSCoverage({ resetOnNavigation: false });
+  }
+}
+
+/**
+ * Adds the code `page` ran since startCoverage() to the report. Call it
+ * before the page reloads too: what a page ran before it reloaded is lost.
+ */
+export async function addCoverage(page: Page): Promise<void> {
+  if (COVERAGE) {
+    await MCR(coverageOptions).add(await page.coverage.stopJSCoverage());
+  }
+}

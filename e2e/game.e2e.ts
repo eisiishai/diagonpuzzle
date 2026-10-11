@@ -1,5 +1,6 @@
 import { fire } from "../src/game/simulate";
 import { LEVELS } from "../src/levels/levels";
+import { EMPTY_PROGRESS, SKIP_WAIT_MS } from "../src/save/progress";
 import { expect, solution, startBoard, test } from "./game";
 import type { Game } from "./game";
 
@@ -40,9 +41,12 @@ test("arrow keys move between level tiles, naming the selected level", async ({
     await game.page.keyboard.press("ArrowRight");
     expect((await title()).detail).toMatch(new RegExp(`^${n}\\. `));
   }
-  // Level 6 is locked, so right goes no further.
+  // Level 6 is locked, so right goes no further; left steps back.
   await game.page.keyboard.press("ArrowRight");
   expect((await title()).detail).toMatch(/^5\. /);
+  await game.page.keyboard.press("ArrowLeft");
+  expect((await title()).detail).toMatch(/^4\. /);
+  await game.page.keyboard.press("ArrowRight");
   await game.page.keyboard.press("Enter");
   await game.waitForLevel(5);
 });
@@ -102,6 +106,24 @@ for (const input of ["mouse", "keyboard"] as const) {
   });
 }
 
+test("Esc cancels choosing the mirror's cell, staying on the level", async ({
+  game,
+}) => {
+  await game.seedCompleted(YOUR_MOVE);
+  await game.open();
+  await game.press(`${YOUR_MOVE + 1}. `);
+  await game.waitForLevel(YOUR_MOVE + 1);
+  await game.page.keyboard.press("p");
+  await expect
+    .poll(async () => (await game.level()).placementPreview)
+    .not.toBeNull();
+  await game.page.keyboard.press("Escape");
+  const level = await game.level();
+  expect(level.placementPreview).toBeNull();
+  expect(level.mirrorInHand).toBe(true);
+  expect((await game.state()).scene).toBe("level");
+});
+
 test("the Skip button skips on its second press", async ({ game }) => {
   await game.open();
   await game.press("PLAY");
@@ -121,6 +143,54 @@ test("the hidden skip (Shift+N) uses no visible skip", async ({ game }) => {
   await game.page.keyboard.press("Shift+N");
   await game.waitForLevel(2);
   await game.button("SKIP LEVEL · 3/3");
+});
+
+test("holding the level's name is the hidden skip too", async ({ game }) => {
+  await game.open();
+  await game.press("PLAY");
+  await game.waitForLevel(1);
+  const { levelName } = await game.level();
+  const box = await game.page.locator("canvas").boundingBox();
+  await game.page.mouse.move(box!.x + levelName.x, box!.y + levelName.y);
+  await game.page.mouse.down();
+  await game.waitForLevel(2);
+  await game.page.mouse.up();
+  await game.button("SKIP LEVEL · 3/3");
+});
+
+test("with no skips left, Skip waits until time on levels gives one back", async ({
+  game,
+}) => {
+  // Two seconds short of earning a skip back. Level 1 was skipped, which
+  // unlocks level 2.
+  await game.seedProgress({
+    ...EMPTY_PROGRESS,
+    skipped: [LEVELS[FIRST].id],
+    skipsLeft: 0,
+    skipWaitMs: SKIP_WAIT_MS - 2000,
+  });
+  await game.open();
+  expect((await game.state()).title!.levels[FIRST].state).toBe("skipped");
+  await game.press("2. ");
+  await game.waitForLevel(2);
+  expect((await game.button("NO SKIPS LEFT")).disabled).toBe(true);
+  expect((await game.button("SKIP LEVEL · 1/3")).disabled).toBe(false);
+});
+
+test("M and F switch music and sounds, on a level and the title", async ({
+  game,
+}) => {
+  await game.open();
+  await game.press("PLAY");
+  await game.waitForLevel(1);
+  await game.page.keyboard.press("m");
+  await game.button("MUSIC OFF");
+  await game.page.keyboard.press("f");
+  await game.button("SOUNDS OFF");
+  await game.press("MENU");
+  await game.waitForScene("title");
+  await game.page.keyboard.press("m");
+  await game.button("MUSIC ON");
 });
 
 test("progress is kept after reloading the page", async ({ game }) => {

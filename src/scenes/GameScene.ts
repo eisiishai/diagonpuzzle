@@ -108,6 +108,7 @@ export class GameScene extends Container implements Scene {
   private readonly options: GameSceneOptions;
   private readonly boardView: BoardView;
   private readonly surround: BoardSurround;
+  private readonly levelText: Text;
   private readonly shotsText: Text;
   private readonly audioControls: AudioControls;
   private readonly messageText: Text;
@@ -173,6 +174,7 @@ export class GameScene extends Container implements Scene {
       text: `LEVEL ${levelNumber}/${levelCount} · ${levelName.toUpperCase()}`,
       style: textStyle("heading"),
     });
+    this.levelText = levelText;
     levelText.y = Math.round((ROW_HEIGHT - levelText.height) / 2);
     this.addHiddenSkip(levelText);
     const menuButton = new Button({
@@ -327,6 +329,7 @@ export class GameScene extends Container implements Scene {
       mirrorInHand: session.mirrorInHand,
       placementPreview: this.placement.preview?.position ?? null,
       message: this.messageText.text,
+      levelName: centerOf(this.levelText),
       launchers: session.board.cells.map((_, y) => center(-1, y)),
       cells: session.board.cells.map((row, y) =>
         row.map((type, x) => ({ type, center: center(x, y) })),
@@ -666,4 +669,10 @@ export class GameScene extends Container implements Scene {
       hasBreakable: board.cells.some((row) => row.includes("breakable")),
     });
   }
+}
+
+/** The centre of `view` on the canvas, for the test hook. */
+function centerOf(view: Container): { x: number; y: number } {
+  const bounds = view.getBounds();
+  return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
 }

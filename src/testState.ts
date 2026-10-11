@@ -30,6 +30,8 @@ export interface LevelTestState {
   /** Where the player's mirror would go, while choosing its cell. */
   placementPreview: Position | null;
   message: string;
+  /** Centre of the level's name in the header (held, the hidden skip). */
+  levelName: Point;
   /** Centre of each row's launcher, top row first. */
   launchers: Point[];
   /** `cells[y][x]`: board cell (x, y) by the rules, and its centre. */
