@@ -103,8 +103,6 @@ with flipping mirrors, before it is built.
       two-hit goal
     - [x] Its own music track: *Glass harp*, chosen on sound lab 4
     - [x] A shattering sound: *Crack and tinkle*, chosen on sound lab 5
-  - [ ] Reinforced wall: a breakable wall that needs two hits, showing a
-    crack after the first
   - [x] Reflector (`@`): sends the pellet straight back the way it came.
     The return trip meets the mirrors it already flipped, so it goes
     somewhere new. Levels 19–22 teach it (chapter *Reflectors*). Design
@@ -123,8 +121,6 @@ with flipping mirrors, before it is built.
   - [ ] Switch and doors: hitting a switch stops the pellet and toggles
     every door on the board between open and closed. Needs cell
     behaviours that can change other cells, not only their own
-  - [ ] Linked mirrors: mirrors of one colour that all flip when any of
-    them is hit. Same model change as switches; may get hard to read
 - [x] Optional bonus targets: one extra target per level, not needed to
   finish and not counted in par, shown once the level has been completed
   at par; collecting it turns the level's star golden. Design in
@@ -649,3 +645,11 @@ could come back if the reason no longer holds.
 - **Pushable block** (2026-10-11): a block the pellet pushes one cell
   along. Never designed or built. Reason: too complex: it would greatly
   enlarge the solver's search and be hard to animate cleanly.
+- **Reinforced wall** (2026-10-11): a breakable wall that needs two hits,
+  showing a crack after the first. Never designed or built. Reason: not
+  interesting enough: the two-hit goal already covers a mechanic of
+  hitting the same thing more than once.
+- **Linked mirrors** (2026-10-11): mirrors of one colour that all flip
+  when any of them is hit. Never designed or built. Reason: too confusing
+  for the player, since one hit would change mirrors far from the
+  pellet's path.
