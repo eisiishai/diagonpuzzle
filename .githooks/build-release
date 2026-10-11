@@ -37,7 +37,7 @@ if ! command -v npx >/dev/null 2>&1 && [ -s "$HOME/.nvm/nvm.sh" ]; then
 fi
 log="$git_dir/build-release.log"
 if npx vite build >"$log" 2>&1; then
-  echo "Built dist/ for $(git describe --tags), ready to upload."
+  echo "Built dist/$(git describe --tags)/ and dist/index.html, ready to upload."
 else
   cat "$log" >&2
   note "the production build failed."

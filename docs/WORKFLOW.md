@@ -261,7 +261,8 @@ git commit -m "Short summary of the change"
   as the change they describe.
 - Each commit on `main` is tagged with the next version, pushed to the
   backup and built into `dist/` automatically; git prints e.g. `Tagged
-  v0.6.`, `Pushed to backup.` and `Built dist/ for v0.6, ready to upload.`
+  v0.6.`, `Pushed to backup.` and `Built dist/v0.6/ and dist/index.html, ready
+  to upload.`
   See *Versions*, *4. Back up* and *5. Release to the website* below.
 
 ## Versions
@@ -361,8 +362,9 @@ The backup doesn't include uncommitted work, stashes, local git settings
 
 1. Commit everything. After each commit on `main`, the `post-commit` hook
    rebuilds `dist/` with the new version (`.githooks/build-release`), and
-   git prints `Built dist/ for v0.6, ready to upload.` That build only runs
-   the production build: the checks already passed before the commit.
+   git prints `Built dist/v0.6/ and dist/index.html, ready to upload.`
+   That build only runs the production build: the checks already passed
+   before the commit.
 
    If git printed `dist/ not rebuilt` instead, build by hand from a clean
    tree. The build runs every check and stops before creating `dist/` if
@@ -378,19 +380,36 @@ The backup doesn't include uncommitted work, stashes, local git settings
    it ran before the commit had its version tag, so it shows the previous
    version as "-dirty" (see below). Turn the automatic build off with
    `git config diagonpuzzle.autoBuild false`.
-2. Optionally test the built version locally:
+2. Optionally test the built version locally, as the site's main page:
    ```bash
-   npx vite preview             # http://localhost:4173
+   npx vite preview --outDir dist   # http://localhost:4173
    ```
    (Opening `dist/index.html` directly from disk does not work: browsers block
    module scripts loaded from `file://`.)
-3. Upload the **contents** of `dist/` with WinSCP. In the local pane, open
+3. Upload with WinSCP. In the local pane, open
    `\\wsl.localhost\<distro>\home\<user>\…\diagonpuzzle\dist`.
-   - Upload `assets/` before `index.html`, so the new page never points to
-     files that aren't there yet.
-   - Then delete the old `.js` files from `assets/` on the server. Each build
-     gives them new names. WinSCP's *Synchronize* with "delete files" does the
-     upload and the cleanup in one step.
+   It holds exactly what to upload:
+   ```
+   dist/
+     index.html     the site's main page: plays the version below
+     v0.6/          the whole game of this version
+   ```
+   - Upload the version folder (`v0.6/`) into the game's folder on the
+     server (`diagonpuzzle/`), next to the older versions.
+   - **Then** upload `index.html` over the old one in `diagonpuzzle/`.
+     `diagonpuzzle/` now plays v0.6, and `diagonpuzzle/v0.6/` plays it too.
+   - Older version folders stay as they are, so each one keeps playing
+     its version at its own address (`diagonpuzzle/v1.10/`). Delete the
+     ones not worth keeping as snapshots, but never the one the main page
+     points to. Don't use WinSCP's *Synchronize* with "delete files" on
+     `diagonpuzzle/`: it would delete every older version.
+   - The main page is a copy of the version's own page with a
+     `<base href="./v0.6/">` tag, which loads everything else from the
+     version folder. The address bar stays at `diagonpuzzle/`. A browser
+     still showing a cached older main page plays the older version,
+     which is still there, until it reloads.
+   - All versions on the same site share one saved progress (browser
+     storage is per site, not per folder).
 4. Open the site and play through a level to confirm it works. If the page is
    blank, check the browser's developer tools (F12): 404 errors mean files are
    missing or in the wrong folder.
@@ -408,7 +427,9 @@ The backup doesn't include uncommitted work, stashes, local git settings
      changed in this release that uses touch (gestures, new buttons).
 
 The game works from any folder on the host (`base: "./"` in
-`vite.config.ts`).
+`vite.config.ts`). The version folder and the main page are made by the
+`versionFolder` plugin there; builds to another `--outDir`, such as the
+smoke tests' `dist-e2e/`, are just the game.
 
 ### Which version is online
 

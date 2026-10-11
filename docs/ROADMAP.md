@@ -354,6 +354,10 @@ lab page on 2026-10-11:
     `placementPositions()`, the formatting helpers in
     `scripts/levelAnalysis.ts` and the title screen's menu choices are
     small enough to leave
+- [x] Versioned uploads: the build puts the game in `dist/<version>/` and
+  a main page in `dist/index.html` that plays it through a `<base>` tag,
+  so the site's main address plays the newest upload and older version
+  folders stay online as snapshots
 
 ### Later
 

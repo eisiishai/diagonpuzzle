@@ -47,8 +47,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   version (only when the user asks for a major version bump)
 - Deploy: commit (the `post-commit` hook rebuilds `dist/` with the new
   version; if it says "dist/ not rebuilt", run `npm run build` from a clean
-  working tree), then copy the contents of `dist/` to the web host (details
-  in `docs/WORKFLOW.md`).
+  working tree), then upload `dist/`'s version folder (`dist/v1.16/`) as a
+  new folder on the web host and `dist/index.html` over the old one there,
+  which makes the site's main address play that version; older version
+  folders stay online as snapshots (details in `docs/WORKFLOW.md`).
   The build embeds `git describe --tags` as the version shown on the title
   screen; a build with uncommitted changes shows "-dirty".
 
@@ -102,9 +104,10 @@ e2e/            browser smoke tests (Playwright) and their helpers
   stray lines to the screen's corner (desktop browsers hide this). Build
   curves with `arcPoints()` and clean point lists with `distinctPoints()`
   from `src/render/polyline.ts`.
-- The game may be hosted in a subfolder (`base: "./"` in `vite.config.ts`).
-  Refer to files in `public/` with relative paths (`assets/x.png`), never
-  root paths (`/assets/x.png`).
+- The game may be hosted in a subfolder (`base: "./"` in `vite.config.ts`),
+  and the site's main page plays it from its version folder through a
+  `<base>` tag. Refer to files in `public/` with relative paths
+  (`assets/x.png`), never root paths (`/assets/x.png`).
 - Level `id`s are used as keys in saved progress: never change or reuse one
   once released. Since v1.0 players have real saves, so released levels'
   `minShots` and boards are best left alone too: stars are worked out
