@@ -137,6 +137,13 @@ to see) and overstate levels that repeat a row (8, 11).
   players)
 - [x] Small ambient animations (e.g. a gently pulsing goal crystal, a faint
   moving background grid)
+- [ ] Open question: the title screen's text is fairly small on a
+  desktop screen (seen in `npm run screenshots` at 1280×800, 2026-10-11),
+  because the whole screen, with all 17 level rows, is shrunk to fit the
+  height. It gets smaller with every level added. Not decided whether it
+  is a problem; options if it is: a scrolling level list, levels in
+  groups or pages (e.g. by mechanic), or a grid of numbered tiles instead
+  of rows. Judge it on a real screen and phone first
 
 ### Presentation, second pass
 
@@ -368,6 +375,19 @@ the polyline rule and is checked on a phone. In suggested order:
     to a tenth while interrupted. A restart that left the shot running
     was caught (wrong mirrors and console errors). Taken off the manual
     checklist
+- [ ] More browser tests, not yet planned in detail. Suggested on
+  2026-10-11 while adding the others:
+  - Bonus targets: hidden on a first visit, shown after completing the
+    level at par, collected by the solver's bonus route
+    (`solveBonusMoves()`), the level's star turning golden in the list
+  - The big celebrations: from saved progress with every level but one
+    at par, earning the last star plays *All levels at par*; likewise
+    *All bonus targets found*. These run once per player, so a crash in
+    them would hardly ever be seen when playing by hand
+  - Smaller ones: *Reset progress* (the confirming second press, and
+    that it erases the saved progress), music and sound settings kept
+    after a reload, and resizing the window or turning a phone mid-level
+    (everything still fits and responds to taps)
 
 ## Discarded ideas
 
