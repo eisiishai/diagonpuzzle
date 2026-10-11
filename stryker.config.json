@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "command",
+  "commandRunner": {
+    "command": "npx vitest run src --maxWorkers=3"
+  },
+  "concurrency": 8,
+  "timeoutMS": 20000,
+  "mutate": [
+    "src/game/**/*.ts",
+    "src/save/**/*.ts",
+    "src/levels/parse.ts",
+    "!**/*.test.ts"
+  ],
+  "coverageAnalysis": "off",
+  "reporters": [
+    "html",
+    "clear-text",
+    "progress"
+  ],
+  "cleanTempDir": "always"
+}

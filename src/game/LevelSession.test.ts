@@ -172,6 +172,8 @@ describe("LevelSession player-placed mirror", () => {
     const session = new LevelSession(parseLevel(MIRROR_BOARD));
     expect(session.mirrorInHand).toBe(false);
     expect(session.place({ x: 1, y: 0 })).toBe(false);
+    session.restart();
+    expect(session.mirrorInHand).toBe(false);
   });
 
   it("can't place during a shot or after completion", () => {

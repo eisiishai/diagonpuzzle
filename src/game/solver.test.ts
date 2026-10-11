@@ -56,6 +56,16 @@ describe("setupRoutes", () => {
     expect(setupRoutes(board)).toEqual([[0, 0]]);
   });
 
+  it("ignores a first shot that already wins", () => {
+    // Row 0 wins, and on its way flips mirrors so that row 1 wins after
+    // it; but a winning shot is no setup.
+    const board = parseLevel(String.raw`
+      . \ G
+      . \ /
+    `);
+    expect(setupRoutes(board)).toEqual([]);
+  });
+
   it("ignores second shots that would win anyway", () => {
     // Row 1 always wins straight ahead, whatever row 0 changed.
     const board = parseLevel(String.raw`

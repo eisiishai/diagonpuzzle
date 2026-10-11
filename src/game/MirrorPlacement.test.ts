@@ -72,6 +72,23 @@ describe("MirrorPlacement on a touch screen", () => {
     expect(session.placedMirror).toEqual({ x: 2, y: 1 });
   });
 
+  it("places only on a second tap on the very same cell", () => {
+    const { session, placement } = newPlacement();
+    // (1,0) then (1,2) share a column, (0,1) then (2,1) a row: each tap is
+    // on another cell than the one before, so each only moves the preview.
+    expect(placement.tap({ x: 1, y: 0 }, "touch")).toBe("previewed");
+    expect(placement.tap({ x: 1, y: 2 }, "touch")).toBe("previewed");
+    expect(placement.tap({ x: 0, y: 1 }, "touch")).toBe("previewed");
+    expect(placement.tap({ x: 2, y: 1 }, "touch")).toBe("previewed");
+    expect(session.mirrorInHand).toBe(true);
+  });
+
+  it("ignores a tap on a cell that isn't empty", () => {
+    const { placement } = newPlacement();
+    expect(placement.tap({ x: 0, y: 0 }, "touch")).toBe("ignored");
+    expect(placement.preview).toBeNull();
+  });
+
   it("keeps the tapped cell shown while a mouse moves", () => {
     const { placement } = newPlacement();
     placement.tap({ x: 1, y: 0 }, "touch");
@@ -140,6 +157,19 @@ describe("MirrorPlacement with the keyboard", () => {
     expect(placement.preview?.position).toEqual({ x: 2, y: 1 });
     placement.key("left");
     expect(placement.preview?.position).toEqual({ x: 1, y: 1 });
+  });
+
+  it("moves up and down, stopping at the board's edges", () => {
+    const { session, placement } = newPlacement();
+    session.select(0);
+    placement.start();
+    expect(placement.preview?.position).toEqual({ x: 1, y: 0 });
+    placement.key("up");
+    expect(placement.preview?.position).toEqual({ x: 1, y: 0 });
+    placement.key("down");
+    placement.key("down");
+    placement.key("down");
+    expect(placement.preview?.position).toEqual({ x: 1, y: 2 });
   });
 
   it("cancels, hiding the cursor", () => {

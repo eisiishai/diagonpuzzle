@@ -41,6 +41,11 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run e2e:full` — the quick set plus every level played through,
   about 2 minutes. Run before a release and after changes to drawing,
   levels or block types
+- `npm run mutation` — mutation testing (Stryker) of the rules
+  (`src/game/`, `src/save/`, `src/levels/parse.ts`): small changes to the
+  code that some unit test should notice; report in
+  `reports/mutation/mutation.html` (git-ignored). Slow; run by hand now and
+  then, in the background
 - `npm run e2e:coverage` — the full browser set with code coverage of the
   game in the browser: a table of files with uncovered code, and a
   line-by-line report in `coverage-e2e/index.html` (git-ignored). About

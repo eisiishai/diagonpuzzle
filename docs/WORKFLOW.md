@@ -159,6 +159,7 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
 | `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 70 s. Run before commits that change the game (see *3. Commit*). |
 | `npm run e2e:full` | The quick set plus every level played through. About 2 minutes. |
+| `npm run mutation` | Mutation testing of the rules: how well the unit tests check them (below). Minutes; run by hand. |
 | `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). About 3 minutes. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
@@ -205,6 +206,36 @@ the game's code. What is left is mostly defensive fallbacks and errors
 for malformed data (unit-tested). A page that reloads loses the coverage
 of what it ran before, so `Game.reload()` in `e2e/game.ts` adds it to
 the report first; reload through it, not `page.reload()`.
+
+`npm run mutation` checks how well the unit tests check the rules, not
+just whether they run them. Stryker (`stryker.config.json`) makes small
+changes to the code one at a time, called mutants (`<` to `<=`, a
+condition to `true`, a function body emptied, a string emptied), and
+runs the unit tests with each one. A mutant is *killed* when a test
+fails, and *survived* when every test still passes: then nothing checks
+that piece of code closely enough. It covers `src/game/`, `src/save/` and
+`src/levels/parse.ts`, the code the unit tests are for; not the level
+list, the drawing, scenes or audio. It prints a table per file and writes
+`reports/mutation/mutation.html`, which shows every surviving mutant in
+its source line, to open in the Windows browser like the coverage
+reports.
+
+- Some survivors change nothing a player or the rules could notice
+  (*equivalent* mutants, e.g. `<` to `<=` where the two values are never
+  equal, or a check that only makes the solver faster). Look at each new
+  survivor and either add a test or leave it. The ones known to be
+  equivalent are listed in `docs/ROADMAP.md` (*Mutation testing*), so a
+  later run shows what is new.
+- It runs `npx vitest run src` once per mutant (Stryker's *command
+  runner*), 8 at a time with 3 Vitest workers each. Stryker's own Vitest
+  runner doesn't work with Vitest 5: its mutants never switch on, so
+  nearly all of them "survive". Running more at once overloads the
+  processor and runs time out, which Stryker counts as killed. Its
+  incremental mode can't see which tests changed with this runner, so
+  each run is a full one.
+- About 6 minutes, using every processor core: run it in the background,
+  and not while committing. Never part of `npm run build` or the commit
+  checks.
 
 The smoke tests (`e2e/`) build the game into `dist-e2e/` (leaving `dist/`
 alone), serve it with `vite preview` and play it in headless Chromium: the

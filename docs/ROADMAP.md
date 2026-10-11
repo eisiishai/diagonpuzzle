@@ -420,6 +420,18 @@ lab page on 2026-10-11:
       the mirror's cell, the hidden skip by holding the level's name
       (its position added to the test hook), and *No skips left* with a
       skip given back after time on levels
+  - [x] Mutation testing (Stryker), `npm run mutation`, of `src/game/`,
+    `src/save/` and `src/levels/parse.ts` (run on 2026-10-11, v1.21).
+    The first run caught 89.6% of 926 mutants; tests for the real gaps
+    raised it to 94.2%. The gaps: completing one skipped level cleared
+    every skip, continuing from a skipped level other than the first,
+    malformed saves (JSON that isn't an object, a wrong version with
+    levels in it, bad `skipped` and `bonuses` entries), the saved wait
+    for a skip back, restart in a level without a player mirror, a
+    second tap on another cell in the same row or column, a tap on a
+    full cell, the cursor's up and down edges, a winning first shot in
+    setup routes, and error messages. *Mutation testing* below lists
+    the 54 survivors known to be equivalent
   - [ ] Optional: coverage thresholds for `src/game/`, `src/levels/` and
     `src/save/` in `npm run build`, so a drop stops the commit
 - [ ] Watch the solver's and `npm run generate`'s run times as placeable
@@ -493,6 +505,36 @@ lab page on 2026-10-11:
     progress. The test hook now also reports the title screen's level
     rows and header and the celebration's banner. Each test was checked
     to fail with its feature broken (celebrations, reset)
+
+### Mutation testing
+
+The 54 mutants that survive `npm run mutation` at v1.21, checked one by
+one: none changes anything a player or the rules could notice. A later
+run that lists others has found something new.
+
+- `progress.ts` (17): parse checks that a later check repeats (`typeof
+  x === "number"` before `Number.isInteger(x)`, `"x" in data` before
+  `typeof data.x`, `json === null` and the `JSON.parse` catch before
+  the object check, `typeof levels` before reading its entries), and
+  `best !== undefined` before `earnsStar(best, …)`, false for
+  `undefined` anyway. Likewise `GameProgress.ts:92`
+- `solver.ts` (13): the `seen` sets, `frontier.length > 0` and the
+  player-mirror guards only save work; the bonus-hit check's parts
+  repeat each other, as only a bonus cell gives a `bonus` outcome
+- `simulate.ts` (6): the `loop` guard, which can't happen, and the
+  board key's separators
+- `board.ts` (5): `isInside()`'s column checks: reading past a row's ends
+  gives `undefined` anyway
+- `LevelSession.ts` (4): `place()`'s player-mirror check, repeated by
+  `canPlace()`, and `finishShot()`'s two conditions, which are always
+  true or false together
+- `MirrorPlacement.ts` (3): the tap's `by: "touch"` (only "keyboard" is
+  ever checked), an optional chaining the line before guards, and the
+  fallback cell for a board with no empty cell, which no level has
+- `placement.ts` (2), `bonus.ts`, `cells.ts`, `parse.ts` (1 each): an
+  error message's text, an optional chaining, `undefined` for `false`,
+  the `pass` kind (anything but `stop` passes) and the goal counter
+  (only zero matters)
 
 ## Discarded ideas
 

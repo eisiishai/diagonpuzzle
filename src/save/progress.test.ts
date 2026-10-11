@@ -128,10 +128,11 @@ describe("skipping", () => {
   });
 
   it("clears the skip when the level is completed later", () => {
-    const skipped = recordSkip(EMPTY_PROGRESS, "a");
+    const skipped = recordSkip(recordSkip(EMPTY_PROGRESS, "a"), "b");
     const completed = recordCompletion(skipped, "a", 3).progress;
     expect(isSkipped(completed, "a")).toBe(false);
     expect(isCompleted(completed, "a")).toBe(true);
+    expect(isSkipped(completed, "b")).toBe(true);
   });
 
   it("keeps completed and skipped levels unlocked whatever comes before", () => {
@@ -155,6 +156,11 @@ describe("skipping", () => {
     progress = recordCompletion(progress, "b", 1).progress;
     progress = recordCompletion(progress, "c", 1).progress;
     expect(nextLevelIndex(progress, IDS)).toBe(0);
+    // The skipped level, wherever it is, not just the first level.
+    progress = recordSkip(EMPTY_PROGRESS, "b");
+    progress = recordCompletion(progress, "a", 1).progress;
+    progress = recordCompletion(progress, "c", 1).progress;
+    expect(nextLevelIndex(progress, IDS)).toBe(1);
   });
 });
 
@@ -195,7 +201,36 @@ describe("parseProgress", () => {
     expect(parseProgress(null)).toEqual(EMPTY_PROGRESS);
     expect(parseProgress("not json")).toEqual(EMPTY_PROGRESS);
     expect(parseProgress("[]")).toEqual(EMPTY_PROGRESS);
-    expect(parseProgress('{"version":99,"levels":{}}')).toEqual(EMPTY_PROGRESS);
+    // JSON that isn't an object at all.
+    for (const json of ["5", "null", '"text"', "true"]) {
+      expect(parseProgress(json), json).toEqual(EMPTY_PROGRESS);
+    }
+    // A completed level that would be kept, if the rest were right.
+    const levels = { a: { bestShots: 2 } };
+    const save = (data: object) => parseProgress(JSON.stringify(data));
+    expect(save({ version: 99, levels })).toEqual(EMPTY_PROGRESS);
+    expect(save({ levels })).toEqual(EMPTY_PROGRESS);
+    expect(save({ version: 1 })).toEqual(EMPTY_PROGRESS);
+    expect(save({ version: 1, levels: null })).toEqual(EMPTY_PROGRESS);
+    expect(save({ version: 1, levels: "a" })).toEqual(EMPTY_PROGRESS);
+  });
+
+  it("drops skipped entries that aren't level ids or are completed", () => {
+    const json = JSON.stringify({
+      version: 1,
+      levels: { a: { bestShots: 2 } },
+      skipped: ["a", "b", 3, null],
+    });
+    expect(parseProgress(json).skipped).toEqual(["b"]);
+    const notList = { version: 1, levels: {}, skipped: "b" };
+    expect(parseProgress(JSON.stringify(notList)).skipped).toEqual([]);
+  });
+
+  it("ignores bonus targets that aren't saved as an object", () => {
+    for (const bonuses of [null, "a", 3]) {
+      const json = JSON.stringify({ version: 1, levels: {}, bonuses });
+      expect(parseProgress(json).bonuses, String(bonuses)).toEqual({});
+    }
   });
 
   it("drops invalid level entries and keeps valid ones", () => {
@@ -309,6 +344,19 @@ describe("visible skips", () => {
     expect(save(-2)).toBe(0);
     expect(save("2")).toBe(MAX_SKIPS);
     expect(parseProgress('{"version":1,"levels":{}}').skipsLeft).toBe(3);
+  });
+
+  it("saves the wait for a skip, clamped, and starts old saves at 0", () => {
+    const waiting = { ...EMPTY_PROGRESS, skipsLeft: 0, skipWaitMs: 1234 };
+    expect(parseProgress(serializeProgress(waiting)).skipWaitMs).toBe(1234);
+    const save = (skipWaitMs: unknown) =>
+      parseProgress(JSON.stringify({ version: 1, levels: {}, skipWaitMs }))
+        .skipWaitMs;
+    expect(save(-5)).toBe(0);
+    expect(save(SKIP_WAIT_MS * 2)).toBe(SKIP_WAIT_MS);
+    expect(save("1234")).toBe(0);
+    expect(save(null)).toBe(0);
+    expect(parseProgress('{"version":1,"levels":{}}').skipWaitMs).toBe(0);
   });
 
   it("gives a skip back after time on level screens with none left", () => {

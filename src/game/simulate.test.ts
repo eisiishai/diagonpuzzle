@@ -98,6 +98,7 @@ describe("fire", () => {
     const board = parseLevel(". G");
     expect(() => fire(board, -1)).toThrow(RangeError);
     expect(() => fire(board, 1)).toThrow(RangeError);
+    expect(() => fire(board, 1)).toThrow("Row 1 is outside the board (0-0)");
   });
 });
 

@@ -32,7 +32,9 @@ describe("parseLevel", () => {
   });
 
   it("rejects unknown symbols", () => {
-    expect(() => parseLevel(". x G")).toThrow('unknown symbol "x"');
+    expect(() => parseLevel(". . G\n. x G")).toThrow(
+      'Line 2, cell 2: unknown symbol "x"',
+    );
   });
 
   it("rejects a level without a goal", () => {
@@ -51,5 +53,6 @@ describe("parseLevel", () => {
     const text = formatLevel(parseLevel(grid), "  ");
     expect(text).toBe("  . \\ / G\n  # . . .");
     expect(parseLevel(text)).toEqual(parseLevel(grid));
+    expect(formatLevel(parseLevel(grid))).toBe(". \\ / G\n# . . .");
   });
 });

@@ -30,6 +30,11 @@ docs/solutions.local.md
 coverage
 coverage-e2e
 
+# Mutation testing (npm run mutation): report, incremental results and
+# Stryker's working copy; local only
+reports
+.stryker-tmp
+
 # Browser smoke tests (npm run e2e, npm run screenshots); local only
 dist-e2e
 test-results

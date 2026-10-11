@@ -11,6 +11,8 @@ export default defineConfig(
     "test-results",
     "coverage",
     "coverage-e2e",
+    "reports",
+    ".stryker-tmp",
   ]),
   {
     extends: [

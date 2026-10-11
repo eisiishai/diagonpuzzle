@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { defineConfig, type Plugin } from "vite";
-import type {} from "vitest/config";
+import { configDefaults } from "vitest/config";
 
 /**
  * The version of the code being built, from the git version tags: "v0.9" on
@@ -74,6 +74,8 @@ export default defineConfig({
     open: true,
   },
   test: {
+    // Stryker's working copy of the project, while `npm run mutation` runs.
+    exclude: [...configDefaults.exclude, ".stryker-tmp/**"],
     // `npm run coverage`: which code the unit tests run. See docs/WORKFLOW.md.
     coverage: {
       include: ["src/**/*.ts", "scripts/**/*.ts"],
