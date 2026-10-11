@@ -16,7 +16,7 @@ export type LevelPhase = "aiming" | "firing" | "complete";
  * all rules about what is allowed when live here.
  */
 export class LevelSession {
-  readonly startBoard: Board;
+  private _startBoard: Board;
   private _board: Board;
   private _phase: LevelPhase = "aiming";
   private _shots = 0;
@@ -32,12 +32,33 @@ export class LevelSession {
   private _placedMirror: Position | null = null;
 
   constructor(startBoard: Board, goalHits = 1, playerMirror?: MirrorType) {
-    this.startBoard = startBoard;
+    this._startBoard = startBoard;
     this._board = startBoard;
     this._selectedRow = Math.floor(startBoard.height / 2);
     this.goalHits = goalHits;
     this.playerMirror = playerMirror;
     this._mirrorInHand = playerMirror !== undefined;
+  }
+
+  /** The board the level starts from, and a restart brings back. */
+  get startBoard(): Board {
+    return this._startBoard;
+  }
+
+  /**
+   * From the next restart on, the level starts from `board`: the starting
+   * board with its bonus targets, once the level has been completed at par
+   * (see docs/DESIGN.md, Bonus targets). The board in play stays as it is.
+   * Throws if `board` is not the same size.
+   */
+  setStartBoard(board: Board): void {
+    if (
+      board.width !== this._startBoard.width ||
+      board.height !== this._startBoard.height
+    ) {
+      throw new Error("The new starting board is not the same size");
+    }
+    this._startBoard = board;
   }
 
   /** True while the player's mirror has not been placed yet. */
@@ -154,7 +175,7 @@ export class LevelSession {
    * progress is abandoned; the selected row is kept.
    */
   restart(): void {
-    this._board = this.startBoard;
+    this._board = this._startBoard;
     this._shots = 0;
     this._hits = 0;
     this._mirrorInHand = this.playerMirror !== undefined;

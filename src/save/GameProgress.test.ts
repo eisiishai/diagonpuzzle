@@ -48,6 +48,7 @@ describe("GameProgress.complete", () => {
       previousBest: undefined,
       skipReturned: 2,
       allLevelsAtPar: false,
+      bonusesShown: false,
     });
     expect(game.progress.levels.a?.bestShots).toBe(4);
     expect(game.progress.skipsLeft).toBe(2);
@@ -65,8 +66,17 @@ describe("GameProgress.complete", () => {
       previousBest: 4,
       skipReturned: undefined,
       allLevelsAtPar: false,
+      bonusesShown: true,
     });
     expect(game.progress.skipsLeft).toBe(1);
+  });
+
+  it("shows the bonus targets once the level is at par, best or not", () => {
+    const game = newGame();
+    expect(game.complete(0, 3).bonusesShown).toBe(false);
+    expect(game.complete(0, 2).bonusesShown).toBe(true);
+    // A later completion above par keeps the best, so they still show.
+    expect(game.complete(0, 5).bonusesShown).toBe(true);
   });
 
   it("reports the last star of the game once", () => {

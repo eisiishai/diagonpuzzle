@@ -80,9 +80,11 @@ export interface GameSceneOptions {
   /**
    * The level's bonus targets: whether they are shown (the level was
    * completed at par before this visit; collected ones too, so they can be
-   * hit again), how many there are and how many were collected before.
+   * hit again), how many there are, how many were collected before, and
+   * the starting board with them, which a restart brings in once the level
+   * is completed at par in this visit.
    */
-  bonus: { shown: boolean; total: number; collected: number };
+  bonus: { shown: boolean; total: number; collected: number; board: Board };
   audio: GameAudio;
   /** Records a completion in `shots`; returns what it earned. */
   onComplete: (shots: number) => CompletionReport;
@@ -129,6 +131,13 @@ export class GameScene extends Container implements Scene {
   private readonly celebration = new Celebration();
   /** The level's bonus targets collected, in this visit or before. */
   private bonusesCollected: number;
+  /**
+   * The level's bonus targets are on the board in play: shown from the
+   * start of the visit, or brought in by a restart after par.
+   */
+  private bonusesInPlay: boolean;
+  /** A restart brings in the bonus targets: the level is at par now. */
+  private bonusesOnRestart = false;
   /** Choosing the cell for the player's mirror. */
   private readonly placement: MirrorPlacement;
 
@@ -136,6 +145,7 @@ export class GameScene extends Container implements Scene {
     super();
     this.options = options;
     this.bonusesCollected = options.bonus.collected;
+    this.bonusesInPlay = options.bonus.shown;
     this.passed = options.passedBefore;
     this.skipsLeft = options.skipsLeft;
     const { board, levelNumber, levelCount, levelName } = options;
@@ -439,8 +449,12 @@ export class GameScene extends Container implements Scene {
       const { shots } = this.session;
       this.boardView.setSelectedRow(null);
       this.boardView.setPlacing(false);
-      const { previousBest, allLevelsAtPar, skipReturned } =
+      const { previousBest, allLevelsAtPar, skipReturned, bonusesShown } =
         this.options.onComplete(shots);
+      if (bonusesShown && !this.bonusesInPlay) {
+        this.bonusesOnRestart = true;
+        this.session.setStartBoard(this.options.bonus.board);
+      }
       this.celebrate(result, shots, allLevelsAtPar);
       this.showMessage(
         completionMessage(shots, this.options.par, previousBest) +
@@ -574,6 +588,7 @@ export class GameScene extends Container implements Scene {
   /** Puts the level back to its starting board, with no shots fired. */
   private restart(): void {
     this.session.restart();
+    this.bonusesInPlay ||= this.bonusesOnRestart;
     this.placement.clear();
     this.showPreview();
     this.boardView.showBoard(this.session.board);
@@ -652,9 +667,11 @@ export class GameScene extends Container implements Scene {
     const pad = (n: number) => String(n).padStart(2, "0");
     const { shots, hits, goalHits } = this.session;
     const goal = goalHits > 1 ? `  ·  GOAL ${hits}/${goalHits}` : "";
-    const { shown, total } = this.options.bonus;
+    const { total } = this.options.bonus;
     const bonus =
-      shown && total > 0 ? `  ·  BONUS ${this.bonusesCollected}/${total}` : "";
+      this.bonusesInPlay && total > 0
+        ? `  ·  BONUS ${this.bonusesCollected}/${total}`
+        : "";
     const mirror =
       this.session.playerMirror === undefined
         ? ""
@@ -666,7 +683,7 @@ export class GameScene extends Container implements Scene {
   private introMessage(): string {
     const { goalHits, bonus, playerMirror, board } = this.options;
     return introMessage({
-      bonusToFind: bonus.shown && this.bonusesCollected < bonus.total,
+      bonusToFind: this.bonusesInPlay && this.bonusesCollected < bonus.total,
       playerMirror,
       goalHits,
       hasBreakable: boardHas(board, ["breakable"]),

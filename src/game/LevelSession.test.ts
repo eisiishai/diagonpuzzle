@@ -143,6 +143,27 @@ describe("LevelSession bonus targets", () => {
   });
 });
 
+describe("LevelSession starting board", () => {
+  it("restarts from a new starting board, leaving the board in play", () => {
+    const session = new LevelSession(parseLevel(". . G\n. . ."));
+    session.fire(0);
+    session.finishShot();
+    const withBonus = parseLevel(". * G\n. . .");
+    session.setStartBoard(withBonus);
+    expect(session.board.cells[0][1]).toBe("empty");
+    expect(session.startBoard).toBe(withBonus);
+    session.restart();
+    expect(session.board).toBe(withBonus);
+    expect(session.shots).toBe(0);
+  });
+
+  it("refuses a starting board of another size", () => {
+    const session = new LevelSession(parseLevel(". G"));
+    expect(() => session.setStartBoard(parseLevel(". . G"))).toThrow();
+    expect(() => session.setStartBoard(parseLevel(". G\n. ."))).toThrow();
+  });
+});
+
 describe("LevelSession player-placed mirror", () => {
   // Row 0 passes the empty cell and exits; with a "\" placed there it turns
   // down into the goal.

@@ -57,11 +57,11 @@ Some levels' goal needs several hits (`goalHits` in the level list; default
 Every level has an optional bonus target (`*` in the level list): a
 puzzle on top of the level for players who have mastered it.
 
-- **Hidden until par.** A level's bonus target appears only on visits
-  after the level was completed at par: not on the visit that first
-  reaches par (restarting doesn't show it either), but once the player
-  goes back to the menu, or on to another level, and returns. Until then
-  its cell is empty.
+- **Hidden until par.** A level's bonus target appears once the level
+  has been completed at par: on the visit that first reaches par it
+  appears with the next *Restart* (the board in play stays as it is until
+  then), and on every later visit from the start. Until then its cell is
+  empty.
 - **Hitting it** stops the beam, like the goal, and collects it: the
   target disappears with a burst of colour and the board keeps the
   mirrors the shot flipped. Play continues; completing the level still

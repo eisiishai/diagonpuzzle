@@ -26,8 +26,9 @@ export const SAVE_WAIT_EVERY_MS = 5000;
 export interface LevelStart {
   /**
    * The level's bonus targets are shown: it was completed at par before
-   * this visit (never on the visit that first reaches par). Collected ones
-   * are shown too, so they can be hit again.
+   * this visit (on the visit that first reaches par, they appear from the
+   * next restart; see CompletionReport). Collected ones are shown too, so
+   * they can be hit again.
    */
   bonusesShown: boolean;
   /** The level's bonus targets collected before this visit. */
@@ -45,6 +46,11 @@ export interface CompletionReport {
   allLevelsAtPar: boolean;
   /** Skips left after one was given back for this, if one was. */
   skipReturned?: number;
+  /**
+   * The level is at par now, so its bonus targets show: from the next
+   * restart in this visit, and on every later visit.
+   */
+  bonusesShown: boolean;
 }
 
 export interface BonusReport {
@@ -86,10 +92,9 @@ export class GameProgress {
   }
 
   levelStart(index: number): LevelStart {
-    const { id, minShots } = this.levels[index];
-    const best = this._progress.levels[id]?.bestShots;
+    const { id } = this.levels[index];
     return {
-      bonusesShown: best !== undefined && earnsStar(best, minShots),
+      bonusesShown: this.atPar(index),
       bonusesCollected: collectedBonuses(this._progress, id).length,
       passedBefore:
         isCompleted(this._progress, id) || isSkipped(this._progress, id),
@@ -111,7 +116,15 @@ export class GameProgress {
       previousBest: result.previousBest,
       skipReturned,
       allLevelsAtPar: completesAllPar(before, this._progress, this.levels),
+      bonusesShown: this.atPar(index),
     };
+  }
+
+  /** True if level `index` has been completed at par. */
+  private atPar(index: number): boolean {
+    const { id, minShots } = this.levels[index];
+    const best = this._progress.levels[id]?.bestShots;
+    return best !== undefined && earnsStar(best, minShots);
   }
 
   /**

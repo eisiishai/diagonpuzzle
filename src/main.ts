@@ -155,6 +155,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
           shown: start.bonusesShown,
           total: LEVEL_SUMMARIES[index].bonusCount,
           collected: start.bonusesCollected,
+          board: fullBoard,
         },
         audio,
         onComplete: (shots) => {

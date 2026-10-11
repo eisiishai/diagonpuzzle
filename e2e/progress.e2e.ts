@@ -18,7 +18,7 @@ async function backToTitle(game: Game) {
   return (await game.state()).title!;
 }
 
-test("a bonus target shows after par and turns the star golden", async ({
+test("a bonus target shows after par, on a restart or the next visit, and turns the star golden", async ({
   game,
 }) => {
   await game.open();
@@ -26,6 +26,15 @@ test("a bonus target shows after par and turns the star golden", async ({
   await game.waitForLevel(1);
   await game.expectBoard(startBoard(FIRST), "on a first visit");
   await game.play(solution(FIRST), "mouse");
+  // Restarting after par brings it in at once.
+  await game.press("RESTART");
+  await game.expectBoard(
+    parseLevel(LEVELS[FIRST].grid),
+    "after par and a restart",
+  );
+  await expect
+    .poll(async () => (await game.level()).message)
+    .toContain("bonus target has appeared");
   expect((await backToTitle(game)).levels[FIRST].state).toBe("star");
 
   // On the next visit the bonus target is on the board.
