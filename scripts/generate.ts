@@ -6,14 +6,14 @@
 import { playMoves } from "../src/game/solver";
 import type { MirrorType } from "../src/game/types";
 import { CELL_SYMBOLS, formatLevel } from "../src/levels/parse";
-import { cellName, describeShot, rowList } from "./levelAnalysis";
-import { findCandidates } from "./levelGenerator";
+import { cellName, describeShot, rowList, shotCount } from "./levelAnalysis";
+import { findCandidates, withAlternatives } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
 
 // Node's process, without depending on @types/node.
 declare const process: { argv: string[]; exitCode?: number };
 
-const DEFAULTS: GeneratorOptions & { show: number } = {
+const DEFAULTS: GeneratorOptions & { show: number; alternatives: number } = {
   width: 6,
   height: 5,
   mirrors: 6,
@@ -28,6 +28,7 @@ const DEFAULTS: GeneratorOptions & { show: number } = {
   requireSetup: false,
   noRepeat: false,
   show: 4,
+  alternatives: 2,
 };
 
 const HELP = `Usage: npm run generate -- [options]
@@ -48,6 +49,9 @@ const HELP = `Usage: npm run generate -- [options]
   --show N          best boards to print (default ${DEFAULTS.show})
   --require-setup   only boards that also have a two-shot setup route
   --no-repeat       no shortest solution fires the same row twice in a row
+  --alternatives N  only boards with an alternative solution within par + N
+                    shots, so a player who strays from par can still
+                    finish (default ${DEFAULTS.alternatives}; 0 keeps every board)
 
 Example: npm run generate -- --width 7 --height 6 --mirrors 8 --shots 3`;
 
@@ -73,6 +77,7 @@ const FLAGS: Record<string, keyof typeof DEFAULTS> = {
   "--show": "show",
   "--require-setup": "requireSetup",
   "--no-repeat": "noRepeat",
+  "--alternatives": "alternatives",
 };
 
 function parseArgs(args: string[]): typeof DEFAULTS | null {
@@ -99,7 +104,10 @@ function parseArgs(args: string[]): typeof DEFAULTS | null {
       continue;
     }
     const value = Number(args[++i]);
-    if (!Number.isInteger(value) || value < (key === "walls" ? 0 : 1)) {
+    if (
+      !Number.isInteger(value) ||
+      value < (key === "walls" || key === "alternatives" ? 0 : 1)
+    ) {
       console.error(`${args[i - 1]} needs a whole number`);
       return null;
     }
@@ -113,7 +121,16 @@ if (options === null) {
   process.exitCode = 1;
 } else {
   const candidates = findCandidates(options);
-  candidates.slice(0, options.show).forEach((candidate, index) => {
+  const shown =
+    options.alternatives > 0
+      ? withAlternatives(
+          candidates,
+          options,
+          options.alternatives,
+          options.show,
+        )
+      : candidates.slice(0, options.show);
+  shown.forEach((candidate, index) => {
     const { board, solutions } = candidate;
     console.log(
       `Board ${index + 1}: ${solutions.length === 1 ? "unique shortest solution" : `${solutions.length} shortest solutions`}` +
@@ -143,9 +160,21 @@ if (options === null) {
     if (solutions.length > 1) {
       console.log(`  all: ${solutions.map(rowList).join(", ")}`);
     }
+    if (candidate.alternative) {
+      const { alternative } = candidate;
+      console.log(
+        `  alternative: ${rowList(alternative)} (${shotCount(alternative)} shots)`,
+      );
+    }
     console.log();
   });
   console.log(
     `${candidates.length} different boards with par ${options.shots} found in ${options.tries} tries.`,
   );
+  if (options.alternatives > 0 && shown.length < options.show) {
+    console.log(
+      `Only ${shown.length} with an alternative solution within par + ${options.alternatives}: ` +
+        "try more --tries, a higher --alternatives, or --alternatives 0.",
+    );
+  }
 }

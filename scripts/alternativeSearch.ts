@@ -60,27 +60,27 @@ export function isEssential(
 }
 
 /**
- * Every different way to complete the level within `maxShots` shots, fewest
- * shots first. Only solutions without a wasted move count (isEssential), and
- * solutions whose shots take the same paths, in any order, count once (so
- * firing two independent shots the other way round, or placing the mirror
- * earlier, is not another solution). Searches all sequences, so keep
- * `maxShots` small.
+ * Every different way to complete the level within `maxShots` shots, as
+ * they are found (not in order of shots). Only solutions without a wasted
+ * move count (isEssential), and solutions whose shots take the same paths,
+ * in any order, count once (so firing two independent shots the other way
+ * round, or placing the mirror earlier, is not another solution). Searches
+ * all sequences, so keep `maxShots` small, or stop early.
  */
-export function alternativeSolutions(
+function* eachSolution(
   board: Board,
   maxShots: number,
-  goalHits = 1,
+  goalHits: number,
   playerMirror?: MirrorType,
-): Move[][] {
-  const solutions = new Map<string, Move[]>();
-  const search = (
+): Generator<Move[]> {
+  const seen = new Set<string>();
+  function* search(
     current: Board,
     inHand: boolean,
     hits: number,
     moves: Move[],
     paths: string[],
-  ) => {
+  ): Generator<Move[]> {
     const choices: { board: Board; placed: Move[]; inHand: boolean }[] = [
       { board: current, placed: [], inHand },
     ];
@@ -104,19 +104,62 @@ export function alternativeSolutions(
         ];
         if (newHits >= goalHits) {
           const key = [...newPaths].sort().join("|");
-          if (!solutions.has(key) && isEssential(board, newMoves, goalHits)) {
-            solutions.set(key, newMoves);
+          if (!seen.has(key) && isEssential(board, newMoves, goalHits)) {
+            seen.add(key);
+            yield newMoves;
           }
         } else if (newPaths.length < maxShots) {
-          search(result.board, choice.inHand, newHits, newMoves, newPaths);
+          yield* search(
+            result.board,
+            choice.inHand,
+            newHits,
+            newMoves,
+            newPaths,
+          );
         }
       }
     }
-  };
-  search(board, playerMirror !== undefined, 0, [], []);
-  return [...solutions.values()].sort(
+  }
+  yield* search(board, playerMirror !== undefined, 0, [], []);
+}
+
+/**
+ * Every different way to complete the level within `maxShots` shots, fewest
+ * shots first (see eachSolution for what counts as different).
+ */
+export function alternativeSolutions(
+  board: Board,
+  maxShots: number,
+  goalHits = 1,
+  playerMirror?: MirrorType,
+): Move[][] {
+  return [...eachSolution(board, maxShots, goalHits, playerMirror)].sort(
     (a, b) => shotRows(a).length - shotRows(b).length,
   );
+}
+
+/**
+ * An alternative solution above par: a way to complete the level in
+ * `minShots` + 1 shots, else in + 2 and so on up to + `extraShots`, with no
+ * wasted move. Fewest shots first, so a player who strays from the par
+ * route loses as little as possible. Null if there is none. Stops at the
+ * first one found, so it is much faster than alternativeSolutions().
+ */
+export function findAlternative(
+  board: Board,
+  minShots: number,
+  extraShots: number,
+  goalHits = 1,
+  playerMirror?: MirrorType,
+): Move[] | null {
+  for (let shots = minShots + 1; shots <= minShots + extraShots; shots++) {
+    for (const moves of eachSolution(board, shots, goalHits, playerMirror)) {
+      if (shotRows(moves).length === shots) {
+        return moves;
+      }
+    }
+  }
+  return null;
 }
 
 export interface AlternativeOptions {

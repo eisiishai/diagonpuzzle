@@ -5,9 +5,11 @@ import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import {
   alternativeSolutions,
+  findAlternative,
   findAlternativeChanges,
   isEssential,
 } from "./alternativeSearch";
+import { SEARCH_EXTRA_SHOTS } from "./levelAnalysis";
 
 describe("isEssential", () => {
   // Row 1 runs straight to the goal; row 2 exits after flipping (1, 1).
@@ -33,6 +35,36 @@ describe("alternativeSolutions", () => {
     expect(alternativeSolutions(board, 2)).toEqual([[3], [4, 0]]);
   });
 });
+
+describe("findAlternative", () => {
+  const board = withBonuses(parseLevel(LEVELS[0].grid));
+
+  it("finds a solution above par with no wasted shot", () => {
+    expect(findAlternative(board, 1, 2)).toEqual([4, 0]);
+  });
+
+  it("returns null when there is none within the extra shots", () => {
+    // Level 1's only solutions are rows 4 (par) and 5 → 1.
+    expect(findAlternative(board, 2, 1)).toBeNull();
+  });
+});
+
+// Every level should have another way to finish a shot or two above par,
+// so a player who strays from the par route can still complete it
+// (docs/DESIGN.md, Levels).
+it.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
+  `level $number ($name) has an alternative solution within par + ${SEARCH_EXTRA_SHOTS}`,
+  ({ grid, minShots, goalHits = 1, playerMirror }) => {
+    const alternative = findAlternative(
+      withBonuses(parseLevel(grid)),
+      minShots,
+      SEARCH_EXTRA_SHOTS,
+      goalHits,
+      playerMirror,
+    );
+    expect(alternative).not.toBeNull();
+  },
+);
 
 describe("findAlternativeChanges", () => {
   it("keeps par, the par solution and the bonus shots of level 9", () => {

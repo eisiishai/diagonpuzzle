@@ -142,6 +142,10 @@ to see) and overstate levels that repeat a row (8, 11).
   Levels 4 and 7 got two added mirrors each, for a route that starts
   differently from par. Level 11 still has no alternative one shot above
   par: board changes only add variants of its par route
+  - [x] Keep it so for new levels: `npm run generate` shows only boards
+    with an alternative within par + 2 (`--alternatives N`), `npm run
+    levels` prints each level's, and the tests require one for every
+    level
 
 ### Presentation
 

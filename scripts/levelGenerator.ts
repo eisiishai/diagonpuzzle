@@ -8,6 +8,7 @@ import { setupRoutes, shotRows, solve } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType } from "../src/game/types";
 import { formatLevel } from "../src/levels/parse";
+import { findAlternative } from "./alternativeSearch";
 
 export interface GeneratorOptions {
   width: number;
@@ -50,6 +51,8 @@ export interface Candidate {
   /** Rows whose first shot reaches the goal on the starting board. */
   rowsHittingAtStart: number;
   setupRoutes: [number, number][];
+  /** An alternative solution above par, once withAlternatives() found it. */
+  alternative?: Move[];
 }
 
 /** A small, seedable random number generator (xorshift32), giving [0, 1). */
@@ -233,4 +236,35 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
       a.solutions.length - b.solutions.length ||
       a.rowsHittingAtStart - b.rowsHittingAtStart,
   );
+}
+
+/**
+ * The first `count` candidates, in order, that have an alternative solution
+ * within par + `extraShots` shots (see findAlternative), each with it.
+ * Checks candidates only until it has `count`, since the check is slow
+ * next to finding them.
+ */
+export function withAlternatives(
+  candidates: readonly Candidate[],
+  options: Pick<GeneratorOptions, "shots" | "goalHits" | "playerMirror">,
+  extraShots: number,
+  count: number,
+): Candidate[] {
+  const kept: Candidate[] = [];
+  for (const candidate of candidates) {
+    if (kept.length >= count) {
+      break;
+    }
+    const alternative = findAlternative(
+      candidate.board,
+      options.shots,
+      extraShots,
+      options.goalHits,
+      options.playerMirror,
+    );
+    if (alternative !== null) {
+      kept.push({ ...candidate, alternative });
+    }
+  }
+  return kept;
 }

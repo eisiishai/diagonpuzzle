@@ -1,5 +1,5 @@
 // Level design report: `npm run levels`. For each level, prints the shortest
-// solution, two-shot setup routes, the shortest way to hit the bonus target,
+// solution, an alternative solution above par, two-shot setup routes, the shortest way to hit the bonus target,
 // how likely random play is to finish within par (a rough difficulty
 // measure) and what each row's first shot does (bonus targets hidden, as
 // before par). Ends with the difficulty of every level in a row.
@@ -7,7 +7,12 @@
 
 import { CELL_SYMBOLS } from "../src/levels/parse";
 import { oneIn } from "./difficulty";
-import { analyzeLevels, rowList, shotCount } from "./levelAnalysis";
+import {
+  analyzeLevels,
+  rowList,
+  SEARCH_EXTRA_SHOTS,
+  shotCount,
+} from "./levelAnalysis";
 
 const analyses = analyzeLevels();
 for (const analysis of analyses) {
@@ -37,6 +42,10 @@ for (const analysis of analyses) {
   console.log(
     `  Shortest:     ${shortest}  ${status}` +
       (shortestCount > 1 ? `  (${shortestCount} shortest solutions)` : ""),
+  );
+  const { alternative } = analysis;
+  console.log(
+    `  Alternative:  ${alternative ? `${rowList(alternative)} (${shotCount(alternative)})` : `none within par + ${SEARCH_EXTRA_SHOTS}  ✗`}`,
   );
   console.log(`  Setup routes: ${routes}`);
   const { bonusSolution } = analysis;

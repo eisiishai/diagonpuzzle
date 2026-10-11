@@ -13,6 +13,7 @@ import {
 } from "../src/game/solver";
 import type { Move, Placement } from "../src/game/solver";
 import { CELL_SYMBOLS } from "../src/levels/parse";
+import { findAlternative } from "./alternativeSearch";
 import { randomWinChance } from "./difficulty";
 import { shortestSolutions } from "./levelGenerator";
 import type { Board, Position } from "../src/game/types";
@@ -21,7 +22,7 @@ import type { LevelDefinition } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 
 /** Search a little beyond the declared minimum to report harder levels too. */
-const SEARCH_EXTRA_SHOTS = 2;
+export const SEARCH_EXTRA_SHOTS = 2;
 
 export interface SolutionShot {
   /** The player's mirror, if placed just before this shot. */
@@ -55,6 +56,11 @@ export interface LevelAnalysis {
   solutionShots: SolutionShot[];
   /** How many different shortest solutions there are; 1 is best. */
   shortestCount: number;
+  /**
+   * An alternative solution within par + SEARCH_EXTRA_SHOTS shots, fewest
+   * shots first (findAlternative), or null if there is none.
+   */
+  alternative: Move[] | null;
   /** Chance that random play completes the level within par (difficulty.ts). */
   randomWinChance: number;
   setupRoutes: [number, number][];
@@ -124,6 +130,13 @@ export function analyzeLevels(): LevelAnalysis[] {
               goalHits,
               playerMirror,
             ).length,
+      alternative: findAlternative(
+        board,
+        level.minShots,
+        SEARCH_EXTRA_SHOTS,
+        goalHits,
+        playerMirror,
+      ),
       randomWinChance: randomWinChance(
         board,
         level.minShots,

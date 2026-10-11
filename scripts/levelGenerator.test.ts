@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { solve } from "../src/game/solver";
+import { shotRows, solve } from "../src/game/solver";
 import { parseLevel } from "../src/levels/parse";
 import {
   createRandom,
   findCandidates,
   randomBoard,
   shortestSolutions,
+  withAlternatives,
   withSolidWalls,
 } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
@@ -141,6 +142,24 @@ describe("findCandidates", () => {
       for (const moves of solutions) {
         expect(typeof moves[0]).toBe("number");
       }
+    }
+  });
+});
+
+describe("withAlternatives", () => {
+  it("keeps candidates in order that have a solution a shot or two above par", () => {
+    const candidates = findCandidates(OPTIONS);
+    const kept = withAlternatives(candidates, OPTIONS, 2, 3);
+    expect(kept.length).toBeGreaterThan(0);
+    expect(kept.length).toBeLessThanOrEqual(3);
+    const order = kept.map((kept) =>
+      candidates.findIndex((candidate) => candidate.board === kept.board),
+    );
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    for (const { alternative } of kept) {
+      const shots = shotRows(alternative!).length;
+      expect(shots).toBeGreaterThan(OPTIONS.shots);
+      expect(shots).toBeLessThanOrEqual(OPTIONS.shots + 2);
     }
   });
 });

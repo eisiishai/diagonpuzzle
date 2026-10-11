@@ -15,13 +15,15 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   verify changes)
 - `npm run lint` — ESLint (with Prettier formatting rules)
 - `npm test` — Vitest unit tests
-- `npm run levels` — level design report: shortest solution, setup routes,
+- `npm run levels` — level design report: shortest solution, an
+  alternative solution above par, setup routes,
   difficulty (random play's odds of finishing at par) and first-shot
   outcomes for every level, then the difficulty curve (`scripts/levels.ts`,
   runs with tsx)
 - `npm run generate -- [options]` — searches random boards for new levels
-  with a given par, best (unique shortest solution) first, printed ready to
-  paste into `levels.ts`; `--help` lists the options
+  with a given par, best (unique shortest solution) first, only those with
+  an alternative solution within par + 2, printed ready to paste into
+  `levels.ts`; `--help` lists the options
 - `npm run bonus -- --level N [options]` — finds cells for a level's bonus
   target `*` that take the wanted number of shots, optionally after small
   board changes that keep par; `--help` lists the options
@@ -121,7 +123,9 @@ e2e/            browser smoke tests (Playwright) and their helpers
   than one hit, `bonusShots` when it has a bonus target `*`);
   `src/levels/levels.test.ts` checks them with the solver.
   Design new levels with `npm run generate`, then hand-tune the board and
-  confirm it with `npm run levels`.
+  confirm it with `npm run levels`. Every level needs an alternative
+  solution within par + 2 shots (tests check it), so a player who strays
+  from par can still finish.
 - Level design scripts (searches, generators, placement helpers) go in
   `scripts/` and are committed with the work that uses them, as an npm
   script with `--help` and tests for the search logic. Don't leave them as

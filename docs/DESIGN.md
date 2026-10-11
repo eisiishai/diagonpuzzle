@@ -205,6 +205,10 @@ level 8 replacing a wall), levels 4 and 7 by two, in cells the par
 solution never reaches (found with `npm run alternatives`, which lists
 every level's alternatives).
 
+Every level must have at least one alternative within two shots above
+par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
+`npm run generate` keeps only boards that have one.
+
 | # | Level | Min shots | Idea |
 |---|---|---|---|
 | 1 | First light | 1 | Row 4 reaches the goal directly. Alternative: row 5 misses but flips three mirrors, after which row 1 gets through. |

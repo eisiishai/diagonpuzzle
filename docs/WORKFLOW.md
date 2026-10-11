@@ -38,7 +38,8 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 
 - Open the URL in the Windows browser; WSL forwards `localhost`.
 - When designing or changing levels, run `npm run levels`. It reports each
-  level's shortest solution, two-shot setup routes, a rough difficulty
+  level's shortest solution, an alternative solution above par (a ✗ if
+  none within par + 2), two-shot setup routes, a rough difficulty
   (how likely random play is to finish within par, "1 in N") and what each
   row's first shot does, and marks with ✗ any level whose declared
   `minShots` doesn't match the solver. It ends with the difficulty of every
@@ -50,9 +51,12 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   npm run generate -- --width 7 --height 6 --mirrors 8 --shots 3
   ```
   It tries random boards and prints the best ones first: a single shortest
-  solution, and few rows that reach the goal with the first shot. Each board
-  is printed as a `grid:` block to paste into `src/levels/levels.ts`, with its
-  solution. Try other `--seed` values for different boards, then adjust the
+  solution, and few rows that reach the goal with the first shot. It shows
+  only boards with an alternative solution within two shots above par
+  (`--alternatives N` for another limit, `0` to show every board), so a
+  player who strays from par can still finish. Each board is printed as a
+  `grid:` block to paste into `src/levels/levels.ts`, with its solution and
+  its alternative. Try other `--seed` values for different boards, then adjust the
   board by hand and check it with `npm run levels`.
 - For levels with a player-placed mirror, add `--player-mirror slash` (or
   `backslash`): only boards that need the mirror for par are kept, and
@@ -88,7 +92,8 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   ```
   Changes adding solutions only above par come first: those give a
   player who strays from the par route another way to finish, without
-  making par easier. Each shows how many solutions it adds and the
+  making par easier. Every level needs an alternative within par + 2
+  (the tests check it); use this when a hand-tuned board has lost its. Each shows how many solutions it adds and the
   random-play difficulty after it.
 - In player-mirror levels the mirror can make nearly every cell reachable
   in the first shot, so a bonus target needing more shots than par is
