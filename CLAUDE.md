@@ -17,7 +17,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm test` — Vitest unit tests
 - `npm run levels` — level design report: shortest solution, an
   alternative solution above par, setup routes,
-  difficulty (random play's odds of finishing at par) and first-shot
+  difficulty (random play's odds of finishing at par, and foresight: the
+  changes the par solution makes for its later shots) and first-shot
   outcomes for every level, then the difficulty curve (`scripts/levels.ts`,
   runs with tsx)
 - `npm run generate -- [options]` — searches random boards for new levels

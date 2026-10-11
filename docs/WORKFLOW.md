@@ -39,11 +39,16 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 - Open the URL in the Windows browser; WSL forwards `localhost`.
 - When designing or changing levels, run `npm run levels`. It reports each
   level's shortest solution, an alternative solution above par (a ✗ if
-  none within par + 2), two-shot setup routes, a rough difficulty
-  (how likely random play is to finish within par, "1 in N") and what each
+  none within par + 2), two-shot setup routes, two rough difficulty
+  measures (how likely random play is to finish within par, "1 in N",
+  and the foresight the shortest solution needs: how many cells one move
+  changes, a flipped mirror, a broken wall or the placed player mirror,
+  that a later shot then passes through) and what each
   row's first shot does, and marks with ✗ any level whose declared
   `minShots` doesn't match the solver. It ends with the difficulty of every
-  level in a row, to see where a new level fits in the curve.
+  level in a row, to see where a new level fits in the curve. Random odds
+  measure how many plays there are; foresight how much a solution must
+  plan ahead, which the odds understate (e.g. an easy-to-see key move).
 - To find a new level, run `npm run generate` with the size, number of
   mirrors and walls, and par wanted (`npm run generate -- --help` lists the
   options), for example:

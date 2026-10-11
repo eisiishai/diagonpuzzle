@@ -1,8 +1,9 @@
 // Level design report: `npm run levels`. For each level, prints the shortest
 // solution, an alternative solution above par, two-shot setup routes, the shortest way to hit the bonus target,
-// how likely random play is to finish within par (a rough difficulty
-// measure) and what each row's first shot does (bonus targets hidden, as
-// before par). Ends with the difficulty of every level in a row.
+// two rough difficulty measures (how likely random play is to finish
+// within par, and the foresight the shortest solution needs) and what each
+// row's first shot does (bonus targets hidden, as before par). Ends with
+// the difficulty of every level in a row.
 // Rows are numbered from 1 at the top, as the player counts them.
 
 import { CELL_SYMBOLS } from "../src/levels/parse";
@@ -58,17 +59,19 @@ for (const analysis of analyses) {
     );
   }
   console.log(
-    `  Difficulty:   random play wins at par ${oneIn(analysis.randomWinChance)}`,
+    `  Difficulty:   random play wins at par ${oneIn(analysis.randomWinChance)}` +
+      `, foresight ${analysis.foresight ?? "-"}`,
   );
   console.log(`  First shots:  ${first}`);
   console.log();
 }
 
-// The difficulty curve: random play's chance of finishing within par.
-console.log("Difficulty curve (random play wins at par, 1 in N):");
-for (const { number, level, randomWinChance } of analyses) {
+// The difficulty curve: random play's chance of finishing within par, and
+// the foresight the shortest solution needs.
+console.log("Difficulty curve (random play wins at par, 1 in N; foresight):");
+for (const { number, level, randomWinChance, foresight } of analyses) {
   const odds = oneIn(randomWinChance).replace("1 in ", "");
   console.log(
-    `  ${String(number).padStart(2)} ${level.name.padEnd(20)} par ${level.minShots}  ${odds.padStart(8)}`,
+    `  ${String(number).padStart(2)} ${level.name.padEnd(20)} par ${level.minShots}  ${odds.padStart(8)}  ${String(foresight ?? "-").padStart(2)}`,
   );
 }

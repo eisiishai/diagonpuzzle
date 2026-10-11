@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseLevel } from "../src/levels/parse";
-import { oneIn, randomWinChance } from "./difficulty";
+import { foresight, oneIn, randomWinChance } from "./difficulty";
 
 describe("randomWinChance", () => {
   it("is the share of rows that win in one shot", () => {
@@ -27,6 +27,39 @@ describe("randomWinChance", () => {
     `);
     expect(randomWinChance(board, 1)).toBe(0);
     expect(randomWinChance(board, 1, 1, "mirrorBackslash")).toBe(0.125);
+  });
+});
+
+describe("foresight", () => {
+  // Row 1 meets the "\" and turns down, flipping it to "/"; fired again,
+  // row 1 turns up at the "/" into the goal.
+  const flip = parseLevel(String.raw`
+    . G
+    . \
+  `);
+
+  it("counts a cell changed by one shot that a later shot passes", () => {
+    expect(foresight(flip, [1, 1])).toBe(1);
+  });
+
+  it("is 0 when no shot passes an earlier change", () => {
+    expect(foresight(flip, [1])).toBe(0);
+    // The second shot never reaches the flipped mirror.
+    expect(foresight(flip, [1, 0])).toBe(0);
+  });
+
+  it("counts the player's mirror when a later shot passes it", () => {
+    const board = parseLevel(String.raw`
+      . .
+      # G
+    `);
+    const place = { x: 1, y: 0, mirror: "mirrorBackslash" } as const;
+    expect(foresight(board, [place, 0])).toBe(1);
+    expect(foresight(board, [place, 1])).toBe(0);
+  });
+
+  it("counts each cell once", () => {
+    expect(foresight(flip, [1, 1, 1])).toBe(1);
   });
 });
 

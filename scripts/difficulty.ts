@@ -1,11 +1,13 @@
-// A rough difficulty measure for the level design tools: how likely random
-// play is to complete a level within par. Lower is harder. It counts how
-// big the space of plays is, not how much insight a level needs, so it
-// overrates levels whose key move is easy to see. See docs/ROADMAP.md,
-// Difficulty curve.
+// Rough difficulty measures for the level design tools. Random play's
+// chance of completing a level within par (lower is harder) counts how big
+// the space of plays is, not how much insight a level needs, so it
+// overrates levels whose key move is easy to see. Foresight counts what a
+// solution must plan ahead: the changes it makes for later shots. See
+// docs/ROADMAP.md, Difficulty curve.
 
 import { placeMirror, placementPositions } from "../src/game/placement";
 import { boardStateKey, fire } from "../src/game/simulate";
+import type { Move } from "../src/game/solver";
 import type { Board, MirrorType } from "../src/game/types";
 
 /**
@@ -72,4 +74,36 @@ export function oneIn(chance: number): string {
   return chance > 0
     ? `1 in ${Math.round(1 / chance).toLocaleString("en-US")}`
     : "never";
+}
+
+/**
+ * How much a solution must plan ahead: the cells that one move changes (a
+ * shot flipping a mirror or breaking a wall, or placing the player's
+ * mirror) and a later shot then passes through. 0 when every shot works
+ * on the board as it is. Each cell counts once.
+ */
+export function foresight(board: Board, moves: readonly Move[]): number {
+  const changed = new Set<string>();
+  const used = new Set<string>();
+  let current = board;
+  for (const move of moves) {
+    if (typeof move !== "number") {
+      current = placeMirror(current, move, move.mirror);
+      changed.add(`${move.x},${move.y}`);
+      continue;
+    }
+    const result = fire(current, move);
+    for (const { x, y } of result.path) {
+      if (changed.has(`${x},${y}`)) {
+        used.add(`${x},${y}`);
+      }
+    }
+    for (const { x, y, becomes } of result.path) {
+      if (becomes) {
+        changed.add(`${x},${y}`);
+      }
+    }
+    current = result.board;
+  }
+  return used.size;
 }

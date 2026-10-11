@@ -117,6 +117,20 @@ keeping it). Lower is harder. It dips at each new mechanic (5, 11,
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
 
+Foresight (added 2026-10-11, also in `npm run levels`): how many cells
+the par solution changes, flipping a mirror, breaking a wall or placing
+the player's mirror, that a later shot then passes through. It measures
+how much a solution must plan ahead, which random odds miss. It counts
+the solver's par solution only, and not the second goal hit:
+
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Foresight | 0 | 0 | 1 | 2 | 1 | 2 | 2 | 2 | 3 | 5 | 3 | 3 | 2 | 5 | 1 | 3 | 4 | 2 |
+
+The two agree that 10 and 14 are the hardest of 1–14. They disagree on
+*Rebuild* (18): the hardest by odds, but a foresight of only 2, so its
+difficulty is in finding the moves, not in planning their effects.
+
 - [x] Smooth the step to *Rebuild* (then level 17), about 14 times
   harder than 16 and 6 times harder than 14: a bridge level,
   *Clear the way* (par 3), now level 17, combines the same three
@@ -376,6 +390,9 @@ lab page on 2026-10-11:
     whose key move is easy to see (15) and those repeating a row (8, 11).
     Compare it with how testers actually do, then refine it (e.g. weight
     moves a player would try first) or add a second measure
+  - [x] Second measure, foresight: the changes the par solution makes
+    for its later shots (*Difficulty curve* above), next to the odds in
+    `npm run levels`
 - [ ] Watch the solver's and `npm run generate`'s run times as placeable
   blocks grow: each placement option multiplies the choices before every
   shot, and the tests check every level with the solver. All tests take

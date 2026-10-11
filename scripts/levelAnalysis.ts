@@ -14,7 +14,7 @@ import {
 import type { Move, Placement } from "../src/game/solver";
 import { CELL_SYMBOLS } from "../src/levels/parse";
 import { findAlternative } from "./alternativeSearch";
-import { randomWinChance } from "./difficulty";
+import { foresight, randomWinChance } from "./difficulty";
 import { shortestSolutions } from "./levelGenerator";
 import type { Board, Position } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
@@ -63,6 +63,12 @@ export interface LevelAnalysis {
   alternative: Move[] | null;
   /** Chance that random play completes the level within par (difficulty.ts). */
   randomWinChance: number;
+  /**
+   * Changes the shortest solution makes for its later shots (difficulty.ts),
+   * or null if there is no solution. With several shortest solutions, it
+   * is the solver's.
+   */
+  foresight: number | null;
   setupRoutes: [number, number][];
   firstShots: ShotOutcome[];
   /** True if the solver confirms the level's declared minShots. */
@@ -143,6 +149,7 @@ export function analyzeLevels(): LevelAnalysis[] {
         goalHits,
         playerMirror,
       ),
+      foresight: solution && foresight(board, solution),
       // Setup routes are about a single goal hit.
       setupRoutes: (level.goalHits ?? 1) === 1 ? setupRoutes(board) : [],
       firstShots: Array.from(
