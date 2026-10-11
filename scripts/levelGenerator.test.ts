@@ -7,11 +7,13 @@ import {
   randomBoard,
   shortestSolutions,
   withAlternatives,
-  withFlippingMirrors,
-  withSolidWalls,
-  withSolidGlass,
-  withWalls,
 } from "./levelGenerator";
+import {
+  withFlippingMirrors,
+  withSolidGlass,
+  withSolidWalls,
+  withWalls,
+} from "./pieces";
 import type { GeneratorOptions } from "./levelGenerator";
 
 const OPTIONS: GeneratorOptions = {

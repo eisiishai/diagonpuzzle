@@ -80,7 +80,7 @@ puzzle on top of the level for players who have mastered it.
   score replaces the best.
 - **Golden star.** Once a level's bonus target is collected, its par star
   turns golden in the level list, which also shows `GOLDEN ★ n/N` (N: levels
-  with a bonus target, currently all 28) once there is at least one. The header shows `BONUS 0/1` while playing a
+  with a bonus target, currently all 30) once there is at least one. The header shows `BONUS 0/1` while playing a
   level whose bonus target has appeared.
 - **Last bonus target of the game: the ending.** Bonus targets appear only
   once a level is at par, so the last one is always the end of the game.
@@ -206,7 +206,8 @@ while the glass mirrors around it flip.
 - Its bounce flashes like a mirror's, with its own *Anvil ring* (see
   Sound) on the bounce ladder; with nothing turning, there is no glint
   along it and no swish.
-- Levels 27–28 teach it (chapter *Fixed mirrors*).
+- Levels 27–30 teach it (chapter *Fixed mirrors*), 29 with breakable
+  walls and a reflector, 30 with the player's mirror and a glass mirror.
 
 ## Cell types
 
@@ -300,6 +301,8 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 26 | Double glazing | 4 | Glass mirrors with a two-hit goal. Row 1 flips the two mirrors in column 4; row 3 then turns up at (3,3) into the glass `/` at (3,2), which turns it right, shattering, and up column 4 into the goal (flipping them back). Row 1 flips them again, and row 2 runs straight through the gap the glass left and up column 4 to hit the goal a second time. Alternative in 5 shots: rows 1, 2, 2, 1, 2. The bonus target sits on the bottom row: rows 4, 4, 4, 5, 4, the third shot shattering the glass `/` at (2,5) and the last running through its gap. |
 | 27 | Bolted down | 2 | Introduces fixed mirrors. Row 3 runs into the fixed `/` at (4,3), which turns it up column 4; the mirrors at (4,1) and (2,1) turn it left and up, out of the board, and flip. The second row 3 shot meets the fixed mirror turned the same way, and the flipped (4,1) now turns it right to the goal. Alternative in 4 shots: rows 1, 4, 4, 3. The bonus target, beside the goal column above the fixed mirror, needs three different rows: 1, 2 and 3, the last turning up at the fixed mirror and winding round the board onto it. |
 | 28 | Cold steel | 3 | Two fixed mirrors. Row 2 winds through the middle, turning down at the fixed `/` at (4,2), flipping five mirrors and hitting the wall at (3,4); row 3 turns up at (2,3) and right at (2,2) into the same fixed mirror from the other side, which sends it up and out; row 2 then runs along row 3 and turns down at (5,3) into the fixed `\` at (5,4), which turns it right to the goal. Alternative in 4 shots: rows 1, 4, 4, 2. The bonus target, below the fixed `\`, needs rows 1, 2, 4, 4, the last climbing column 1 and running through both fixed mirrors onto it. |
+| 29 | Steel echo | 3 | Fixed mirrors with breakable walls and a reflector. Row 3 climbs column 1 and leaves at the top, flipping three mirrors. Row 1 then turns down column 1 and right at (1,3) into the reflector, which sends it back into the same mirror, now `/`; it turns down onto the fixed `\` at (1,4), which turns it right along row 4 into the cracked wall, breaking it. Row 3 turns down at (1,3) onto the fixed mirror again, which turns it right the same way, through the gap to the goal. Alternative in 4 shots: rows 2, 2, 3, 1. The bonus target sits below the gap: rows 1, 1, 2, 3, 2, the fourth shot breaking the wall and the last turning down into the reflector, back up and round through the top row onto it. |
+| 30 | True north | 3 | Fixed mirrors with the player's mirror (`\`) and a glass mirror. Row 2 turns down at the glass `\` at (1,2), which shatters, and leaves at the bottom. With the mirror placed at (4,1), row 2 runs through the gap into the fixed `/` at (4,2), which turns it up into the player's mirror, which turns it into the wall and flips. Row 2 again: the fixed mirror turns it up the same way, and the flipped player's mirror now turns it right to the goal. Alternative in 4 shots: rows 5, 5, the mirror at (4,1), rows 2, 2. The bonus target needs the mirror at (2,5): rows 4, 4, 2, 4, the third shot shattering the glass and the last turning up at the fixed mirror onto it. |
 
 Levels 27–28 were found with `npm run generate -- --fixed N`, which
 keeps only boards that can't reach par with their fixed mirrors made
@@ -310,6 +313,16 @@ chosen among `npm run bonus` placements with `--uses fixed` (27 after
 two added mirrors, at (3,2) and (3,4); 28 after two, at (5,1) and
 (1,4)), and 28 got a mirror at (6,2) for an alternative one shot above
 par (`npm run alternatives`).
+
+Levels 29–30 combine fixed mirrors with earlier pieces, found with `npm
+run generate -- --fixed N`: 29 with `--fixed 2 --breakable 1
+--reflectors 1 --mirrors 5 --walls 1 --shots 3 --no-repeat`, 30 with
+`--fixed 2 --glass 1 --mirrors 4 --walls 1 --player-mirror backslash
+--place-later --shots 3`, on 6×5 boards; each keeps only boards that need
+every piece named. Both have a unique shortest solution. Their bonus
+targets were chosen among `npm run bonus` placements with `--uses fixed`
+(29 after two added mirrors, at (2,2) and (3,2); 30 after one, at
+(2,4)), which also keep every piece the level needs.
 
 Levels 23–24 were found with `npm run generate -- --glass N`, which keeps
 only boards that can't reach par with their glass mirrors made ordinary
@@ -420,7 +433,7 @@ difficulty doesn't dip at the end.
 - The level list is split into **chapters**, one per mechanic (`CHAPTERS`
   in `src/levels/levels.ts`, following the music groups): 1–4 *Basics*,
   5–10 *Flip tricks*, 11–14 *Breakable walls*, 15–18 *Your mirror*,
-  19–22 *Reflectors*, 23–26 *Glass mirrors*, 27–28 *Fixed mirrors*. Each
+  19–22 *Reflectors*, 23–26 *Glass mirrors*, 27–30 *Fixed mirrors*. Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one
@@ -678,7 +691,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 15–18 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
 | Levels 19–22 (reflectors) | **Return**: pads and bass on Dm9 – B♭maj7♯11. Now and then a two-note pluck phrase on the left is answered from the right by its mirror image (the step turned upside down), quieter and further away, like a shot coming back from a reflector, changed |
 | Levels 23–26 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
-| Levels 27–28 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
+| Levels 27–30 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,

@@ -30,7 +30,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   `levels.ts`; `--help` lists the options
 - `npm run bonus -- --level N [options]` — finds cells for a level's bonus
   target `*` that take the wanted number of shots, optionally after small
-  board changes that keep par and leave the par route's cells alone, and
+  board changes that keep par and the pieces the level needs for it and
+  leave the par route's cells alone, and
   (`--uses reflector,glass`) only with routes through given pieces;
   `--help` lists the options
 - `npm run trace -- --level N MOVES...` — plays rows (and `x,y` for the
@@ -39,7 +40,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run alternatives -- [options]` — the different solutions of each
   level at par and a shot or two above it; with `--level N --changes 1`,
   board changes that add alternatives while keeping par, the par
-  solution and the bonus target; `--help` lists the options
+  solution, the pieces the level needs and the bonus target; `--help`
+  lists the options
 - `npm run e2e` — quick browser smoke tests (Playwright, headless
   Chromium, `e2e/`): every screen and flow at desktop and phone size,
   about 2 minutes. The pre-commit hook runs it when a commit changes the game

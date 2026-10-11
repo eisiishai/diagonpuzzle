@@ -446,6 +446,35 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . # . * .
     `,
   },
+  {
+    id: "steel-echo",
+    name: "Steel echo",
+    minShots: 3,
+    bonusShots: 5,
+    music: "anchor",
+    grid: String.raw`
+      / . / . \ .
+      . / / # . .
+      / @ . . . .
+      L . . . % G
+      \ L / . * .
+    `,
+  },
+  {
+    id: "true-north",
+    name: "True north",
+    minShots: 3,
+    bonusShots: 4,
+    playerMirror: "mirrorBackslash",
+    music: "anchor",
+    grid: String.raw`
+      . . # . . G
+      N . . J / .
+      . . L . . .
+      . / . . / *
+      \ . . \ . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {

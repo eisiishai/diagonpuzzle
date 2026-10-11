@@ -13,6 +13,12 @@ import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType } from "../src/game/types";
 import { formatLevel } from "../src/levels/parse";
 import { findAlternative, pathKey } from "./alternativeSearch";
+import {
+  withFlippingMirrors,
+  withSolidGlass,
+  withSolidWalls,
+  withWalls,
+} from "./pieces";
 
 export interface GeneratorOptions {
   width: number;
@@ -135,45 +141,6 @@ export function randomBoard(
   place(() => (random() < 0.5 ? "glassBackslash" : "glassSlash"), glass);
   place(() => (random() < 0.5 ? "fixedBackslash" : "fixedSlash"), fixed);
   return { width, height, cells };
-}
-
-/** The board with every cell of type `cell` made a wall. */
-export function withWalls(board: Board, cell: CellType): Board {
-  return {
-    ...board,
-    cells: board.cells.map((row) => row.map((c) => (c === cell ? "wall" : c))),
-  };
-}
-
-/** The board with every glass mirror made an ordinary mirror. */
-export function withSolidGlass(board: Board): Board {
-  return withReplaced(board, {
-    glassBackslash: "mirrorBackslash",
-    glassSlash: "mirrorSlash",
-  });
-}
-
-/** The board with every fixed mirror made an ordinary one, which flips. */
-export function withFlippingMirrors(board: Board): Board {
-  return withReplaced(board, {
-    fixedBackslash: "mirrorBackslash",
-    fixedSlash: "mirrorSlash",
-  });
-}
-
-function withReplaced(
-  board: Board,
-  replacements: Partial<Record<CellType, CellType>>,
-): Board {
-  return {
-    ...board,
-    cells: board.cells.map((row) => row.map((c) => replacements[c] ?? c)),
-  };
-}
-
-/** The board with every breakable wall made solid. */
-export function withSolidWalls(board: Board): Board {
-  return withWalls(board, "breakable");
 }
 
 /**

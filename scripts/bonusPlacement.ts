@@ -20,6 +20,7 @@ import {
 import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType, Position } from "../src/game/types";
 import { shortestSolutions } from "./levelGenerator";
+import { neededPieces } from "./pieces";
 
 export interface PlacementOptions {
   /** The level's par, which every placement keeps. */
@@ -172,7 +173,8 @@ export function firstEntries(
  * Bonus target placements for a level's board, fewest routes first (one
  * route is best), then routes firing more different rows, then fewest
  * board changes. Every placement keeps par, the
- * level's current par solution and its number of shortest solutions, and
+ * level's current par solution and its number of shortest solutions, the
+ * pieces par needs (see neededPieces), and
  * puts the bonus target in an empty cell that the par solution never passes
  * through. Board changes only touch cells the par solution never reaches
  * (neither its paths nor where it places the player's mirror), so it plays
@@ -193,6 +195,12 @@ export function findPlacements(
   const solutionCount = (board: Board) =>
     shortestSolutions(board, minShots, goalHits, playerMirror).length;
   const parSolutions = solutionCount(start);
+  // Pieces the level is built around must stay needed for par.
+  const needed = neededPieces(start, minShots, goalHits, playerMirror);
+  const keepsNeeded = (board: Board) => {
+    const still = neededPieces(board, minShots, goalHits, playerMirror);
+    return needed.every((piece) => still.includes(piece));
+  };
   const placements: Placement[] = [];
   const usesPiece = (board: Board, route: Move[]) =>
     options.uses === undefined ||
@@ -234,6 +242,9 @@ export function findPlacements(
         return;
       }
       if (solutionCount(board) > parSolutions) {
+        return;
+      }
+      if (!keepsNeeded(board)) {
         return;
       }
     }
