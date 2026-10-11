@@ -24,6 +24,10 @@ export const COLORS = {
   stone: 0x323846,
   stoneEdge: 0x5d6680,
   stoneCrack: 0x0d111b,
+  /** Fixed mirrors: matte steel, duller than the glass of mirrors. */
+  steel: 0x8592a8,
+  steelHighlight: 0xc3ccda,
+  steelBolt: 0x3a4660,
   emitterIdle: 0x3b5a86,
   emitterSelected: 0x11223a,
   /** Corner ticks around the board, and their labels (4.9:1 contrast). */

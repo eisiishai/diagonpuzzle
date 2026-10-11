@@ -255,6 +255,65 @@ describe("glass mirrors", () => {
   });
 });
 
+describe("fixed mirrors", () => {
+  it("turn the pellet like mirrors, and never change", () => {
+    for (const [fixed, mirror] of [
+      ["fixedBackslash", "mirrorBackslash"],
+      ["fixedSlash", "mirrorSlash"],
+    ] as const) {
+      for (const d of ["right", "down", "left", "up"] as Direction[]) {
+        const { becomes, ...turn } = CELL_BEHAVIORS[mirror](d) as {
+          becomes?: string;
+        };
+        expect(becomes).toBeDefined();
+        expect(CELL_BEHAVIORS[fixed](d)).toEqual(turn);
+      }
+    }
+  });
+
+  it("turn every shot the same way", () => {
+    const board = parseLevel(String.raw`
+      . L .
+      . . G
+    `);
+    const first = fire(board, 0);
+    expect(first.outcome).toBe("exit");
+    expect(first.board.cells).toEqual(board.cells);
+    expect(
+      cells(
+        String.raw`
+      . L .
+      . . G
+    `,
+        0,
+      ),
+    ).toEqual(["0,0", "1,0", "1,1"]);
+  });
+
+  it("turn a pellet coming back the same way, unlike a mirror", () => {
+    // Up into the reflector and back down: the fixed "/" turns the pellet
+    // left on its way back, where a flipped mirror would turn it right.
+    expect(
+      cells(
+        String.raw`
+      . @ .
+      . J G
+    `,
+        1,
+      ),
+    ).toEqual(["0,1", "1,1", "1,0", "1,1", "0,1"]);
+    expect(
+      cells(
+        String.raw`
+      . @ .
+      . / G
+    `,
+        1,
+      ),
+    ).toEqual(["0,1", "1,1", "1,0", "1,1", "2,1"]);
+  });
+});
+
 describe("path steps", () => {
   it("name each cell as the pellet found it, before the hit changed it", () => {
     const result = fire(

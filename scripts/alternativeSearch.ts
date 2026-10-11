@@ -7,7 +7,7 @@
 import { boardHas, withCell } from "../src/game/board";
 import type { CellChange } from "../src/game/board";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
-import { GLASS_MIRRORS, MIRRORS } from "../src/game/cells";
+import { FIXED_MIRRORS, GLASS_MIRRORS, MIRRORS } from "../src/game/cells";
 import type { ShotResult } from "../src/game/simulate";
 import {
   completesLevel,
@@ -183,6 +183,7 @@ export function findAlternativeChanges(
     ["breakable"],
     ["reflector"],
     GLASS_MIRRORS,
+    FIXED_MIRRORS,
   ];
   // Pieces the level already has may go elsewhere too.
   for (const piece of pieces) {

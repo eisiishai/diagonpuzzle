@@ -10,6 +10,8 @@ export const CELL_SYMBOLS: Readonly<Record<CellType, string>> = {
   reflector: "@",
   glassBackslash: "N",
   glassSlash: "Z",
+  fixedBackslash: "L",
+  fixedSlash: "J",
   goal: "G",
   bonus: "*",
 };

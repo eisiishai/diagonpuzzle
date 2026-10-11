@@ -2,7 +2,7 @@ import { Container, Text } from "pixi.js";
 import { columnPan } from "../audio/effects";
 import type { GameAudio } from "../audio/GameAudio";
 import { boardHas } from "../game/board";
-import { GLASS_MIRRORS } from "../game/cells";
+import { FIXED_MIRRORS, GLASS_MIRRORS } from "../game/cells";
 import { LevelSession } from "../game/LevelSession";
 import { MirrorPlacement } from "../game/MirrorPlacement";
 import type { PlacementKey, PlacementResult } from "../game/MirrorPlacement";
@@ -672,6 +672,7 @@ export class GameScene extends Container implements Scene {
       hasBreakable: boardHas(board, ["breakable"]),
       hasReflector: boardHas(board, ["reflector"]),
       hasGlass: boardHas(board, GLASS_MIRRORS),
+      hasFixed: boardHas(board, FIXED_MIRRORS),
     });
   }
 }

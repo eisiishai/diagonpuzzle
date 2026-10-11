@@ -31,6 +31,8 @@ describe("cell groups", () => {
       mirrorSlash: "mirror",
       glassBackslash: "glass",
       glassSlash: "glass",
+      fixedBackslash: "fixed",
+      fixedSlash: "fixed",
       reflector: "reflector",
     });
   });

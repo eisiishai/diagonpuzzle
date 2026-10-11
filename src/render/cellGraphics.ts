@@ -15,8 +15,15 @@ export interface GoalHits {
  */
 type CellDrawer = (g: Graphics, half: number, goalHits: GoalHits) => void;
 
+/** Cells drawn as a "\" piece turned a quarter turn. */
+const SLASHES: readonly CellType[] = [
+  "mirrorSlash",
+  "glassSlash",
+  "fixedSlash",
+];
+
 /**
- * How each cell type looks. Mirrors (and glass mirrors) are both drawn as
+ * How each cell type looks. Mirrors (and glass and fixed mirrors) are drawn as
  * "\"; drawCell() rotates "/" by 90°. New block types are added here (the type check fails
  * until they are).
  */
@@ -26,6 +33,8 @@ const CELL_DRAWERS: Record<CellType, CellDrawer> = {
   mirrorSlash: drawMirror,
   glassBackslash: drawGlassMirror,
   glassSlash: drawGlassMirror,
+  fixedBackslash: drawFixedMirror,
+  fixedSlash: drawFixedMirror,
   wall: (g, half) => {
     // A dark block with diagonal hatching.
     const edge = half * 0.87;
@@ -168,6 +177,26 @@ function drawGlassMirror(g: Graphics, half: number): void {
 }
 
 /**
+ * A fixed mirror, drawn as "\": a matte steel bar with a dull centre line,
+ * bolted down at both ends, so it reads as one that doesn't turn.
+ */
+function drawFixedMirror(g: Graphics, half: number): void {
+  const reach = half * 0.7;
+  g.moveTo(-reach, -reach)
+    .lineTo(reach, reach)
+    .stroke({ width: 7, color: COLORS.steel, cap: "round" })
+    .moveTo(-reach + 4, -reach + 4)
+    .lineTo(reach - 4, reach - 4)
+    .stroke({ width: 1.5, color: COLORS.steelHighlight, cap: "round" });
+  const bolt = reach * 0.92;
+  for (const end of [-bolt, bolt]) {
+    g.circle(end, end, half * 0.11)
+      .fill(COLORS.steelBolt)
+      .stroke({ width: 1.5, color: COLORS.steel });
+  }
+}
+
+/**
  * Draws `cell` into `g`, centred on g's origin, resetting any rotation,
  * scale and fade left from animations.
  */
@@ -178,8 +207,7 @@ export function drawCell(
   goalHits: GoalHits,
 ): void {
   g.clear();
-  g.rotation =
-    cell === "mirrorSlash" || cell === "glassSlash" ? Math.PI / 2 : 0;
+  g.rotation = SLASHES.includes(cell) ? Math.PI / 2 : 0;
   g.scale.set(1);
   g.alpha = 1;
   CELL_DRAWERS[cell](g, cellSize / 2, goalHits);

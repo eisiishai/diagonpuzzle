@@ -419,6 +419,33 @@ export const LEVELS: readonly LevelDefinition[] = [
       / Z . * . .
     `,
   },
+  {
+    id: "bolted-down",
+    name: "Bolted down",
+    minShots: 2,
+    bonusShots: 3,
+    music: "glassGarden",
+    grid: String.raw`
+      . \ . \ G
+      . . \ . *
+      . . . J .
+      . / \ # .
+    `,
+  },
+  {
+    id: "cold-steel",
+    name: "Cold steel",
+    minShots: 3,
+    bonusShots: 4,
+    music: "glassGarden",
+    grid: String.raw`
+      \ . . . \ .
+      . \ . J \ /
+      . \ . . / .
+      / . # / L G
+      . . # . * .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
@@ -440,6 +467,7 @@ export const CHAPTERS: readonly ChapterDefinition[] = [
   { name: "Your mirror", firstLevel: "your-move" },
   { name: "Reflectors", firstLevel: "return-trip" },
   { name: "Glass mirrors", firstLevel: "glass-house" },
+  { name: "Fixed mirrors", firstLevel: "bolted-down" },
 ];
 
 /** A chapter's levels: indices `start` up to, not including, `end`. */

@@ -194,7 +194,7 @@ export class GameAudio {
   }
 
   /**
-   * A bounce off a mirror, reflector or glass mirror (`kind`) at stereo
+   * A bounce off a mirror, fixed mirror, reflector or glass mirror (`kind`) at stereo
    * position `pan`; each further bounce in the same shot is a note higher
    * on the music's scale.
    */

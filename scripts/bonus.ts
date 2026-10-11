@@ -4,7 +4,7 @@
 // board ready to paste into src/levels/levels.ts. Rows and columns are
 // numbered from 1, as the player counts them. `--help` lists the options.
 
-import { GLASS_MIRRORS, MIRRORS } from "../src/game/cells";
+import { FIXED_MIRRORS, GLASS_MIRRORS, MIRRORS } from "../src/game/cells";
 import type { CellType } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
 import { CELL_SYMBOLS, formatLevel, parseLevel } from "../src/levels/parse";
@@ -19,6 +19,7 @@ declare const process: { argv: string[]; exitCode?: number };
 const PIECES: Record<string, readonly CellType[]> = {
   mirror: MIRRORS,
   glass: GLASS_MIRRORS,
+  fixed: FIXED_MIRRORS,
   reflector: ["reflector"],
   breakable: ["breakable"],
 };

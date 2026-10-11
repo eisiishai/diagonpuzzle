@@ -35,6 +35,11 @@ export interface GeneratorOptions {
    */
   glass: number;
   /**
+   * Fixed mirrors. With any, only boards that need one to stay fixed for
+   * par are kept (as ordinary mirrors, which flip, par would be higher).
+   */
+  fixed: number;
+  /**
    * A mirror the player may place on any empty cell. With one, only boards
    * that need it placed for par are kept.
    */
@@ -84,8 +89,8 @@ export function createRandom(seed: number): () => number {
 
 /**
  * A random board: the goal somewhere in the rightmost column, mirrors,
- * walls, breakable walls, reflectors and glass mirrors in random empty
- * cells left of it.
+ * walls, breakable walls, reflectors, glass mirrors and fixed mirrors in
+ * random empty cells left of it.
  * Asks for no more pieces than fit.
  */
 export function randomBoard(
@@ -98,12 +103,14 @@ export function randomBoard(
     | "breakable"
     | "reflectors"
     | "glass"
+    | "fixed"
   >,
   random: () => number,
 ): Board {
   const { width, height, mirrors, walls, breakable } = options;
-  const { reflectors, glass } = options;
-  if (mirrors + walls + breakable + reflectors + glass > (width - 1) * height) {
+  const { reflectors, glass, fixed } = options;
+  const pieces = mirrors + walls + breakable + reflectors + glass + fixed;
+  if (pieces > (width - 1) * height) {
     throw new Error("Too many pieces for the board size");
   }
   const cells: CellType[][] = Array.from({ length: height }, () =>
@@ -126,6 +133,7 @@ export function randomBoard(
   place(() => "breakable", breakable);
   place(() => "reflector", reflectors);
   place(() => (random() < 0.5 ? "glassBackslash" : "glassSlash"), glass);
+  place(() => (random() < 0.5 ? "fixedBackslash" : "fixedSlash"), fixed);
   return { width, height, cells };
 }
 
@@ -139,13 +147,27 @@ export function withWalls(board: Board, cell: CellType): Board {
 
 /** The board with every glass mirror made an ordinary mirror. */
 export function withSolidGlass(board: Board): Board {
-  const solid: Partial<Record<CellType, CellType>> = {
+  return withReplaced(board, {
     glassBackslash: "mirrorBackslash",
     glassSlash: "mirrorSlash",
-  };
+  });
+}
+
+/** The board with every fixed mirror made an ordinary one, which flips. */
+export function withFlippingMirrors(board: Board): Board {
+  return withReplaced(board, {
+    fixedBackslash: "mirrorBackslash",
+    fixedSlash: "mirrorSlash",
+  });
+}
+
+function withReplaced(
+  board: Board,
+  replacements: Partial<Record<CellType, CellType>>,
+): Board {
   return {
     ...board,
-    cells: board.cells.map((row) => row.map((c) => solid[c] ?? c)),
+    cells: board.cells.map((row) => row.map((c) => replacements[c] ?? c)),
   };
 }
 
@@ -218,6 +240,12 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
     if (
       options.glass > 0 &&
       solve(withSolidGlass(board), shots, goalHits, playerMirror) !== null
+    ) {
+      continue;
+    }
+    if (
+      options.fixed > 0 &&
+      solve(withFlippingMirrors(board), shots, goalHits, playerMirror) !== null
     ) {
       continue;
     }

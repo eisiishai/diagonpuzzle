@@ -23,14 +23,17 @@ export type CellType =
   | "reflector"
   | "glassBackslash"
   | "glassSlash"
+  | "fixedBackslash"
+  | "fixedSlash"
   | "goal"
   | "bonus";
 
 /**
- * What turned the pellet at a bounce: a mirror (which flips), a reflector
- * (which sends it back) or a glass mirror (which shatters).
+ * What turned the pellet at a bounce: a mirror (which flips), a fixed
+ * mirror (which doesn't), a reflector (which sends it back) or a glass
+ * mirror (which shatters).
  */
-export type BounceKind = "mirror" | "reflector" | "glass";
+export type BounceKind = "mirror" | "fixed" | "reflector" | "glass";
 
 /** The two mirror cells, e.g. the kind of mirror a player may place. */
 export type MirrorType = "mirrorBackslash" | "mirrorSlash";

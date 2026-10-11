@@ -92,9 +92,15 @@ with flipping mirrors, before it is built.
 - [ ] New block types
   - [x] Breakable walls (`%`): stop the pellet once and break; levels
     11–14 use them (13–14 with two-hit goals)
-  - [ ] Fixed mirror: turns the pellet like a mirror but never flips
-    (drawn in dull metal). Gives levels fixed points to plan around, so
-    larger levels stay readable; makes the solver's search smaller
+  - [x] Fixed mirror (`L` `\`, `J` `/`): turns the pellet like a mirror
+    but never flips (drawn in matte steel, bolted down). Gives levels
+    fixed points to plan around. Levels 27–28 teach it (chapter *Fixed
+    mirrors*). Design in `docs/DESIGN.md`, *Fixed mirrors*
+    - [ ] Its own music track (the chapter plays *Glass garden* for now),
+      chosen on a sound lab page
+    - [ ] Its own hit sound, if the mirror bell without the swish isn't
+      enough, chosen on a sound lab page
+    - [ ] More fixed mirror levels, combined with earlier pieces
   - [x] Glass mirror (`N` `\`, `Z` `/`): turns the pellet once, then
     shatters and leaves an empty cell, the mirror version of the
     breakable wall. Levels 23–26 teach it (chapter *Glass mirrors*).
@@ -147,11 +153,12 @@ keeping it). Lower is harder. It dips at each new mechanic (5, 11,
 |---|---|---|---|---|---|---|---|---|---|
 | 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 2,553 | 45,000 |
 
-Levels 19–26 (reflectors, then glass mirrors; added 2026-10-11, v1.26–v1.28):
+Levels 19–28 (reflectors, then glass mirrors, then fixed mirrors; added
+2026-10-11, v1.26–v1.28 and v2.3):
 
-| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 |
-|---|---|---|---|---|---|---|---|---|
-| 1 in | 4 | 25 | 125 | 3,143 | 16 | 125 | 125 | 625 |
+| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 in | 4 | 25 | 125 | 3,143 | 16 | 125 | 125 | 625 | 16 | 125 |
 
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
@@ -166,11 +173,11 @@ the solver's par solution only, and not the second goal hit:
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Foresight | 0 | 0 | 1 | 2 | 1 | 2 | 2 | 2 | 3 | 5 | 3 | 3 | 2 | 5 | 1 | 3 | 4 | 2 |
 
-| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 |
-|---|---|---|---|---|---|---|---|---|
-| Foresight | 0 | 2 | 4 | 5 | 1 | 3 | 3 | 3 |
+| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Foresight | 0 | 2 | 4 | 5 | 1 | 3 | 3 | 3 | 1 | 3 |
 
-Each new chapter starts easy again (19 and 23 are among the easiest levels
+Each new chapter starts easy again (19, 23 and 27 are among the easiest levels
 in the game) and climbs. The steepest step is to *Mirror image* (22),
 reflectors with the player's mirror: about 25 times harder than 21 by
 odds, with the highest foresight of 19–26, about as hard as *Double duty*
@@ -237,9 +244,9 @@ difficulty is in finding the moves, not in planning their effects.
   Chapters: 1–4 *Basics*, 5–10 *Flip tricks*, 11–14 *Breakable walls*,
   15–18 *Your mirror*; a new mechanic adds a chapter. Levels still
   unlock one by one, as now
-  - [ ] Room for more chapters: with six chapter rows (v1.28, 26 levels)
-    the phone's title screen still fits, but has room for about one more
-    row. Any new piece's chapter needs a layout that takes more first
+  - [ ] Room for more chapters: with seven chapter rows (v2.3, 28
+    levels) the phone's title screen still fits, with little room left.
+    Any further piece's chapter needs a layout that takes more first
     (e.g. two chapters per row, collapsible chapters, or a scrolling
     list; the level list lab page has some of these)
 

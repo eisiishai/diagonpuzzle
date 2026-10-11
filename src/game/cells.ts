@@ -61,6 +61,15 @@ export const CELL_BEHAVIORS: Record<
     direction: SLASH_TURNS[direction],
     becomes: "empty",
   }),
+  // Fixed mirrors turn the pellet like mirrors, and never flip.
+  fixedBackslash: (direction) => ({
+    kind: "pass",
+    direction: BACKSLASH_TURNS[direction],
+  }),
+  fixedSlash: (direction) => ({
+    kind: "pass",
+    direction: SLASH_TURNS[direction],
+  }),
   wall: () => ({ kind: "stop", reason: "blocked" }),
   // A reflector sends the pellet straight back the way it came; it never
   // changes, but the mirrors behind it may have flipped on the way in.
@@ -85,6 +94,12 @@ export const GLASS_MIRRORS: readonly CellType[] = [
   "glassSlash",
 ];
 
+/** The fixed mirrors, which turn the pellet and never flip. */
+export const FIXED_MIRRORS: readonly CellType[] = [
+  "fixedBackslash",
+  "fixedSlash",
+];
+
 export function isMirror(cell: CellType): cell is MirrorType {
   return MIRRORS.includes(cell as MirrorType);
 }
@@ -103,6 +118,8 @@ const BOUNCE_KINDS: Record<CellType, BounceKind | null> = {
   mirrorSlash: "mirror",
   glassBackslash: "glass",
   glassSlash: "glass",
+  fixedBackslash: "fixed",
+  fixedSlash: "fixed",
   reflector: "reflector",
   wall: null,
   breakable: null,

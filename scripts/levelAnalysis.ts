@@ -1,6 +1,7 @@
 // Analysis of every level with the solver, shared by the level design tools.
 // Rows are 0-based here; the tools show them from 1, as the player counts.
 
+import { isGlassMirror } from "../src/game/cells";
 import { fire } from "../src/game/simulate";
 import type { ShotOutcome, ShotResult } from "../src/game/simulate";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
@@ -38,11 +39,7 @@ export function describeShot(result: ShotResult): string {
   const { path, outcome } = result;
   const flips = path.filter((step) => step.becomes?.startsWith("mirror"));
   const broke = outcome === "blocked" && path[path.length - 1].becomes;
-  // A glass mirror turns the pellet and becomes empty.
-  const shattered = path.filter(
-    (step) =>
-      step.becomes === "empty" && step.directionIn !== step.directionOut,
-  ).length;
+  const shattered = path.filter((step) => isGlassMirror(step.cell)).length;
   const n = flips.length;
   return (
     `${outcome}${broke ? ", breaks a wall" : ""}` +

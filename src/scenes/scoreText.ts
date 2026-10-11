@@ -76,11 +76,14 @@ export interface IntroFacts {
   hasReflector: boolean;
   /** The level has glass mirrors. */
   hasGlass: boolean;
+  /** The level has fixed mirrors. */
+  hasFixed: boolean;
 }
 
 /**
  * The message shown when a level starts or restarts: about the newest thing
- * in it, in this order: a bonus target to find, glass mirrors, reflectors,
+ * in it, in this order: a bonus target to find, fixed mirrors, glass
+ * mirrors, reflectors,
  * the player's mirror, a goal needing several hits, breakable walls; else how to play.
  */
 export function introMessage(facts: IntroFacts): string {
@@ -91,9 +94,13 @@ export function introMessage(facts: IntroFacts): string {
     hasBreakable,
     hasReflector,
     hasGlass,
+    hasFixed,
   } = facts;
   if (bonusToFind) {
     return "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
+  }
+  if (hasFixed) {
+    return "Steel mirrors are bolted down: they turn the pellet but never flip.";
   }
   if (hasGlass) {
     return "Glass mirrors turn the pellet once, then shatter: later shots pass through.";

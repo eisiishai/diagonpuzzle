@@ -7,6 +7,7 @@ import {
   randomBoard,
   shortestSolutions,
   withAlternatives,
+  withFlippingMirrors,
   withSolidWalls,
   withSolidGlass,
   withWalls,
@@ -21,6 +22,7 @@ const OPTIONS: GeneratorOptions = {
   breakable: 0,
   reflectors: 0,
   glass: 0,
+  fixed: 0,
   placeLater: false,
   shots: 2,
   goalHits: 1,
@@ -76,6 +78,7 @@ describe("randomBoard", () => {
           breakable: 0,
           reflectors: 0,
           glass: 0,
+          fixed: 0,
         },
         Math.random,
       ),
@@ -161,6 +164,21 @@ describe("findCandidates", () => {
     expect(candidates.length).toBeGreaterThan(0);
     for (const { board } of candidates) {
       expect(solve(withSolidGlass(board), 2)).toBeNull();
+    }
+  });
+
+  it("keeps only boards that need a fixed mirror to stay fixed for par", () => {
+    const candidates = findCandidates({ ...OPTIONS, fixed: 2 });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board } of candidates) {
+      const fixed = board.cells
+        .flat()
+        .filter((c) => c === "fixedBackslash" || c === "fixedSlash");
+      expect(fixed).toHaveLength(2);
+      const flipping = withFlippingMirrors(board);
+      expect(flipping.cells.flat()).not.toContain("fixedBackslash");
+      expect(flipping.cells.flat()).not.toContain("fixedSlash");
+      expect(solve(flipping, 2)).toBeNull();
     }
   });
 

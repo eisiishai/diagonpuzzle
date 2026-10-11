@@ -72,6 +72,21 @@ it.each(idsWith("glassBackslash", "glassSlash"))(
   },
 );
 
+// Levels with fixed mirrors are built around their staying put: with every
+// fixed mirror an ordinary one, which flips, par is out of reach.
+it.each(idsWith("fixedBackslash", "fixedSlash"))(
+  "%s needs a fixed mirror to stay fixed",
+  (id) => {
+    const { level, board } = replaced(
+      id,
+      ["fixedBackslash", "fixedSlash"],
+      (cell) => (cell === "fixedBackslash" ? "mirrorBackslash" : "mirrorSlash"),
+    );
+    const { minShots, goalHits = 1, playerMirror } = level;
+    expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
+  },
+);
+
 // Levels that give the player a mirror are built around it: without it,
 // par is out of reach (a longer way round may exist).
 it.each(LEVELS.filter((level) => level.playerMirror).map((level) => level.id))(
