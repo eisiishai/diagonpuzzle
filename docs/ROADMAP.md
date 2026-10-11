@@ -14,6 +14,16 @@ tracks:
 Ordering: finish *Engineering → Next* before starting the next new mechanic,
 since those items make mechanic changes safer to build and test.
 
+## Version 2.0 — complete (2026-10-11)
+
+The second major version adds two new pieces, each with a chapter of four
+levels: reflectors (levels 19–22, the last two with breakable walls and
+the player's mirror) and glass mirrors (levels 23–26, the last two with a
+reflector and a two-hit goal), with their own music tracks (*Return*,
+*Glass harp*) and sounds (*Echo ping*, *Crack and tinkle*). 26 levels in
+six chapters. Saves from version 1 keep working: level ids are unchanged,
+and the new levels are added within the chapters' order.
+
 ## Version 1.0 — complete (2026-10-11)
 
 The first major version is complete and released as v1.0: 17 levels with
