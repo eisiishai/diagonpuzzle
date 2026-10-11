@@ -46,8 +46,12 @@ export interface LevelTestState {
 export interface TitleTestState {
   /** The level list's header, e.g. "LEVELS  ·  ★ 2/18". */
   header: string;
-  /** Each level's row in the list, first level first. */
+  /** Each level's state and score text, first level first. */
   levels: { state: LevelRowState; detail: string }[];
+  /** Each chapter's label, e.g. "01 BASICS ★ 4/4". */
+  chapters: string[];
+  /** The selected level's name and score, e.g. "1. First light · par 1". */
+  detail: string;
 }
 
 export interface TestState {

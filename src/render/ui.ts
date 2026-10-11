@@ -26,6 +26,15 @@ export interface ButtonOptions {
    * `detail` is right-aligned in the number font.
    */
   row?: { leading: IconDrawer; detail: string };
+  /**
+   * A tile instead (give `width` and `height`): `label` (a level number)
+   * centred in the number font, and `icon` below it in its own colours
+   * (given the label's colour). `name` names the button for the test hook
+   * instead of the label.
+   */
+  tile?: { icon: IconDrawer; name: string };
+  /** Fixed height; otherwise it fits the label. */
+  height?: number;
   onTap: () => void;
   onHover?: () => void;
 }
@@ -77,11 +86,13 @@ export class Button extends Container {
     super();
     this.options = options;
     // PixiJS's own name for a container; the test hook finds buttons by it.
-    this.label = options.label;
+    this.label = options.tile?.name ?? options.label;
     this.variant = options.variant ?? "secondary";
     this.labelText = new Text({
       text: options.label,
-      style: textStyle("label", options.large ? { fontSize: 24 } : {}),
+      style: options.tile
+        ? textStyle("value", { fontSize: 20 })
+        : textStyle("label", options.large ? { fontSize: 24 } : {}),
     });
     this.body.addChild(this.glow, this.background, this.icon, this.labelText);
     if (options.row) {
@@ -198,7 +209,7 @@ export class Button extends Container {
   }
 
   private redraw(): void {
-    const { width, icon, large, row } = this.options;
+    const { width, height, icon, large, row, tile } = this.options;
     const { variant, active } = this;
     const primary = variant === "primary";
 
@@ -215,7 +226,8 @@ export class Button extends Container {
     const iconWidth = icon ? ICON_SIZE + ICON_GAP : 0;
     const contentWidth = iconWidth + this.labelText.width;
     const w = width ?? contentWidth + 2 * PADDING_X;
-    const h = Math.max(MIN_HEIGHT, this.labelText.height + (large ? 24 : 16));
+    const h =
+      height ?? Math.max(MIN_HEIGHT, this.labelText.height + (large ? 24 : 16));
     this.size = { width: w, height: h };
 
     const g = this.background.clear().roundRect(0, 0, w, h, 6);
@@ -229,7 +241,16 @@ export class Button extends Container {
     }
 
     this.icon.clear();
-    if (row) {
+    if (tile) {
+      this.labelText.position.set(
+        Math.round((w - this.labelText.width) / 2),
+        Math.round(h * 0.4 - this.labelText.height / 2),
+      );
+      tile.icon(this.icon, textColor);
+      this.icon.alpha = this._disabled ? 0.6 : 1;
+      this.icon.scale.set(0.8);
+      this.icon.position.set(w / 2, Math.round(h * 0.72));
+    } else if (row) {
       this.labelText.position.set(
         ROW_ICON_COLUMN,
         Math.round((h - this.labelText.height) / 2),

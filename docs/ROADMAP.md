@@ -56,9 +56,7 @@ One level, playable with the mouse, plain graphics.
 
 ## Game track
 
-Suggested order from here (2026-10-11, v1.11): decide the level list
-layout (the open question under *Presentation*, best chosen from variants
-on a lab page) before levels are added, then the option to rotate the
+Suggested order from here (2026-10-11, v1.15): the option to rotate the
 placed mirror with new levels for it. In parallel, playtesters' feedback
 would settle the items that wait on how people play: the step to
 *Rebuild*, level 7's dip and the difficulty measure.
@@ -162,13 +160,16 @@ to see) and overstate levels that repeat a row (8, 11).
   players)
 - [x] Small ambient animations (e.g. a gently pulsing goal crystal, a faint
   moving background grid)
-- [ ] Open question: the title screen's text is fairly small on a
-  desktop screen (seen in `npm run screenshots` at 1280×800, 2026-10-11),
-  because the whole screen, with all 17 level rows, is shrunk to fit the
-  height. It gets smaller with every level added. Not decided whether it
-  is a problem; options if it is: a scrolling level list, levels in
-  groups or pages (e.g. by mechanic), or a grid of numbered tiles instead
-  of rows. Judge it on a real screen and phone first
+- [x] Level list layout: the title screen's text was small on a desktop
+  screen (1280×800), because the whole screen, with one row per level, is
+  shrunk to fit the height, and it got smaller with every level added.
+  Chosen on the level list lab page (2026-10-11): **chapters by mechanic,
+  each a row of numbered tiles** (number and state icon), the chapter's
+  name and stars on its left (above the tiles on narrow screens), and
+  the selected level's name and score in a line under the chapters.
+  Chapters: 1–4 *Basics*, 5–10 *Flip tricks*, 11–14 *Breakable walls*,
+  15–18 *Your mirror*; a new mechanic adds a chapter. Levels still
+  unlock one by one, as now
 
 ### Presentation, second pass
 

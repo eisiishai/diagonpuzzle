@@ -6,7 +6,7 @@ import { GameAudio } from "./audio/GameAudio";
 import { TITLE_MUSIC } from "./audio/music";
 import { bonusPositions, withBonuses } from "./game/bonus";
 import { bindKeyboard } from "./input/keyboard";
-import { LEVELS } from "./levels/levels";
+import { CHAPTERS, LEVELS, chapterRanges } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
 import { GameProgress } from "./save/GameProgress";
 import { MAX_SKIPS, parseProgress, serializeProgress } from "./save/progress";
@@ -24,6 +24,7 @@ import { TitleScene } from "./scenes/TitleScene";
 
 const PROGRESS_STORAGE_KEY = "progress";
 
+const LEVEL_CHAPTERS = chapterRanges(LEVELS, CHAPTERS);
 const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
   id: level.id,
   minShots: level.minShots,
@@ -107,6 +108,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
       audio.setMusic(TITLE_MUSIC);
       return new TitleScene({
         levels: LEVELS,
+        chapters: LEVEL_CHAPTERS,
         summaries: LEVEL_SUMMARIES,
         progress: game.progress,
         audio,

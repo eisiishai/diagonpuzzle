@@ -22,6 +22,31 @@ test("the title screen lists every level, only the first unlocked", async ({
   );
 });
 
+test("arrow keys move between level tiles, naming the selected level", async ({
+  game,
+}) => {
+  await game.seedCompleted(4);
+  await game.open();
+  const title = async () => (await game.state()).title!;
+  expect((await title()).chapters[0]).toBe("01 BASICS ★ 4/4");
+  expect((await title()).detail).toBe(`5. ${LEVELS[4].name} · par 2`);
+
+  // Down from Play reaches a tile in the first chapter; right steps on.
+  await game.page.keyboard.press("ArrowDown");
+  const first = Number((await title()).detail.split(".")[0]);
+  expect(first).toBeGreaterThanOrEqual(1);
+  expect(first).toBeLessThanOrEqual(4);
+  for (let n = first + 1; n <= 5; n++) {
+    await game.page.keyboard.press("ArrowRight");
+    expect((await title()).detail).toMatch(new RegExp(`^${n}\\. `));
+  }
+  // Level 6 is locked, so right goes no further.
+  await game.page.keyboard.press("ArrowRight");
+  expect((await title()).detail).toMatch(/^5\. /);
+  await game.page.keyboard.press("Enter");
+  await game.waitForLevel(5);
+});
+
 test("Play and a level button open a level", async ({ game }) => {
   await game.seedCompleted(2);
   await game.open();

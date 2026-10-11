@@ -105,7 +105,10 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   `src/levels/levels.ts` (a new `id`; `music` from its mechanic's group,
   see *Sound* in `docs/DESIGN.md`). It may go anywhere in the list, also
   between released levels: progress is saved by `id`, and a level after
-  it stays unlocked once passed.
+  it stays unlocked once passed. It joins the chapter it is placed in
+  (`CHAPTERS` in the same file; a chapter holds at most six levels, one
+  row of tiles); a new mechanic starts a new chapter there, named after
+  it.
   - `src/levels/levels.test.ts`: the lists of levels with a setup route
     or needing a breakable wall broken, if it belongs in one
   - `docs/DESIGN.md`: the level table (and renumber the levels after it),

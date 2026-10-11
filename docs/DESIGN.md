@@ -297,7 +297,9 @@ difficulty doesn't dip at the end.
 ## Title screen and progress
 
 - The title screen shows the game's name ("Diagon Puzzle", a working title),
-  a *Play* button and the level list. Navigate with ↑/↓ and Enter, or the mouse.
+  a *Play* button and the level list. Navigate with the arrow keys and
+  Enter, or the mouse: left and right move along a row of tiles and on to
+  the next row, up and down between rows and buttons.
 - The browser tab shows the same name, with the goal crystal as its icon
   (`public/favicon.svg`, and a 32×32 PNG for browsers without SVG icons).
   The PNG was drawn from the same shapes by a one-off script that was not
@@ -308,13 +310,23 @@ difficulty doesn't dip at the end.
   is completed. Locked levels are shown but can't be selected.
 - Completed levels show the best (lowest) shot count. Completing a level again
   reports a new best or the existing one.
-- Each row of the level list has an icon column on the left showing the
-  level's state by shape and colour, its numbered name, and its score
-  aligned on the right in the number font (`best 4 / par 3`, `par 3`, or
-  `skipped · par 4`): a white ★ for a level completed at par, a gold ★
-  once its bonus targets are all collected (golden), a green ✓ for
-  completed above par, a beam-coloured ▶ for unlocked and not yet played,
-  a double chevron for skipped, and a lock for locked.
+- The level list is split into **chapters**, one per mechanic (`CHAPTERS`
+  in `src/levels/levels.ts`, following the music groups): 1–4 *Basics*,
+  5–10 *Flip tricks*, 11–14 *Breakable walls*, 15–18 *Your mirror*. Each
+  chapter is a row of square level tiles (at most six) with a label: its
+  number, name in capitals, and stars earned in it (`★ 3/4`, or
+  `locked`). The label sits left of the tiles on a wide screen and on one
+  line above them on a narrow one (a phone), so the screen keeps its full
+  size on a desktop. Chosen on the level list lab page (2026-10-11), when
+  one row per level had shrunk the screen's text with every level added.
+- Each tile shows the level's number and, below it, its state by shape
+  and colour: a white ★ for a level completed at par, a gold ★ once its
+  bonus targets are all collected (golden), a green ✓ for completed above
+  par, a beam-coloured ▶ for unlocked and not yet played, a double chevron
+  for skipped, and a lock for locked (dimmed). A line under the chapters
+  shows the selected (or hovered) level's numbered name and its score in
+  the number font (`best 4 / par 3`, `par 3`, or `skipped · par 4`); it
+  starts on the level *Play* would start.
 - **Par** is a level's minimum shot count (`minShots`). It is shown in the
   game header and in the level list. Completing a level in par earns a star
   (★), shown in the level list; the list header shows stars earned out of the

@@ -308,3 +308,60 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
 ];
+
+export interface ChapterDefinition {
+  /** Shown in the title screen's level list, in capitals. */
+  name: string;
+  /** The id of the chapter's first level; it runs up to the next chapter's. */
+  firstLevel: string;
+}
+
+/**
+ * The level list's chapters, one per mechanic (they follow the music
+ * groups, see docs/DESIGN.md, Sound). A new level joins the chapter it is
+ * placed in; a new mechanic starts a new chapter.
+ */
+export const CHAPTERS: readonly ChapterDefinition[] = [
+  { name: "Basics", firstLevel: "first-light" },
+  { name: "Flip tricks", firstLevel: "double-take" },
+  { name: "Breakable walls", firstLevel: "breakthrough" },
+  { name: "Your mirror", firstLevel: "your-move" },
+];
+
+/** A chapter's levels: indices `start` up to, not including, `end`. */
+export interface ChapterRange {
+  name: string;
+  start: number;
+  end: number;
+}
+
+/**
+ * Where each chapter's levels are in `levels`. Throws if a chapter's first
+ * level is missing, the first chapter doesn't start at the first level, or
+ * the chapters are out of order.
+ */
+export function chapterRanges(
+  levels: readonly Pick<LevelDefinition, "id">[],
+  chapters: readonly ChapterDefinition[],
+): ChapterRange[] {
+  const starts = chapters.map(({ firstLevel }) => {
+    const index = levels.findIndex((level) => level.id === firstLevel);
+    if (index < 0) {
+      throw new Error(`No level "${firstLevel}" to start a chapter`);
+    }
+    return index;
+  });
+  if (starts[0] !== 0) {
+    throw new Error("The first chapter must start at the first level");
+  }
+  starts.forEach((start, i) => {
+    if (i > 0 && start <= starts[i - 1]) {
+      throw new Error(`Chapter "${chapters[i].name}" is out of order`);
+    }
+  });
+  return chapters.map(({ name }, i) => ({
+    name,
+    start: starts[i],
+    end: starts[i + 1] ?? levels.length,
+  }));
+}

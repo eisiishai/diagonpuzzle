@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MUSIC_TRACKS } from "../audio/music";
 import { bonusPositions, withBonuses } from "../game/bonus";
 import { setupRoutes, solve, solveBonus } from "../game/solver";
-import { LEVELS } from "./levels";
+import { CHAPTERS, LEVELS, chapterRanges } from "./levels";
 import { parseLevel } from "./parse";
 
 // Levels that can be solved in one shot, but also by a two-shot route where
@@ -58,6 +58,37 @@ it("gives every level an existing music track", () => {
   for (const level of LEVELS) {
     expect(MUSIC_TRACKS[level.music]).toBeDefined();
   }
+});
+
+describe("chapterRanges", () => {
+  const levels = ["a", "b", "c", "d"].map((id) => ({ id }));
+
+  it("runs each chapter up to the next one's first level", () => {
+    const chapters = [
+      { name: "One", firstLevel: "a" },
+      { name: "Two", firstLevel: "c" },
+    ];
+    expect(chapterRanges(levels, chapters)).toEqual([
+      { name: "One", start: 0, end: 2 },
+      { name: "Two", start: 2, end: 4 },
+    ]);
+  });
+
+  it("rejects a missing level, a late first chapter or a wrong order", () => {
+    const named = (...ids: string[]) =>
+      ids.map((firstLevel, i) => ({ name: `C${i}`, firstLevel }));
+    expect(() => chapterRanges(levels, named("a", "x"))).toThrow();
+    expect(() => chapterRanges(levels, named("b"))).toThrow();
+    expect(() => chapterRanges(levels, named("a", "c", "b"))).toThrow();
+  });
+
+  // The title screen shows a chapter's levels as one row of tiles.
+  it("splits the game's levels into chapters of 1 to 6 levels", () => {
+    for (const { start, end } of chapterRanges(LEVELS, CHAPTERS)) {
+      expect(end - start).toBeGreaterThanOrEqual(1);
+      expect(end - start).toBeLessThanOrEqual(6);
+    }
+  });
 });
 
 it("has unique level ids", () => {

@@ -2,13 +2,13 @@ import { Container, Graphics, Text } from "pixi.js";
 import type { GlowFilter } from "pixi-filters";
 import type { GameAudio } from "../audio/GameAudio";
 import type { GameAction } from "../input/keyboard";
-import type { LevelDefinition } from "../levels/levels";
+import type { ChapterRange, LevelDefinition } from "../levels/levels";
 import { prefersReducedMotion, pulse } from "../render/ambient";
 import { easeInOutCubic, easeOutCubic } from "../render/easing";
 import { drawCell } from "../render/cellGraphics";
 import { arcPoints } from "../render/polyline";
 import { SpectrumText } from "../render/spectrumText";
-import { fitToScreen } from "../render/fitToScreen";
+import { SCREEN_MARGIN, fitToScreen } from "../render/fitToScreen";
 import {
   BONUS_COLORS,
   COLORS,
@@ -35,10 +35,24 @@ import type { TitleTestState } from "../testState";
 import type { Scene } from "./Scene";
 import { STAR, levelListRow } from "./scoreText";
 import type { LevelRowState } from "./scoreText";
+import { nextMenuItem } from "./menuNavigation";
+import type { MenuDirection } from "./menuNavigation";
 
 const GAME_TITLE = "DIAGON PUZZLE";
-const LIST_WIDTH = 440;
-const LEVEL_ROW_HEIGHT = 50;
+const PLAY_WIDTH = 440;
+/** Level tiles: size, and the gap between them. */
+const TILE_SIZE = 54;
+const TILE_GAP = 8;
+/** The most tiles in a chapter's row (src/levels/levels.test.ts checks it). */
+const MAX_TILES = 6;
+const TILES_WIDTH = MAX_TILES * TILE_SIZE + (MAX_TILES - 1) * TILE_GAP;
+/** On wide screens, chapter labels sit in a column left of the tiles. */
+const LABEL_COLUMN = 200;
+const LABEL_GAP = 20;
+const WIDE_WIDTH = LABEL_COLUMN + LABEL_GAP + TILES_WIDTH;
+const CHAPTER_GAP = 14;
+/** Height kept for the selected level's name and score. */
+const DETAIL_HEIGHT = 56;
 /** The title beam fires once, a moment after the title screen appears. */
 const BEAM_FIRE_MS = 400;
 /** Time for the beam to cross, and for the crystal's flash on arrival. */
@@ -50,6 +64,8 @@ const TITLE_GLOW = 1.5;
 
 export interface TitleSceneOptions {
   levels: readonly LevelDefinition[];
+  /** Where each chapter's levels are in `levels`. */
+  chapters: readonly ChapterRange[];
   /** The same levels as `levels`, with what progress needs to know. */
   summaries: readonly LevelSummary[];
   progress: Progress;
@@ -61,28 +77,52 @@ export interface TitleSceneOptions {
 interface MenuItem {
   button: Button;
   activate: () => void;
+  /** The level a tile starts, shown in the detail line when selected. */
+  level?: number;
 }
 
-/** Title screen: play/continue, level select with best scores, settings. */
+/** A chapter in the level list: its label and its levels' tiles. */
+interface ChapterView {
+  number: Text;
+  name: Text;
+  stars: Text;
+  tiles: Button[];
+}
+
+/**
+ * Title screen: play/continue, the levels in chapters of numbered tiles
+ * with the selected level's name and score, and settings.
+ */
 export class TitleScene extends Container implements Scene {
   private readonly items: MenuItem[] = [];
   private readonly resetItem: MenuItem;
   private readonly audioControls: AudioControls;
-  private readonly contentHeight: number;
   private readonly titleBeam: TitleBeam;
   private readonly titleGlow: GlowFilter;
   private readonly audio: GameAudio;
   private readonly header: Container;
-  private readonly levelRows: { state: LevelRowState; detail: string }[] = [];
+  private readonly levelRows: {
+    state: LevelRowState;
+    title: string;
+    detail: string;
+  }[] = [];
+  private readonly chapterViews: ChapterView[] = [];
+  private readonly detailName: Text;
+  private readonly detailScore: Text;
+  private readonly version: Text;
+  private readonly play: MenuItem;
+  private readonly title: Text;
+  private contentHeight = 0;
+  /** Whether the chapters are laid out for a narrow screen; null before the first layout. */
+  private narrow: boolean | null = null;
   private ambientMs = 0;
   private selected = 0;
   private resetArmed = false;
 
   constructor(options: TitleSceneOptions) {
     super();
-    const { levels, summaries, progress, audio } = options;
+    const { levels, chapters, summaries, progress, audio } = options;
     const levelIds = levels.map((level) => level.id);
-    let y = 0;
 
     this.audio = audio;
     const title = new Text({ text: GAME_TITLE, style: textStyle("title") });
@@ -90,15 +130,14 @@ export class TitleScene extends Container implements Scene {
     this.titleGlow = createGlow(COLORS.beam, TITLE_GLOW);
     title.filters = [this.titleGlow];
     this.addChild(title);
-    y += title.height + 10;
+    this.title = title;
     this.titleBeam = new TitleBeam(
       title.width,
-      y,
+      title.height + 10,
       hasFoundAllBonuses(progress, summaries),
     );
     this.titleBeam.draw(prefersReducedMotion() ? 1 : 0);
     this.addChild(this.titleBeam);
-    y += 40;
 
     const next = nextLevelIndex(progress, levelIds);
     const completedCount = levelIds.filter((id) =>
@@ -110,53 +149,94 @@ export class TitleScene extends Container implements Scene {
         : completedCount === levels.length
           ? "PLAY AGAIN FROM LEVEL 1 ▶"
           : `CONTINUE: LEVEL ${next + 1} ▶`;
-    const play = this.addItem(
+    this.play = this.addItem(
       new Button({
         label: playLabel,
         variant: "primary",
         large: true,
-        width: LIST_WIDTH,
+        width: PLAY_WIDTH,
         onTap: () => options.onStartLevel(next),
         onHover: () => this.select(0),
       }),
-      y,
       () => options.onStartLevel(next),
     );
-    y += play.button.height + 30;
 
-    const header = levelListHeader(progress, summaries);
-    header.y = y;
-    this.addChild(header);
-    this.header = header;
-    y += header.height + 12;
+    this.header = levelListHeader(progress, summaries);
+    this.addChild(this.header);
 
     levels.forEach((level, index) => {
-      const row = levelListRow(
-        index + 1,
-        level.name,
-        level.minShots,
-        isUnlocked(progress, levelIds, index),
-        progress.levels[level.id]?.bestShots,
-        isSkipped(progress, level.id),
-        hasAllBonuses(progress, summaries[index]),
+      this.levelRows.push(
+        levelListRow(
+          index + 1,
+          level.name,
+          level.minShots,
+          isUnlocked(progress, levelIds, index),
+          progress.levels[level.id]?.bestShots,
+          isSkipped(progress, level.id),
+          hasAllBonuses(progress, summaries[index]),
+        ),
       );
-      this.levelRows.push({ state: row.state, detail: row.detail });
-      const itemIndex = this.items.length;
-      const item = this.addItem(
-        new Button({
-          label: row.title,
-          row: { leading: levelStateIcon(row.state), detail: row.detail },
-          width: LIST_WIDTH,
-          onTap: () => options.onStartLevel(index),
-          onHover: () => this.select(itemIndex),
-        }),
-        y,
-        () => options.onStartLevel(index),
-      );
-      item.button.disabled = !isUnlocked(progress, levelIds, index);
-      y += LEVEL_ROW_HEIGHT;
     });
-    y += 16;
+    chapters.forEach((chapter, c) => {
+      const rows = this.levelRows.slice(chapter.start, chapter.end);
+      const locked = rows.every((row) => row.state === "locked");
+      const stars = rows.filter(
+        (row) => row.state === "star" || row.state === "golden",
+      ).length;
+      const view: ChapterView = {
+        number: new Text({
+          text: String(c + 1).padStart(2, "0"),
+          style: textStyle("value", {
+            fontSize: 13,
+            fill: COLORS.markingText,
+          }),
+        }),
+        name: new Text({
+          text: chapter.name.toUpperCase(),
+          style: textStyle("label", {
+            fontSize: 16,
+            fontWeight: "700",
+            letterSpacing: 1.6,
+            fill: locked ? COLORS.markingText : COLORS.text,
+          }),
+        }),
+        stars: new Text({
+          text: locked ? "locked" : `${STAR} ${stars}/${rows.length}`,
+          style: textStyle("value", { fontSize: 14 }),
+        }),
+        tiles: [],
+      };
+      this.addChild(view.number, view.name, view.stars);
+      for (let index = chapter.start; index < chapter.end; index++) {
+        const row = this.levelRows[index];
+        const itemIndex = this.items.length;
+        const tile = this.addItem(
+          new Button({
+            label: String(index + 1),
+            tile: { icon: levelStateIcon(row.state), name: row.title },
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+            onTap: () => options.onStartLevel(index),
+            onHover: () => this.select(itemIndex),
+          }),
+          () => options.onStartLevel(index),
+          index,
+        );
+        tile.button.disabled = row.state === "locked";
+        view.tiles.push(tile.button);
+      }
+      this.chapterViews.push(view);
+    });
+
+    this.detailName = new Text({ text: "", style: textStyle("body") });
+    this.detailName.anchor.set(0.5, 0);
+    this.detailScore = new Text({
+      text: "",
+      style: textStyle("value", { fontSize: 15 }),
+    });
+    this.detailScore.anchor.set(0.5, 0);
+    this.addChild(this.detailName, this.detailScore);
+    this.showLevel(next);
 
     const resetIndex = this.items.length;
     const resetActivate = () => {
@@ -173,27 +253,22 @@ export class TitleScene extends Container implements Scene {
         onTap: resetActivate,
         onHover: () => this.select(resetIndex),
       }),
-      y,
       resetActivate,
     );
     this.resetItem.button.disabled = completedCount === 0;
     this.resetItem.button.visible = completedCount > 0;
-    y += this.resetItem.button.height + 24;
 
     this.audioControls = new AudioControls(audio, "center");
-    this.audioControls.y = y;
     this.addChild(this.audioControls);
-    y += this.audioControls.height + 24;
 
-    const version = new Text({
+    this.version = new Text({
       text: GAME_VERSION,
       style: textStyle("value", { fontSize: 13 }),
     });
-    version.anchor.set(0.5, 0);
-    version.y = y;
-    this.addChild(version);
-    this.contentHeight = y + version.height;
+    this.version.anchor.set(0.5, 0);
+    this.addChild(this.version);
 
+    this.arrange(false);
     this.refresh();
   }
 
@@ -201,12 +276,21 @@ export class TitleScene extends Container implements Scene {
   testState(): TitleTestState {
     return {
       header: allText(this.header),
-      levels: this.levelRows,
+      levels: this.levelRows.map(({ state, detail }) => ({ state, detail })),
+      chapters: this.chapterViews.map(
+        (view) => `${view.number.text} ${view.name.text} ${view.stars.text}`,
+      ),
+      detail: `${this.detailName.text} · ${this.detailScore.text}`,
     };
   }
 
-  /** Centres the scene in a screen of the given size, shrinking it to fit. */
+  /**
+   * Centres the scene in a screen of the given size, shrinking it to fit.
+   * Chapter labels go left of their tiles where the screen is wide enough,
+   * else above them.
+   */
   layout(screenWidth: number, screenHeight: number): void {
+    this.arrange(screenWidth - 2 * SCREEN_MARGIN < WIDE_WIDTH);
     // Items are centred on x = 0, so the bounds start at a negative x.
     const bounds = this.getLocalBounds();
     const { scale, x, y } = fitToScreen(
@@ -221,10 +305,16 @@ export class TitleScene extends Container implements Scene {
   handleAction(action: GameAction): void {
     switch (action) {
       case "selectUp":
-        this.moveSelection(-1);
+        this.moveSelection("up");
         break;
       case "selectDown":
-        this.moveSelection(1);
+        this.moveSelection("down");
+        break;
+      case "selectLeft":
+        this.moveSelection("left");
+        break;
+      case "selectRight":
+        this.moveSelection("right");
         break;
       case "fire":
         if (!this.items[this.selected].button.disabled) {
@@ -238,8 +328,7 @@ export class TitleScene extends Container implements Scene {
       case "toggleEffects":
         this.audioControls.toggle("effects");
         break;
-      case "back":
-      case "skipLevel":
+      default:
         break;
     }
   }
@@ -280,30 +369,103 @@ export class TitleScene extends Container implements Scene {
     this.titleBeam.crystal.alpha = Math.min(1, 0.8 + 0.2 * breath + flash);
   }
 
-  /** Adds a centred menu button at `y`; keyboard selection follows the list. */
-  private addItem(button: Button, y: number, activate: () => void): MenuItem {
-    button.position.set(-button.width / 2, y);
+  /** Adds a menu button; arrange() places it. */
+  private addItem(
+    button: Button,
+    activate: () => void,
+    level?: number,
+  ): MenuItem {
     this.addChild(button);
-    const item = { button, activate };
+    const item = { button, activate, level };
     this.items.push(item);
     return item;
   }
 
-  /**
-   * Moves to the next enabled item in `step` direction, if there is one,
-   * with a soft tick.
-   */
-  private moveSelection(step: number): void {
-    for (
-      let index = this.selected + step;
-      index >= 0 && index < this.items.length;
-      index += step
-    ) {
-      if (!this.items[index].button.disabled) {
-        this.select(index);
-        this.audio.play("tick");
-        return;
+  /** Places everything from the top down, centred on x = 0. */
+  private arrange(narrow: boolean): void {
+    if (narrow === this.narrow) {
+      return;
+    }
+    this.narrow = narrow;
+    let y = this.title.height + 10 + 40;
+    const centre = (button: Button) => {
+      button.position.set(-button.width / 2, y);
+      y += button.height;
+    };
+    centre(this.play.button);
+    y += 30;
+    this.header.y = y;
+    y += this.header.height + 16;
+
+    const left = -(narrow ? TILES_WIDTH : WIDE_WIDTH) / 2;
+    this.chapterViews.forEach((view, c) => {
+      if (c > 0) {
+        y += CHAPTER_GAP;
       }
+      const { number, name, stars } = view;
+      let tilesX = left + LABEL_COLUMN + LABEL_GAP;
+      if (narrow) {
+        // One line above the tiles: number and name left, stars right.
+        number.position.set(left, y + 2);
+        name.position.set(left + number.width + 10, y);
+        stars.position.set(left + TILES_WIDTH - stars.width, y + 1);
+        y += name.height + 6;
+        tilesX = left;
+      } else {
+        // Three lines, centred beside the tiles.
+        const top =
+          y + (TILE_SIZE - (number.height + name.height + stars.height)) / 2;
+        number.position.set(left, Math.round(top));
+        name.position.set(left, Math.round(top + number.height));
+        stars.position.set(left, Math.round(top + number.height + name.height));
+      }
+      view.tiles.forEach((tile, i) => {
+        tile.position.set(tilesX + i * (TILE_SIZE + TILE_GAP), y);
+      });
+      y += TILE_SIZE;
+    });
+
+    y += 14;
+    this.detailName.y = y;
+    this.detailScore.y = y + this.detailName.height + 4;
+    y += DETAIL_HEIGHT + 8;
+
+    centre(this.resetItem.button);
+    y += 24;
+    this.audioControls.y = y;
+    y += this.audioControls.height + 24;
+    this.version.y = y;
+    this.contentHeight = y + this.version.height;
+  }
+
+  /** Shows level `index`'s name and score in the line under the chapters. */
+  private showLevel(index: number): void {
+    const row = this.levelRows[index];
+    if (row === undefined) {
+      return;
+    }
+    const locked = row.state === "locked";
+    this.detailName.text = locked ? `Level ${index + 1}` : row.title;
+    this.detailName.style.fill = locked ? COLORS.markingText : COLORS.text;
+    this.detailScore.text = locked ? "locked" : row.detail;
+  }
+
+  /**
+   * Moves to the nearest enabled item in `direction`, if there is one, with
+   * a soft tick.
+   */
+  private moveSelection(direction: MenuDirection): void {
+    const centers = this.items.map(({ button }) => ({
+      x: button.x + button.width / 2,
+      y: button.y + button.height / 2,
+    }));
+    const enabled = this.items.map(
+      ({ button }) => button.visible && !button.disabled,
+    );
+    const index = nextMenuItem(centers, enabled, this.selected, direction);
+    if (index !== this.selected) {
+      this.select(index);
+      this.audio.play("tick");
     }
   }
 
@@ -313,6 +475,10 @@ export class TitleScene extends Container implements Scene {
     }
     this.selected = index;
     this.resetArmed = false;
+    const level = this.items[index].level;
+    if (level !== undefined) {
+      this.showLevel(level);
+    }
     this.refresh();
   }
 
