@@ -1,3 +1,4 @@
+import { cellPositions, withCell } from "./board";
 import type { Board, MirrorType, Position } from "./types";
 
 /**
@@ -24,20 +25,10 @@ export function placeMirror(
   if (!canPlaceAt(board, position)) {
     throw new Error(`Cell (${position.x}, ${position.y}) is not empty`);
   }
-  const cells = board.cells.map((row) => [...row]);
-  cells[position.y][position.x] = mirror;
-  return { width: board.width, height: board.height, cells };
+  return withCell(board, { ...position, cell: mirror });
 }
 
 /** Every position where a mirror may be placed, in reading order. */
 export function placementPositions(board: Board): Position[] {
-  const positions: Position[] = [];
-  board.cells.forEach((row, y) =>
-    row.forEach((cell, x) => {
-      if (cell === "empty") {
-        positions.push({ x, y });
-      }
-    }),
-  );
-  return positions;
+  return cellPositions(board, (cell) => cell === "empty");
 }

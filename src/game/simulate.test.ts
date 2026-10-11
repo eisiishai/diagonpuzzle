@@ -255,6 +255,27 @@ describe("glass mirrors", () => {
   });
 });
 
+describe("path steps", () => {
+  it("name each cell as the pellet found it, before the hit changed it", () => {
+    const result = fire(
+      parseLevel(String.raw`
+      . \ . %
+      . @ . G
+    `),
+      0,
+    );
+    expect(result.path.map(({ cell, becomes }) => [cell, becomes])).toEqual([
+      ["empty", undefined],
+      ["mirrorBackslash", "mirrorSlash"],
+      ["reflector", undefined],
+      // Back into the mirror, which has flipped to "/".
+      ["mirrorSlash", "mirrorBackslash"],
+      ["empty", undefined],
+      ["breakable", "empty"],
+    ]);
+  });
+});
+
 describe("shots on the game's levels", () => {
   // Every step can be traced back uniquely (docs/DESIGN.md, Outcomes), so
   // no shot loops, reflectors included. Random play checks it on every

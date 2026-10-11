@@ -1,3 +1,4 @@
+import { cellPositions, withCells } from "./board";
 import type { Board, Position } from "./types";
 
 /**
@@ -6,15 +7,22 @@ import type { Board, Position } from "./types";
  * progress.
  */
 export function bonusPositions(board: Board): Position[] {
-  const positions: Position[] = [];
-  board.cells.forEach((row, y) =>
-    row.forEach((cell, x) => {
-      if (cell === "bonus") {
-        positions.push({ x, y });
-      }
-    }),
+  return cellPositions(board, (cell) => cell === "bonus");
+}
+
+/**
+ * The index of the bonus target at `position` in bonusPositions(board),
+ * which identifies it in saved progress. `board` must be the level's full
+ * board, with every bonus target; throws if there is none at `position`.
+ */
+export function bonusIndexAt(board: Board, position: Position): number {
+  const index = bonusPositions(board).findIndex(
+    ({ x, y }) => x === position.x && y === position.y,
   );
-  return positions;
+  if (index < 0) {
+    throw new Error(`No bonus target at (${position.x}, ${position.y})`);
+  }
+  return index;
 }
 
 /**
@@ -26,20 +34,8 @@ export function withBonuses(
   show: (index: number) => boolean = () => false,
 ): Board {
   const hidden = bonusPositions(board).filter((_, index) => !show(index));
-  return withEmptyCells(board, hidden);
-}
-
-/** The board with the cells at `positions` emptied. */
-export function withEmptyCells(
-  board: Board,
-  positions: readonly Position[],
-): Board {
-  if (positions.length === 0) {
-    return board;
-  }
-  const cells = board.cells.map((row) => [...row]);
-  for (const { x, y } of positions) {
-    cells[y][x] = "empty";
-  }
-  return { width: board.width, height: board.height, cells };
+  return withCells(
+    board,
+    hidden.map((position) => ({ ...position, cell: "empty" })),
+  );
 }

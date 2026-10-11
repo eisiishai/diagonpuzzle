@@ -4,6 +4,7 @@
 // board ready to paste into src/levels/levels.ts. Rows and columns are
 // numbered from 1, as the player counts them. `--help` lists the options.
 
+import { GLASS_MIRRORS, MIRRORS } from "../src/game/cells";
 import type { CellType } from "../src/game/types";
 import { LEVELS } from "../src/levels/levels";
 import { CELL_SYMBOLS, formatLevel, parseLevel } from "../src/levels/parse";
@@ -15,9 +16,9 @@ import { cellName, rowList } from "./levelAnalysis";
 declare const process: { argv: string[]; exitCode?: number };
 
 /** Piece names for --uses, and the cell types they stand for. */
-const PIECES: Record<string, CellType[]> = {
-  mirror: ["mirrorBackslash", "mirrorSlash"],
-  glass: ["glassBackslash", "glassSlash"],
+const PIECES: Record<string, readonly CellType[]> = {
+  mirror: MIRRORS,
+  glass: GLASS_MIRRORS,
   reflector: ["reflector"],
   breakable: ["breakable"],
 };

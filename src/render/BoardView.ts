@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle } from "pixi.js";
 import type { FederatedPointerEvent } from "pixi.js";
+import { isGlassMirror, isMirror } from "../game/cells";
 import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
 import type { Board, CellType, MirrorType, Position } from "../game/types";
@@ -7,7 +8,7 @@ import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
 import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
 import { BoardEffects } from "./BoardEffects";
-import { drawCell, isGlassMirror, isMirror } from "./cellGraphics";
+import { drawCell } from "./cellGraphics";
 import type { GoalHits } from "./cellGraphics";
 import {
   introCell,

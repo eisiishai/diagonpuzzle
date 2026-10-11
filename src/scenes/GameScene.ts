@@ -1,6 +1,8 @@
 import { Container, Text } from "pixi.js";
 import { columnPan } from "../audio/effects";
 import type { GameAudio } from "../audio/GameAudio";
+import { boardHas } from "../game/board";
+import { GLASS_MIRRORS } from "../game/cells";
 import { LevelSession } from "../game/LevelSession";
 import { MirrorPlacement } from "../game/MirrorPlacement";
 import type { PlacementKey, PlacementResult } from "../game/MirrorPlacement";
@@ -453,7 +455,7 @@ export class GameScene extends Container implements Scene {
     // Wall hits and breaks sound from where they happen.
     const last = result.path[result.path.length - 1];
     const pan = columnPan(last.x, this.session.board.width);
-    if (outcome === "blocked" && last.becomes) {
+    if (outcome === "blocked" && last.cell === "breakable") {
       audio.play("break", pan);
       this.showMessage("The pellet broke a cracked wall.");
       return;
@@ -667,11 +669,9 @@ export class GameScene extends Container implements Scene {
       bonusToFind: bonus.shown && this.bonusesCollected < bonus.total,
       playerMirror,
       goalHits,
-      hasBreakable: board.cells.some((row) => row.includes("breakable")),
-      hasReflector: board.cells.some((row) => row.includes("reflector")),
-      hasGlass: board.cells.some(
-        (row) => row.includes("glassBackslash") || row.includes("glassSlash"),
-      ),
+      hasBreakable: boardHas(board, ["breakable"]),
+      hasReflector: boardHas(board, ["reflector"]),
+      hasGlass: boardHas(board, GLASS_MIRRORS),
     });
   }
 }

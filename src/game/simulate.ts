@@ -7,6 +7,8 @@ export type ShotOutcome = "goal" | "bonus" | "exit" | "blocked" | "loop";
 export interface PathStep {
   x: number;
   y: number;
+  /** The cell as the pellet found it, before any change the hit made. */
+  cell: CellType;
   /** Direction the pellet was moving when it entered the cell. */
   directionIn: Direction;
   /** Direction the pellet left the cell; equals directionIn where it stopped. */
@@ -70,6 +72,7 @@ export function fire(board: Board, row: number): ShotResult {
     if (effect.kind === "stop") {
       path.push({
         ...position,
+        cell,
         directionIn: direction,
         directionOut: direction,
         ...(effect.becomes && { becomes: effect.becomes }),
@@ -82,6 +85,7 @@ export function fire(board: Board, row: number): ShotResult {
 
     path.push({
       ...position,
+      cell,
       directionIn: direction,
       directionOut: effect.direction,
       ...(effect.becomes && { becomes: effect.becomes }),

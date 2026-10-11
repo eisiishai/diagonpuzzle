@@ -151,7 +151,11 @@ e2e/            browser smoke tests (Playwright) and their helpers
   `scripts/` and are committed with the work that uses them, as an npm
   script with `--help` and tests for the search logic. Don't leave them as
   throwaway files in a scratch folder; they are needed again in later
-  sessions.
+  sessions. Searches over moves build on the solver's shared pieces
+  (`eachCompletion`, `mirrorPlacements`, `tryPlayMoves`, `completesLevel`
+  in `src/game/solver.ts`) and board edits on `withCell(s)` in
+  `src/game/board.ts`, rather than their own copies, so a new kind of move
+  is added in one place.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
 - Every commit runs `npm run build` first (pre-commit hook), plus

@@ -4,7 +4,7 @@ import "@fontsource/jetbrains-mono/latin-500.css";
 import { Application, Sprite } from "pixi.js";
 import { GameAudio } from "./audio/GameAudio";
 import { TITLE_MUSIC } from "./audio/music";
-import { bonusPositions, withBonuses } from "./game/bonus";
+import { bonusIndexAt, bonusPositions, withBonuses } from "./game/bonus";
 import { bindKeyboard } from "./input/keyboard";
 import { CHAPTERS, LEVELS, chapterRanges } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
@@ -139,7 +139,6 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
     switchTo(() => {
       audio.setMusic(level.music);
       const fullBoard = parseLevel(level.grid);
-      const bonuses = bonusPositions(fullBoard);
       const start = game.levelStart(index);
       return new GameScene({
         board: withBonuses(fullBoard, () => start.bonusesShown),
@@ -154,7 +153,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
         maxSkips: MAX_SKIPS,
         bonus: {
           shown: start.bonusesShown,
-          total: bonuses.length,
+          total: LEVEL_SUMMARIES[index].bonusCount,
           collected: start.bonusesCollected,
         },
         audio,
@@ -164,7 +163,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
           return report;
         },
         onBonus: (x, y) => {
-          const bonus = bonuses.findIndex((p) => p.x === x && p.y === y);
+          const bonus = bonusIndexAt(fullBoard, { x, y });
           const report = game.collectBonus(index, bonus);
           save();
           return report;

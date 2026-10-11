@@ -2,13 +2,17 @@
 // keeps the ones the solver says need exactly the wanted number of shots.
 // Rows are 0-based here, like the solver's.
 
-import { placeMirror, placementPositions } from "../src/game/placement";
 import { fire } from "../src/game/simulate";
-import { setupRoutes, shotRows, solve } from "../src/game/solver";
+import {
+  eachCompletion,
+  setupRoutes,
+  shotRows,
+  solve,
+} from "../src/game/solver";
 import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType } from "../src/game/types";
 import { formatLevel } from "../src/levels/parse";
-import { findAlternative } from "./alternativeSearch";
+import { findAlternative, pathKey } from "./alternativeSearch";
 
 export interface GeneratorOptions {
   width: number;
@@ -164,46 +168,17 @@ export function shortestSolutions(
   playerMirror?: MirrorType,
 ): Move[][] {
   const solutions = new Map<string, Move[]>();
-  const search = (
-    current: Board,
-    inHand: boolean,
-    hits: number,
-    moves: Move[],
-    paths: string[],
-  ) => {
-    const choices: { board: Board; placed: Move[]; inHand: boolean }[] = [
-      { board: current, placed: [], inHand },
-    ];
-    if (inHand && playerMirror !== undefined) {
-      for (const position of placementPositions(current)) {
-        choices.push({
-          board: placeMirror(current, position, playerMirror),
-          placed: [{ ...position, mirror: playerMirror }],
-          inHand: false,
-        });
-      }
+  for (const completion of eachCompletion(
+    board,
+    shots,
+    goalHits,
+    playerMirror,
+  )) {
+    const key = completion.shots.map(pathKey).join("|");
+    if (completion.shots.length === shots && !solutions.has(key)) {
+      solutions.set(key, completion.moves);
     }
-    for (const choice of choices) {
-      for (let row = 0; row < board.height; row++) {
-        const result = fire(choice.board, row);
-        const newHits = hits + (result.outcome === "goal" ? 1 : 0);
-        const newMoves = [...moves, ...choice.placed, row];
-        const newPaths = [
-          ...paths,
-          result.path.map((p) => `${p.x},${p.y}`).join(" "),
-        ];
-        if (newHits >= goalHits) {
-          const key = newPaths.join("|");
-          if (newPaths.length === shots && !solutions.has(key)) {
-            solutions.set(key, newMoves);
-          }
-        } else if (newPaths.length < shots) {
-          search(result.board, choice.inHand, newHits, newMoves, newPaths);
-        }
-      }
-    }
-  };
-  search(board, playerMirror !== undefined, 0, [], []);
+  }
   return [...solutions.values()];
 }
 

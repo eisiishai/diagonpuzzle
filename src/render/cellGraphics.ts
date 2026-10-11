@@ -184,11 +184,3 @@ export function drawCell(
   g.alpha = 1;
   CELL_DRAWERS[cell](g, cellSize / 2, goalHits);
 }
-
-export function isGlassMirror(cell: CellType): boolean {
-  return cell === "glassBackslash" || cell === "glassSlash";
-}
-
-export function isMirror(cell: CellType): boolean {
-  return cell === "mirrorBackslash" || cell === "mirrorSlash";
-}

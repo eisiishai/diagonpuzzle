@@ -128,6 +128,9 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   - `src/game/types.ts`: add it to `CellType`. `npm run build` then fails
     until each of the next three has an entry for it:
     - `src/game/cells.ts`: what a pellet entering it does
+      (`CELL_BEHAVIORS`) and what kind of bounce it makes, if it turns the
+      pellet (`BOUNCE_KINDS`); also add it to a group there (`MIRRORS`,
+      `GLASS_MIRRORS`) if it belongs to one
     - `src/levels/parse.ts`: its symbol in level grids
     - `src/render/cellGraphics.ts`: how it is drawn
   - If it stops the pellet or changes when hit, check

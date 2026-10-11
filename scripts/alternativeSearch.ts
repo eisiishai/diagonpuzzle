@@ -4,41 +4,23 @@
 // solution and the bonus target as they are. Rows and columns are 0-based
 // here, like the solver's.
 
+import { boardHas, withCell } from "../src/game/board";
+import type { CellChange } from "../src/game/board";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
-import { placeMirror, placementPositions } from "../src/game/placement";
-import { fire } from "../src/game/simulate";
+import { GLASS_MIRRORS, MIRRORS } from "../src/game/cells";
+import type { ShotResult } from "../src/game/simulate";
 import {
-  playMoves,
+  completesLevel,
+  eachCompletion,
   shotRows,
   solve,
   solveBonusMoves,
   solveMoves,
+  tryPlayMoves,
 } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType, Position } from "../src/game/types";
 import { randomWinChance } from "./difficulty";
-
-/** True if playing `moves` from `board` completes the level. */
-function completes(board: Board, moves: readonly Move[], goalHits: number) {
-  let current = board;
-  let hits = 0;
-  for (const move of moves) {
-    if (typeof move !== "number") {
-      if (current.cells[move.y][move.x] !== "empty") {
-        return false;
-      }
-      current = placeMirror(current, move, move.mirror);
-      continue;
-    }
-    const result = fire(current, move);
-    hits += result.outcome === "goal" ? 1 : 0;
-    if (hits >= goalHits) {
-      return true;
-    }
-    current = result.board;
-  }
-  return false;
-}
 
 /**
  * True if every move of a solution is needed: leaving out any one shot (or
@@ -51,7 +33,7 @@ export function isEssential(
 ): boolean {
   return moves.every(
     (_, i) =>
-      !completes(
+      !completesLevel(
         board,
         [...moves.slice(0, i), ...moves.slice(i + 1)],
         goalHits,
@@ -74,53 +56,23 @@ function* eachSolution(
   playerMirror?: MirrorType,
 ): Generator<Move[]> {
   const seen = new Set<string>();
-  function* search(
-    current: Board,
-    inHand: boolean,
-    hits: number,
-    moves: Move[],
-    paths: string[],
-  ): Generator<Move[]> {
-    const choices: { board: Board; placed: Move[]; inHand: boolean }[] = [
-      { board: current, placed: [], inHand },
-    ];
-    if (inHand && playerMirror !== undefined) {
-      for (const position of placementPositions(current)) {
-        choices.push({
-          board: placeMirror(current, position, playerMirror),
-          placed: [{ ...position, mirror: playerMirror }],
-          inHand: false,
-        });
-      }
-    }
-    for (const choice of choices) {
-      for (let row = 0; row < board.height; row++) {
-        const result = fire(choice.board, row);
-        const newHits = hits + (result.outcome === "goal" ? 1 : 0);
-        const newMoves = [...moves, ...choice.placed, row];
-        const newPaths = [
-          ...paths,
-          result.path.map((p) => `${p.x},${p.y}`).join(" "),
-        ];
-        if (newHits >= goalHits) {
-          const key = [...newPaths].sort().join("|");
-          if (!seen.has(key) && isEssential(board, newMoves, goalHits)) {
-            seen.add(key);
-            yield newMoves;
-          }
-        } else if (newPaths.length < maxShots) {
-          yield* search(
-            result.board,
-            choice.inHand,
-            newHits,
-            newMoves,
-            newPaths,
-          );
-        }
-      }
+  for (const { moves, shots } of eachCompletion(
+    board,
+    maxShots,
+    goalHits,
+    playerMirror,
+  )) {
+    const key = shots.map(pathKey).sort().join("|");
+    if (!seen.has(key) && isEssential(board, moves, goalHits)) {
+      seen.add(key);
+      yield moves;
     }
   }
-  yield* search(board, playerMirror !== undefined, 0, [], []);
+}
+
+/** The cells a shot passes through, in order, as a string. */
+export function pathKey({ path }: ShotResult): string {
+  return path.map((p) => `${p.x},${p.y}`).join(" ");
 }
 
 /**
@@ -175,10 +127,6 @@ export interface AlternativeOptions {
   changes: number;
 }
 
-export interface CellChange extends Position {
-  cell: CellType;
-}
-
 export interface AlternativeChange {
   changes: CellChange[];
   /** The changed board, with the bonus target if the level has one. */
@@ -191,24 +139,13 @@ export interface AlternativeChange {
   randomWinChance: number;
 }
 
-function withCell(board: Board, { x, y, cell }: CellChange): Board {
-  const cells = board.cells.map((row) => [...row]);
-  cells[y][x] = cell;
-  return { ...board, cells };
-}
-
 /** The paths and outcomes of `moves`' shots, or null if a move can't be played. */
 function playedShots(board: Board, moves: readonly Move[]): string | null {
-  try {
-    return playMoves(board, moves)
-      .shots.map(
-        ({ path, outcome }) =>
-          `${path.map((p) => `${p.x},${p.y}`).join(" ")} ${outcome}`,
-      )
-      .join("|");
-  } catch {
-    return null; // the player's mirror would go on a cell that is not empty
-  }
+  const played = tryPlayMoves(board, moves);
+  return (
+    played?.shots.map((shot) => `${pathKey(shot)} ${shot.outcome}`).join("|") ??
+    null
+  );
 }
 
 /**
@@ -241,20 +178,17 @@ export function findAlternativeChanges(
       JSON.stringify(moves),
     ),
   );
-  const cellTypes: CellType[] = ["empty", "mirrorBackslash", "mirrorSlash"];
-  cellTypes.push("wall");
-  if (levelBoard.cells.some((row) => row.includes("breakable"))) {
-    cellTypes.push("breakable");
-  }
-  if (levelBoard.cells.some((row) => row.includes("reflector"))) {
-    cellTypes.push("reflector");
-  }
-  if (
-    levelBoard.cells.some(
-      (row) => row.includes("glassBackslash") || row.includes("glassSlash"),
-    )
-  ) {
-    cellTypes.push("glassBackslash", "glassSlash");
+  const cellTypes: CellType[] = ["empty", ...MIRRORS, "wall"];
+  const pieces: (readonly CellType[])[] = [
+    ["breakable"],
+    ["reflector"],
+    GLASS_MIRRORS,
+  ];
+  // Pieces the level already has may go elsewhere too.
+  for (const piece of pieces) {
+    if (boardHas(levelBoard, piece)) {
+      cellTypes.push(...piece);
+    }
   }
 
   const found: AlternativeChange[] = [];

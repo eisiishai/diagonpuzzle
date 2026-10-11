@@ -5,8 +5,9 @@
 // solution must plan ahead: the changes it makes for later shots. See
 // docs/ROADMAP.md, Difficulty curve.
 
-import { placeMirror, placementPositions } from "../src/game/placement";
+import { placeMirror } from "../src/game/placement";
 import { boardStateKey, fire } from "../src/game/simulate";
+import { mirrorPlacements } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
 import type { Board, MirrorType } from "../src/game/types";
 
@@ -39,13 +40,14 @@ export function randomWinChance(
     }
     const choices: { board: Board; inHand: boolean; weight: number }[] = [];
     if (inHand && playerMirror !== undefined) {
-      const cells = placementPositions(current);
-      choices.push({ board: current, inHand, weight: cells.length ? 0.5 : 1 });
-      for (const cell of cells) {
+      const placements = mirrorPlacements(current, playerMirror);
+      const weight = placements.length ? 0.5 : 1;
+      choices.push({ board: current, inHand, weight });
+      for (const placement of placements) {
         choices.push({
-          board: placeMirror(current, cell, playerMirror),
+          board: placement.board,
           inHand: false,
-          weight: 0.5 / cells.length,
+          weight: 0.5 / placements.length,
         });
       }
     } else {

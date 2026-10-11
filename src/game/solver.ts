@@ -1,4 +1,4 @@
-import { placeMirror, placementPositions } from "./placement";
+import { canPlaceAt, placeMirror, placementPositions } from "./placement";
 import { boardStateKey, fire } from "./simulate";
 import type { ShotResult } from "./simulate";
 import type { Board, MirrorType, Position } from "./types";
@@ -18,12 +18,30 @@ export function shotRows(moves: readonly Move[]): number[] {
 
 /**
  * Plays `moves` from `board`: the result of each shot, in order, and the
- * board after the last move.
+ * board after the last move. Throws if a move places the player's mirror
+ * on a cell that is not empty.
  */
 export function playMoves(
   board: Board,
   moves: readonly Move[],
 ): { shots: ShotResult[]; board: Board } {
+  const played = tryPlayMoves(board, moves);
+  if (played === null) {
+    throw new Error(
+      "A move places the player's mirror on a cell that is not empty",
+    );
+  }
+  return played;
+}
+
+/**
+ * Like playMoves(), but null instead of throwing if a move places the
+ * player's mirror on a cell that is not empty.
+ */
+export function tryPlayMoves(
+  board: Board,
+  moves: readonly Move[],
+): { shots: ShotResult[]; board: Board } | null {
   const shots: ShotResult[] = [];
   let current = board;
   for (const move of moves) {
@@ -31,11 +49,122 @@ export function playMoves(
       const result = fire(current, move);
       shots.push(result);
       current = result.board;
-    } else {
+    } else if (canPlaceAt(current, move)) {
       current = placeMirror(current, move, move.mirror);
+    } else {
+      return null;
     }
   }
   return { shots, board: current };
+}
+
+/**
+ * True if playing `moves` from `board` completes the level: `goalHits` of
+ * its shots reach the goal. Moves after the shot that completes it are not
+ * played. False if a move before that can't be played (the player's mirror
+ * on a cell that is not empty).
+ */
+export function completesLevel(
+  board: Board,
+  moves: readonly Move[],
+  goalHits: number,
+): boolean {
+  let current = board;
+  let hits = 0;
+  for (const move of moves) {
+    if (typeof move !== "number") {
+      if (!canPlaceAt(current, move)) {
+        return false;
+      }
+      current = placeMirror(current, move, move.mirror);
+      continue;
+    }
+    const result = fire(current, move);
+    hits += result.outcome === "goal" ? 1 : 0;
+    if (hits >= goalHits) {
+      return true;
+    }
+    current = result.board;
+  }
+  return false;
+}
+
+/**
+ * Every way to place the player's `mirror` on `board` (a free move, on any
+ * empty cell, in reading order): the move and the board after it. The
+ * searches offer these before each shot while the mirror is in hand.
+ */
+export function mirrorPlacements(
+  board: Board,
+  mirror: MirrorType,
+): { move: Placement; board: Board }[] {
+  return placementPositions(board).map((position) => ({
+    move: { ...position, mirror },
+    board: placeMirror(board, position, mirror),
+  }));
+}
+
+/** A sequence of moves that completes a level, and its shots' results. */
+export interface Completion {
+  moves: Move[];
+  shots: ShotResult[];
+}
+
+/**
+ * Every sequence of moves that completes the level with its last shot,
+ * within `maxShots` shots, depth first: before each shot, the board as it
+ * is first, then (while the player's mirror is in hand) with the mirror
+ * placed on each empty cell; then the rows from the top. Sequences that
+ * play out the same are all listed, so callers remove the ones they count
+ * as the same. Searches all sequences, so keep `maxShots` small, or stop
+ * early.
+ */
+export function* eachCompletion(
+  board: Board,
+  maxShots: number,
+  goalHits = 1,
+  playerMirror?: MirrorType,
+): Generator<Completion> {
+  function* search(
+    current: Board,
+    inHand: boolean,
+    hits: number,
+    moves: Move[],
+    shots: ShotResult[],
+  ): Generator<Completion> {
+    const choices: { board: Board; placed: Move[]; inHand: boolean }[] = [
+      { board: current, placed: [], inHand },
+    ];
+    if (inHand && playerMirror !== undefined) {
+      for (const placement of mirrorPlacements(current, playerMirror)) {
+        choices.push({
+          board: placement.board,
+          placed: [placement.move],
+          inHand: false,
+        });
+      }
+    }
+    for (const choice of choices) {
+      for (let row = 0; row < board.height; row++) {
+        const result = fire(choice.board, row);
+        const newHits = hits + (result.outcome === "goal" ? 1 : 0);
+        const newMoves = [...moves, ...choice.placed, row];
+        const newShots = [...shots, result];
+        if (newHits >= goalHits) {
+          yield { moves: newMoves, shots: newShots };
+        } else if (newShots.length < maxShots) {
+          yield* search(
+            result.board,
+            choice.inHand,
+            newHits,
+            newMoves,
+            newShots,
+          );
+        }
+      }
+    }
+  }
+  yield* search(board, playerMirror !== undefined, 0, [], []);
 }
 
 /** What a level gives the solver to work with besides the board. */
@@ -76,12 +205,12 @@ function search(
       if (!state.inHand || playerMirror === undefined) {
         continue;
       }
-      for (const position of placementPositions(state.board)) {
+      for (const placement of mirrorPlacements(state.board, playerMirror)) {
         const variant = {
-          board: placeMirror(state.board, position, playerMirror),
+          board: placement.board,
           hits: state.hits,
           inHand: false,
-          moves: [...state.moves, { ...position, mirror: playerMirror }],
+          moves: [...state.moves, placement.move],
         };
         const key = stateKey(variant);
         if (!seen.has(key)) {

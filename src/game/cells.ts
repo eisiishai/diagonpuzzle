@@ -1,4 +1,4 @@
-import type { CellType, Direction } from "./types";
+import type { BounceKind, CellType, Direction, MirrorType } from "./types";
 
 /**
  * What happens to a pellet that enters a cell. `becomes` is set when the hit
@@ -72,3 +72,45 @@ export const CELL_BEHAVIORS: Record<
   // for the rest of the level.
   bonus: () => ({ kind: "stop", reason: "bonus", becomes: "empty" }),
 };
+
+/** The mirrors, which flip between "\\" and "/" when hit. */
+export const MIRRORS: readonly MirrorType[] = [
+  "mirrorBackslash",
+  "mirrorSlash",
+];
+
+/** The glass mirrors, which turn the pellet once and then shatter. */
+export const GLASS_MIRRORS: readonly CellType[] = [
+  "glassBackslash",
+  "glassSlash",
+];
+
+export function isMirror(cell: CellType): cell is MirrorType {
+  return MIRRORS.includes(cell as MirrorType);
+}
+
+export function isGlassMirror(cell: CellType): boolean {
+  return GLASS_MIRRORS.includes(cell);
+}
+
+/**
+ * What turns the pellet in each cell type that can (for its sound and the
+ * beam's drawing); null for the others. Every cell type needs an entry.
+ */
+const BOUNCE_KINDS: Record<CellType, BounceKind | null> = {
+  empty: null,
+  mirrorBackslash: "mirror",
+  mirrorSlash: "mirror",
+  glassBackslash: "glass",
+  glassSlash: "glass",
+  reflector: "reflector",
+  wall: null,
+  breakable: null,
+  goal: null,
+  bonus: null,
+};
+
+/** What kind of bounce a pellet turned by `cell` makes; null if it can't turn it. */
+export function bounceKind(cell: CellType): BounceKind | null {
+  return BOUNCE_KINDS[cell];
+}

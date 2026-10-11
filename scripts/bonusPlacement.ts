@@ -3,19 +3,19 @@
 // after changing a cell or two of the board. Rows and columns are 0-based
 // here, like the solver's.
 
+import { cellPositions, withCell } from "../src/game/board";
+import type { CellChange } from "../src/game/board";
 import { withBonuses } from "../src/game/bonus";
 import { boardStateKey, fire } from "../src/game/simulate";
+import type { ShotResult } from "../src/game/simulate";
 import {
-  canPlaceAt,
-  placeMirror,
-  placementPositions,
-} from "../src/game/placement";
-import {
+  mirrorPlacements,
   playMoves,
   shotRows,
   solve,
   solveBonusMoves,
   solveMoves,
+  tryPlayMoves,
 } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType, Position } from "../src/game/types";
@@ -39,10 +39,6 @@ export interface PlacementOptions {
   uses?: readonly CellType[];
 }
 
-export interface CellChange extends Position {
-  cell: CellType;
-}
-
 export interface Placement {
   /** Board changes made before placing the bonus target. */
   changes: CellChange[];
@@ -64,10 +60,24 @@ const CHANGE_CELLS: readonly CellType[] = [
   "breakable",
 ];
 
-function withCell(board: Board, { x, y, cell }: CellChange): Board {
-  const cells = board.cells.map((row) => [...row]);
-  cells[y][x] = cell;
-  return { ...board, cells };
+/**
+ * The cells that playing `moves` reaches, keyed "x,y": the paths of its
+ * `shots` and where it places the player's mirror.
+ */
+function reachedCells(
+  moves: readonly Move[],
+  shots: readonly ShotResult[],
+): Set<string> {
+  const cells = new Set<string>();
+  for (const move of moves) {
+    if (typeof move !== "number") {
+      cells.add(`${move.x},${move.y}`);
+    }
+  }
+  for (const { path } of shots) {
+    path.forEach(({ x, y }) => cells.add(`${x},${y}`));
+  }
+  return cells;
 }
 
 /**
@@ -104,12 +114,12 @@ export function firstEntries(
     const choices = [...frontier];
     for (const state of frontier) {
       if (state.inHand && playerMirror !== undefined) {
-        for (const position of placementPositions(state.board)) {
+        for (const placement of mirrorPlacements(state.board, playerMirror)) {
           choices.push({
-            board: placeMirror(state.board, position, playerMirror),
+            board: placement.board,
             hits: state.hits,
             inHand: false,
-            untouched: position,
+            untouched: { x: placement.move.x, y: placement.move.y },
           });
         }
       }
@@ -192,26 +202,13 @@ export function findPlacements(
 
   const evaluate = (board: Board, changes: CellChange[]) => {
     // The par solution must still complete the level; note where it goes.
-    const used = new Set<string>();
-    let current = board;
-    let hits = 0;
-    for (const move of par) {
-      if (typeof move !== "number") {
-        if (!canPlaceAt(current, move)) {
-          return;
-        }
-        current = placeMirror(current, move, move.mirror);
-        used.add(`${move.x},${move.y}`);
-        continue;
-      }
-      const result = fire(current, move);
-      result.path.forEach((p) => used.add(`${p.x},${p.y}`));
-      hits += result.outcome === "goal" ? 1 : 0;
-      current = result.board;
-    }
-    if (hits < goalHits) {
+    const played = tryPlayMoves(board, par);
+    const hits = (shots: ShotResult[]) =>
+      shots.filter((shot) => shot.outcome === "goal").length;
+    if (played === null || hits(played.shots) < goalHits) {
       return;
     }
+    const used = reachedCells(par, played.shots);
 
     // Cells for the bonus target first: most changed boards have none, and
     // checking that a change keeps par is the slow part.
@@ -262,25 +259,10 @@ export function findPlacements(
   };
 
   // Cells the par solution reaches: its paths and the player's mirror.
-  const parCells = new Set<string>();
-  let parBoard = start;
-  for (const move of par) {
-    if (typeof move === "number") {
-      const result = fire(parBoard, move);
-      result.path.forEach(({ x, y }) => parCells.add(`${x},${y}`));
-      parBoard = result.board;
-    } else {
-      parCells.add(`${move.x},${move.y}`);
-      parBoard = placeMirror(parBoard, move, move.mirror);
-    }
-  }
-  const changeable: Position[] = [];
-  start.cells.forEach((row, y) =>
-    row.forEach((cell, x) => {
-      if (cell !== "goal" && !parCells.has(`${x},${y}`)) {
-        changeable.push({ x, y });
-      }
-    }),
+  const parCells = reachedCells(par, playMoves(start, par).shots);
+  const changeable = cellPositions(
+    start,
+    (cell, { x, y }) => cell !== "goal" && !parCells.has(`${x},${y}`),
   );
   const search = (board: Board, changes: CellChange[], from: number) => {
     evaluate(board, changes);

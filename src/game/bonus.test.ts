@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseLevel } from "../levels/parse";
-import { bonusPositions, withBonuses } from "./bonus";
+import { bonusIndexAt, bonusPositions, withBonuses } from "./bonus";
 
 // Saved progress identifies a collected bonus target by its index in
 // bonusPositions(), so the order must stay row by row, left to right.
@@ -16,6 +16,21 @@ describe("bonusPositions", () => {
       { x: 3, y: 0 },
       { x: 0, y: 1 },
     ]);
+  });
+});
+
+describe("bonusIndexAt", () => {
+  it("gives a bonus target's index in reading order", () => {
+    expect(bonusIndexAt(BOARD, { x: 1, y: 0 })).toBe(0);
+    expect(bonusIndexAt(BOARD, { x: 3, y: 0 })).toBe(1);
+    expect(bonusIndexAt(BOARD, { x: 0, y: 1 })).toBe(2);
+  });
+
+  it("throws for a cell without a bonus target", () => {
+    expect(() => bonusIndexAt(BOARD, { x: 0, y: 0 })).toThrow(
+      "No bonus target at (0, 0)",
+    );
+    expect(() => bonusIndexAt(BOARD, { x: 3, y: 1 })).toThrow();
   });
 });
 

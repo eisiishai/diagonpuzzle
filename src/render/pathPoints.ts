@@ -1,3 +1,4 @@
+import { bounceKind } from "../game/cells";
 import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
 import type { BounceKind, CellType } from "../game/types";
@@ -46,17 +47,12 @@ export function pathPoints(result: ShotResult): PathPoint[] {
       const reversed = delta.x === -back.x && delta.y === -back.y;
       const offset = reversed ? REFLECTOR_RADIUS : 0;
       const bounce = step.directionIn !== step.directionOut;
-      // A mirror flips when hit; a glass mirror becomes empty.
-      const bounceKind: BounceKind = reversed
-        ? "reflector"
-        : step.becomes === "empty"
-          ? "glass"
-          : "mirror";
+      const kind = bounce ? bounceKind(step.cell) : null;
       return {
         x: step.x - delta.x * offset,
         y: step.y - delta.y * offset,
         bounce,
-        ...(bounce && { bounceKind }),
+        ...(kind && { bounceKind: kind }),
         ...(step.becomes && { becomes: step.becomes }),
       };
     }),
