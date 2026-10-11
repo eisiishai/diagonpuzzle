@@ -350,6 +350,18 @@ the polyline rule and is checked on a phone. In suggested order:
     a commit changes the game; doc-only commits skip it. The full set
     runs by hand before a release and after changes to drawing, levels or
     block types
+- [ ] Browser tests for interrupting a shot, in the quick set
+  (`e2e/game.e2e.ts`): while the pellet is still moving, restart (R and
+  the button), leave with Menu/Esc, use the hidden skip (Shift+N), and
+  fire again (ignored until the shot finishes). Switching scenes or
+  resetting the board mid-animation is where errors from destroyed
+  objects or leftover effects would appear, and only a browser shows
+  them
+  - Check after each: no console error, the expected screen, and after a
+    restart the starting board both by the rules and as drawn (`shown` in
+    the test hook), with no shot or goal hit counted
+  - Restarting mid-shot is on the manual checklist in
+    `docs/WORKFLOW.md`, *2. Check*; take it off once covered here
 
 ## Discarded ideas
 
