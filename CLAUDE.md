@@ -25,6 +25,13 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run bonus -- --level N [options]` — finds cells for a level's bonus
   target `*` that take the wanted number of shots, optionally after small
   board changes that keep par; `--help` lists the options
+- `npm run e2e` — browser smoke tests (Playwright, headless Chromium,
+  `e2e/`): every screen and flow at desktop and phone size, about 30 s;
+  not part of `npm run build`. Run after changes to scenes, input or
+  dependencies
+- `npm run screenshots` — pictures of the main screens in `screenshots/`
+  (git-ignored). Look at them after a visual change; they don't show
+  phone-only GPU bugs, so phone checks stay
 - `npm run solutions` — writes `docs/solutions.local.md` (git-ignored, also
   run by `npm run build`): every level's grid and solution, for the user to
   look up. Don't commit or publish it.
@@ -55,7 +62,10 @@ src/
                 game's progress and how play changes it, tested) and
                 localStorage helpers
   scenes/       TitleScene and GameScene; main.ts switches between them
+  testHook.ts   the smoke tests' view of the game (scene, buttons, level
+                state with screen positions), loaded only with ?e2e
 scripts/        development tools run with tsx (not part of the game)
+e2e/            browser smoke tests (Playwright) and their helpers
 ```
 
 ## Conventions

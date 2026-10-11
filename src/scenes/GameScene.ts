@@ -15,6 +15,7 @@ import { Celebration } from "../render/Celebration";
 import { fitToScreen } from "../render/fitToScreen";
 import { COLORS, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
+import type { LevelTestState } from "../testState";
 import type { Scene } from "./Scene";
 import { STAR, completionMessage, introMessage } from "./scoreText";
 
@@ -307,6 +308,30 @@ export class GameScene extends Container implements Scene {
     this.boardView.update(deltaMs);
     this.surround.alpha = this.boardView.panelAlpha;
     this.celebration.update(deltaMs);
+  }
+
+  /** The level's state for the browser smoke tests; see src/testHook.ts. */
+  testState(): LevelTestState {
+    const { session, boardView } = this;
+    const center = (x: number, y: number) => {
+      const { x: px, y: py } = boardView.toGlobal(boardView.cellCenter(x, y));
+      return { x: px, y: py };
+    };
+    return {
+      number: this.options.levelNumber,
+      phase: session.phase,
+      shots: session.shots,
+      hits: session.hits,
+      goalHits: session.goalHits,
+      selectedRow: session.selectedRow,
+      mirrorInHand: session.mirrorInHand,
+      placementPreview: this.placement.preview?.position ?? null,
+      message: this.messageText.text,
+      launchers: session.board.cells.map((_, y) => center(-1, y)),
+      cells: session.board.cells.map((row, y) =>
+        row.map((type, x) => ({ type, center: center(x, y) })),
+      ),
+    };
   }
 
   /** Keyboard selection: a soft tick when the selected row changes. */

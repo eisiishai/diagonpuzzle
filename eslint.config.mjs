@@ -4,7 +4,7 @@ import prettier from "eslint-plugin-prettier/recommended";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  globalIgnores(["dist"]),
+  globalIgnores(["dist", "dist-e2e", "playwright-report", "test-results"]),
   {
     extends: [
       js.configs.recommended,

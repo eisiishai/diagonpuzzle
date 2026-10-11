@@ -17,6 +17,15 @@ npm install          # also enables the git hooks (see Versions)
 npm run build        # confirms everything works
 ```
 
+For the browser smoke tests (`npm run e2e`, see *2. Check*) also install
+Playwright's Chromium and the fonts it needs. With nvm, `sudo` can't find
+`npx`, so the last line installs the fonts with apt directly:
+
+```bash
+npx playwright install chromium
+sudo apt-get install fonts-liberation fonts-noto-color-emoji fonts-freefont-ttf
+```
+
 Keep the project on the Linux filesystem (e.g. `~/claude/diagonpuzzle`), not
 under `/mnt/c` or another Windows drive: it is much faster there, and Vite's
 file watching works reliably.
@@ -105,6 +114,8 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm test` | Unit tests (Vitest) |
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
+| `npm run e2e` | Browser smoke tests (Playwright, headless Chromium): every screen and flow, at desktop and phone size. About 30 s. Not part of `npm run build`. |
+| `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
 `npm run build` is the full check. **It runs automatically before every
 commit** (see *3. Commit*); run it yourself any time to check earlier.
@@ -114,10 +125,25 @@ parser, saved progress and path geometry. Every level is checked against its
 declared `minShots` with the solver, and levels 1–2 must keep their two-shot
 setup route.
 
-What is checked only by hand: drawing, animation, sound, input and layout.
-Before committing a change that affects them, play it in `npm run dev`:
-fire a few shots, restart (also while the pellet is moving), complete a level,
-and return to the title screen.
+The smoke tests (`e2e/`) build the game into `dist-e2e/` (leaving `dist/`
+alone), serve it with `vite preview` and play it in headless Chromium: the
+title screen and level list, completing levels with the mouse, keyboard and
+touch, restart, the player's mirror, both skips, progress kept after a
+reload, the game with localStorage blocked, and everything fitting on a
+phone screen. Any console error or uncaught exception fails a test. They
+find buttons, launchers and cells through a test hook (`src/testHook.ts`),
+loaded only when the URL has `?e2e`, and play levels by the solver's
+solutions. They run with reduced motion, and at pixel density 1 on the
+phone: the browser draws in software, and the phone's real density made it
+too slow. Run them before a release and after changes to scenes, input or
+dependencies; a failure leaves a trace to open with `npx playwright
+show-trace` (the path is printed).
+
+What is checked only by hand: how drawing, animation and sound look and
+sound, and anything only a real phone shows (such as the GPU line bugs in
+CLAUDE.md). Before committing a change that affects them, play it in
+`npm run dev`: fire a few shots, restart (also while the pellet is moving),
+complete a level, and return to the title screen.
 
 ## 3. Commit
 
@@ -318,5 +344,3 @@ Not set up, and not needed at the current size:
 
 - **`npm run deploy`** uploading `dist/` from WSL (e.g. with `rsync` or
   `lftp`), if releases become frequent. Depends on what the host supports.
-- **Browser smoke tests** (e.g. Playwright), if manual checks of the screens
-  become a burden.

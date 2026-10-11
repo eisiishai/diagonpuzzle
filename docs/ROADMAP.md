@@ -319,63 +319,28 @@ the polyline rule and is checked on a phone. In suggested order:
   blocks grow: each placement option multiplies the choices before every
   shot, and the tests check every level with the solver. All tests take
   under 1 s at v1.0, so not a problem yet
-- [ ] Automated browser smoke tests with Playwright. Worth doing now
-  rather than waiting for the UI to grow: they also let Claude take and
-  look at screenshots of the running game, so visual changes (e.g. the
-  rotation cursor) reach the user already checked for obvious breakage.
-  They catch crashes, broken flows and layout, not how things look in
-  detail or sound, so the desktop and phone checks stay. Possible scope:
-  - load the built game (`vite preview`) in headless Chromium and fail on
-    any console error or uncaught exception
-  - title screen: the level list appears; *Continue* and a level button
-    open a level
-  - play a level: fire with the keyboard and with a click on a launcher,
-    restart (R), and complete level 1 by its known solution to reach the
-    *Next level* button
-  - player mirror: place it with the mouse and with the keyboard
-  - skips: the skip button's two presses, and the hidden skip (Shift+N)
-  - saved progress: reload the page and see the completed level kept;
-    with localStorage blocked, the game still starts
-  - a phone-sized viewport with touch input, for layout and taps
-  - Installed by the user (WSL Ubuntu):
-    ```bash
-    npm i -D @playwright/test                  # dev dependency only
-    npx playwright install chromium            # ~150–300 MB into ~/.cache/ms-playwright
-    sudo npx playwright install-deps chromium  # Ubuntu libraries via apt
-    ```
-    Headless Chromium needs no display or GPU in WSL; PixiJS then draws
-    with software WebGL (SwiftShader), slower but working. Recent
-    `@playwright/test` versions run no install scripts, so the
-    `allowScripts` setting in `package.json` doesn't affect it
-  - Project side: `playwright.config.ts` and a separate `npm run e2e`
-    against `vite preview` (not part of `npm run build`, since it needs a
-    browser); a small test-only hook, e.g. `window.__diagonTest`, enabled
-    only by a URL parameter such as `?e2e`, that reports the current
-    scene and the positions of buttons, launchers and cells (the game is
-    one canvas, so tests can't find things by text; clicking at positions
-    computed from layout code would break more easily); reduced motion
-    emulated, which the game already respects, so tests don't wait for
-    animations; Chromium's autoplay policy relaxed so Web Audio starts
-    without a gesture. A first batch of about 8–10 tests
-  - Benefits: Claude can check its own visual work from screenshots;
-    crashes and console errors caught in the scenes and `main.ts`, which
-    unit tests don't reach; safer refactoring of `GameScene` and
-    `TitleScene` (mirror rotation changes the placement cursor); layout
-    and taps checked at phone size; a quick check after PixiJS, Vite or
-    TypeScript upgrades
-  - Risks and costs: phone GPU bugs (the stray lines the polyline rule
-    guards against) don't show with software rendering, so phone checks
-    stay; sound can't be judged, at most that audio starts without
-    errors; only "renders without breaking" is tested (pixel-by-pixel
-    screenshot comparison breaks on every intended visual change, so not
-    at first); animations, transitions and the 5 s save interval can make
-    tests flaky, avoided by reduced motion and waiting on states the hook
-    reports instead of fixed sleeps; the hook ships in the build, small
-    and off by default; upkeep: `npx playwright install` after upgrading
-    Playwright, and test fixes when the UI changes; outside the build the
-    tests can go stale unless run, e.g. before each release. Low supply
-    chain risk: a widely used, Microsoft-maintained dev dependency, not
-    part of the shipped game
+- [x] Automated browser smoke tests with Playwright (`npm run e2e`,
+  `e2e/`), and `npm run screenshots` for looking over the main screens.
+  Run and details in `docs/WORKFLOW.md`, *2. Check*. Built on 2026-10-11:
+  - 13 tests at desktop and phone size, about 30 s: the title screen and
+    level list, *Play*, *Continue* and level buttons, completing level 1
+    with the mouse, keyboard and taps, restart, the player's mirror placed
+    with the mouse, keyboard and two taps, both skips, progress after a
+    reload, localStorage blocked, and everything fitting a phone screen.
+    Any console error or uncaught exception fails a test
+  - A test hook (`src/testHook.ts`, a separate file loaded only with
+    `?e2e`) reports the scene, its buttons and the level's state with
+    screen positions; tests play levels by the solver's solutions, so they
+    keep working when levels change
+  - Limits that remain: rendering is in software, so phone GPU bugs (the
+    stray lines the polyline rule guards against) don't show, and phone
+    checks stay; sound is only checked for not causing errors; nothing
+    compares pictures, the screenshots are for looking at. Software
+    rendering is slow: the tests run 4 browsers at once and the phone at
+    pixel density 1 (2.6 ran the title screen at 4–5 frames a second,
+    which slows the game's own time)
+  - Not part of `npm run build`: run them before a release and after
+    changes to scenes, input or dependencies, or they can go stale
 
 ## Discarded ideas
 

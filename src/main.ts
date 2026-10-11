@@ -183,6 +183,12 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
     });
   };
 
+  // The browser smoke tests' view of the game (e2e/); not loaded otherwise.
+  if (new URLSearchParams(window.location.search).has("e2e")) {
+    const { installTestHook } = await import("./testHook");
+    installTestHook(() => scene);
+  }
+
   showTitle();
   window.addEventListener("resize", layout);
   bindKeyboard((action) => scene?.handleAction(action));

@@ -76,6 +76,8 @@ export class Button extends Container {
   constructor(options: ButtonOptions) {
     super();
     this.options = options;
+    // PixiJS's own name for a container; the test hook finds buttons by it.
+    this.label = options.label;
     this.variant = options.variant ?? "secondary";
     this.labelText = new Text({
       text: options.label,
@@ -144,6 +146,7 @@ export class Button extends Container {
   }
 
   setLabel(label: string): void {
+    this.label = label;
     this.labelText.text = label;
     this.redraw();
   }
