@@ -67,6 +67,17 @@ it.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
 );
 
 describe("findAlternativeChanges", () => {
+  it("refuses a level with no solution within par", () => {
+    expect(() =>
+      findAlternativeChanges(parseLevel(". #\n# G"), {
+        minShots: 1,
+        goalHits: 1,
+        extraShots: 1,
+        changes: 1,
+      }),
+    ).toThrow("no solution within 1 shots");
+  });
+
   it("keeps par, the par solution and the bonus shots of level 9", () => {
     const level = LEVELS[8];
     const levelBoard = parseLevel(level.grid);

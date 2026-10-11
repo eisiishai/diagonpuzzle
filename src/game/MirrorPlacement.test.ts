@@ -127,6 +127,21 @@ describe("MirrorPlacement with the keyboard", () => {
     expect(placement.choosingByKeyboard).toBe(false);
   });
 
+  it("moves left and right, stopping at the board's edges", () => {
+    const { session, placement } = newPlacement();
+    session.select(1);
+    placement.start();
+    expect(placement.preview?.position).toEqual({ x: 0, y: 1 });
+    expect(placement.key("left")).toBe("moved");
+    expect(placement.preview?.position).toEqual({ x: 0, y: 1 });
+    placement.key("right");
+    placement.key("right");
+    placement.key("right");
+    expect(placement.preview?.position).toEqual({ x: 2, y: 1 });
+    placement.key("left");
+    expect(placement.preview?.position).toEqual({ x: 1, y: 1 });
+  });
+
   it("cancels, hiding the cursor", () => {
     const { session, placement } = newPlacement();
     placement.start();

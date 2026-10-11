@@ -178,8 +178,8 @@ covered or not: in the Windows browser,
 `\\wsl.localhost\<distro>\home\<user>\…\diagonpuzzle\coverage\index.html`.
 
 On 2026-10-11 (v1.17) the rules were nearly fully covered: `src/levels/`
-and `src/save/` 100%, `src/game/` 99% of statements and 97% of
-branches. The PixiJS views, scenes and audio playback are mostly
+and `src/save/` 100%, `src/game/` 99% of statements and 98% of
+branches (what is left is the unreachable `loop` guard and a fallback). The PixiJS views, scenes and audio playback are mostly
 uncovered, as expected: the browser smoke tests run them, and the
 coverage report doesn't see those. Neither do the level design tools'
 command-line parts (`scripts/levels.ts`, `generate.ts` and the like),

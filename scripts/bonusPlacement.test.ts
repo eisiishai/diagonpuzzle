@@ -25,6 +25,17 @@ describe("firstEntries", () => {
 });
 
 describe("findPlacements", () => {
+  it("refuses a level with no solution within par", () => {
+    expect(() =>
+      findPlacements(parseLevel(". #\n# G"), {
+        minShots: 1,
+        goalHits: 1,
+        bonusShots: 2,
+        changes: 0,
+      }),
+    ).toThrow("no solution within 1 shots");
+  });
+
   it.each([
     [3, 0],
     [13, 1],

@@ -365,9 +365,9 @@ lab page on 2026-10-11:
     cells change as the pellet reaches them, then the shot finishes);
     the board it leaves is now checked after every move by the browser
     smoke tests' level play-through;
-    `placementPositions()`, the formatting helpers in
-    `scripts/levelAnalysis.ts` and the title screen's menu choices are
-    small enough to leave
+    `placementPositions()` and the title screen's menu choices are
+    small enough to leave (`scripts/levelAnalysis.ts`'s `describeShot()`
+    and `rowList()` got tests with the coverage gaps below)
 - [x] Versioned uploads: the build puts the game in `dist/<version>/` and
   a main page in `dist/index.html` that plays it through a `<base>` tag,
   so the site's main address plays the newest upload and older version
@@ -397,6 +397,14 @@ lab page on 2026-10-11:
   the rules are nearly fully covered (`src/game/` 97% of branches,
   `src/levels/` and `src/save/` 100%); drawing, scenes and audio are
   covered by the browser smoke tests instead
+  - [x] Tests for the gaps it showed that were worth closing: the
+    keyboard listener (used keys don't scroll the page; unbinding),
+    the cursor's left arrow, random-play odds with the mirror in hand
+    and no empty cell, the generator's seed 0, the level tools'
+    "no solution within par" errors, and `describeShot()` and
+    `rowList()`. Left uncovered on purpose: Web Audio synthesis, the
+    unreachable `loop` guard and empty path, and the reduced-motion
+    query read once on loading
   - [ ] Optional: coverage from the browser smoke tests too (Chromium's
     coverage through Playwright, mapped to the sources with e.g.
     `monocart-coverage-reports`), to see drawing, scene and audio code

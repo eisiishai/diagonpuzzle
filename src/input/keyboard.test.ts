@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { keyAction } from "./keyboard";
-import type { KeyPress } from "./keyboard";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { bindKeyboard, keyAction } from "./keyboard";
+import type { GameAction, KeyPress } from "./keyboard";
 
 function press(key: string, extra: Partial<KeyPress> = {}) {
   return keyAction({
@@ -54,5 +54,48 @@ describe("keyAction", () => {
     expect(press("N", { shiftKey: true, repeat: true })).toEqual({
       used: true,
     });
+  });
+});
+
+describe("bindKeyboard", () => {
+  // The tests run in Node: a bare event target stands in for the window.
+  const fakeWindow = () => {
+    const target = new EventTarget();
+    vi.stubGlobal("window", target);
+    return target;
+  };
+  const keydown = (target: EventTarget, key: string) => {
+    const event = Object.assign(new Event("keydown", { cancelable: true }), {
+      key,
+      shiftKey: false,
+      ctrlKey: false,
+      altKey: false,
+      metaKey: false,
+      repeat: false,
+    });
+    target.dispatchEvent(event);
+    return event;
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("passes actions on, and stops used keys from scrolling the page", () => {
+    const target = fakeWindow();
+    const actions: GameAction[] = [];
+    bindKeyboard((action) => actions.push(action));
+    expect(keydown(target, "ArrowDown").defaultPrevented).toBe(true);
+    expect(keydown(target, "Tab").defaultPrevented).toBe(false);
+    expect(actions).toEqual(["selectDown"]);
+  });
+
+  it("stops listening when unbound", () => {
+    const target = fakeWindow();
+    const actions: GameAction[] = [];
+    const unbind = bindKeyboard((action) => actions.push(action));
+    unbind();
+    expect(keydown(target, "Enter").defaultPrevented).toBe(false);
+    expect(actions).toEqual([]);
   });
 });

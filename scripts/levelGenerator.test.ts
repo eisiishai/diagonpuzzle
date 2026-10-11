@@ -34,6 +34,12 @@ describe("createRandom", () => {
     expect(numbers).toEqual(Array.from({ length: 100 }, () => b()));
     expect(numbers.every((n) => n >= 0 && n < 1)).toBe(true);
   });
+
+  it("works from seed 0, which xorshift alone would keep at 0", () => {
+    const random = createRandom(0);
+    const numbers = Array.from({ length: 10 }, () => random());
+    expect(new Set(numbers).size).toBe(10);
+  });
 });
 
 describe("randomBoard", () => {

@@ -28,6 +28,15 @@ describe("randomWinChance", () => {
     expect(randomWinChance(board, 1)).toBe(0);
     expect(randomWinChance(board, 1, 1, "mirrorBackslash")).toBe(0.125);
   });
+
+  it("keeps the player's mirror when no cell is empty", () => {
+    // Row 0 wins whether or not the mirror is in hand: 1 of 2 rows.
+    const board = parseLevel(String.raw`
+      G
+      #
+    `);
+    expect(randomWinChance(board, 1, 1, "mirrorSlash")).toBe(0.5);
+  });
 });
 
 describe("foresight", () => {

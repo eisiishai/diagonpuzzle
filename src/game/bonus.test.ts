@@ -30,4 +30,9 @@ describe("withBonuses", () => {
   it("removes all of them by default", () => {
     expect(bonusPositions(withBonuses(BOARD))).toEqual([]);
   });
+
+  it("returns a board without bonus targets as it is", () => {
+    const board = parseLevel(". G");
+    expect(withBonuses(board)).toBe(board);
+  });
 });
