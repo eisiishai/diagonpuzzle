@@ -63,6 +63,22 @@ const CELL_DRAWERS: Record<CellType, CellDrawer> = {
       join: "round",
     });
   },
+  reflector: (g, half) => {
+    // A round retroreflector: a glass ring around the three facets of a
+    // corner cube, which send light back the way it came. The beam turns
+    // back at the ring (REFLECTOR_RADIUS in pathPoints.ts).
+    const outer = half * 0.6;
+    g.circle(0, 0, outer)
+      .fill(COLORS.panel)
+      .stroke({ width: 3, color: COLORS.glass });
+    const facet = outer * 0.78;
+    for (const angle of [-Math.PI / 2, Math.PI / 6, (Math.PI * 5) / 6]) {
+      g.moveTo(0, 0).lineTo(Math.cos(angle) * facet, Math.sin(angle) * facet);
+    }
+    g.stroke({ width: 1.5, color: COLORS.glassHighlight, cap: "round" })
+      .circle(0, 0, half * 0.1)
+      .fill(COLORS.glassHighlight);
+  },
   bonus: (g, half) => {
     // A prism gem: a hexagon cut into facets of every bonus colour around a
     // bright core. It turns slowly, so the colours swirl.

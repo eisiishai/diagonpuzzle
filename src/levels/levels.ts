@@ -307,6 +307,33 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . % \ .
     `,
   },
+  {
+    id: "return-trip",
+    name: "Return trip",
+    minShots: 1,
+    bonusShots: 2,
+    music: "afterglow",
+    grid: String.raw`
+      . \ / . .
+      . @ * # .
+      . / . . G
+      . \ . . .
+    `,
+  },
+  {
+    id: "there-and-back",
+    name: "There and back",
+    minShots: 2,
+    bonusShots: 3,
+    music: "afterglow",
+    grid: String.raw`
+      \ . . . \ *
+      . / . . . .
+      \ . . @ . .
+      . . # . @ .
+      . / . / . G
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
@@ -326,6 +353,7 @@ export const CHAPTERS: readonly ChapterDefinition[] = [
   { name: "Flip tricks", firstLevel: "double-take" },
   { name: "Breakable walls", firstLevel: "breakthrough" },
   { name: "Your mirror", firstLevel: "your-move" },
+  { name: "Reflectors", firstLevel: "return-trip" },
 ];
 
 /** A chapter's levels: indices `start` up to, not including, `end`. */

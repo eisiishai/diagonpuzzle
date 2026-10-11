@@ -72,17 +72,23 @@ export interface IntroFacts {
   goalHits: number;
   /** The level has breakable walls. */
   hasBreakable: boolean;
+  /** The level has reflectors. */
+  hasReflector: boolean;
 }
 
 /**
  * The message shown when a level starts or restarts: about the newest thing
- * in it, in this order: a bonus target to find, the player's mirror, a goal
- * needing several hits, breakable walls; else how to play.
+ * in it, in this order: a bonus target to find, reflectors, the player's
+ * mirror, a goal needing several hits, breakable walls; else how to play.
  */
 export function introMessage(facts: IntroFacts): string {
-  const { bonusToFind, playerMirror, goalHits, hasBreakable } = facts;
+  const { bonusToFind, playerMirror, goalHits, hasBreakable, hasReflector } =
+    facts;
   if (bonusToFind) {
     return "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
+  }
+  if (hasReflector) {
+    return "Round reflectors send the pellet straight back, into the mirrors it has just flipped.";
   }
   if (playerMirror) {
     const symbol = playerMirror === "mirrorSlash" ? "/" : "\\";

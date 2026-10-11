@@ -52,7 +52,12 @@ describe("levelListRow", () => {
 });
 
 describe("introMessage", () => {
-  const plain = { bonusToFind: false, goalHits: 1, hasBreakable: false };
+  const plain = {
+    bonusToFind: false,
+    goalHits: 1,
+    hasBreakable: false,
+    hasReflector: false,
+  };
 
   it("explains how to play on a plain level", () => {
     expect(introMessage(plain)).toContain("Aim with ↑/↓");
@@ -65,8 +70,18 @@ describe("introMessage", () => {
         playerMirror: "mirrorSlash",
         goalHits: 2,
         hasBreakable: true,
+        hasReflector: true,
       }),
     ).toContain("bonus target");
+    expect(
+      introMessage({
+        ...plain,
+        playerMirror: "mirrorSlash",
+        goalHits: 2,
+        hasBreakable: true,
+        hasReflector: true,
+      }),
+    ).toContain("reflectors");
     expect(
       introMessage({
         ...plain,

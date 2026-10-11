@@ -12,6 +12,7 @@ const SIZES = {
   phone: { width: 412, height: 839 },
 };
 const YOUR_MOVE = 14; // the first level with the player's mirror
+const RETURN_TRIP = 18; // the first level with a reflector
 
 for (const [device, size] of Object.entries(SIZES)) {
   const shoot = (game: Game, name: string) =>
@@ -45,6 +46,16 @@ for (const [device, size] of Object.entries(SIZES)) {
       await game.waitForLevel(YOUR_MOVE + 1);
       await game.page.keyboard.press("p");
       await shoot(game, "level-15-placing");
+    });
+
+    test("reflector", async ({ game }) => {
+      await game.seedCompleted(RETURN_TRIP);
+      await game.open();
+      await game.press(`${RETURN_TRIP + 1}. `);
+      await game.waitForLevel(RETURN_TRIP + 1);
+      await shoot(game, "level-19-start");
+      await game.play(solution(RETURN_TRIP), "mouse");
+      await shoot(game, "level-19-complete");
     });
 
     test("last level", async ({ game }) => {

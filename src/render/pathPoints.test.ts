@@ -39,6 +39,16 @@ describe("pathPoints", () => {
     });
   });
 
+  it("turns back at a reflector's near side", () => {
+    expect(points(". @ G", 0)).toEqual([
+      { x: -1, y: 0, bounce: false },
+      { x: 0, y: 0, bounce: false },
+      { x: 0.7, y: 0, bounce: true },
+      { x: 0, y: 0, bounce: false },
+      { x: -1, y: 0, bounce: false },
+    ]);
+  });
+
   it("stops at the near edge of a wall", () => {
     expect(lastPoint(". # G", 0)).toEqual({ x: 0.5, y: 0, bounce: false });
   });

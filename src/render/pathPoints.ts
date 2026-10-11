@@ -2,6 +2,12 @@ import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
 import type { CellType } from "../game/types";
 
+/**
+ * Where a reflector sends the beam back: this far from its cell's centre, in
+ * cells, at the ring drawn in cellGraphics.ts.
+ */
+export const REFLECTOR_RADIUS = 0.3;
+
 export interface PathPoint {
   /** Board coordinates in cells; may be fractional or outside the board. */
   x: number;
@@ -21,7 +27,8 @@ export interface PathPoint {
  * The points the pellet travels through, in board cell coordinates: from the
  * launcher (x = -1), through the centre of each cell it enters, to where it
  * ends — one cell past the edge when it exits, the near edge of a wall when
- * it is blocked.
+ * it is blocked. Where it is sent straight back (a reflector), the point is
+ * at the reflector's near side instead of its centre.
  */
 export function pathPoints(result: ShotResult): PathPoint[] {
   const { path, outcome } = result;
@@ -31,12 +38,18 @@ export function pathPoints(result: ShotResult): PathPoint[] {
 
   const points: PathPoint[] = [
     { x: -1, y: path[0].y, bounce: false },
-    ...path.map((step) => ({
-      x: step.x,
-      y: step.y,
-      bounce: step.directionIn !== step.directionOut,
-      ...(step.becomes && { becomes: step.becomes }),
-    })),
+    ...path.map((step) => {
+      const delta = DIRECTION_DELTAS[step.directionIn];
+      const back = DIRECTION_DELTAS[step.directionOut];
+      const reversed = delta.x === -back.x && delta.y === -back.y;
+      const offset = reversed ? REFLECTOR_RADIUS : 0;
+      return {
+        x: step.x - delta.x * offset,
+        y: step.y - delta.y * offset,
+        bounce: step.directionIn !== step.directionOut,
+        ...(step.becomes && { becomes: step.becomes }),
+      };
+    }),
   ];
 
   const last = path[path.length - 1];

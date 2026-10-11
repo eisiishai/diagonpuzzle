@@ -89,9 +89,15 @@ with flipping mirrors, before it is built.
     empty cell, the mirror version of the breakable wall
   - [ ] Reinforced wall: a breakable wall that needs two hits, showing a
     crack after the first
-  - [ ] Reflector: sends the pellet straight back the way it came. The
-    return trip meets the mirrors it already flipped, so it goes
-    somewhere new; the strongest link to flipping mirrors of these ideas
+  - [x] Reflector (`@`): sends the pellet straight back the way it came.
+    The return trip meets the mirrors it already flipped, so it goes
+    somewhere new. Levels 19–20 teach it (chapter *Reflectors*). Design
+    in `docs/DESIGN.md`, *Reflectors*
+    - [ ] Harder reflector levels, e.g. combined with breakable walls or
+      the player's mirror
+    - [ ] Optional: its own music track (levels 19–20 play *Afterglow*)
+      and hit sound (it plays the mirror's ping), chosen on a sound lab
+      page
   - [ ] Portal pair: the pellet enters one and leaves the other in the
     same direction. No state of its own, so no cost to the solver;
     reaches rows and routes the left edge can't. The loop guard covers

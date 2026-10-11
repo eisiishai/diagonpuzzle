@@ -219,8 +219,8 @@ function playedShots(board: Board, moves: readonly Move[]): string | null {
  * par solution exactly as before (so it only touches cells that solution
  * never reaches), and keeps the bonus target where it is, still taking
  * `bonusShots` shots. Changes may put an empty cell, a mirror or a wall in
- * any cell but the goal and the bonus target, and a breakable wall only in
- * levels that already have one.
+ * any cell but the goal and the bonus target, and a breakable wall or a
+ * reflector only in levels that already have one.
  */
 export function findAlternativeChanges(
   levelBoard: Board,
@@ -245,6 +245,9 @@ export function findAlternativeChanges(
   cellTypes.push("wall");
   if (levelBoard.cells.some((row) => row.includes("breakable"))) {
     cellTypes.push("breakable");
+  }
+  if (levelBoard.cells.some((row) => row.includes("reflector"))) {
+    cellTypes.push("reflector");
   }
 
   const found: AlternativeChange[] = [];

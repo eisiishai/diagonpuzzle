@@ -20,6 +20,7 @@ export type CellType =
   | "mirrorSlash"
   | "wall"
   | "breakable"
+  | "reflector"
   | "goal"
   | "bonus";
 

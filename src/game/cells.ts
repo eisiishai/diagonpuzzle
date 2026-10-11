@@ -23,6 +23,13 @@ const SLASH_TURNS: Record<Direction, Direction> = {
   down: "left",
 };
 
+const REVERSED: Record<Direction, Direction> = {
+  right: "left",
+  left: "right",
+  up: "down",
+  down: "up",
+};
+
 /**
  * Behavior of each cell type, given the direction the pellet is moving when
  * it enters the cell. New block types are added here.
@@ -44,6 +51,9 @@ export const CELL_BEHAVIORS: Record<
     becomes: "mirrorBackslash",
   }),
   wall: () => ({ kind: "stop", reason: "blocked" }),
+  // A reflector sends the pellet straight back the way it came; it never
+  // changes, but the mirrors behind it may have flipped on the way in.
+  reflector: (direction) => ({ kind: "pass", direction: REVERSED[direction] }),
   // A cracked wall stops the pellet and breaks: the next shot passes through.
   breakable: () => ({ kind: "stop", reason: "blocked", becomes: "empty" }),
   goal: () => ({ kind: "stop", reason: "goal" }),

@@ -8,6 +8,7 @@ import {
   shortestSolutions,
   withAlternatives,
   withSolidWalls,
+  withWalls,
 } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
 
@@ -17,6 +18,7 @@ const OPTIONS: GeneratorOptions = {
   mirrors: 4,
   walls: 1,
   breakable: 0,
+  reflectors: 0,
   placeLater: false,
   shots: 2,
   goalHits: 1,
@@ -64,7 +66,14 @@ describe("randomBoard", () => {
   it("refuses more pieces than fit left of the goal column", () => {
     expect(() =>
       randomBoard(
-        { width: 2, height: 2, mirrors: 2, walls: 1, breakable: 0 },
+        {
+          width: 2,
+          height: 2,
+          mirrors: 2,
+          walls: 1,
+          breakable: 0,
+          reflectors: 0,
+        },
         Math.random,
       ),
     ).toThrow("Too many");
@@ -132,6 +141,15 @@ describe("findCandidates", () => {
     expect(candidates.length).toBeGreaterThan(0);
     for (const { board } of candidates) {
       expect(solve(withSolidWalls(board), 2)).toBeNull();
+    }
+  });
+
+  it("keeps only boards that need a reflector for par", () => {
+    const candidates = findCandidates({ ...OPTIONS, reflectors: 1 });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board } of candidates) {
+      expect(board.cells.flat()).toContain("reflector");
+      expect(solve(withWalls(board, "reflector"), 2)).toBeNull();
     }
   });
 

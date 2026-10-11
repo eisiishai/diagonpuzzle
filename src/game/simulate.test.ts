@@ -195,3 +195,29 @@ describe("breakable walls", () => {
     expect(fire(first.board, 0).outcome).toBe("goal");
   });
 });
+
+describe("reflectors", () => {
+  it("send the pellet back the way it came, unchanged", () => {
+    for (const d of ["right", "down", "left", "up"] as Direction[]) {
+      const effect = CELL_BEHAVIORS.reflector(d);
+      expect(effect).toEqual({
+        kind: "pass",
+        direction: { right: "left", left: "right", up: "down", down: "up" }[d],
+      });
+    }
+    const result = fire(parseLevel(". @ G"), 0);
+    expect(result.outcome).toBe("exit");
+    expect(result.path.map(({ x }) => x)).toEqual([0, 1, 0]);
+  });
+
+  it("send it back into mirrors it flipped, which turn it somewhere new", () => {
+    // Right into "\" (which flips to "/"), down to the reflector, back up
+    // into the "/", which turns it right into the goal.
+    const grid = String.raw`
+      . \ G
+      . @ .
+    `;
+    expect(cells(grid, 0)).toEqual(["0,0", "1,0", "1,1", "1,0", "2,0"]);
+    expect(fire(parseLevel(grid), 0).outcome).toBe("goal");
+  });
+});

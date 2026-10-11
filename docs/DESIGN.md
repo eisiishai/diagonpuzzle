@@ -80,7 +80,7 @@ puzzle on top of the level for players who have mastered it.
   score replaces the best.
 - **Golden star.** Once a level's bonus target is collected, its par star
   turns golden in the level list, which also shows `GOLDEN ★ n/N` (N: levels
-  with a bonus target, currently all 18) once there is at least one. The header shows `BONUS 0/1` while playing a
+  with a bonus target, currently all 20) once there is at least one. The header shows `BONUS 0/1` while playing a
   level whose bonus target has appeared.
 - **Last bonus target of the game: the ending.** Bonus targets appear only
   once a level is at par, so the last one is always the end of the game.
@@ -151,6 +151,26 @@ level list), to place once, anywhere it fits:
   checked for a unique one. A test checks that every level with a player
   mirror can't reach par without it.
 
+## Reflectors
+
+A reflector (`@`) sends the pellet straight back the way it came, from
+any side. It never changes itself, but every mirror the pellet bounced
+off on the way in has flipped, so the return trip meets a different board
+and goes somewhere new. That is the point of the piece: it shows the
+player, within one shot, that a mirror is different after the pellet has
+passed it.
+
+- A pellet with nothing in its way on the way back simply retraces its
+  path and leaves the board where it came in (at its launcher).
+- A mirror hit on the way in and again on the way back flips twice, so it
+  ends the shot as it started.
+- Shots stay finite: every step can still be traced back uniquely (a
+  pellet leaving a reflector moving left entered it moving right), so no
+  loop is possible.
+- The beam turns back at the reflector's ring, not its centre, with the
+  mirror bounce's flash and sound.
+- Levels 19–20 teach it (chapter *Reflectors*).
+
 ## Cell types
 
 | Symbol | Name | Behavior |
@@ -160,6 +180,7 @@ level list), to place once, anywhere it fits:
 | `/` | Mirror (slash) | Turns the pellet 90°: right → up, up → right, left → down, down → left. Then flips to `\`. |
 | `#` | Wall | Stops the pellet. |
 | `%` | Breakable wall | Stops the pellet and breaks: it becomes empty, so later shots pass through. |
+| `@` | Reflector | Sends the pellet straight back the way it came: right → left, left → right, up → down, down → up. Never changes. See *Reflectors*. |
 | `G` | Goal | Pellet reaches the goal; level complete. |
 | `*` | Bonus target | Stops the pellet and is collected (becomes empty). Hidden (empty) until the level is completed at par; see *Bonus targets*. |
 
@@ -230,6 +251,16 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 16 | Double duty | 3 | Player mirror `/`, used twice. Row 2 first flips the mirror at (2,2); with the mirror placed at (3,4), row 2 then runs down and round, bouncing off it and flipping it; row 4 turns down at the flipped mirror and runs to the goal. The bonus target needs the mirror placed later: rows 5, 5, then the mirror at (5,3), then rows 1, 1. |
 | 17 | Clear the way | 3 | Breakable walls, player mirror (`/`) and a two-hit goal together, in an easy first combination before level 18. Row 1 breaks the cracked wall in front of it; with the mirror placed at (5,2), row 1 then runs down and along into the mirror, which turns it up into the goal; the mirrors it flipped now take row 2 up and along to the goal. The bonus target needs the mirror at (4,2): rows 1, 5, 5, 1, the second row 5 setting up the mirrors that turn row 1 down to it. |
 | 18 | Rebuild | 4 | Breakable walls, player mirror (`/`) and a two-hit goal together. Row 3 breaks the cracked wall at (4,5), and the mirror goes into the gap it leaves; row 5 then climbs to the goal, row 3 swings the mirrors back, and row 5 hits the goal again. The bonus target sits behind the cracked walls at the top: rows 3, 3, 5, 5, then the mirror at (5,4) and row 2. Four alternatives in 5 shots, e.g. rows 3, 5, 5, 3, then the mirror at (6,4) and row 2. |
+| 19 | Return trip | 1 | Introduces reflectors. Row 3 turns up at the `/` at (2,3) into the reflector above it, comes back down into the same mirror, now `\`, and turns right to the goal; row 2 just comes straight back. Alternative in 2 shots: row 4 twice. The bonus target sits beside the reflector: row 1 turns down into the reflector and back up, flipping (3,1) on its way out; the second row 1 then turns down at (3,1) onto the target. |
+| 20 | There and back | 2 | Two reflectors. Row 5 flips the mirrors at (2,5) and (2,2) on its way up and across; row 2 then turns down at (2,2), right at (2,5) and up at (4,5) into the reflector at (4,3), and comes back down into (4,5), now `\`, which turns it right to the goal. Alternative in 4 shots: row 2 four times. The bonus target needs both reflectors: rows 1, 3, 3, the last climbing column 1 and turning down at (5,1) into the reflector at (5,4), then back up and right off the flipped mirror. |
+
+Levels 19–20 were found with `npm run generate -- --reflectors N`,
+which keeps only boards that can't reach par with their reflectors made
+walls (19 with `--reflectors 1 --shots 1 --require-setup` on a 5×4
+board, 20 with `--reflectors 2 --shots 2 --no-repeat` on a 6×5 board);
+both have a unique shortest solution. Their bonus targets were chosen
+among `npm run bonus` placements (20's after one added mirror, at (1,3))
+for routes that use the reflectors too.
 
 Levels 15–16 were found with `npm run generate -- --player-mirror slash`
 (16 with `--place-later`), which keeps only boards that can't reach par
@@ -313,7 +344,8 @@ difficulty doesn't dip at the end.
   reports a new best or the existing one.
 - The level list is split into **chapters**, one per mechanic (`CHAPTERS`
   in `src/levels/levels.ts`, following the music groups): 1–4 *Basics*,
-  5–10 *Flip tricks*, 11–14 *Breakable walls*, 15–18 *Your mirror*. Each
+  5–10 *Flip tricks*, 11–14 *Breakable walls*, 15–18 *Your mirror*,
+  19–20 *Reflectors*. Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one
@@ -411,6 +443,9 @@ Text colours keep at least 4.5:1 contrast on the background.
   selected one is outlined in the beam colour and glows.
 - **Mirrors**: glass bars with a bright centre line, glowing pale blue.
 - **Walls**: dark rounded blocks with diagonal hatching, no glow.
+- **Reflectors**: a round glass ring on a dark disc, with the three
+  facet lines of a corner cube (a Y) and a bright centre dot, glowing
+  pale blue like the mirrors. The beam turns back at the ring.
 - **Breakable walls**: lighter stone blocks with dark jagged cracks
   running through them instead of hatching, no glow. When hit, they burst
   into stone pieces that fall away and fade.
@@ -557,6 +592,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 5–10 (multi-hit goals, harder flips) | **Glass garden**: a slow, dark drone with a soft bell now and then; the calmest track, for the hardest levels before breakable walls |
 | Levels 11–14 (breakable walls) | **Prism drift**: two swaying chords (Fmaj7♯11 – Cmaj9), a faint high shimmer, glassy bells now and then with a long tail |
 | Levels 15–18 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
+| Levels 19–20 (reflectors) | **Afterglow** again for now, the calm track of the basics, as these levels teach a new piece from the start; a track of their own may follow |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,
