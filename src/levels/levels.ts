@@ -70,7 +70,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     bonusShots: 3,
     music: "afterglow",
     grid: String.raw`
-      . . . . . \ .
+      . . / . . \ .
       / . / . . . G
       . # . . . . .
       \ . / . . . .
@@ -88,7 +88,7 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . . \ . # .
       / \ . / . . . .
       . . . / . . . G
-      . . . . . . . .
+      . \ . . / . . .
       . . . # . . . .
     `,
   },
@@ -116,7 +116,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     grid: String.raw`
       . . . . \ *
       / . . . / G
-      . . . . \ .
+      . . . . \ /
       \ . . . # .
     `,
   },
@@ -129,9 +129,9 @@ export const LEVELS: readonly LevelDefinition[] = [
     grid: String.raw`
       # . . . * . . .
       / # . . / . / G
-      . . . . . / . .
+      . . \ . . / . .
       . . . . / . . .
-      . . \ . . . . .
+      . . \ . . . . \
       / . . . . . / .
     `,
   },
@@ -148,7 +148,7 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . \ . . . . .
       . . . . . . \ G
       \ / . . . . . *
-      # . . . . / . .
+      \ . . . . / . .
     `,
   },
   {
@@ -160,7 +160,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     grid: String.raw`
       # . # . . . . . .
       . . . . . \ . . *
-      \ # . . . / \ / .
+      \ # . / . / \ / .
       . . . \ . . . . .
       . . . . . \ . \ .
       . . . \ . . \ \ G
@@ -224,7 +224,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     music: "prism",
     grid: String.raw`
       \ / . # . .
-      . \ . . . .
+      . \ . \ . .
       . . . \ . .
       / / . % . G
       . / . . * .
@@ -301,7 +301,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     music: "photon",
     grid: String.raw`
       # . % * / .
-      \ . # / % .
+      \ . # / % \
       . . . \ . G
       \ . . . . .
       . . . % \ .

@@ -75,6 +75,21 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   cells first, keeping par, the par solution and the number of shortest
   solutions. Paste the printed grid, set `bonusShots` and confirm with
   `npm run levels`.
+- To see the different ways to solve the levels, run `npm run
+  alternatives` (`--help` lists the options). Without `--level` it counts,
+  for every level, the solutions at par and with one more shot
+  (`--extra 2` for two more). A solution counts only if no shot in it can
+  be left out, and shots taking the same paths in another order count
+  once. With `--level N --changes 1` (or `2`) it also lists board changes
+  that add new solutions while keeping par, the par solution and the
+  bonus target's cell and shots, for example:
+  ```bash
+  npm run alternatives -- --level 9 --changes 1
+  ```
+  Changes adding solutions only above par come first: those give a
+  player who strays from the par route another way to finish, without
+  making par easier. Each shows how many solutions it adds and the
+  random-play difficulty after it.
 - In player-mirror levels the mirror can make nearly every cell reachable
   in the first shot, so a bonus target needing more shots than par is
   rare without board changes. Level 18 needed `--changes 2`, which took

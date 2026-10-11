@@ -101,7 +101,7 @@ with flipping mirrors, before it is built.
 
 ### Difficulty curve
 
-Measured on 2026-10-10 (v0.34) by `npm run levels`, level 17 added on
+Measured on 2026-10-10 (v0.34) by `npm run levels`, level 17 added and level 18 given alternatives on
 2026-10-11, which ends with this
 curve: the chance that random play completes a level within par (a random
 row each shot; in player-mirror levels a random cell for the mirror, or
@@ -114,7 +114,7 @@ keeping it). Lower is harder. It dips at each new mechanic (5, 11,
 
 | Level | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 2,553 | 47,500 |
+| 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 2,553 | 45,000 |
 
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
@@ -127,11 +127,21 @@ to see) and overstate levels that repeat a row (8, 11).
   --breakable 2 --goal-hits 2 --shots 3 --width 5 --height 5 --mirrors 5
   --walls 1`; its bonus target with `npm run bonus -- --changes 1`
   - [ ] By random-play odds the bridge level is about as hard as 16, so
-    the step from it to *Rebuild* (18) is now about 19 times. The
+    the step from it to *Rebuild* (18) is now about 18 times. The
     bridge teaches the combination rather than the difficulty; whether
     18 still feels too steep is best judged by playing it (or seeing
     testers play it)
 - [ ] Optional: level 7 is a slight dip after levels 5–6 (as hard as 4)
+- [x] Alternative solutions one shot above par, so a player who strays
+  from the par route can still finish: `npm run alternatives` lists them
+  and finds board changes that add them. Levels 3, 9, 13 and 18 got one
+  added mirror each with a route different from par; levels 6 and 8 one
+  that lets a player recover after the par route's first shots (8's
+  replaces the wall at (1,7)). Par, par solutions and bonus targets are
+  unchanged; 18's random-play odds went from 1 in 47,500 to 45,000.
+  Levels 4 and 7 got two added mirrors each, for a route that starts
+  differently from par. Level 11 still has no alternative one shot above
+  par: board changes only add variants of its par route
 
 ### Presentation
 

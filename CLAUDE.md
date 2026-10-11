@@ -25,6 +25,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run bonus -- --level N [options]` — finds cells for a level's bonus
   target `*` that take the wanted number of shots, optionally after small
   board changes that keep par; `--help` lists the options
+- `npm run alternatives -- [options]` — the different solutions of each
+  level at par and a shot or two above it; with `--level N --changes 1`,
+  board changes that add alternatives while keeping par, the par
+  solution and the bonus target; `--help` lists the options
 - `npm run e2e` — quick browser smoke tests (Playwright, headless
   Chromium, `e2e/`): every screen and flow at desktop and phone size,
   about 70 s. The pre-commit hook runs it when a commit changes the game

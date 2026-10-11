@@ -197,26 +197,34 @@ starting board. This lets players discover flipping before level 3 requires
 it. `setupRoutes()` in the solver finds such routes; the tests check that
 levels 1 and 2 have one.
 
+Most levels also have *alternative solutions* one shot above par: other
+routes to the goal, so a player who strays from the par route can still
+finish without restarting, while par stays a single route. Levels 3, 6, 8,
+9, 13 and 18 got theirs on 2026-10-11 by one added mirror each (in
+level 8 replacing a wall), levels 4 and 7 by two, in cells the par
+solution never reaches (found with `npm run alternatives`, which lists
+every level's alternatives).
+
 | # | Level | Min shots | Idea |
 |---|---|---|---|
 | 1 | First light | 1 | Row 4 reaches the goal directly. Alternative: row 5 misses but flips three mirrors, after which row 1 gets through. |
 | 2 | Up and over | 1 | Row 5 reaches the goal directly. Alternative: row 1 runs down column 3 and flips the mirrors at both ends; row 6 then runs back up it and round to the goal. |
-| 3 | Second try | 2 | The first shot from row 2 flips the mirror at the edge; the same row then reaches the goal. Teaches flipping. |
-| 4 | Set the stage | 2 | A shot from row 4 flips two mirrors in column 4, which the next shot from row 3 needs. A different row must set up the board. |
+| 3 | Second try | 2 | The first shot from row 2 flips the mirror at the edge; the same row then reaches the goal. Teaches flipping. Alternative in 3 shots: row 4 twice, the second time up and round through the top row, so that row 1 turns down at (3,1) and runs along row 2 to the goal. |
+| 4 | Set the stage | 2 | A shot from row 4 flips two mirrors in column 4, which the next shot from row 3 needs. A different row must set up the board. Alternative in 3 shots: rows 2, 4, 5. |
 | 5 | Double take | 2 | Goal needs 2 hits. Row 3 climbs two mirrors into the goal, flipping them; that lets row 1 come down into the goal too. Repeating row 3 misses. Teaches the multi-hit goal. |
-| 6 | Warm-up | 3 | Goal needs 2 hits. Row 3 first hits a wall (a setup shot), then climbs into the goal; that lets row 1 hit it too. First level needing three shots. |
-| 7 | Down and around | 2 | Row 6 climbs column 1 and flips its corner mirrors; row 2 then runs down and around the board. |
-| 8 | Third time lucky | 3 | Row 5 twice turns the pellet a step further each time; row 2 then loops to the goal. |
-| 9 | Back and forth | 3 | Rows 4, 6, 4: two different setup shots, and a final shot that crosses its own path. |
+| 6 | Warm-up | 3 | Goal needs 2 hits. Row 3 first hits a wall (a setup shot), then climbs into the goal; that lets row 1 hit it too. First level needing three shots. Alternative in 4 shots, after the same first goal hit: rows 4, 4 hit it a second time. |
+| 7 | Down and around | 2 | Row 6 climbs column 1 and flips its corner mirrors; row 2 then runs down and around the board. Alternative in 3 shots: rows 3, 5, 3. |
+| 8 | Third time lucky | 3 | Row 5 twice turns the pellet a step further each time; row 2 then loops to the goal. Alternative in 4 shots, after the same two row 5 shots: rows 6, 7. |
+| 9 | Back and forth | 3 | Rows 4, 6, 4: two different setup shots, and a final shot that crosses its own path. Alternatives in 4 shots: rows 2, 4, 4, 4 and rows 4, 5, 5, 4. |
 | 10 | Two-step | 4 | Rows 3, 5, 3, 5: each shot flips mirrors the other row's next shot needs. |
 | 11 | Breakthrough | 3 | Introduces breakable walls. Row 2 breaks the cracked wall in front of it, then runs through to flip the mirrors it needs, then reaches the goal: the same row three times, each shot changing the board. |
 | 12 | Stone by stone | 4 | Rows 6, 7, 6, 7: three of the four shots break a cracked wall, opening the way for the next. |
-| 13 | Crack and double | 3 | Breakable walls with a two-hit goal. Row 3 breaks the cracked wall in front of the goal; rows 5 and 2 then reach it through the gap. |
+| 13 | Crack and double | 3 | Breakable walls with a two-hit goal. Row 3 breaks the cracked wall in front of the goal; rows 5 and 2 then reach it through the gap. Alternatives in 4 shots: rows 2, 3, 3, 5 and rows 5, 2, 5, 5. |
 | 14 | Rubble run | 5 | Goal needs 2 hits. Rows 4, 2, 3, 4, 3: a miss sets up the mirrors, row 2 breaks a cracked wall, and rows 3 and 4 take turns reaching the goal. |
 | 15 | Your move | 1 | Introduces the player-placed mirror (`/`). Row 4 runs along the bottom; the mirror in the corner below the goal turns it up into it. The bonus target needs the mirror somewhere else: row 1, then the mirror at (1,2), then row 2. |
 | 16 | Double duty | 3 | Player mirror `/`, used twice. Row 2 first flips the mirror at (2,2); with the mirror placed at (3,4), row 2 then runs down and round, bouncing off it and flipping it; row 4 turns down at the flipped mirror and runs to the goal. The bonus target needs the mirror placed later: rows 5, 5, then the mirror at (5,3), then rows 1, 1. |
 | 17 | Clear the way | 3 | Breakable walls, player mirror (`/`) and a two-hit goal together, in an easy first combination before level 18. Row 1 breaks the cracked wall in front of it; with the mirror placed at (5,2), row 1 then runs down and along into the mirror, which turns it up into the goal; the mirrors it flipped now take row 2 up and along to the goal. The bonus target needs the mirror at (4,2): rows 1, 5, 5, 1, the second row 5 setting up the mirrors that turn row 1 down to it. |
-| 18 | Rebuild | 4 | Breakable walls, player mirror (`/`) and a two-hit goal together. Row 3 breaks the cracked wall at (4,5), and the mirror goes into the gap it leaves; row 5 then climbs to the goal, row 3 swings the mirrors back, and row 5 hits the goal again. The bonus target sits behind the cracked walls at the top: rows 3, 3, 5, 5, then the mirror at (5,4) and row 2. |
+| 18 | Rebuild | 4 | Breakable walls, player mirror (`/`) and a two-hit goal together. Row 3 breaks the cracked wall at (4,5), and the mirror goes into the gap it leaves; row 5 then climbs to the goal, row 3 swings the mirrors back, and row 5 hits the goal again. The bonus target sits behind the cracked walls at the top: rows 3, 3, 5, 5, then the mirror at (5,4) and row 2. Four alternatives in 5 shots, e.g. rows 3, 5, 5, 3, then the mirror at (6,4) and row 2. |
 
 Levels 15–16 were found with `npm run generate -- --player-mirror slash`
 (16 with `--place-later`), which keeps only boards that can't reach par
