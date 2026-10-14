@@ -1,0 +1,102 @@
+# Releases the game to GitHub Pages, for the versions chosen for players:
+# commits and their version tags are pushed to GitHub as usual, and
+# publishing a GitHub Release for a tag (v2.8) runs every check, the full
+# browser set included (every level played through), and only then adds
+# the version's folder to the gh-pages branch and points the site's main
+# page at it. Older version folders stay there as snapshots, as on a web
+# host. See docs/WORKFLOW.md.
+name: Release to GitHub Pages
+
+on:
+  # A Release made from an existing version tag, on the Releases page or
+  # with `gh release create v2.8`. Pre-releases are skipped.
+  release:
+    types: [published]
+  # By hand from the Actions tab: to run a release again, or to point the
+  # main page back at an earlier version.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to release, e.g. v2.8"
+        required: true
+
+# One release at a time, in order; a newer one waits instead of cancelling.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # The chosen version, with all history and tags: the build's version
+      # comes from git describe.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.version }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Only a version tag: a release named otherwise, or a commit without
+      # a version, would build as v2.8-2-g1a2b3c4 and become the main page.
+      - name: Check the commit has a version
+        run: |
+          version=$(git describe --tags --exact-match --match 'v[0-9]*.[0-9]*')
+          echo "Releasing $version"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      # Lint, type check, unit tests and the production build in dist/.
+      - run: npm run build
+
+      - run: npx playwright install --with-deps chromium
+
+      # The quick set and every level played through (npm run e2e:full).
+      - run: npm run e2e:full
+
+      # Traces of failed browser tests, to open with npx playwright show-trace.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: test-results/
+          if-no-files-found: ignore
+
+      - name: Check the build is the tagged version
+        run: test -d "dist/$VERSION" && test -f dist/index.html
+
+      - name: Publish to the gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null; then
+            git fetch origin gh-pages:gh-pages
+            git worktree add site gh-pages
+          else
+            git worktree add --orphan -b gh-pages site
+          fi
+          # The version folder, then the main page that plays it; a rerun
+          # of the same version replaces its folder.
+          rm -rf "site/$VERSION"
+          cp -r "dist/$VERSION" site/
+          cp dist/index.html site/
+          # Serve the files as they are, without Jekyll.
+          touch site/.nojekyll
+          cd site
+          git add -A
+          if git diff --cached --quiet; then
+            echo "gh-pages already has $VERSION."
+          else
+            git commit -m "Release $VERSION"
+            git push origin gh-pages
+          fi

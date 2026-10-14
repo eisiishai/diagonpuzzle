@@ -65,12 +65,20 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   look up. Don't commit or publish it.
 - `npm run version:major` — make the next commit on main start a new major
   version (only when the user asks for a major version bump)
-- Deploy: commit (the `post-commit` hook rebuilds `dist/` with the new
-  version; if it says "dist/ not rebuilt", run `npm run build` from a clean
-  working tree), then upload `dist/`'s version folder (`dist/v1.16/`) as a
-  new folder on the web host and `dist/index.html` over the old one there,
-  which makes the site's main address play that version; older version
-  folders stay online as snapshots (details in `docs/WORKFLOW.md`).
+- Deploy on GitHub Pages: commit (the hook pushes it and its tag to the
+  `github` remote), then publish a GitHub Release for that existing tag
+  (`gh release create v2.9 --verify-tag`); `.github/workflows/pages.yml`
+  runs `npm run build` and `npm run e2e:full` and only then adds the
+  version folder and main page to the `gh-pages` branch. Not every
+  version is released: the user chooses which. Publishing a Release is
+  outward-facing, so only when the user asks.
+- Deploy to a web host by hand: commit (the `post-commit` hook rebuilds
+  `dist/` with the new version; if it says "dist/ not rebuilt", run
+  `npm run build` from a clean working tree), then upload `dist/`'s
+  version folder (`dist/v1.16/`) as a new folder on the web host and
+  `dist/index.html` over the old one there, which makes the site's main
+  address play that version; older version folders stay online as
+  snapshots (details in `docs/WORKFLOW.md`).
   The build embeds `git describe --tags` as the version shown on the title
   screen; a build with uncommitted changes shows "-dirty".
 
@@ -168,7 +176,8 @@ e2e/            browser smoke tests (Playwright) and their helpers
   the git hooks in `.githooks/`. Don't create version tags by hand, and don't
   rewrite history on `main` (rebase), which leaves tags on the old commits.
 - The `post-commit` hook then pushes `main` and its tags to the `backup`
-  remote (never forced; it only warns if that fails) and rebuilds `dist/`
+  remote, and to the `github` remote when one is set up (never forced; it
+  only warns if that fails), and rebuilds `dist/`
   with the new version. Don't push or force-push by hand unless the user
   asks.
 

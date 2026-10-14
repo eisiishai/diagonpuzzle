@@ -443,6 +443,17 @@ lab page on 2026-10-11:
   a main page in `dist/index.html` that plays it through a `<base>` tag,
   so the site's main address plays the newest upload and older version
   folders stay online as snapshots
+- [ ] Release on GitHub Pages (`docs/WORKFLOW.md`, *Release on GitHub
+  Pages*), for the versions chosen for players:
+  - [x] Workflow `.github/workflows/pages.yml`: a published GitHub
+    Release of a version tag (or *Run workflow* with a version) runs
+    `npm run build` and the full browser set, then adds the version
+    folder and the main page to the `gh-pages` branch, keeping older
+    version folders as snapshots
+  - [x] The commit hook pushes `main` and its tags to a `github` remote
+    too, once one is set up; no password prompt during a commit
+  - [ ] Create the GitHub repo, push, make the first release by hand
+    and turn on Pages (needs the user's GitHub login)
 
 ### Later
 

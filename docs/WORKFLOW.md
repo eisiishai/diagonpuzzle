@@ -11,18 +11,24 @@ nvm, not Windows' Node. Check with `which node npm`: both should be under
 `~/.nvm/`.
 
 ```bash
-git clone <backup repo> diagonpuzzle
+git clone -o backup <backup repo> diagonpuzzle
 cd diagonpuzzle
 npm install          # also enables the git hooks (see Versions)
 npm run build        # confirms everything works
 ```
 
+`-o backup` names the remote `backup`, the name the hooks push to (see
+*4. Back up*). For GitHub, add its remote as well (see *Release on GitHub
+Pages*).
+
 For the browser smoke tests (`npm run e2e`, see *2. Check*) also install
-Playwright's Chromium and the fonts it needs. With nvm, `sudo` can't find
-`npx`, so the last line installs the fonts with apt directly:
+Playwright's Chromium, the system libraries it needs and fonts. With nvm,
+`sudo` can't find `npx` on its own, so the second line passes it the
+`PATH`:
 
 ```bash
 npx playwright install chromium
+sudo env PATH="$PATH" npx playwright install-deps chromium
 sudo apt-get install fonts-liberation fonts-noto-color-emoji fonts-freefont-ttf
 ```
 
@@ -403,12 +409,20 @@ is tagged (the `post-commit` and `post-merge` hooks run
 disk: `<backup repo>`. Version tags are pushed
 along with the commits. Commits on other branches are not pushed.
 
+When a `github` remote is set up (see *Release on GitHub Pages*), the same
+hook pushes there too, after the backup; without one it skips GitHub
+silently. Pushing to GitHub releases nothing: the site changes only when a
+GitHub Release is published.
+
 The automatic push never forces and never stops a commit. If it can't push,
-it prints a warning starting with `⚠ Backup not updated` and the commit stays
-local:
+it prints a warning starting with `⚠ Backup not updated` (or `⚠ GitHub not
+updated`, e.g. when offline or not logged in) and the commit stays local:
 
 - **Disk not available** (the backup disk not connected or not mounted): push later with
-  `git push`, or just make the next commit once the disk is back.
+  `git push backup`, or just make the next commit once the disk is back.
+- **GitHub not reachable or not logged in**: the error is shown above the
+  warning. Push later with `git push github` (`gh auth status` shows the
+  login); a password is never asked during a commit.
 - **Push rejected**: the backup has a commit that local `main` doesn't, which
   happens after amending a pushed commit (see below). Every later commit
   repeats the warning until this is fixed.
@@ -418,7 +432,7 @@ local:
 To turn the automatic push off, for example when working without the backup
 disk for a while: `git config diagonpuzzle.autoPush false` (back on with
 `git config --unset diagonpuzzle.autoPush`). Then push by hand at the end of
-every work session with `git push`.
+every work session with `git push backup` (and `git push github`).
 
 ### Amending a pushed commit
 
@@ -429,7 +443,11 @@ the moved tag:
 
 ```bash
 git push --force backup main vX.Y
+git push --force github main vX.Y    # if it was pushed to GitHub too
 ```
+
+Don't do this for a version already released on GitHub Pages: its Release
+and site folder stay as they were built.
 
 ### Checking the backup
 
@@ -459,6 +477,10 @@ The backup doesn't include uncommitted work, stashes, local git settings
 
 ## 5. Release to the website
 
+The game is released in one of two ways: on GitHub Pages, by publishing a
+GitHub Release for a version (*Release on GitHub Pages* below), or by
+uploading `dist/` to a web host by hand (the steps here).
+
 1. Commit everything. After each commit on `main`, the `post-commit` hook
    rebuilds `dist/` with the new version (`.githooks/build-release`), and
    git prints `Built dist/v0.6/ and dist/index.html, ready to upload.`
@@ -486,7 +508,8 @@ The backup doesn't include uncommitted work, stashes, local git settings
    (Opening `dist/index.html` directly from disk does not work: browsers block
    module scripts loaded from `file://`.)
 3. Upload with WinSCP. In the local pane, open
-   `\\wsl.localhost\<distro>\home\<user>\…\diagonpuzzle\dist`.
+   `\\wsl.localhost\<distro>\home\<user>\…\diagonpuzzle\dist`
+   (the distro's name as `wsl --list` shows it).
    It holds exactly what to upload:
    ```
    dist/
@@ -532,6 +555,55 @@ tests' `dist-e2e/`, which so check the layout that gets uploaded. It
 clears that folder first, and refuses an `--outDir` that isn't a folder
 inside the project.
 
+### Release on GitHub Pages
+
+Commits and their version tags go to GitHub with every commit on `main`
+(see *4. Back up*), but only the versions chosen for players are put
+online: publishing a GitHub Release for a version tag starts the workflow
+in `.github/workflows/pages.yml`. On GitHub's machines it runs every check
+(`npm run build`) and the full browser set (`npm run e2e:full`, every level
+played through), and only if all pass adds the version folder and the main
+page to the `gh-pages` branch, the same layout as an upload above: older
+version folders stay as snapshots. The site is
+`https://<user>.github.io/diagonpuzzle/`.
+
+**Once:** install the GitHub CLI from GitHub's own apt repository (the
+command is in https://github.com/cli/cli/blob/trunk/docs/install_linux.md;
+Ubuntu's own `gh` package is too old or broken), then:
+
+```bash
+gh auth login                    # GitHub.com, HTTPS, authenticate Git: yes
+gh repo create diagonpuzzle --public --source . --remote github
+git push github main --tags      # all history and versions
+```
+
+GitHub starts no runs for a push of more than three tags at once, so make
+the first release by hand: on GitHub, *Actions → Release to GitHub Pages →
+Run workflow* with the current version (`v2.8`). When it has finished,
+under *Settings → Pages* set *Source* to *Deploy from a branch*, branch
+`gh-pages`, folder `/ (root)`.
+
+**Each release:**
+
+1. Commit as usual; the hook pushes the commit and its tag to GitHub.
+2. Publish a Release for that version's existing tag:
+   ```bash
+   gh release create v2.9 --verify-tag --title v2.9 --notes "What changed"
+   ```
+   or on GitHub's *Releases → Draft a new release*, choosing the tag from
+   the list. Never type a new tag name there: GitHub would create that
+   tag by hand on the current `main`, outside the hooks' numbering.
+   A Release marked as a pre-release isn't put online.
+3. Follow the run under *Actions* (`gh run watch`). If a check fails,
+   nothing goes online; the failed browser tests' traces are in the run's
+   `e2e-results` artifact (`npx playwright show-trace`). Fix, commit, and
+   release the new version.
+4. Open the site and check it as in steps 4 and 5 above, phone included.
+
+To run a release again, or to point the main page back at an earlier
+version, use *Run workflow* with that version: the main page plays the
+version released last.
+
 ### Which version is online
 
 The title screen shows the version the game was built from, so opening the
@@ -551,5 +623,7 @@ working tree.
 
 Not set up, and not needed at the current size:
 
-- **`npm run deploy`** uploading `dist/` from WSL (e.g. with `rsync` or
-  `lftp`), if releases become frequent. Depends on what the host supports.
+- **`npm run deploy`** uploading `dist/` from WSL to a web host (e.g. with
+  `rsync` or `lftp`), if releases there become frequent. Depends on what
+  the host supports. (GitHub Pages needs none: see *Release on GitHub
+  Pages*.)
