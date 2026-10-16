@@ -450,8 +450,10 @@ lab page on 2026-10-11:
     `npm run build` and the full browser set, then adds the version
     folder and the main page to the `gh-pages` branch, keeping older
     version folders as snapshots
-  - [x] The commit hook pushes `main` and its tags to a `github` remote
-    too, once one is set up; no password prompt during a commit
+  - [x] GitHub is updated only by hand, with `npm run github`
+    (`scripts/push-github.sh`): it shows the commits, files and tags
+    GitHub doesn't have yet, warns about added lines that look private
+    and asks before pushing; the commit hook pushes only to the backup
   - [ ] Create the GitHub repo, push, make the first release by hand
     and turn on Pages (needs the user's GitHub login)
 

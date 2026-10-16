@@ -1,6 +1,6 @@
 #!/bin/sh
-# Run by post-commit: pushes main and its version tags to the backup remote,
-# and to GitHub once a `github` remote is set up (no warning before that).
+# Run by post-commit: pushes main and its version tags to the backup remote.
+# GitHub gets them only by hand, with `npm run github`.
 # Never forces and never stops anything: if a push can't be done, it prints
 # a warning and the commit stays local until the next push.
 # Turn off with `git config diagonpuzzle.autoPush false`. See docs/WORKFLOW.md.
@@ -14,8 +14,7 @@ RELEASE_BRANCH=main
 git_dir=$(git rev-parse --git-dir)
 [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ] && exit 0
 
-# push_to REMOTE NAME OPTIONAL: NAME is what the messages call it; an
-# OPTIONAL remote that isn't set up is skipped without a warning.
+# push_to REMOTE NAME: NAME is what the messages call it.
 push_to() {
   remote=$1
   name=$2
@@ -26,7 +25,7 @@ push_to() {
 
   url=$(git remote get-url "$remote" 2>/dev/null)
   if [ -z "$url" ]; then
-    [ "$3" = optional ] || warn "no '$remote' remote is set up."
+    warn "no '$remote' remote is set up."
     return
   fi
   # A local backup on a disk that isn't connected or mounted.
@@ -54,5 +53,4 @@ push_to() {
 }
 
 push_to backup Backup
-push_to github GitHub optional
 exit 0

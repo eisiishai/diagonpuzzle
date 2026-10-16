@@ -65,9 +65,12 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   look up. Don't commit or publish it.
 - `npm run version:major` — make the next commit on main start a new major
   version (only when the user asks for a major version bump)
-- Deploy on GitHub Pages: commit (the hook pushes it and its tag to the
-  `github` remote), then publish a GitHub Release for that existing tag
-  (`gh release create v2.9 --verify-tag`); `.github/workflows/pages.yml`
+- `npm run github` — put `main` and its version tags on GitHub, after
+  showing what GitHub doesn't have yet (with warnings for added lines
+  that look private) and asking; the commit hook never pushes to GitHub.
+  It makes commits public, so only when the user asks
+- Deploy on GitHub Pages: commit, `npm run github`, then publish a GitHub
+  Release for that existing tag (`gh release create v2.9 --verify-tag`); `.github/workflows/pages.yml`
   runs `npm run build` and `npm run e2e:full` and only then adds the
   version folder and main page to the `gh-pages` branch. Not every
   version is released: the user chooses which. Publishing a Release is
@@ -176,8 +179,8 @@ e2e/            browser smoke tests (Playwright) and their helpers
   the git hooks in `.githooks/`. Don't create version tags by hand, and don't
   rewrite history on `main` (rebase), which leaves tags on the old commits.
 - The `post-commit` hook then pushes `main` and its tags to the `backup`
-  remote, and to the `github` remote when one is set up (never forced; it
-  only warns if that fails), and rebuilds `dist/`
+  remote (never forced; it only warns if that fails; GitHub only with
+  `npm run github`), and rebuilds `dist/`
   with the new version. Don't push or force-push by hand unless the user
   asks.
 

@@ -23,7 +23,8 @@
     "version:major": "git config diagonpuzzle.nextMajor true && echo 'The next commit on main starts a new major version.'",
     "prepare": "git config core.hooksPath .githooks && git config push.followTags true",
     "alternatives": "tsx scripts/alternatives.ts",
-    "trace": "tsx scripts/trace.ts"
+    "trace": "tsx scripts/trace.ts",
+    "github": "sh scripts/push-github.sh"
   },
   "dependencies": {
     "@fontsource/chakra-petch": "^5.3.0",

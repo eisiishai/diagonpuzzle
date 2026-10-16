@@ -413,21 +413,18 @@ is tagged (the `post-commit` and `post-merge` hooks run
 disk (`git remote get-url backup` shows where). Version tags are pushed
 along with the commits. Commits on other branches are not pushed.
 
-When a `github` remote is set up (see *Release on GitHub Pages*), the same
-hook pushes there too, after the backup; without one it skips GitHub
-silently. Pushing to GitHub releases nothing: the site changes only when a
-GitHub Release is published.
+GitHub is never updated automatically: commits go there only with
+`npm run github` (see *Release on GitHub Pages*), so a commit made by
+mistake, with something private in it, can still be fixed before it is
+public.
 
 The automatic push never forces and never stops a commit. If it can't push,
-it prints a warning starting with `⚠ Backup not updated` (or `⚠ GitHub not
-updated`, e.g. when offline or not logged in) and the commit stays local:
+it prints a warning starting with `⚠ Backup not updated` and the commit
+stays local:
 
 - **Disk not available** (the backup disk not connected or not mounted):
   push later with `git push backup`, or just make the next commit once the
   disk is back.
-- **GitHub not reachable or not logged in**: the error is shown above the
-  warning. Push later with `git push github` (`gh auth status` shows the
-  login); a password is never asked during a commit.
 - **Push rejected**: the backup has a commit that local `main` doesn't, which
   happens after amending a pushed commit (see below). Every later commit
   repeats the warning until this is fixed.
@@ -437,7 +434,7 @@ updated`, e.g. when offline or not logged in) and the commit stays local:
 To turn the automatic push off, for example when working without the backup
 disk for a while: `git config diagonpuzzle.autoPush false` (back on with
 `git config --unset diagonpuzzle.autoPush`). Then push by hand at the end of
-every work session with `git push backup` (and `git push github`).
+every work session with `git push backup`.
 
 ### Amending a pushed commit
 
@@ -448,11 +445,12 @@ the moved tag:
 
 ```bash
 git push --force backup main vX.Y
-git push --force github main vX.Y    # if it was pushed to GitHub too
 ```
 
-Don't do this for a version already released on GitHub Pages: its Release
-and site folder stay as they were built.
+If it was already put on GitHub, it is public: amending there needs
+`git push --force github main vX.Y` too, and others may already have the
+old commit. Don't do this for a version already released on GitHub Pages:
+its Release and site folder stay as they were built.
 
 ### Checking the backup
 
@@ -561,9 +559,9 @@ inside the project.
 
 ### Release on GitHub Pages
 
-Commits and their version tags go to GitHub with every commit on `main`
-(see *4. Back up*), but only the versions chosen for players are put
-online: publishing a GitHub Release for a version tag starts the workflow
+Commits and their version tags go to GitHub only when you choose, with
+`npm run github`, and only the versions chosen for players are put online:
+publishing a GitHub Release for a version tag starts the workflow
 in `.github/workflows/pages.yml`. On GitHub's machines it runs every check
 (`npm run build`) and the full browser set (`npm run e2e:full`, every level
 played through), and only if all pass adds the version folder and the main
@@ -578,19 +576,30 @@ Ubuntu's own `gh` package is too old or broken), then:
 ```bash
 gh auth login                    # GitHub.com, HTTPS, authenticate Git: yes
 gh repo create diagonpuzzle --public --source . --remote github
-git push github main --tags      # all history and versions
+npm run github                   # all history and versions
 ```
 
-GitHub starts no runs for a push of more than three tags at once, so make
-the first release by hand: on GitHub, *Actions → Release to GitHub Pages →
-Run workflow* with the current version (`v2.8`). When it has finished,
+Make the first release by hand: on GitHub, *Actions → Release to GitHub
+Pages → Run workflow* with the current version (`v2.10`). When it has finished,
 under *Settings → Pages* set *Source* to *Deploy from a branch*, branch
 `gh-pages`, folder `/ (root)`.
 
 **Each release:**
 
-1. Commit as usual; the hook pushes the commit and its tag to GitHub.
-2. Publish a Release for that version's existing tag:
+1. Commit as usual; the hook pushes only to the backup.
+2. Put the commits on GitHub:
+   ```bash
+   npm run github
+   ```
+   It lists the commits, changed files and tags GitHub doesn't have yet,
+   warns about added lines that look private (local paths, home folders,
+   keys, tokens), and pushes only after you answer `y`. It never forces.
+   Check the list: whatever is pushed is public. If a commit has something
+   private in it, answer `n` and fix it first (*Amending a pushed commit*
+   for the last commit; an older one needs its history rewritten, so ask
+   for help). `npm run github` can also be run any time without releasing:
+   pushing releases nothing.
+3. Publish a Release for that version's existing tag:
    ```bash
    gh release create v2.9 --verify-tag --title v2.9 --notes "What changed"
    ```
@@ -598,11 +607,11 @@ under *Settings → Pages* set *Source* to *Deploy from a branch*, branch
    the list. Never type a new tag name there: GitHub would create that
    tag by hand on the current `main`, outside the hooks' numbering.
    A Release marked as a pre-release isn't put online.
-3. Follow the run under *Actions* (`gh run watch`). If a check fails,
+4. Follow the run under *Actions* (`gh run watch`). If a check fails,
    nothing goes online; the failed browser tests' traces are in the run's
    `e2e-results` artifact (`npx playwright show-trace`). Fix, commit, and
    release the new version.
-4. Open the site and check it as in steps 4 and 5 above, phone included.
+5. Open the site and check it as in steps 4 and 5 above, phone included.
 
 To run a release again, or to point the main page back at an earlier
 version, use *Run workflow* with that version: the main page plays the
