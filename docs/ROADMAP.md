@@ -177,7 +177,7 @@ can't be harder than 1 in 125), well below *Mirror image* (22):
 | Level | 31 | 32 | 33 | 34 |
 |---|---|---|---|---|
 | 1 in | 5 | 25 | 125 | 625 |
-| Foresight | 0 | 1 | 3 | 3 |
+| Foresight | 0 | 1 | 4 | 3 |
 
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).

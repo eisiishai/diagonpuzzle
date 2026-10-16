@@ -510,11 +510,11 @@ export const LEVELS: readonly LevelDefinition[] = [
     bonusShots: 4,
     music: "photon",
     grid: String.raw`
-      . . / % O .
+      \ . O . / .
       . # . . . .
-      . . / . O G
-      . . / . \ *
-      . % . . \ .
+      . . . \ . *
+      . O . / # .
+      / . . % . G
     `,
   },
   {
@@ -524,10 +524,10 @@ export const LEVELS: readonly LevelDefinition[] = [
     bonusShots: 5,
     music: "photon",
     grid: String.raw`
-      . . \ / / .
+      . . \ \ / .
       / / . . . G
       \ O . * O .
-      . . / # . .
+      . / / # . .
       . . # . @ .
     `,
   },

@@ -68,6 +68,15 @@ const SWAPS: {
 ];
 
 /**
+ * The board with every `piece` swapped for a plainer one, as neededPieces
+ * does; unchanged for the player's mirror, which is not on the board.
+ */
+export function withoutPiece(board: Board, piece: Piece): Board {
+  const swap = SWAPS.find((entry) => entry.piece === piece);
+  return swap ? swap.swap(board) : board;
+}
+
+/**
  * The kinds of piece `board` needs for par in `shots` shots: those it has
  * (and the player's mirror, if given) without which par is out of reach,
  * with breakable walls made solid, reflectors and portals made walls, glass

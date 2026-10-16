@@ -20,7 +20,8 @@ import {
 import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType, Position } from "../src/game/types";
 import { shortestSolutions } from "./levelGenerator";
-import { neededPieces } from "./pieces";
+import { neededPieces, withoutPiece } from "./pieces";
+import type { Piece } from "./pieces";
 
 export interface PlacementOptions {
   /** The level's par, which every placement keeps. */
@@ -38,6 +39,13 @@ export interface PlacementOptions {
    * mirror or the gap it leaves), so the bonus target uses them too.
    */
   uses?: readonly CellType[];
+  /**
+   * Keep only placements whose bonus target is out of reach in
+   * `bonusShots` shots without each of these pieces (swapped for a plainer
+   * one, see withoutPiece, or no mirror for the player), so the bonus
+   * target needs them.
+   */
+  needs?: readonly Piece[];
 }
 
 export interface Placement {
@@ -249,6 +257,16 @@ export function findPlacements(
       }
     }
 
+    const needsPieces = (withBonus: Board, bonus: Position) =>
+      (options.needs ?? []).every(
+        (piece) =>
+          solveBonusMoves(withoutPiece(withBonus, piece), bonus, {
+            maxShots: bonusShots,
+            goalHits,
+            playerMirror: piece === "playerMirror" ? undefined : playerMirror,
+          }) === null,
+      );
+
     for (const { x, y, routes } of cells) {
       const withBonus = withCell(board, { x, y, cell: "bonus" });
       const route =
@@ -257,7 +275,7 @@ export function findPlacements(
           { x, y },
           { maxShots: bonusShots, goalHits, playerMirror },
         ) ?? [];
-      if (usesPiece(withBonus, route)) {
+      if (usesPiece(withBonus, route) && needsPieces(withBonus, { x, y })) {
         placements.push({
           changes,
           bonus: { x, y },

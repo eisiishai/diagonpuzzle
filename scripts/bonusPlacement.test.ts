@@ -4,12 +4,14 @@ import {
   playMoves,
   shotRows,
   solve,
+  solveBonus,
   solveBonusMoves,
   solveMoves,
 } from "../src/game/solver";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import { findPlacements, firstEntries } from "./bonusPlacement";
+import { withWalls } from "./pieces";
 
 describe("firstEntries", () => {
   it("finds the first shot reaching each cell, and in how many ways", () => {
@@ -126,5 +128,23 @@ describe("findPlacements", () => {
       );
       expect(cells).toContain("reflector");
     }
+  });
+
+  it("keeps only bonus targets that need the pieces asked for", () => {
+    // Level 33's bonus target needs its portals (the search removes it
+    // first and finds its cell again).
+    const level = LEVELS.find((candidate) => candidate.id === "knock-first")!;
+    const options = { minShots: 3, goalHits: 1, bonusShots: 4, changes: 0 };
+    const needing = findPlacements(parseLevel(level.grid), {
+      ...options,
+      needs: ["portal"],
+    });
+    expect(needing.length).toBeGreaterThan(0);
+    for (const { board, bonus } of needing) {
+      expect(solveBonus(withWalls(board, "portal"), bonus, 4, 1)).toBeNull();
+    }
+    expect(
+      findPlacements(parseLevel(level.grid), options).length,
+    ).toBeGreaterThanOrEqual(needing.length);
   });
 });

@@ -32,7 +32,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   target `*` that take the wanted number of shots, optionally after small
   board changes that keep par and the pieces the level needs for it and
   leave the par route's cells alone, and
-  (`--uses reflector,glass`) only with routes through given pieces;
+  (`--uses reflector,glass`) only with routes through given pieces, or
+  (`--needs portal`) only targets out of reach without them;
   `--help` lists the options
 - `npm run trace -- --level N MOVES...` — plays rows (and `x,y` for the
   player's mirror) on a level or a `--grid` and prints each shot's cells

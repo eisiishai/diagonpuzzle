@@ -95,6 +95,20 @@ it.each(idsWith("portal"))("%s needs its portals", (id) => {
   expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
 });
 
+// Their bonus targets need the portals too: with both portals walls, the
+// bonus target is out of reach in its shots.
+it.each(idsWith("portal"))(
+  "%s needs its portals for the bonus target",
+  (id) => {
+    const { level, board } = replaced(id, ["portal"], () => "wall");
+    const { bonusShots, goalHits = 1, playerMirror } = level;
+    const [bonus] = bonusPositions(parseLevel(level.grid));
+    expect(
+      solveBonus(board, bonus, bonusShots, goalHits, playerMirror),
+    ).toBeNull();
+  },
+);
+
 // Levels that give the player a mirror are built around it: without it,
 // par is out of reach (a longer way round may exist).
 it.each(LEVELS.filter((level) => level.playerMirror).map((level) => level.id))(

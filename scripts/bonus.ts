@@ -10,6 +10,7 @@ import { LEVELS } from "../src/levels/levels";
 import { CELL_SYMBOLS, formatLevel, parseLevel } from "../src/levels/parse";
 import { findPlacements } from "./bonusPlacement";
 import type { Placement } from "./bonusPlacement";
+import type { Piece } from "./pieces";
 import { cellName, rowList } from "./levelAnalysis";
 
 // Node's process, without depending on @types/node.
@@ -25,6 +26,16 @@ const PIECES: Record<string, readonly CellType[]> = {
   portal: ["portal"],
 };
 
+/** Piece names for --needs. */
+const NEEDS: Record<string, Piece> = {
+  breakable: "breakable",
+  reflector: "reflector",
+  glass: "glass",
+  fixed: "fixed",
+  portal: "portal",
+  "player-mirror": "playerMirror",
+};
+
 const HELP = `Usage: npm run bonus -- --level N [options]
 
   --level N|ID      the level, by number (from 1) or id
@@ -36,12 +47,15 @@ const HELP = `Usage: npm run bonus -- --level N [options]
   --uses P[,P...]   only routes that pass through one of these pieces:
                     ${Object.keys(PIECES).join(", ")} (glass counts the gap
                     a shattered one leaves too)
+  --needs P[,P...]  only bonus targets out of reach in --shots shots
+                    without each of these pieces: ${Object.keys(NEEDS).join(", ")}
 
 Changes never touch a cell the par solution reaches, so it plays out
 exactly as before.
 
 Example: npm run bonus -- --level 13 --shots 4 --changes 1
-         npm run bonus -- --level 25 --changes 1 --uses reflector,glass`;
+         npm run bonus -- --level 25 --changes 1 --uses reflector,glass
+         npm run bonus -- --level 33 --changes 1 --needs portal`;
 
 interface Args {
   level: string;
@@ -49,6 +63,7 @@ interface Args {
   changes: number;
   show: number;
   uses?: CellType[];
+  needs?: Piece[];
 }
 
 const NUMBER_FLAGS: Record<string, "shots" | "changes" | "show"> = {
@@ -75,6 +90,18 @@ function parseArgs(args: string[]): Args | null {
         return null;
       }
       parsed.uses = names.flatMap((name) => PIECES[name]);
+      continue;
+    }
+    if (flag === "--needs") {
+      const names = (args[++i] ?? "").split(",");
+      const unknown = names.find((name) => NEEDS[name] === undefined);
+      if (unknown !== undefined) {
+        console.error(
+          `Unknown piece "${unknown}"; use ${Object.keys(NEEDS).join(", ")}`,
+        );
+        return null;
+      }
+      parsed.needs = names.map((name) => NEEDS[name]);
       continue;
     }
     const key = NUMBER_FLAGS[flag];
@@ -135,6 +162,7 @@ if (args === null) {
     bonusShots,
     changes: args.changes,
     uses: args.uses,
+    needs: args.needs,
   });
 
   console.log(
