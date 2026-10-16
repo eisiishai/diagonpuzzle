@@ -22,8 +22,8 @@ npm run build        # confirms everything works
 has the exact command, and on an existing clone `git remote get-url backup`
 shows it.
 `-o backup` names the remote `backup`, the name the hooks push to (see
-*4. Back up*). For GitHub, add its remote as well (see *Release on GitHub
-Pages*).
+*4. Back up*). For GitHub, add its remote and login as well (see *Release
+on GitHub Pages*).
 
 For the browser smoke tests (`npm run e2e`, see *2. Check*) also install
 Playwright's Chromium, the system libraries it needs and fonts. With nvm,
@@ -36,7 +36,7 @@ sudo env PATH="$PATH" npx playwright install-deps chromium
 sudo apt-get install fonts-liberation fonts-noto-color-emoji fonts-freefont-ttf
 ```
 
-Keep the project on the Linux filesystem (e.g. `~/claude/diagonpuzzle`), not
+Keep the project on the Linux filesystem (in your home folder), not
 under `/mnt/c` or another Windows drive: it is much faster there, and Vite's
 file watching works reliably.
 
@@ -296,6 +296,26 @@ too slow. Run `npm run e2e:full` before a release and after changes to
 drawing, levels or block types; the quick set runs with each commit that
 changes the game. A failure leaves a trace to open with
 `npx playwright show-trace` (the path is printed).
+
+**Browser tests as on GitHub.** GitHub's machines have no GPU and 4 slow
+cores: the browsers draw in software at about 3 frames a second, and the
+full set takes about 12 minutes instead of 4. Recording a trace makes
+every step of a test about three times slower, so there only a failed
+test's retry records one, and tests get longer time limits (`CI` set:
+`playwright.config.ts`, `e2e/ci.ts`; a test file's own
+`test.describe.configure` limit overrides the config's, so give it a
+`CI` value too). Under `?e2e` the game's time keeps up with real time at
+low frame rates (`ticker.minFPS` in `src/testHook.ts`); a test that needs
+something done within a few seconds of the game's time slows the game
+with `game.setSpeed()` instead of relying on speed. Two local cores
+behave about like GitHub:
+
+```bash
+CI=1 taskset -c 0-1 npx playwright test --project=desktop --project=phone --project=levels --retries=0
+```
+
+About 11 minutes; every test must pass with time to spare (the slowest
+took 1.2 min of their 2 min limit).
 
 What is checked only by hand: how drawing, animation and sound look and
 sound, and anything only a real phone shows (such as the GPU line bugs in
@@ -566,23 +586,35 @@ in `.github/workflows/pages.yml`. On GitHub's machines it runs every check
 (`npm run build`) and the full browser set (`npm run e2e:full`, every level
 played through), and only if all pass adds the version folder and the main
 page to the `gh-pages` branch, the same layout as an upload above: older
-version folders stay as snapshots. The site is
-`https://<user>.github.io/diagonpuzzle/`.
+version folders stay as snapshots.
 
-**Once:** install the GitHub CLI from GitHub's own apt repository (the
-command is in https://github.com/cli/cli/blob/trunk/docs/install_linux.md;
-Ubuntu's own `gh` package is too old or broken), then:
+- Repository: https://github.com/eisiishai/diagonpuzzle (public)
+- Site: https://eisiishai.github.io/diagonpuzzle/ (first release v2.13,
+  2026-10-16)
+
+**Login without a token in WSL.** Git signs in to GitHub through Git
+Credential Manager from Git for Windows, which keeps the login in the
+Windows Credential Manager, encrypted with the Windows login. The GitHub
+CLI (`gh`) is not logged in: in WSL it can only keep its token in a plain
+text file (`~/.config/gh/hosts.yml`), with write access to every
+repository. Repository settings and Releases are done on github.com.
+
+**Setup on a machine** (the repository and Pages already exist). The
+credential helper is `git-credential-manager.exe` in Git for Windows'
+`mingw64/bin` folder, given as a WSL path with its spaces escaped
+(`docs/backup.local.md`, git-ignored, has the exact command):
 
 ```bash
-gh auth login                    # GitHub.com, HTTPS, authenticate Git: yes
-gh repo create diagonpuzzle --public --source . --remote github
-npm run github                   # all history and versions
+git config --global credential.helper "<git-credential-manager.exe>"
+git remote add github https://github.com/eisiishai/diagonpuzzle.git
+git fetch github                 # the first push opens a Windows sign-in
 ```
 
-Make the first release by hand: on GitHub, *Actions → Release to GitHub
-Pages → Run workflow* with the current version (`v2.10`). When it has finished,
-under *Settings → Pages* set *Source* to *Deploy from a branch*, branch
-`gh-pages`, folder `/ (root)`.
+How it was set up the first time: the repository was created empty on
+github.com (no README, license or .gitignore), `npm run github` pushed all
+history and versions, *Actions → Release to GitHub Pages → Run workflow*
+made the first release, and then *Settings → Pages* was set to *Deploy
+from a branch*, branch `gh-pages`, folder `/ (root)`.
 
 **Each release:**
 
@@ -599,21 +631,23 @@ under *Settings → Pages* set *Source* to *Deploy from a branch*, branch
    for the last commit; an older one needs its history rewritten, so ask
    for help). `npm run github` can also be run any time without releasing:
    pushing releases nothing.
-3. Publish a Release for that version's existing tag:
-   ```bash
-   gh release create v2.9 --verify-tag --title v2.9 --notes "What changed"
-   ```
-   or on GitHub's *Releases → Draft a new release*, choosing the tag from
-   the list. Never type a new tag name there: GitHub would create that
-   tag by hand on the current `main`, outside the hooks' numbering.
-   A Release marked as a pre-release isn't put online.
-4. Follow the run under *Actions* (`gh run watch`). If a check fails,
+3. Publish a Release for that version's existing tag: on github.com,
+   *Releases → Draft a new release*, choose the tag (`v2.14`) from the
+   list, give a title and what changed, *Publish release*. Never type a
+   new tag name there: GitHub would create that tag by hand on the
+   current `main`, outside the hooks' numbering. A Release marked as a
+   pre-release isn't put online. (With `gh` logged in for the moment,
+   `gh release create v2.14 --verify-tag --title v2.14 --notes "…"` does
+   the same; `gh auth logout` afterwards.)
+4. Follow the run under *Actions*; it takes about 15 minutes. If a check fails,
    nothing goes online. On GitHub a failed browser test runs once more,
    recording a trace (recording one for every test slows GitHub's 4 cores
    until tests time out); the traces are in the run's `e2e-results`
    artifact (`npx playwright show-trace`). A test that passed only on its
    second run is listed as flaky and doesn't stop the release. Fix,
-   commit, and release the new version.
+   commit, and release the new version. Before that, check a fix to
+   the browser tests as on GitHub (*Browser tests as on GitHub* in
+   *2. Check*).
 5. Open the site and check it as in steps 4 and 5 above, phone included.
 
 To run a release again, or to point the main page back at an earlier

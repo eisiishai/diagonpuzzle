@@ -5,6 +5,8 @@ diagonal mirrors (`\` `/`) turn it 90°, and get it to the goal crystal. Every
 mirror the pellet bounces off flips, so a shot that misses still changes the
 board, and the puzzle is planning shots that set up the next ones.
 
+**[Play it in the browser](https://eisiishai.github.io/diagonpuzzle/)**
+
 - 30 levels in chapters, each introducing a new piece: the player's own
   mirror, breakable walls, reflectors, glass mirrors and fixed mirrors
 - Par and stars for the fewest shots, and a hidden bonus target in every

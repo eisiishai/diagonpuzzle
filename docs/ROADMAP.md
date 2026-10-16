@@ -443,7 +443,7 @@ lab page on 2026-10-11:
   a main page in `dist/index.html` that plays it through a `<base>` tag,
   so the site's main address plays the newest upload and older version
   folders stay online as snapshots
-- [ ] Release on GitHub Pages (`docs/WORKFLOW.md`, *Release on GitHub
+- [x] Release on GitHub Pages (`docs/WORKFLOW.md`, *Release on GitHub
   Pages*), for the versions chosen for players:
   - [x] Workflow `.github/workflows/pages.yml`: a published GitHub
     Release of a version tag (or *Run workflow* with a version) runs
@@ -454,8 +454,13 @@ lab page on 2026-10-11:
     (`scripts/push-github.sh`): it shows the commits, files and tags
     GitHub doesn't have yet, warns about added lines that look private
     and asks before pushing; the commit hook pushes only to the backup
-  - [ ] Create the GitHub repo, push, make the first release by hand
-    and turn on Pages (needs the user's GitHub login)
+  - [x] Create the GitHub repo, push, make the first release by hand
+    and turn on Pages: https://eisiishai.github.io/diagonpuzzle/, first
+    release v2.13 (2026-10-16). Git signs in through Git Credential
+    Manager; `gh` stays logged out (plain-text token in WSL)
+  - [x] Browser tests pass on GitHub's machines (no GPU, 4 slow cores,
+    about 3 frames a second): traces only on a retry, longer limits
+    there, the game's time keeping up at low frame rates under `?e2e`
 
 ### Later
 

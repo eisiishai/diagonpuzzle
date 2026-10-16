@@ -69,12 +69,19 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   showing what GitHub doesn't have yet (with warnings for added lines
   that look private) and asking; the commit hook never pushes to GitHub.
   It makes commits public, so only when the user asks
-- Deploy on GitHub Pages: commit, `npm run github`, then publish a GitHub
-  Release for that existing tag (`gh release create v2.9 --verify-tag`); `.github/workflows/pages.yml`
-  runs `npm run build` and `npm run e2e:full` and only then adds the
-  version folder and main page to the `gh-pages` branch. Not every
-  version is released: the user chooses which. Publishing a Release is
-  outward-facing, so only when the user asks.
+- Deploy on GitHub Pages (https://eisiishai.github.io/diagonpuzzle/,
+  repository github.com/eisiishai/diagonpuzzle): commit, `npm run github`,
+  then the user publishes a GitHub Release for that existing tag on
+  github.com (`gh` is kept logged out: in WSL it stores its token in plain
+  text; git signs in through Git Credential Manager);
+  `.github/workflows/pages.yml` runs `npm run build` and
+  `npm run e2e:full` and only then adds the version folder and main page
+  to the `gh-pages` branch. Not every version is released: the user
+  chooses which. Publishing a Release is outward-facing, so only when the
+  user asks. GitHub's machines are much slower than local runs: check
+  browser test changes with
+  `CI=1 taskset -c 0-1 npx playwright test --project=desktop --project=phone --project=levels --retries=0`
+  (`docs/WORKFLOW.md`, *Browser tests as on GitHub*).
 - Deploy to a web host by hand: commit (the `post-commit` hook rebuilds
   `dist/` with the new version; if it says "dist/ not rebuilt", run
   `npm run build` from a clean working tree), then upload `dist/`'s
