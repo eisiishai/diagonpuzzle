@@ -17,6 +17,15 @@ describe("neededPieces", () => {
     ).toEqual(["reflector"]);
     // The glass mirror turns row 1 away once; then row 1 runs straight on.
     expect(neededPieces(parseLevel(". Z G"), 2)).toEqual(["glass"]);
+    // Row 1 goes into the portal and comes out of the one beside the goal;
+    // with the portals made walls, no row gets through.
+    expect(
+      neededPieces(
+        parseLevel(String.raw`O # .
+# O G`),
+        1,
+      ),
+    ).toEqual(["portal"]);
   });
 
   it("finds fixed mirrors and the player's mirror needed", () => {

@@ -158,8 +158,9 @@ function playedShots(board: Board, moves: readonly Move[]): string | null {
  * never reaches), keeps the pieces par needs (see neededPieces) and keeps
  * the bonus target where it is, still taking `bonusShots` shots. Changes
  * may put an empty cell, a mirror or a wall in any cell but the goal and
- * the bonus target, and a breakable wall, a reflector, glass mirrors or
- * fixed mirrors only in levels that already have one.
+ * the bonus target (or a portal, as they come in pairs), and a breakable
+ * wall, a reflector, glass mirrors or fixed mirrors only in levels that
+ * already have one.
  */
 export function findAlternativeChanges(
   levelBoard: Board,
@@ -243,7 +244,8 @@ export function findAlternativeChanges(
   const changeable: Position[] = [];
   levelBoard.cells.forEach((row, y) =>
     row.forEach((cell, x) => {
-      if (cell !== "goal" && cell !== "bonus") {
+      // Portals stay where they are: they come in pairs.
+      if (cell !== "goal" && cell !== "bonus" && cell !== "portal") {
         changeable.push({ x, y });
       }
     }),

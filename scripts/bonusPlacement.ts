@@ -273,7 +273,9 @@ export function findPlacements(
   const parCells = reachedCells(par, playMoves(start, par).shots);
   const changeable = cellPositions(
     start,
-    (cell, { x, y }) => cell !== "goal" && !parCells.has(`${x},${y}`),
+    // Portals stay where they are: they come in pairs.
+    (cell, { x, y }) =>
+      cell !== "goal" && cell !== "portal" && !parCells.has(`${x},${y}`),
   );
   const search = (board: Board, changes: CellChange[], from: number) => {
     evaluate(board, changes);

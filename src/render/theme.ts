@@ -28,6 +28,9 @@ export const COLORS = {
   steel: 0x8592a8,
   steelHighlight: 0xc3ccda,
   steelBolt: 0x3a4660,
+  /** Portals: a violet ring, the one piece in this colour. */
+  portal: 0xa98bff,
+  portalCore: 0x1a1236,
   emitterIdle: 0x3b5a86,
   emitterSelected: 0x11223a,
   /** Corner ticks around the board, and their labels (4.9:1 contrast). */

@@ -59,6 +59,7 @@ describe("introMessage", () => {
     hasReflector: false,
     hasGlass: false,
     hasFixed: false,
+    hasPortal: false,
   };
 
   it("explains how to play on a plain level", () => {
@@ -75,8 +76,12 @@ describe("introMessage", () => {
         hasReflector: true,
         hasGlass: true,
         hasFixed: true,
+        hasPortal: true,
       }),
     ).toContain("bonus target");
+    expect(
+      introMessage({ ...plain, hasFixed: true, hasPortal: true }),
+    ).toContain("Portals");
     expect(
       introMessage({ ...plain, hasGlass: true, hasFixed: true }),
     ).toContain("Steel mirrors");

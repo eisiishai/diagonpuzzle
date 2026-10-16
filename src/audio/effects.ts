@@ -381,6 +381,7 @@ export const BOUNCE_SECONDS: Record<BounceKind, number> = {
   fixed: 0.6,
   reflector: 0.65,
   glass: 0.5,
+  portal: 0.45,
 };
 
 /**
@@ -398,6 +399,7 @@ export const BOUNCE_SECONDS: Record<BounceKind, number> = {
  * - glass (sound lab 5, "Crack and tinkle"): the bell cut off by a short
  *   bright crack and small clicks, then a soft shower of tiny high notes
  *   in the music's scale, falling like the shards.
+ * - portal: the mirror's sound for now, until a sound lab gives it its own.
  * The reflector and glass sounds are a little quieter than on the lab page.
  */
 export function playBounce(

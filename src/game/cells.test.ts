@@ -34,6 +34,7 @@ describe("cell groups", () => {
       fixedBackslash: "fixed",
       fixedSlash: "fixed",
       reflector: "reflector",
+      portal: "portal",
     });
   });
 });

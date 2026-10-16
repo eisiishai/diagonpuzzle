@@ -3,11 +3,14 @@ import type { BounceKind, CellType, Direction, MirrorType } from "./types";
 /**
  * What happens to a pellet that enters a cell. `becomes` is set when the hit
  * changes the cell itself; the change takes effect immediately, so a pellet
- * returning to the cell later in the same shot meets the new cell.
+ * returning to the cell later in the same shot meets the new cell. A
+ * `teleport` sends the pellet on from the board's other portal, moving the
+ * same way.
  */
 export type CellEffect =
   | { kind: "pass"; direction: Direction; becomes?: CellType }
-  | { kind: "stop"; reason: "blocked" | "goal" | "bonus"; becomes?: CellType };
+  | { kind: "stop"; reason: "blocked" | "goal" | "bonus"; becomes?: CellType }
+  | { kind: "teleport" };
 
 const BACKSLASH_TURNS: Record<Direction, Direction> = {
   right: "down",
@@ -74,6 +77,9 @@ export const CELL_BEHAVIORS: Record<
   // A reflector sends the pellet straight back the way it came; it never
   // changes, but the mirrors behind it may have flipped on the way in.
   reflector: (direction) => ({ kind: "pass", direction: REVERSED[direction] }),
+  // A portal sends the pellet on from its partner, the board's other
+  // portal, moving the same way; it never changes.
+  portal: () => ({ kind: "teleport" }),
   // A cracked wall stops the pellet and breaks: the next shot passes through.
   breakable: () => ({ kind: "stop", reason: "blocked", becomes: "empty" }),
   goal: () => ({ kind: "stop", reason: "goal" }),
@@ -110,7 +116,8 @@ export function isGlassMirror(cell: CellType): boolean {
 
 /**
  * What turns the pellet in each cell type that can (for its sound and the
- * beam's drawing); null for the others. Every cell type needs an entry.
+ * beam's drawing), or sends it elsewhere (a portal); null for the others.
+ * Every cell type needs an entry.
  */
 const BOUNCE_KINDS: Record<CellType, BounceKind | null> = {
   empty: null,
@@ -121,13 +128,17 @@ const BOUNCE_KINDS: Record<CellType, BounceKind | null> = {
   fixedBackslash: "fixed",
   fixedSlash: "fixed",
   reflector: "reflector",
+  portal: "portal",
   wall: null,
   breakable: null,
   goal: null,
   bonus: null,
 };
 
-/** What kind of bounce a pellet turned by `cell` makes; null if it can't turn it. */
+/**
+ * What kind of bounce a pellet turned (or sent through a portal) by `cell`
+ * makes; null if it can't turn it.
+ */
 export function bounceKind(cell: CellType): BounceKind | null {
   return BOUNCE_KINDS[cell];
 }

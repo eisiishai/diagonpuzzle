@@ -15,6 +15,7 @@ const YOUR_MOVE = 14; // the first level with the player's mirror
 const RETURN_TRIP = 18; // the first level with a reflector
 const GLASS_HOUSE = 22; // the first level with a glass mirror
 const BOLTED_DOWN = 26; // the first level with a fixed mirror
+const OTHER_SIDE = 30; // the first level with portals
 
 for (const [device, size] of Object.entries(SIZES)) {
   const shoot = (game: Game, name: string) =>
@@ -80,6 +81,17 @@ for (const [device, size] of Object.entries(SIZES)) {
       const [first] = solution(BOLTED_DOWN);
       await game.play([first], "mouse");
       await shoot(game, "level-27-first-shot");
+    });
+
+    test("portals", async ({ game }) => {
+      await game.seedCompleted(OTHER_SIDE);
+      await game.open();
+      await game.press(`${OTHER_SIDE + 1}. `);
+      await game.waitForLevel(OTHER_SIDE + 1);
+      await shoot(game, "level-31-start");
+      const [first] = solution(OTHER_SIDE);
+      await game.play([first], "mouse");
+      await shoot(game, "level-31-first-shot");
     });
 
     test("last level", async ({ game }) => {

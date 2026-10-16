@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle } from "pixi.js";
 import type { FederatedPointerEvent } from "pixi.js";
+import { cellPositions } from "../game/board";
 import { isGlassMirror, isMirror } from "../game/cells";
 import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
@@ -27,6 +28,8 @@ const MIRROR_PLACE_MS = 220;
 const SPARKLE_INTERVAL_MS = 170;
 /** Turning speed of the bonus gem, in radians per millisecond. */
 const BONUS_SPIN = (2 * Math.PI) / 9000;
+/** Turning speed of portals' vanes (the other way), in radians per millisecond. */
+const PORTAL_SPIN = -(2 * Math.PI) / 6000;
 
 export interface BoardViewHandlers {
   /** A launcher was clicked or tapped. */
@@ -93,6 +96,8 @@ export class BoardView extends Container {
   private readonly rowHighlight = new Graphics();
   private readonly cellViews: Graphics[][] = [];
   private readonly cells: CellType[][];
+  /** Where the board's portals are; they never change. */
+  private readonly portals: Position[];
   /** Goal hits so far and needed; see setGoalHits(). */
   private goalHits: GoalHits = { hits: 0, required: 1 };
   private readonly launchers: Graphics[] = [];
@@ -123,6 +128,7 @@ export class BoardView extends Container {
     this.boardHeight = board.height;
     this.cellSize = cellSize;
     this.cells = board.cells.map((row) => [...row]);
+    this.portals = cellPositions(board, (cell) => cell === "portal");
     this.boardEffects = new BoardEffects(cellSize);
     this.filters = [createBloom()];
 
@@ -301,8 +307,12 @@ export class BoardView extends Container {
     this.animator.play(result, {
       ...callbacks,
       onBounce: (bounceNumber, at) => {
-        const center = this.cellCenter(at.x, at.y);
-        this.boardEffects.addFlash(center.x, center.y, "mirror");
+        // A pellet going through a portal lights up both of them.
+        const flashed = at.bounceKind === "portal" ? this.portals : [at];
+        for (const { x, y } of flashed) {
+          const center = this.cellCenter(x, y);
+          this.boardEffects.addFlash(center.x, center.y, "mirror");
+        }
         callbacks.onBounce(bounceNumber, at);
       },
       onCellChange: (x, y, cell) => this.changeCell(x, y, cell),
@@ -501,7 +511,8 @@ export class BoardView extends Container {
   /**
    * Goal crystals breathe (grow slightly and glow), and the selected
    * emitter's glow pulses. Bonus targets turn, pulse faster and deeper, and
-   * give off sparkles. Still when the player prefers reduced motion.
+   * give off sparkles; portals' vanes swirl. Still when the player prefers
+   * reduced motion.
    */
   private updateAmbient(deltaMs: number): void {
     if (prefersReducedMotion()) {
@@ -529,6 +540,8 @@ export class BoardView extends Container {
             const center = this.cellCenter(x, y);
             this.boardEffects.addSparkle(center.x, center.y);
           }
+        } else if (cell === "portal") {
+          view.rotation = this.ambientMs * PORTAL_SPIN;
         }
       }),
     );

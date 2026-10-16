@@ -116,10 +116,18 @@ with flipping mirrors, before it is built.
       player's mirror
     - [x] Its own music track: *Return*, chosen on sound lab 4
     - [x] Its own hit sound: *Echo ping*, chosen on sound lab 5
-  - [ ] Portal pair: the pellet enters one and leaves the other in the
-    same direction. No state of its own, so no cost to the solver;
-    reaches rows and routes the left edge can't. The loop guard covers
-    any loops it makes
+  - [x] Portal pair (`O`): the pellet enters one and leaves the other in
+    the same direction. No state of its own, so no cost to the solver;
+    reaches rows and routes the left edge can't. One pair per level.
+    Levels 31–32 teach it (chapter *Portals*). Design in
+    `docs/DESIGN.md`, *Portals*
+    - [ ] Its own music track, chosen on a sound lab page (it borrows
+      *Photon* until then)
+    - [ ] Its own sound as the pellet goes through (it borrows the mirror
+      bell until then)
+    - [ ] Harder portal levels, combined with the other pieces
+    - [ ] Optional: several pairs per level, each with its own symbol and
+      colour
   - [ ] One-way gate: the pellet passes in one direction and is stopped
     from the others (shown with an arrow). Closes off routes, which helps
     keep a level's alternatives in check
@@ -158,6 +166,14 @@ Levels 19–30 (reflectors, then glass mirrors, then fixed mirrors; added
 | Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 in | 4 | 25 | 125 | 3,143 | 16 | 125 | 125 | 625 | 16 | 125 | 125 | 3,387 |
+
+Levels 31–32 (portals, added 2026-10-16), easy teaching levels at the
+start of a chapter like 19, 23 and 27:
+
+| Level | 31 | 32 |
+|---|---|---|
+| 1 in | 5 | 25 |
+| Foresight | 0 | 1 |
 
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).

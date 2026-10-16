@@ -32,6 +32,12 @@ describe("traceMoves", () => {
     ]);
   });
 
+  it("marks where the pellet comes out of a portal", () => {
+    expect(traceMoves(parseLevel(". O #\nO . G"), [0])[1]).toBe(
+      "  (1,1) (2,1) ⇒ (1,2) (2,2) (3,2)",
+    );
+  });
+
   it("places the player's mirror, and refuses a cell it can't go on", () => {
     const board = parseLevel(". . G\n. . .");
     expect(

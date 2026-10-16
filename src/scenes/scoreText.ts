@@ -78,11 +78,13 @@ export interface IntroFacts {
   hasGlass: boolean;
   /** The level has fixed mirrors. */
   hasFixed: boolean;
+  /** The level has portals. */
+  hasPortal: boolean;
 }
 
 /**
  * The message shown when a level starts or restarts: about the newest thing
- * in it, in this order: a bonus target to find, fixed mirrors, glass
+ * in it, in this order: a bonus target to find, portals, fixed mirrors, glass
  * mirrors, reflectors,
  * the player's mirror, a goal needing several hits, breakable walls; else how to play.
  */
@@ -95,9 +97,13 @@ export function introMessage(facts: IntroFacts): string {
     hasReflector,
     hasGlass,
     hasFixed,
+    hasPortal,
   } = facts;
   if (bonusToFind) {
     return "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
+  }
+  if (hasPortal) {
+    return "Portals come in pairs: the pellet goes into one and comes out of the other, moving the same way.";
   }
   if (hasFixed) {
     return "Steel mirrors are bolted down: they turn the pellet but never flip.";

@@ -1,4 +1,4 @@
-import { getCell, step } from "./board";
+import { cellPositions, getCell, step } from "./board";
 import { CELL_BEHAVIORS } from "./cells";
 import type { Board, CellType, Direction, Position } from "./types";
 
@@ -15,6 +15,11 @@ export interface PathStep {
   directionOut: Direction;
   /** What the cell turned into when the pellet hit it, if it changed. */
   becomes?: CellType;
+  /**
+   * Set where the pellet came out of a portal, having entered the other one
+   * (the step before): it didn't travel here from that cell.
+   */
+  throughPortal?: true;
 }
 
 export interface ShotResult {
@@ -49,8 +54,8 @@ export function fire(board: Board, row: number): ShotResult {
   // identical board, so the board is part of the visited key. Every state is
   // visited at most once, so the loop terminates.
   // With the current cells a loop can't happen (every step can be traced
-  // back uniquely, see docs/DESIGN.md), so no test builds one; the check
-  // guards future block types.
+  // back uniquely, through portals too, see docs/DESIGN.md), so no test
+  // builds one; the check guards future block types.
   const visited = new Set<string>();
   let boardKey = boardStateKey(current);
   let position: Position = { x: 0, y: row };
@@ -69,6 +74,14 @@ export function fire(board: Board, row: number): ShotResult {
     visited.add(key);
 
     const effect = CELL_BEHAVIORS[cell](direction);
+    if (effect.kind === "teleport") {
+      const exit = otherPortal(current, position);
+      const through = { cell, directionIn: direction, directionOut: direction };
+      path.push({ ...position, ...through });
+      path.push({ ...exit, ...through, throughPortal: true });
+      position = step(exit, direction);
+      continue;
+    }
     if (effect.kind === "stop") {
       path.push({
         ...position,
@@ -97,6 +110,21 @@ export function fire(board: Board, row: number): ShotResult {
     direction = effect.direction;
     position = step(position, direction);
   }
+}
+
+/** The board's portal other than the one at `position`. */
+function otherPortal(board: Board, position: Position): Position {
+  const others = cellPositions(
+    board,
+    (cell, { x, y }) =>
+      cell === "portal" && (x !== position.x || y !== position.y),
+  );
+  if (others.length !== 1) {
+    throw new Error(
+      `A board needs two portals or none, found ${others.length + 1}`,
+    );
+  }
+  return others[0];
 }
 
 /** A string that is equal for two boards exactly when their cells are equal. */

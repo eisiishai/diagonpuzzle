@@ -690,6 +690,7 @@ export class GameScene extends Container implements Scene {
       hasReflector: boardHas(board, ["reflector"]),
       hasGlass: boardHas(board, GLASS_MIRRORS),
       hasFixed: boardHas(board, FIXED_MIRRORS),
+      hasPortal: boardHas(board, ["portal"]),
     });
   }
 }

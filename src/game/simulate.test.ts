@@ -222,6 +222,61 @@ describe("reflectors", () => {
   });
 });
 
+describe("portals", () => {
+  it("send the pellet on from the other portal, moving the same way", () => {
+    // Into the portal at (1,0), out of the one at (0,1), on right to the
+    // goal; the portals don't change.
+    const grid = String.raw`
+      . O #
+      O . G
+    `;
+    expect(CELL_BEHAVIORS.portal("up")).toEqual({ kind: "teleport" });
+    const result = fire(parseLevel(grid), 0);
+    expect(result.outcome).toBe("goal");
+    expect(cells(grid, 0)).toEqual(["0,0", "1,0", "0,1", "1,1", "2,1"]);
+    expect(result.path[2]).toEqual({
+      x: 0,
+      y: 1,
+      cell: "portal",
+      directionIn: "right",
+      directionOut: "right",
+      throughPortal: true,
+    });
+    expect(result.path[1].throughPortal).toBeUndefined();
+    expect(result.board.cells).toEqual(parseLevel(grid).cells);
+  });
+
+  it("work both ways, after mirrors turn the pellet into them", () => {
+    // Row 2 turns up at the "/" and left at the "\" above it, enters the
+    // right portal moving left and comes out of the left one, moving left
+    // off the board.
+    const grid = String.raw`
+      O . . O \
+      . . . . /
+      # . . . G
+    `;
+    const result = fire(parseLevel(grid), 1);
+    expect(result.outcome).toBe("exit");
+    expect(cells(grid, 1)).toEqual([
+      "0,1",
+      "1,1",
+      "2,1",
+      "3,1",
+      "4,1",
+      "4,0",
+      "3,0",
+      "0,0",
+    ]);
+  });
+
+  it("need a partner", () => {
+    const lone = { width: 2, height: 1, cells: [["portal", "goal"]] } as const;
+    expect(() =>
+      fire({ ...lone, cells: lone.cells.map((row) => [...row]) }, 0),
+    ).toThrow("two portals");
+  });
+});
+
 describe("glass mirrors", () => {
   it("turn the pellet like mirrors, then shatter", () => {
     for (const [glass, mirror] of [

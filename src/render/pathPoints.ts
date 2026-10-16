@@ -13,10 +13,18 @@ export interface PathPoint {
   /** Board coordinates in cells; may be fractional or outside the board. */
   x: number;
   y: number;
-  /** True if the pellet changes direction at this point. */
+  /**
+   * True if the pellet changes direction at this point, or enters a portal
+   * (and comes out of the other one at the next point).
+   */
   bounce: boolean;
-  /** What turned it, where it changes direction. */
+  /** What turned it, where it changes direction or enters a portal. */
   bounceKind?: BounceKind;
+  /**
+   * Set where the pellet comes out of a portal: it doesn't travel here from
+   * the point before, so nothing is drawn between them.
+   */
+  jump?: true;
   /** Set if the cell at this point changes when hit (e.g. a mirror flips). */
   becomes?: CellType;
   /**
@@ -31,7 +39,8 @@ export interface PathPoint {
  * launcher (x = -1), through the centre of each cell it enters, to where it
  * ends — one cell past the edge when it exits, the near edge of a wall when
  * it is blocked. Where it is sent straight back (a reflector), the point is
- * at the reflector's near side instead of its centre.
+ * at the reflector's near side instead of its centre. Through a portal, the
+ * path jumps from the portal's centre to its partner's (`jump`).
  */
 export function pathPoints(result: ShotResult): PathPoint[] {
   const { path, outcome } = result;
@@ -46,7 +55,8 @@ export function pathPoints(result: ShotResult): PathPoint[] {
       const back = DIRECTION_DELTAS[step.directionOut];
       const reversed = delta.x === -back.x && delta.y === -back.y;
       const offset = reversed ? REFLECTOR_RADIUS : 0;
-      const bounce = step.directionIn !== step.directionOut;
+      const entersPortal = step.cell === "portal" && !step.throughPortal;
+      const bounce = step.directionIn !== step.directionOut || entersPortal;
       const kind = bounce ? bounceKind(step.cell) : null;
       return {
         x: step.x - delta.x * offset,
@@ -54,6 +64,7 @@ export function pathPoints(result: ShotResult): PathPoint[] {
         bounce,
         ...(kind && { bounceKind: kind }),
         ...(step.becomes && { becomes: step.becomes }),
+        ...(step.throughPortal && { jump: true as const }),
       };
     }),
   ];
@@ -75,4 +86,22 @@ export function pathPoints(result: ShotResult): PathPoint[] {
     };
   }
   return points;
+}
+
+/**
+ * `points` split into the runs drawn as separate lines: a new run starts at
+ * each point where `jumpsTo` is true (a portal's exit).
+ */
+export function splitAtJumps<T>(
+  points: readonly T[],
+  jumpsTo: (point: T) => boolean,
+): T[][] {
+  const runs: T[][] = [];
+  for (const point of points) {
+    if (runs.length === 0 || jumpsTo(point)) {
+      runs.push([]);
+    }
+    runs[runs.length - 1].push(point);
+  }
+  return runs;
 }

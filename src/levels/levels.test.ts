@@ -87,6 +87,14 @@ it.each(idsWith("fixedBackslash", "fixedSlash"))(
   },
 );
 
+// Levels with portals are built around them: with both portals walls, par
+// is out of reach.
+it.each(idsWith("portal"))("%s needs its portals", (id) => {
+  const { level, board } = replaced(id, ["portal"], () => "wall");
+  const { minShots, goalHits = 1, playerMirror } = level;
+  expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
+});
+
 // Levels that give the player a mirror are built around it: without it,
 // par is out of reach (a longer way round may exist).
 it.each(LEVELS.filter((level) => level.playerMirror).map((level) => level.id))(

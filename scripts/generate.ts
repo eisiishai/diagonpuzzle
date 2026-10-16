@@ -22,6 +22,7 @@ const DEFAULTS: GeneratorOptions & { show: number; alternatives: number } = {
   reflectors: 0,
   glass: 0,
   fixed: 0,
+  portals: false,
   playerMirror: undefined,
   placeLater: false,
   shots: 2,
@@ -48,6 +49,7 @@ const HELP = `Usage: npm run generate -- [options]
                     (default ${DEFAULTS.glass})
   --fixed N         fixed mirrors; boards must need one to stay fixed (not
                     flip) for par (default ${DEFAULTS.fixed})
+  --portals         a pair of portals; boards must need them for par
   --player-mirror M the player may place one mirror M (slash or backslash)
                     on any empty cell; boards must need it for par
   --place-later     no shortest solution places the mirror before the first shot
@@ -81,6 +83,7 @@ const FLAGS: Record<string, keyof typeof DEFAULTS> = {
   "--reflectors": "reflectors",
   "--glass": "glass",
   "--fixed": "fixed",
+  "--portals": "portals",
   "--place-later": "placeLater",
   "--shots": "shots",
   "--goal-hits": "goalHits",

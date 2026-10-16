@@ -48,7 +48,7 @@ export function withSolidWalls(board: Board): Board {
 
 /** A kind of piece a level can be built around. */
 export type Piece =
-  "breakable" | "reflector" | "glass" | "fixed" | "playerMirror";
+  "breakable" | "reflector" | "glass" | "fixed" | "portal" | "playerMirror";
 
 /** Each kind of piece on a board, and the board with it swapped for a plainer one. */
 const SWAPS: {
@@ -64,13 +64,14 @@ const SWAPS: {
   },
   { piece: "glass", cells: GLASS_MIRRORS, swap: withSolidGlass },
   { piece: "fixed", cells: FIXED_MIRRORS, swap: withFlippingMirrors },
+  { piece: "portal", cells: ["portal"], swap: (b) => withWalls(b, "portal") },
 ];
 
 /**
  * The kinds of piece `board` needs for par in `shots` shots: those it has
  * (and the player's mirror, if given) without which par is out of reach,
- * with breakable walls made solid, reflectors made walls, glass and fixed
- * mirrors made ordinary ones, or no mirror for the player.
+ * with breakable walls made solid, reflectors and portals made walls, glass
+ * and fixed mirrors made ordinary ones, or no mirror for the player.
  */
 export function neededPieces(
   board: Board,

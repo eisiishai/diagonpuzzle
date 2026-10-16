@@ -39,8 +39,8 @@ export function parseMoves(
 
 /**
  * Plays `moves` from `board`: for each shot a line with the row, its
- * outcome and what it changed, and every cell the pellet entered, then the
- * board after it; for a placement, where the mirror went. Throws on a row
+ * outcome and what it changed, and every cell the pellet entered (with
+ * "⇒" before the portal it comes out of), then the board after it; for a placement, where the mirror went. Throws on a row
  * outside the board or a cell the mirror can't go on.
  */
 export function traceMoves(board: Board, moves: readonly Move[]): string[] {
@@ -61,7 +61,10 @@ export function traceMoves(board: Board, moves: readonly Move[]): string[] {
     const result = fire(current, move);
     lines.push(
       `row ${move + 1}: ${describeShot(result)}`,
-      `  ${result.path.map(cellName).join(" ")}`,
+      // "⇒" marks where the pellet comes out of a portal.
+      `  ${result.path
+        .map((step) => (step.throughPortal ? "⇒ " : "") + cellName(step))
+        .join(" ")}`,
     );
     current = result.board;
     lines.push(formatLevel(current, "    "));

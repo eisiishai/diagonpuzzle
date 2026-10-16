@@ -1,6 +1,7 @@
 import type { Graphics } from "pixi.js";
 import type { CellType } from "../game/types";
 import { diamondFill } from "./goalFill";
+import { arcPoints } from "./polyline";
 import { BONUS_COLORS, COLORS } from "./theme";
 
 /** Goal hits so far and needed, for a goal that needs several hits. */
@@ -87,6 +88,26 @@ const CELL_DRAWERS: Record<CellType, CellDrawer> = {
       g.moveTo(0, 0).lineTo(Math.cos(angle) * facet, Math.sin(angle) * facet);
     }
     g.stroke({ width: 1.5, color: COLORS.glassHighlight, cap: "round" })
+      .circle(0, 0, half * 0.1)
+      .fill(COLORS.glassHighlight);
+  },
+  portal: (g, half) => {
+    // A violet ring around a dark well, with three curved vanes swirling
+    // into it: the pellet goes in here and comes out of the other one.
+    // BoardView turns it slowly.
+    const outer = half * 0.66;
+    g.circle(0, 0, outer)
+      .fill(COLORS.portalCore)
+      .stroke({ width: 3.5, color: COLORS.portal });
+    for (let i = 0; i < 3; i++) {
+      const start = (i / 3) * Math.PI * 2;
+      const vane = arcPoints(0, 0, outer * 0.62, start, start + 1.4, 8);
+      g.moveTo(vane[0].x, vane[0].y);
+      for (const p of vane.slice(1)) {
+        g.lineTo(p.x, p.y);
+      }
+    }
+    g.stroke({ width: 2, color: COLORS.portal, alpha: 0.75, cap: "round" })
       .circle(0, 0, half * 0.1)
       .fill(COLORS.glassHighlight);
   },

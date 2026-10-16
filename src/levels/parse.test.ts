@@ -18,9 +18,11 @@ describe("parseLevel", () => {
 
   it("reads every cell type's symbol, and writes it back", () => {
     const types = Object.keys(CELL_SYMBOLS) as CellType[];
-    const grid = types.map((type) => CELL_SYMBOLS[type]).join(" ");
+    // Portals come in pairs.
+    const cells = [...types, "portal" as const];
+    const grid = cells.map((type) => CELL_SYMBOLS[type]).join(" ");
     const board = parseLevel(grid);
-    expect(board.cells[0]).toEqual(types);
+    expect(board.cells[0]).toEqual(cells);
     expect(formatLevel(board)).toBe(grid);
     expect(new Set(Object.values(CELL_SYMBOLS)).size).toBe(types.length);
   });
@@ -49,6 +51,12 @@ describe("parseLevel", () => {
 
   it("rejects a level without a goal", () => {
     expect(() => parseLevel(". . .")).toThrow("no goal");
+  });
+
+  it("rejects a level with one portal or more than two", () => {
+    expect(() => parseLevel(". O G")).toThrow("1 portals");
+    expect(() => parseLevel("O O O G")).toThrow("3 portals");
+    expect(parseLevel("O O G").cells[0]).toEqual(["portal", "portal", "goal"]);
   });
 
   it("rejects an empty level", () => {

@@ -46,6 +46,11 @@ export interface GeneratorOptions {
    */
   fixed: number;
   /**
+   * A pair of portals. With one, only boards that need it for par are kept
+   * (with the portals made walls, par would be higher).
+   */
+  portals: boolean;
+  /**
    * A mirror the player may place on any empty cell. With one, only boards
    * that need it placed for par are kept.
    */
@@ -95,8 +100,8 @@ export function createRandom(seed: number): () => number {
 
 /**
  * A random board: the goal somewhere in the rightmost column, mirrors,
- * walls, breakable walls, reflectors, glass mirrors and fixed mirrors in
- * random empty cells left of it.
+ * walls, breakable walls, reflectors, glass mirrors, fixed mirrors and a
+ * pair of portals in random empty cells left of it.
  * Asks for no more pieces than fit.
  */
 export function randomBoard(
@@ -110,12 +115,15 @@ export function randomBoard(
     | "reflectors"
     | "glass"
     | "fixed"
+    | "portals"
   >,
   random: () => number,
 ): Board {
   const { width, height, mirrors, walls, breakable } = options;
   const { reflectors, glass, fixed } = options;
-  const pieces = mirrors + walls + breakable + reflectors + glass + fixed;
+  const portals = options.portals ? 2 : 0;
+  const pieces =
+    mirrors + walls + breakable + reflectors + glass + fixed + portals;
   if (pieces > (width - 1) * height) {
     throw new Error("Too many pieces for the board size");
   }
@@ -140,6 +148,7 @@ export function randomBoard(
   place(() => "reflector", reflectors);
   place(() => (random() < 0.5 ? "glassBackslash" : "glassSlash"), glass);
   place(() => (random() < 0.5 ? "fixedBackslash" : "fixedSlash"), fixed);
+  place(() => "portal", portals);
   return { width, height, cells };
 }
 
@@ -213,6 +222,12 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
     if (
       options.fixed > 0 &&
       solve(withFlippingMirrors(board), shots, goalHits, playerMirror) !== null
+    ) {
+      continue;
+    }
+    if (
+      options.portals &&
+      solve(withWalls(board, "portal"), shots, goalHits, playerMirror) !== null
     ) {
       continue;
     }

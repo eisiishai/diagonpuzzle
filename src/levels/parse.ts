@@ -12,6 +12,7 @@ export const CELL_SYMBOLS: Readonly<Record<CellType, string>> = {
   glassSlash: "Z",
   fixedBackslash: "L",
   fixedSlash: "J",
+  portal: "O",
   goal: "G",
   bonus: "*",
 };
@@ -43,6 +44,7 @@ export function parseLevel(text: string): Board {
 
   const width = rows[0].symbols.length;
   let goals = 0;
+  let portals = 0;
   const cells = rows.map(({ lineNumber, symbols }) => {
     if (symbols.length !== width) {
       throw new Error(
@@ -58,6 +60,8 @@ export function parseLevel(text: string): Board {
       }
       if (cell === "goal") {
         goals++;
+      } else if (cell === "portal") {
+        portals++;
       }
       return cell;
     });
@@ -65,6 +69,11 @@ export function parseLevel(text: string): Board {
 
   if (goals === 0) {
     throw new Error("Level has no goal (G)");
+  }
+  if (portals !== 0 && portals !== 2) {
+    throw new Error(
+      `Level has ${portals} portals (O): a level has two or none`,
+    );
   }
 
   return { width, height: rows.length, cells };

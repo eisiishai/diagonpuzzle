@@ -2,7 +2,7 @@ import { Container, Graphics } from "pixi.js";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
 import type { CellType } from "../game/types";
 import { prefersReducedMotion } from "./ambient";
-import { pathPoints } from "./pathPoints";
+import { pathPoints, splitAtJumps } from "./pathPoints";
 import { distinctPoints, pointsAlong } from "./polyline";
 import type { PathPoint } from "./pathPoints";
 import { COLORS } from "./theme";
@@ -38,6 +38,25 @@ interface PixelPoint {
   y: number;
   /** The path point in board cell coordinates. */
   cell: PathPoint;
+}
+
+/** A point of a drawn line, in pixels; `jump` starts a new line (a portal). */
+type LinePoint = { x: number; y: number; jump?: boolean };
+
+/**
+ * The lines to draw along `points`: one per run between portals, without
+ * repeated points (they break the stroke on some phone GPUs, see
+ * polyline.ts), and only those with two points or more.
+ */
+function lines(points: readonly LinePoint[]): { x: number; y: number }[][] {
+  return splitAtJumps(points, (p) => p.jump === true)
+    .map((run) => distinctPoints(run))
+    .filter((run) => run.length >= 2);
+}
+
+/** The pixel points as line points, each knowing whether it is a jump. */
+function linePoints(points: readonly PixelPoint[]): LinePoint[] {
+  return points.map((p) => ({ x: p.x, y: p.y, jump: p.cell.jump }));
 }
 
 /**
@@ -97,7 +116,7 @@ export class PelletAnimator extends Container {
 
   play(result: ShotResult, callbacks: ShotCallbacks): void {
     // The shot before this one stays as a ghost until the next shot.
-    this.drawGhost(this.points);
+    this.drawGhost(linePoints(this.points));
     this.ghostMs = 0;
     this.points = pathPoints(result).map((cell) => ({
       ...this.toPixels(cell.x, cell.y),
@@ -145,15 +164,17 @@ export class PelletAnimator extends Container {
    * bright core or end marker, so it reads as the past shot. Nothing if
    * there was no shot.
    */
-  private drawGhost(allPoints: { x: number; y: number }[]): void {
+  private drawGhost(allPoints: LinePoint[]): void {
     const g = this.ghost.clear();
-    const points = distinctPoints(allPoints);
-    if (points.length < 2) {
+    const runs = lines(allPoints);
+    if (runs.length === 0) {
       return;
     }
-    g.moveTo(points[0].x, points[0].y);
-    for (const p of points.slice(1)) {
-      g.lineTo(p.x, p.y);
+    for (const points of runs) {
+      g.moveTo(points[0].x, points[0].y);
+      for (const p of points.slice(1)) {
+        g.lineTo(p.x, p.y);
+      }
     }
     g.stroke({
       width: this.cellSize * 0.2,
@@ -163,18 +184,21 @@ export class PelletAnimator extends Container {
       join: "round",
     });
     const size = this.cellSize * 0.07;
-    const total = points
-      .slice(1)
-      .reduce(
-        (sum, p, i) => sum + Math.hypot(p.x - points[i].x, p.y - points[i].y),
-        0,
-      );
     const start = this.cellSize * GHOST_CHEVRON_START;
     const spacing = this.cellSize * GHOST_CHEVRON_SPACING;
-    const chevrons = pointsAlong(points, start, spacing).filter(
-      // Leave the last stretch bare, where the shot ended.
-      (_, i) => start + i * spacing < total - this.cellSize * 0.3,
-    );
+    const chevrons = runs.flatMap((points) => {
+      const total = points
+        .slice(1)
+        .reduce(
+          (sum, p, i) => sum + Math.hypot(p.x - points[i].x, p.y - points[i].y),
+          0,
+        );
+      return pointsAlong(points, start, spacing).filter(
+        // Leave each line's last stretch bare, where the shot ended or
+        // went into a portal.
+        (_, i) => start + i * spacing < total - this.cellSize * 0.3,
+      );
+    });
     for (const p of chevrons) {
       const cos = Math.cos(p.angle);
       const sin = Math.sin(p.angle);
@@ -201,7 +225,10 @@ export class PelletAnimator extends Container {
     while (this.segment < points.length - 1) {
       const from = points[this.segment];
       const to = points[this.segment + 1];
-      const length = Math.hypot(to.x - from.x, to.y - from.y);
+      // Through a portal the pellet is at its partner at once.
+      const length = to.cell.jump
+        ? 0
+        : Math.hypot(to.x - from.x, to.y - from.y);
       const remaining = length - this.segmentProgress;
       if (distance < remaining) {
         this.segmentProgress += distance;
@@ -229,7 +256,7 @@ export class PelletAnimator extends Container {
   private currentPosition(): { x: number; y: number } {
     const from = this.points[this.segment];
     const to = this.points[this.segment + 1];
-    if (!to) {
+    if (!to || to.cell.jump) {
       return from;
     }
     const length = Math.hypot(to.x - from.x, to.y - from.y);
@@ -239,7 +266,7 @@ export class PelletAnimator extends Container {
 
   private draw(): void {
     const head = this.currentPosition();
-    const path = [...this.points.slice(0, this.segment + 1), head];
+    const path = [...linePoints(this.points.slice(0, this.segment + 1)), head];
     this.drawBeam(path, { color: COLORS.beam, dimmed: false });
     this.drawTail();
     this.drawLight(path, COLORS.beam, 1, head);
@@ -273,6 +300,10 @@ export class PelletAnimator extends Container {
       remaining -= length;
       x = p.x;
       y = p.y;
+      // The tail doesn't reach back through a portal.
+      if (p.cell.jump) {
+        break;
+      }
     }
     return { x, y };
   }
@@ -282,18 +313,20 @@ export class PelletAnimator extends Container {
    * a soft glow around `head` while the beam is still moving.
    */
   private drawLight(
-    allPoints: { x: number; y: number }[],
+    allPoints: LinePoint[],
     color: number,
     strength: number,
     head?: { x: number; y: number },
   ): void {
     const g = this.light.clear();
-    const points = distinctPoints(allPoints);
-    if (points.length >= 2) {
+    const runs = lines(allPoints);
+    if (runs.length > 0) {
       for (const width of [0.95, 0.5]) {
-        g.moveTo(points[0].x, points[0].y);
-        for (const p of points.slice(1)) {
-          g.lineTo(p.x, p.y);
+        for (const points of runs) {
+          g.moveTo(points[0].x, points[0].y);
+          for (const p of points.slice(1)) {
+            g.lineTo(p.x, p.y);
+          }
         }
         g.stroke({
           width: this.cellSize * width,
@@ -317,36 +350,39 @@ export class PelletAnimator extends Container {
   private finish(): void {
     this.playing = false;
     this.pellet.visible = false;
+    const points = linePoints(this.points);
     if (this.outcome === "goal") {
-      this.drawBeam(this.points, { color: COLORS.success, dimmed: false });
-      this.drawLight(this.points, COLORS.success, 1);
+      this.drawBeam(points, { color: COLORS.success, dimmed: false });
+      this.drawLight(points, COLORS.success, 1);
     } else if (this.outcome === "bonus") {
-      this.drawBeam(this.points, { color: COLORS.star, dimmed: false });
-      this.drawLight(this.points, COLORS.star, 1);
+      this.drawBeam(points, { color: COLORS.star, dimmed: false });
+      this.drawLight(points, COLORS.star, 1);
     } else {
-      this.drawBeam(this.points, { color: COLORS.beam, dimmed: true });
+      this.drawBeam(points, { color: COLORS.beam, dimmed: true });
       this.drawEndMarker();
-      this.drawLight(this.points, COLORS.beam, 0.4);
+      this.drawLight(points, COLORS.beam, 0.4);
     }
     this.callbacks?.onFinish();
   }
 
   /** A coloured band with a thin bright core; dimmed for a missed shot. */
   private drawBeam(
-    allPoints: { x: number; y: number }[],
+    allPoints: LinePoint[],
     style: { color: number; dimmed: boolean },
   ): void {
     const g = this.trail.clear();
-    // The moving head can sit exactly on the last corner; a repeated point
-    // breaks the stroke on some phone GPUs (see polyline.ts).
-    const points = distinctPoints(allPoints);
-    if (points.length < 2) {
+    // The moving head can sit exactly on the last corner; lines() leaves
+    // out repeated points, which break the stroke on some phone GPUs.
+    const runs = lines(allPoints);
+    if (runs.length === 0) {
       return;
     }
     const path = () => {
-      g.moveTo(points[0].x, points[0].y);
-      for (const p of points.slice(1)) {
-        g.lineTo(p.x, p.y);
+      for (const points of runs) {
+        g.moveTo(points[0].x, points[0].y);
+        for (const p of points.slice(1)) {
+          g.lineTo(p.x, p.y);
+        }
       }
     };
     path();

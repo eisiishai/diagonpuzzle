@@ -22,6 +22,7 @@ const PIECES: Record<string, readonly CellType[]> = {
   fixed: FIXED_MIRRORS,
   reflector: ["reflector"],
   breakable: ["breakable"],
+  portal: ["portal"],
 };
 
 const HELP = `Usage: npm run bonus -- --level N [options]

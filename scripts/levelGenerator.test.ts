@@ -25,6 +25,7 @@ const OPTIONS: GeneratorOptions = {
   reflectors: 0,
   glass: 0,
   fixed: 0,
+  portals: false,
   placeLater: false,
   shots: 2,
   goalHits: 1,
@@ -81,6 +82,7 @@ describe("randomBoard", () => {
           reflectors: 0,
           glass: 0,
           fixed: 0,
+          portals: false,
         },
         Math.random,
       ),
@@ -181,6 +183,15 @@ describe("findCandidates", () => {
       expect(flipping.cells.flat()).not.toContain("fixedBackslash");
       expect(flipping.cells.flat()).not.toContain("fixedSlash");
       expect(solve(flipping, 2)).toBeNull();
+    }
+  });
+
+  it("keeps only boards that need their pair of portals for par", () => {
+    const candidates = findCandidates({ ...OPTIONS, portals: true });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board } of candidates) {
+      expect(board.cells.flat().filter((c) => c === "portal")).toHaveLength(2);
+      expect(solve(withWalls(board, "portal"), 2)).toBeNull();
     }
   });
 
