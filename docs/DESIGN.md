@@ -447,8 +447,12 @@ difficulty doesn't dip at the end.
   wheel, by dragging (a drag never opens the level it started on; a
   quick one glides on), and follows the arrow keys, gliding to show the
   selected tile's whole chapter. It opens on the chapter of the level
-  *Play* starts. Tiles fade towards an edge with more of the list beyond
-  it. Gliding is left out under reduced motion.
+  *Play* starts. A thin scroll bar right of the tiles shows, while the
+  list doesn't all fit, how much of it is in view and where: its thumb
+  can be dragged (it lights up in the beam colour under the pointer) and
+  a click on its track pages up or down. Tiles also fade towards an edge
+  with more of the list beyond it. Gliding is left out under reduced
+  motion.
 - Each tile shows the level's number and, below it, its state by shape
   and colour: a white ★ for a level completed at par, a gold ★ once its
   bonus targets are all collected (golden), a green ✓ for completed above

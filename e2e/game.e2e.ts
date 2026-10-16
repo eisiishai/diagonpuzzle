@@ -98,6 +98,35 @@ test.describe("a level list taller than the screen", () => {
     await game.waitForLevel(LAST + 1);
   });
 
+  test("has a scroll bar whose thumb drags and track pages", async ({
+    game,
+  }) => {
+    await game.seedCompleted(LEVELS.length);
+    await game.open();
+    const bar = async () => (await game.state()).title!.scrollBar!;
+    const { track, thumb } = await bar();
+    expect(thumb.height).toBeLessThan(track.height);
+    expect(thumb.y).toBeCloseTo(track.y);
+    // Dragging the thumb to the track's end shows the last chapter.
+    const box = (await game.page.locator("canvas").boundingBox())!;
+    const x = box.x + thumb.x + thumb.width / 2;
+    await game.page.mouse.move(x, box.y + thumb.y + thumb.height / 2);
+    await game.page.mouse.down();
+    await game.page.mouse.move(x, box.y + track.y + track.height, {
+      steps: 5,
+    });
+    await game.page.mouse.up();
+    await expect
+      .poll(async () => (await game.button(lastLabel)).inView)
+      .toBe(true);
+    const end = (await bar()).thumb;
+    expect(end.y + end.height).toBeCloseTo(track.y + track.height);
+    // A click on the track above the thumb pages back up.
+    await game.pointAt({ x: x - box.x, y: track.y + 4 }, "mouse");
+    await expect.poll(async () => (await bar()).thumb.y).toBeLessThan(end.y);
+    expect((await game.state()).scene).toBe("title");
+  });
+
   test("follows the arrow keys", async ({ game }) => {
     await game.seedCompleted(LEVELS.length);
     await game.open();

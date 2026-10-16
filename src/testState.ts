@@ -11,6 +11,13 @@ export interface Point {
   y: number;
 }
 
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface ButtonTestState {
   label: string;
   disabled: boolean;
@@ -60,7 +67,9 @@ export interface TitleTestState {
   /** The selected level's name and score, e.g. "1. First light · par 1". */
   detail: string;
   /** The part of the screen where the scrolling level list shows. */
-  listView: { x: number; y: number; width: number; height: number };
+  listView: Rect;
+  /** The list's scroll bar, while it doesn't all fit. */
+  scrollBar: { track: Rect; thumb: Rect } | null;
 }
 
 export interface TestState {

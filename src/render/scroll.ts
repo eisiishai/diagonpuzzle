@@ -108,3 +108,39 @@ export function dragVelocity(
   const time = last.time - first.time;
   return time > 0 ? (last.scroll - first.scroll) / time : 0;
 }
+
+/** The shortest a scroll bar's thumb gets, so it stays easy to grab. */
+const MIN_THUMB = 28;
+
+/**
+ * A scroll bar's thumb on a track `trackHeight` tall: its length shows how
+ * much of the content is in view, its place where the view is.
+ */
+export function thumbPlace(
+  scroll: number,
+  viewHeight: number,
+  contentHeight: number,
+  trackHeight: number,
+): { top: number; height: number } {
+  const range = maxScroll(contentHeight, viewHeight);
+  const height = Math.min(
+    trackHeight,
+    Math.max(MIN_THUMB, (trackHeight * viewHeight) / contentHeight),
+  );
+  const travel = trackHeight - height;
+  return { top: range > 0 ? (travel * scroll) / range : 0, height };
+}
+
+/** How far the content scrolls for the thumb moving `distance` along its track. */
+export function scrollPerThumb(
+  distance: number,
+  viewHeight: number,
+  contentHeight: number,
+  trackHeight: number,
+): number {
+  const travel =
+    trackHeight - thumbPlace(0, viewHeight, contentHeight, trackHeight).height;
+  return travel > 0
+    ? (distance * maxScroll(contentHeight, viewHeight)) / travel
+    : 0;
+}

@@ -4,7 +4,9 @@ import {
   dragVelocity,
   edgeFade,
   maxScroll,
+  scrollPerThumb,
   scrollToShow,
+  thumbPlace,
   wheelPixels,
 } from "./scroll";
 
@@ -80,5 +82,27 @@ describe("dragVelocity", () => {
     ];
     expect(dragVelocity(samples, 500)).toBe(0);
     expect(dragVelocity([], 0)).toBe(0);
+  });
+});
+
+describe("scroll bar", () => {
+  it("sizes the thumb by how much is in view and places it by the scroll", () => {
+    expect(thumbPlace(0, 200, 400, 200)).toEqual({ top: 0, height: 100 });
+    expect(thumbPlace(100, 200, 400, 200)).toEqual({ top: 50, height: 100 });
+    expect(thumbPlace(200, 200, 400, 200)).toEqual({ top: 100, height: 100 });
+  });
+
+  it("keeps the thumb long enough to grab", () => {
+    expect(thumbPlace(0, 100, 10000, 100).height).toBe(28);
+    expect(thumbPlace(9900, 100, 10000, 100).top).toBe(72);
+  });
+
+  it("fills the track when everything is in view", () => {
+    expect(thumbPlace(0, 200, 100, 200)).toEqual({ top: 0, height: 200 });
+  });
+
+  it("turns the thumb's movement into the content's", () => {
+    expect(scrollPerThumb(50, 200, 400, 200)).toBe(100);
+    expect(scrollPerThumb(50, 200, 100, 200)).toBe(0);
   });
 });

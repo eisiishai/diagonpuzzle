@@ -319,6 +319,7 @@ export class TitleScene extends Container implements Scene {
       ),
       detail: `${this.detailName.text} · ${this.detailScore.text}`,
       listView: this.levelList.viewBounds(),
+      scrollBar: this.levelList.barBounds(),
     };
   }
 
@@ -331,7 +332,7 @@ export class TitleScene extends Container implements Scene {
   layout(screenWidth: number, screenHeight: number): void {
     this.arrange(screenWidth - 2 * SCREEN_MARGIN < WIDE_WIDTH);
     // Items are centred on x = 0, so the bounds start at a negative x. The
-    // list's own bounds are cut to its view, so its content is measured.
+    // list doesn't measure itself (ScrollView), so its content is measured.
     const scene = this.getLocalBounds();
     const list = this.levelList.content.getLocalBounds();
     const x = Math.min(scene.x, list.x);
