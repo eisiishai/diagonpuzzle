@@ -121,10 +121,9 @@ with flipping mirrors, before it is built.
     reaches rows and routes the left edge can't. One pair per level.
     Levels 31–34 teach it (chapter *Portals*). Design in
     `docs/DESIGN.md`, *Portals*
-    - [ ] Its own music track, chosen on a sound lab page (it borrows
-      *Photon* until then)
-    - [ ] Its own sound as the pellet goes through (it borrows the mirror
-      bell until then)
+    - [x] Its own music track: *Wormhole*, chosen on sound lab 7
+    - [x] Its own sound as the pellet goes through: *Phase drop*, chosen
+      on sound lab 7
     - [x] Harder portal levels: 33 with a breakable wall, 34 with a
       reflector
     - [ ] Optional: several pairs per level, each with its own symbol and

@@ -480,7 +480,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Other side",
     minShots: 1,
     bonusShots: 2,
-    music: "photon",
+    music: "wormhole",
     grid: String.raw`
       \ . . # * .
       . O . . . .
@@ -494,7 +494,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Shortcut",
     minShots: 2,
     bonusShots: 3,
-    music: "photon",
+    music: "wormhole",
     grid: String.raw`
       O . . . . G
       # . . . . .
@@ -508,7 +508,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Knock first",
     minShots: 3,
     bonusShots: 4,
-    music: "photon",
+    music: "wormhole",
     grid: String.raw`
       \ . O . / .
       . # . . . .
@@ -522,7 +522,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Boomerang",
     minShots: 4,
     bonusShots: 5,
-    music: "photon",
+    music: "wormhole",
     grid: String.raw`
       . . \ \ / .
       / / . . . G

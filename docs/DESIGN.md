@@ -230,8 +230,9 @@ off from the left, or the goal from above.
 - The beam stops at the centre of the portal it enters and starts again
   at the centre of the other one; nothing is drawn between them. Both
   portals flash as the pellet goes through, which counts on the bounce
-  ladder like a bounce. Until a sound lab gives portals their own sound,
-  they borrow the mirror's.
+  ladder like a bounce, with its own *Phase drop* (see Sound): it starts
+  at the portal the pellet goes into and ends at the one it comes out
+  of.
 - The player's mirror can't go on a portal (only on empty cells).
 - One pair per level for now; several pairs would need a symbol and a
   colour per pair.
@@ -716,7 +717,7 @@ celebrations (final star, bonus targets) keep their full level.
 |---|---|
 | Fire | *Soft pulse*: a gentle falling tone with a breath of air |
 | Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is one note higher on the music's scale, from E5 (capped after ten), so long shots stay in key. With a quiet glassy swish as the mirror turns (sound lab 2) |
-| Portal | Borrows the mirror bounce for now, on the bounce ladder, until a sound lab gives portals their own |
+| Portal | *Phase drop* (sound lab 7): a quick tone dropping an octave into the bounce's ladder note, panned to the portal the pellet goes into, landing 60 ms later as a soft bell panned to the one it comes out of |
 | Fixed mirror bounce | *Anvil ring* (sound lab 6): a round note on the bounce's ladder note with a bright metallic overtone above it, like a small steel bar; no swish, as nothing turns. A little quieter than on the lab page |
 | Reflector hit | *Echo ping* (sound lab 5): the bounce's bell on the same ladder note, answered by two quick, quieter repeats that move back towards the centre, as the beam goes back; no swish, as nothing turns |
 | Glass mirror shatters | *Crack and tinkle* (sound lab 5): the bounce's ping on its ladder note, cut off by a short bright crack and three small clicks, then six tiny high notes falling down the music's scale, like the shards |
@@ -746,7 +747,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 19–22 (reflectors) | **Return**: pads and bass on Dm9 – B♭maj7♯11. Now and then a two-note pluck phrase on the left is answered from the right by its mirror image (the step turned upside down), quieter and further away, like a shot coming back from a reflector, changed |
 | Levels 23–26 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 | Levels 27–30 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
-| Levels 31–34 (portals) | Borrow **Photon** for now, until a sound lab gives the chapter its own track |
+| Levels 31–34 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,
@@ -757,8 +758,11 @@ tunes were tried on sound lab 2 and found too distracting.)
 
 Return and Glass harp were chosen on sound lab 4 (2026-10-11), and play a
 little quieter and rarer than on the lab page; Anchor on sound lab 6
-(2026-10-11), its tine a little quieter and rarer too. Return's answering phrase
-is the only music placed off centre (35 % to either side).
+(2026-10-11), its tine a little quieter and rarer too; Wormhole on sound
+lab 7 (2026-10-16), its bells likewise. Most music sits in the
+centre; off centre are Return's answering phrase (35 % to either side),
+Anchor's tine (20 % right) and Wormhole's two bells (50 % to either
+side, one each).
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different

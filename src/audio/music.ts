@@ -13,7 +13,8 @@ export type MusicTrackId =
   | "photon"
   | "return"
   | "glassHarp"
-  | "anchor";
+  | "anchor"
+  | "wormhole";
 
 /** The notes that fit the music at a moment, for tuning effects to it. */
 export interface Harmony {
@@ -187,6 +188,17 @@ const ANCHOR = {
   // The steel tine's one note: D, the fifth of G and the seventh of E♭.
   tine: 74,
   tines: { last: -Infinity },
+};
+const WORMHOLE = {
+  chords: [
+    [52, 56, 59, 63],
+    [52, 56, 57, 61],
+  ],
+  roots: [37, 33],
+  // C♯m9 – Amaj7, C♯ minor.
+  scale: [1, 4, 6, 8, 11],
+  tonic: 1,
+  jumps: { last: -Infinity },
 };
 const GLASS_BELLS = [69, 72, 74, 76, 79, 81, 84];
 const glassBells = { last: -Infinity };
@@ -597,6 +609,48 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
           wet: 0.6,
           echo: 0.3,
         });
+      }
+    },
+  },
+
+  // Ambient on C♯m9 – Amaj7, for the portal levels: now and then a bell
+  // note rings on one side, a faint breath of air follows, and the same
+  // note rings again from the other side, unchanged, like a pellet going
+  // through a portal (sound lab 7).
+  wormhole: {
+    name: "Wormhole",
+    bpm: 60,
+    stepsPerBeat: 2,
+    harmony: (i) => ({
+      root: WORMHOLE.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      chord: WORMHOLE.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      scale: WORMHOLE.scale,
+      tonic: WORMHOLE.tonic,
+    }),
+    step: (s, dest, i, t, step) => {
+      const k = Math.floor(i / AMBIENT_CHORD_STEPS);
+      const chord = WORMHOLE.chords[k % 2];
+      if (i % AMBIENT_CHORD_STEPS === 0) {
+        const seconds = step * AMBIENT_CHORD_STEPS;
+        ambientBed(s, dest, t, seconds, chord, WORMHOLE.roots[k % 2], k);
+      }
+      if (sparse(WORMHOLE.jumps, i, 8, 0.14)) {
+        const side = Math.random() < 0.5 ? -1 : 1;
+        const f = midi(pick(chord) + 24);
+        const ring = { f, d: 2, vol: 0.02, ratio: 3.5, index: 0.9, dest };
+        s.bell({ ...ring, t, pan: -0.5 * side, wet: 0.5 });
+        s.noise({
+          t: t + 0.25,
+          a: 0.15,
+          d: 0.35,
+          vol: 0.006,
+          f: 3000,
+          f2: 1200,
+          q: 1.5,
+          dest,
+          wet: 0.4,
+        });
+        s.bell({ ...ring, t: t + 0.7, pan: 0.5 * side, wet: 0.5, echo: 0.25 });
       }
     },
   },

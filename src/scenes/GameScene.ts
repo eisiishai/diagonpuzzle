@@ -1,7 +1,7 @@
 import { Container, Text } from "pixi.js";
 import { columnPan } from "../audio/effects";
 import type { GameAudio } from "../audio/GameAudio";
-import { boardHas } from "../game/board";
+import { boardHas, cellPositions } from "../game/board";
 import { FIXED_MIRRORS, GLASS_MIRRORS } from "../game/cells";
 import { LevelSession } from "../game/LevelSession";
 import { MirrorPlacement } from "../game/MirrorPlacement";
@@ -379,13 +379,20 @@ export class GameScene extends Container implements Scene {
     this.updateShots();
     this.showMessage("");
     this.options.audio.play("fire");
+    const { width } = this.session.board;
+    const portals = cellPositions(this.session.board, (c) => c === "portal");
     this.boardView.playShot(result, {
-      onBounce: (bounceNumber, at) =>
+      onBounce: (bounceNumber, at) => {
+        const pan = columnPan(at.x, width);
+        // Through a portal, the sound ends where the pellet comes out.
+        const exit = portals.find(({ x, y }) => x !== at.x || y !== at.y);
         this.options.audio.playBounce(
           bounceNumber,
-          columnPan(at.x, this.session.board.width),
+          pan,
           at.bounceKind,
-        ),
+          at.bounceKind === "portal" && exit ? columnPan(exit.x, width) : pan,
+        );
+      },
       onFinish: () => this.finishShot(result),
     });
   }

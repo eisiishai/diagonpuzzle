@@ -195,10 +195,16 @@ export class GameAudio {
 
   /**
    * A bounce off a mirror, fixed mirror, reflector or glass mirror (`kind`) at stereo
-   * position `pan`; each further bounce in the same shot is a note higher
-   * on the music's scale.
+   * position `pan`, or a pellet going into a portal there and coming out of
+   * the other one at `exitPan`; each further bounce in the same shot is a
+   * note higher on the music's scale.
    */
-  playBounce(bounceNumber: number, pan = 0, kind: BounceKind = "mirror"): void {
+  playBounce(
+    bounceNumber: number,
+    pan = 0,
+    kind: BounceKind = "mirror",
+    exitPan = pan,
+  ): void {
     const graph = this.graph;
     if (!graph || !this.enabled.effects) {
       return;
@@ -213,6 +219,7 @@ export class GameAudio {
         this.harmonyAt(t),
         kind,
         pan,
+        exitPan,
       );
     }
   }

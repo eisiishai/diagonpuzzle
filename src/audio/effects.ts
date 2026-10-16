@@ -381,7 +381,7 @@ export const BOUNCE_SECONDS: Record<BounceKind, number> = {
   fixed: 0.6,
   reflector: 0.65,
   glass: 0.5,
-  portal: 0.45,
+  portal: 0.5,
 };
 
 /**
@@ -399,7 +399,9 @@ export const BOUNCE_SECONDS: Record<BounceKind, number> = {
  * - glass (sound lab 5, "Crack and tinkle"): the bell cut off by a short
  *   bright crack and small clicks, then a soft shower of tiny high notes
  *   in the music's scale, falling like the shards.
- * - portal: the mirror's sound for now, until a sound lab gives it its own.
+ * - portal (sound lab 7, "Phase drop"): a quick tone dropping an octave
+ *   into the note at the portal the pellet goes into (`pan`), landing as a
+ *   soft bell at the one it comes out of (`exitPan`).
  * The reflector and glass sounds are a little quieter than on the lab page.
  */
 export function playBounce(
@@ -410,8 +412,34 @@ export function playBounce(
   harmony: Harmony,
   kind: BounceKind = "mirror",
   pan = 0,
+  exitPan = pan,
 ): void {
   const f = midi(bounceNote(bounceNumber, harmony.scale));
+  if (kind === "portal") {
+    s.tone({
+      f: f * 2,
+      f2: f,
+      t,
+      a: 0.003,
+      d: 0.07,
+      vol: 0.04,
+      dest,
+      pan,
+      wet: 0.2,
+    });
+    s.bell({
+      f,
+      t: t + 0.06,
+      d: 0.4,
+      vol: 0.055,
+      ratio: 3.5,
+      index: 0.8,
+      dest,
+      pan: exitPan,
+      wet: 0.3,
+    });
+    return;
+  }
   if (kind === "fixed") {
     s.bell({
       f,
