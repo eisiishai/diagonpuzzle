@@ -235,7 +235,9 @@ off from the left, or the goal from above.
 - The player's mirror can't go on a portal (only on empty cells).
 - One pair per level for now; several pairs would need a symbol and a
   colour per pair.
-- Levels 31–32 teach it (chapter *Portals*).
+- Levels 31–34 teach it (chapter *Portals*), 33 with a breakable wall
+  and 34 with a reflector, which sends the pellet back through the
+  portals.
 
 ## Cell types
 
@@ -334,6 +336,8 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 30 | True north | 3 | Fixed mirrors with the player's mirror (`\`) and a glass mirror. Row 2 turns down at the glass `\` at (1,2), which shatters, and leaves at the bottom. With the mirror placed at (4,1), row 2 runs through the gap into the fixed `/` at (4,2), which turns it up into the player's mirror, which turns it into the wall and flips. Row 2 again: the fixed mirror turns it up the same way, and the flipped player's mirror now turns it right to the goal. Alternative in 4 shots: rows 5, 5, the mirror at (4,1), rows 2, 2. The bonus target needs the mirror at (2,5): rows 4, 4, 2, 4, the third shot shattering the glass and the last turning up at the fixed mirror onto it. |
 | 31 | Other side | 1 | Introduces portals. The goal sits beside the lower portal, walled off from the left; row 2 runs straight into the upper portal and comes out of the lower one, beside the goal. Alternative in 3 shots: row 4 three times: it turns up at (2,4) into the upper portal and comes out of the lower one moving up, flipping (5,3) beyond it; the second shot sets (2,4) back, and the third goes up through the portals again, where (5,3) now turns it right and the `\` at (6,3) down into the goal. The bonus target sits in the walled-off top right corner: row 4 goes up through the portals and flips (1,3) and (5,3), which then take row 1 down column 1, along row 3 and up onto it. |
 | 32 | Shortcut | 2 | Portals with a setup shot. Row 4 turns up at (1,4) into the wall and flips it; row 4 again turns down there and right at (1,5), along the bottom row into the portal at (4,5), and comes out of the one in the top left corner, running along the top row to the goal. Alternative in 3 shots: rows 5, 5, 4. The bonus target shows that portals work both ways: row 1 goes straight into the top left portal and out of the bottom one; three row 1 shots flip the mirrors beyond it until the last turns up at (5,5) and right at (5,4) onto it. |
+| 33 | Knock first | 3 | Portals with a breakable wall. Row 3 turns up at (3,3) and right at (3,1) into the cracked wall in front of the top portal, breaking it. Row 1 turns down at (3,1), now `\`, and right at (3,3) into the lower portal, comes out of the top one and leaves the board, setting both mirrors back. Row 3 then makes its first trip again, through the gap into the top portal, and comes out of the lower one beside the goal. Alternative in 5 shots: row 3 five times. The bonus target sits below the lower portal, behind a second cracked wall: rows 4, 3, 5, 5, the third shot breaking the wall at (2,5) and the last running along the bottom row and turning up at (5,5) and right at (5,4) onto it. |
+| 34 | Boomerang | 4 | Portals with a reflector. Row 3 flips the `\` at (1,3) and leaves at the bottom; row 3 again climbs column 1 and leaves at the top, flipping (1,2) and (2,2); row 2 turns down column 1 into the left portal and comes out of the right one, leaving the board. Row 3 then turns down at (2,2) into the left portal, comes out of the right one moving down into the reflector, goes back up through both portals and meets (2,2), which it flipped on the way in: it now turns the pellet right along row 2 to the goal. Alternative in 5 shots: rows 2, 2, 3, 2, 3. The bonus target sits between the portals: rows 1, 4, 4, 1, 4, which turn the mirrors at the top of columns 3 and 4 until the last shot climbs column 3, turns right along the top row and down column 4 onto it. |
 
 Levels 27–28 were found with `npm run generate -- --fixed N`, which
 keeps only boards that can't reach par with their fixed mirrors made
@@ -741,7 +745,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 19–22 (reflectors) | **Return**: pads and bass on Dm9 – B♭maj7♯11. Now and then a two-note pluck phrase on the left is answered from the right by its mirror image (the step turned upside down), quieter and further away, like a shot coming back from a reflector, changed |
 | Levels 23–26 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 | Levels 27–30 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
-| Levels 31–32 (portals) | Borrow **Photon** for now, until a sound lab gives the chapter its own track |
+| Levels 31–34 (portals) | Borrow **Photon** for now, until a sound lab gives the chapter its own track |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,

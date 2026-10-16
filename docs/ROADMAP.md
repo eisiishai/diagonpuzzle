@@ -119,13 +119,14 @@ with flipping mirrors, before it is built.
   - [x] Portal pair (`O`): the pellet enters one and leaves the other in
     the same direction. No state of its own, so no cost to the solver;
     reaches rows and routes the left edge can't. One pair per level.
-    Levels 31–32 teach it (chapter *Portals*). Design in
+    Levels 31–34 teach it (chapter *Portals*). Design in
     `docs/DESIGN.md`, *Portals*
     - [ ] Its own music track, chosen on a sound lab page (it borrows
       *Photon* until then)
     - [ ] Its own sound as the pellet goes through (it borrows the mirror
       bell until then)
-    - [ ] Harder portal levels, combined with the other pieces
+    - [x] Harder portal levels: 33 with a breakable wall, 34 with a
+      reflector
     - [ ] Optional: several pairs per level, each with its own symbol and
       colour
   - [ ] One-way gate: the pellet passes in one direction and is stopped
@@ -167,13 +168,16 @@ Levels 19–30 (reflectors, then glass mirrors, then fixed mirrors; added
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 in | 4 | 25 | 125 | 3,143 | 16 | 125 | 125 | 625 | 16 | 125 | 125 | 3,387 |
 
-Levels 31–32 (portals, added 2026-10-16), easy teaching levels at the
-start of a chapter like 19, 23 and 27:
+Levels 31–34 (portals, added 2026-10-16): two easy teaching levels at
+the start of the chapter like 19, 23 and 27, then 33 with a breakable
+wall and 34 with a reflector, which sends the pellet back through the
+portals. 34 is par 4 so that it is harder than 33 (with five rows, par 3
+can't be harder than 1 in 125), well below *Mirror image* (22):
 
-| Level | 31 | 32 |
-|---|---|---|
-| 1 in | 5 | 25 |
-| Foresight | 0 | 1 |
+| Level | 31 | 32 | 33 | 34 |
+|---|---|---|---|---|
+| 1 in | 5 | 25 | 125 | 625 |
+| Foresight | 0 | 1 | 3 | 3 |
 
 Random odds understate how easy level 15 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).

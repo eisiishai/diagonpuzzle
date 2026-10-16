@@ -503,6 +503,34 @@ export const LEVELS: readonly LevelDefinition[] = [
       \ . . O / .
     `,
   },
+  {
+    id: "knock-first",
+    name: "Knock first",
+    minShots: 3,
+    bonusShots: 4,
+    music: "photon",
+    grid: String.raw`
+      . . / % O .
+      . # . . . .
+      . . / . O G
+      . . / . \ *
+      . % . . \ .
+    `,
+  },
+  {
+    id: "boomerang",
+    name: "Boomerang",
+    minShots: 4,
+    bonusShots: 5,
+    music: "photon",
+    grid: String.raw`
+      . . \ / / .
+      / / . . . G
+      \ O . * O .
+      . . / # . .
+      . . # . @ .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
