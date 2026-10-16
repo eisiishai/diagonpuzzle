@@ -2,6 +2,7 @@ import { bonusPositions } from "../src/game/bonus";
 import { playMoves } from "../src/game/solver";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
+import { CI } from "./ci";
 import { atPar, bonusRoute, expect, solution, startBoard, test } from "./game";
 
 // The other smoke tests run with reduced motion, which leaves out the
@@ -10,8 +11,9 @@ import { atPar, bonusRoute, expect, solution, startBoard, test } from "./game";
 // motion on, so that code runs too and an error in it fails a test.
 
 test.use({ reducedMotion: "no-preference" });
-// Animations make shots and screen changes take longer.
-test.describe.configure({ timeout: 60_000 });
+// Animations make shots and screen changes take longer, and longer still
+// on GitHub's 4 cores.
+test.describe.configure({ timeout: CI ? 180_000 : 60_000 });
 
 const FIRST = 0;
 const BREAKTHROUGH = 10; // mirrors to flip and a wall to break

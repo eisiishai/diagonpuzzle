@@ -14,12 +14,13 @@ export default defineConfig({
   workers: 4,
   reporter: "list",
   // The longest tests play a level twice and take about 30 s locally,
-  // where a trace is recorded for every test, and on GitHub's 4 cores.
-  timeout: 60_000,
+  // where a trace is recorded for every test. GitHub's machines are about
+  // four times slower: the longest took over 60 s there.
+  timeout: CI ? 120_000 : 60_000,
   // On GitHub (CI is set) a failed test runs once more, recording a trace.
   retries: CI ? 1 : 0,
   // Shots animate at their normal speed; the longest take a few seconds.
-  expect: { timeout: 15_000 },
+  expect: { timeout: CI ? 30_000 : 15_000 },
   use: {
     baseURL: "http://localhost:4173",
     // Skips the build-in, transitions and ambient motion; the game
