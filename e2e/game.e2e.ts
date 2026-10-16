@@ -1,5 +1,5 @@
 import { fire } from "../src/game/simulate";
-import { LEVELS } from "../src/levels/levels";
+import { CHAPTERS, LEVELS, chapterRanges } from "../src/levels/levels";
 import { EMPTY_PROGRESS, SKIP_WAIT_MS } from "../src/save/progress";
 import { expect, solution, startBoard, test } from "./game";
 import type { Game } from "./game";
@@ -74,6 +74,52 @@ test("arrow keys move between level tiles, naming the selected level", async ({
   await game.page.keyboard.press("ArrowRight");
   await game.page.keyboard.press("Enter");
   await game.waitForLevel(5);
+});
+
+test.describe("a level list taller than the screen", () => {
+  test.use({ viewport: { width: 1280, height: 600 } });
+  const LAST = LEVELS.length - 1;
+  const lastLabel = `${LAST + 1}. `;
+
+  test("opens on the chapter Play starts", async ({ game }) => {
+    await game.seedCompleted(LAST - 1);
+    await game.open();
+    expect((await game.button(lastLabel)).inView).toBe(true);
+    expect((await game.button("1. ")).inView).toBe(false);
+    await game.expectAllOnScreen();
+  });
+
+  test("scrolls with the mouse wheel", async ({ game }) => {
+    await game.seedCompleted(LEVELS.length);
+    await game.open();
+    expect((await game.button(lastLabel)).inView).toBe(false);
+    // press() wheels the list until the tile is in view.
+    await game.press(lastLabel);
+    await game.waitForLevel(LAST + 1);
+  });
+
+  test("follows the arrow keys", async ({ game }) => {
+    await game.seedCompleted(LEVELS.length);
+    await game.open();
+    const chapters = chapterRanges(LEVELS, CHAPTERS);
+    const selected = async () => {
+      const number = Number((await game.state()).title!.detail.split(".")[0]);
+      return { number, tile: await game.button(`${number}. `) };
+    };
+    // Down from Play steps through the chapters, each scrolled into view.
+    for (const chapter of chapters) {
+      await game.page.keyboard.press("ArrowDown");
+      const { number, tile } = await selected();
+      expect(number).toBeGreaterThan(chapter.start);
+      expect(number).toBeLessThanOrEqual(chapter.end);
+      await expect.poll(async () => (await selected()).tile.inView).toBe(true);
+      expect(tile.label).toMatch(/^\d+\. /);
+    }
+    // Down again leaves the list for Reset progress.
+    await game.page.keyboard.press("ArrowDown");
+    await game.page.keyboard.press("Enter");
+    await game.button("PRESS ENTER OR CLICK AGAIN");
+  });
 });
 
 test("Play and a level button open a level", async ({ game }) => {

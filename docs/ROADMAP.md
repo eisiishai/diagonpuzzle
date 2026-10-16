@@ -243,11 +243,12 @@ difficulty is in finding the moves, not in planning their effects.
   Chapters: 1–4 *Basics*, 5–10 *Flip tricks*, 11–14 *Breakable walls*,
   15–18 *Your mirror*; a new mechanic adds a chapter. Levels still
   unlock one by one, as now
-  - [ ] Room for more chapters: with seven chapter rows (v2.3, 28
-    levels) the phone's title screen still fits, with little room left.
-    Any further piece's chapter needs a layout that takes more first
-    (e.g. two chapters per row, collapsible chapters, or a scrolling
-    list; the level list lab page has some of these)
+  - [x] Room for more chapters: with seven chapter rows (v2.3, 28
+    levels) the phone's title screen still fit, with little room left.
+    Chosen (2026-10-16): a **scrolling list** of chapters between the
+    header and the selected level's line, so the screen no longer shrinks
+    for its height (`src/render/ScrollView.ts`; docs/DESIGN.md, *Title
+    screen and progress*). New pieces can add chapters freely
 
 ### Presentation, second pass
 

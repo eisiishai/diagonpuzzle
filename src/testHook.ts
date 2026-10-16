@@ -4,7 +4,8 @@
 // it changes nothing in the game unless a test sets the game's speed,
 // except that the game's time keeps up with real time at low frame rates.
 
-import type { Container, Ticker } from "pixi.js";
+import type { Container, Rectangle, Ticker } from "pixi.js";
+import { ScrollView } from "./render/ScrollView";
 import { Button } from "./render/ui";
 import { GameScene } from "./scenes/GameScene";
 import { TitleScene } from "./scenes/TitleScene";
@@ -59,24 +60,34 @@ export function installTestHook(
   };
 }
 
-function visibleButtons(container: Container): ButtonTestState[] {
+/**
+ * The buttons in `container`, each in view unless outside `view`: the
+ * view of the scrolling list it is in, if any.
+ */
+function visibleButtons(
+  container: Container,
+  view?: Rectangle,
+): ButtonTestState[] {
   const buttons: ButtonTestState[] = [];
+  const shown = container instanceof ScrollView ? container.viewBounds() : view;
   for (const child of container.children) {
     if (!child.visible) {
       continue;
     }
     if (child instanceof Button) {
       const bounds = child.getBounds();
+      const center = {
+        x: bounds.x + bounds.width / 2,
+        y: bounds.y + bounds.height / 2,
+      };
       buttons.push({
         label: child.label,
         disabled: child.disabled,
-        center: {
-          x: bounds.x + bounds.width / 2,
-          y: bounds.y + bounds.height / 2,
-        },
+        center,
+        inView: shown?.contains(center.x, center.y) ?? true,
       });
     } else {
-      buttons.push(...visibleButtons(child));
+      buttons.push(...visibleButtons(child, shown));
     }
   }
   return buttons;

@@ -16,6 +16,11 @@ export interface ButtonTestState {
   disabled: boolean;
   /** The button's centre. */
   center: Point;
+  /**
+   * False for a button scrolled out of its list's view (its centre is
+   * hidden), which has to be scrolled into view to be pressed.
+   */
+  inView: boolean;
 }
 
 export interface LevelTestState {
@@ -54,6 +59,8 @@ export interface TitleTestState {
   chapters: string[];
   /** The selected level's name and score, e.g. "1. First light · par 1". */
   detail: string;
+  /** The part of the screen where the scrolling level list shows. */
+  listView: { x: number; y: number; width: number; height: number };
 }
 
 export interface TestState {

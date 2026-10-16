@@ -37,6 +37,11 @@ export interface ButtonOptions {
   height?: number;
   onTap: () => void;
   onHover?: () => void;
+  /**
+   * Asked before a tap counts: a button in a scrolling list doesn't take
+   * the tap that ends a drag of the list.
+   */
+  allowTap?: () => boolean;
 }
 
 const PADDING_X = 16;
@@ -107,7 +112,7 @@ export class Button extends Container {
     this.eventMode = "static";
     this.cursor = "pointer";
     this.on("pointertap", () => {
-      if (!this._disabled) {
+      if (!this._disabled && options.allowTap?.() !== false) {
         tapSound?.();
         options.onTap();
       }

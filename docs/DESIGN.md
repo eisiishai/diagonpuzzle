@@ -440,6 +440,15 @@ difficulty doesn't dip at the end.
   line above them on a narrow one (a phone), so the screen keeps its full
   size on a desktop. Chosen on the level list lab page (2026-10-11), when
   one row per level had shrunk the screen's text with every level added.
+- The chapters **scroll** when the screen is too short for them, so new
+  chapters never shrink the screen: it shrinks only to fit its width and
+  at least about two chapters' worth of list, between the header and the
+  selected level's line, which stay put. The list scrolls with the mouse
+  wheel, by dragging (a drag never opens the level it started on; a
+  quick one glides on), and follows the arrow keys, gliding to show the
+  selected tile's whole chapter. It opens on the chapter of the level
+  *Play* starts. Tiles fade towards an edge with more of the list beyond
+  it. Gliding is left out under reduced motion.
 - Each tile shows the level's number and, below it, its state by shape
   and colour: a white ★ for a level completed at par, a gold ★ once its
   bonus targets are all collected (golden), a green ✓ for completed above

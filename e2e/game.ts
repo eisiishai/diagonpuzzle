@@ -164,8 +164,9 @@ export class Game {
   }
 
   /**
-   * Checks that every button and, on a level screen, every launcher and
-   * cell is inside the window, where it can be clicked or tapped.
+   * Checks that every button in view and, on a level screen, every
+   * launcher and cell is inside the window, where it can be clicked or
+   * tapped; on the title screen, that the level list's view is too.
    */
   async expectAllOnScreen(): Promise<void> {
     const size = this.page.viewportSize()!;
@@ -174,9 +175,17 @@ export class Game {
       point.x < size.width &&
       point.y > 0 &&
       point.y < size.height;
-    const { buttons, level } = await this.state();
-    for (const button of buttons) {
+    const { buttons, level, title } = await this.state();
+    for (const button of buttons.filter(({ inView }) => inView)) {
       expect(inside(button.center), button.label).toBe(true);
+    }
+    if (title) {
+      const { x, y, width, height } = title.listView;
+      expect(inside({ x, y }), "the level list's top left").toBe(true);
+      expect(
+        inside({ x: x + width, y: y + height }),
+        "the level list's bottom right",
+      ).toBe(true);
     }
     const points = level
       ? [...level.launchers, ...level.cells.flat().map((cell) => cell.center)]
@@ -229,8 +238,68 @@ export class Game {
     return buttons.find((button) => button.label.startsWith(label))!;
   }
 
+  /** Clicks or taps a button, first scrolling it into view if need be. */
   async press(label: string, input: "mouse" | "touch" = "mouse") {
+    await this.scrollIntoView(label, input);
     await this.pointAt((await this.button(label)).center, input);
+  }
+
+  /**
+   * Scrolls the title screen's level list until the button whose label
+   * starts with `label` is in view: with the mouse wheel, or by swiping.
+   */
+  async scrollIntoView(label: string, input: "mouse" | "touch") {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const button = await this.button(label);
+      if (button.inView) {
+        return;
+      }
+      const view = (await this.state()).title!.listView;
+      const centre = {
+        x: view.x + view.width / 2,
+        y: view.y + view.height / 2,
+      };
+      const distance = button.center.y - centre.y;
+      const step =
+        Math.sign(distance) * Math.min(Math.abs(distance), view.height / 2);
+      if (input === "touch") {
+        await this.swipe(centre, -step);
+      } else {
+        const box = await this.page.locator("canvas").boundingBox();
+        await this.page.mouse.move(
+          (box?.x ?? 0) + centre.x,
+          (box?.y ?? 0) + centre.y,
+        );
+        await this.page.mouse.wheel(0, step);
+      }
+      await expect
+        .poll(async () => (await this.button(label)).center.y, {
+          message: `the level list to scroll towards "${label}"`,
+        })
+        .not.toBe(button.center.y);
+    }
+    throw new Error(`"${label}" didn't scroll into view`);
+  }
+
+  /** Touches the canvas at `from` and slides `dy` pixels down (up if negative). */
+  async swipe(from: Point, dy: number): Promise<void> {
+    const box = await this.page.locator("canvas").boundingBox();
+    const x = (box?.x ?? 0) + from.x;
+    const y = (box?.y ?? 0) + from.y;
+    // Playwright can only tap, so the touches go through Chromium's own
+    // input events.
+    const cdp = await this.page.context().newCDPSession(this.page);
+    const touch = (
+      type: "touchStart" | "touchMove" | "touchEnd",
+      points: Point[],
+    ) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
+    await touch("touchStart", [{ x, y }]);
+    const steps = 6;
+    for (let i = 1; i <= steps; i++) {
+      await touch("touchMove", [{ x, y: y + (dy * i) / steps }]);
+    }
+    await touch("touchEnd", []);
+    await cdp.detach();
   }
 
   /** Clicks or taps at a point on the canvas. */
