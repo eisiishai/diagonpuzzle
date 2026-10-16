@@ -26,6 +26,9 @@ dist-ssr
 # Generated level solutions (npm run solutions); local only
 docs/solutions.local.md
 
+# Local paths for this machine (backup disk); local only
+docs/backup.local.md
+
 # Coverage reports (npm run coverage, npm run e2e:coverage); local only
 coverage
 coverage-e2e

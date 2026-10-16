@@ -17,6 +17,10 @@ npm install          # also enables the git hooks (see Versions)
 npm run build        # confirms everything works
 ```
 
+`<backup repo>` is the bare repository on the backup disk
+(`/mnt/<drive>/…/diagonpuzzle.git`); `docs/backup.local.md`, git-ignored,
+has the exact command, and on an existing clone `git remote get-url backup`
+shows it.
 `-o backup` names the remote `backup`, the name the hooks push to (see
 *4. Back up*). For GitHub, add its remote as well (see *Release on GitHub
 Pages*).
@@ -197,8 +201,8 @@ run, the share of statements, branches (each side of an `if`, `? :`,
 `??`), functions and lines they do run, and the uncovered line numbers.
 Fully covered files are left out of the table. Open
 `coverage/index.html` in a browser for every file with each line marked
-covered or not: in the Windows browser,
-`\\wsl.localhost\<distro>\home\<user>\…\diagonpuzzle\coverage\index.html`.
+covered or not; `explorer.exe "$(wslpath -w coverage/index.html)"` opens it
+in the Windows browser.
 
 On 2026-10-11 (v1.17) the rules were nearly fully covered: `src/levels/`
 and `src/save/` 100%, `src/game/` 99% of statements and 98% of
@@ -406,7 +410,7 @@ Tags v0.1–v0.4 were created by hand before this, as lightweight tags, which
 Each commit on `main` is pushed to the backup automatically, right after it
 is tagged (the `post-commit` and `post-merge` hooks run
 `.githooks/push-backup`). The `backup` remote is a bare repository on another
-disk: `<backup repo>`. Version tags are pushed
+disk (`git remote get-url backup` shows where). Version tags are pushed
 along with the commits. Commits on other branches are not pushed.
 
 When a `github` remote is set up (see *Release on GitHub Pages*), the same
@@ -418,8 +422,9 @@ The automatic push never forces and never stops a commit. If it can't push,
 it prints a warning starting with `⚠ Backup not updated` (or `⚠ GitHub not
 updated`, e.g. when offline or not logged in) and the commit stays local:
 
-- **Disk not available** (the backup disk not connected or not mounted): push later with
-  `git push backup`, or just make the next commit once the disk is back.
+- **Disk not available** (the backup disk not connected or not mounted):
+  push later with `git push backup`, or just make the next commit once the
+  disk is back.
 - **GitHub not reachable or not logged in**: the error is shown above the
   warning. Push later with `git push github` (`gh auth status` shows the
   login); a password is never asked during a commit.
@@ -460,14 +465,14 @@ diff <(git for-each-ref --format='%(objectname) %(refname)' refs/heads refs/tags
      <(git ls-remote --heads --tags backup | grep -v '\^{}' | awk '{print $1, $2}' | sort)
 
 # 3. The backup's files are intact: no output.
-git -C <backup repo> fsck --full
+git -C "$(git remote get-url backup)" fsck --full
 ```
 
 Now and then, test a real restore: clone the backup into a temporary folder
 and build it.
 
 ```bash
-git clone <backup repo> /tmp/restore-test
+git clone "$(git remote get-url backup)" /tmp/restore-test
 cd /tmp/restore-test && npm ci && npm run build
 cd ~ && rm -rf /tmp/restore-test
 ```
@@ -507,9 +512,8 @@ uploading `dist/` to a web host by hand (the steps here).
    ```
    (Opening `dist/index.html` directly from disk does not work: browsers block
    module scripts loaded from `file://`.)
-3. Upload with WinSCP. In the local pane, open
-   `\\wsl.localhost\<distro>\home\<user>\…\diagonpuzzle\dist`
-   (the distro's name as `wsl --list` shows it).
+3. Upload with WinSCP. In the local pane, open the path that
+   `wslpath -w dist` prints (`explorer.exe dist` shows the folder too).
    It holds exactly what to upload:
    ```
    dist/
