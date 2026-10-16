@@ -375,6 +375,19 @@ git commit -m "Short summary of the change"
   hook warns and skips them. If anything fails, the commit is stopped and
   the errors are shown; fix them and commit again. Merge commits are
   checked the same way.
+- **Nothing private in commits:** the repository is public on GitHub, so
+  before the checks the hook stops a commit that adds lines looking
+  private, and lists them: paths on this machine outside the repository
+  (Windows drives under `/mnt/`, `\\wsl.localhost\…`, `C:\…`,
+  `/home/…`, install folders in *Program Files*) and keys, tokens or
+  passwords (`.githooks/private-lines`; the same check warns in
+  `npm run github`). Write a placeholder instead
+  (`<backup repo>`, `\\wsl.localhost\<distro>\…`) or a command that finds
+  the path (`git remote get-url backup`, `wslpath -w`), and keep the real
+  value in `docs/backup.local.md`, which is git-ignored. Generic places
+  pass: `~/.nvm/`, `/tmp`, `/mnt/c` as an example. If a listed line is
+  fine to publish, allow it for that one commit:
+  `ALLOW_PRIVATE_LINES=1 git commit …`.
 - The checks run on the files in the working tree. If some changes are not
   staged for the commit, the hook prints a note, since the checked files then
   differ from the commit. With `git add -A` they are the same.

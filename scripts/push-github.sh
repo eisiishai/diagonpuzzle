@@ -74,12 +74,11 @@ fi
 echo
 echo "Tags: $(echo "$new_tags" | tr '\n' ' ')"
 
-# Added lines that look private: local paths, home folders, keys and tokens.
+# Added lines that look private: local paths, home folders, keys and tokens
+# (the same check as pre-commit, so normally none; one is let through only
+# with ALLOW_PRIVATE_LINES=1).
 if [ -n "$base" ]; then
-  suspicious=$(git diff "$base" "$BRANCH" |
-    grep -E '^\+[^+]' |
-    grep -E '/mnt/[a-z]/|wsl\.localhost|\\\\wsl\$|/home/[a-z]|[A-Z]:\\Users\\|BEGIN [A-Z ]*PRIVATE KEY|ghp_[A-Za-z0-9]|github_pat_|password *[:=]' |
-    head -20 || true)
+  suspicious=$("$(git rev-parse --show-toplevel)/.githooks/private-lines" "$base" "$BRANCH" | head -20)
   if [ -n "$suspicious" ]; then
     echo
     echo "⚠ Added lines that may be private (check before pushing):"

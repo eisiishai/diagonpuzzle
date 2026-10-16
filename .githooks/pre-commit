@@ -1,8 +1,23 @@
 #!/bin/sh
-# Runs the full check (lint, type check, tests, production build) before each
+# Stops a commit that adds lines looking private (private-lines), then runs
+# the full check (lint, type check, tests, production build) before each
 # commit, and the quick browser smoke tests when the game changes; stops the
 # commit if anything fails. Skip in an emergency with
 # `git commit --no-verify`. See docs/WORKFLOW.md.
+
+# Added lines that look private (paths on this machine outside the
+# repository, keys or tokens) never get into a commit unless allowed for
+# this one commit: they would go public with the next npm run github.
+private=$("$(dirname "$0")/private-lines" --cached)
+if [ -n "$private" ] && [ "$ALLOW_PRIVATE_LINES" != 1 ]; then
+  echo "pre-commit: these added lines look private (paths on this machine" >&2
+  echo "outside the repository, keys or tokens):" >&2
+  echo "$private" | sed 's/^/  /' >&2
+  echo "Commit stopped. Use a placeholder instead (docs/backup.local.md," >&2
+  echo "git-ignored, keeps the real value), or if they are fine to publish:" >&2
+  echo "  ALLOW_PRIVATE_LINES=1 git commit ..." >&2
+  exit 1
+fi
 
 # Hooks started from an editor may not have nvm's Node on the PATH.
 if ! command -v npm >/dev/null 2>&1 && [ -s "$HOME/.nvm/nvm.sh" ]; then

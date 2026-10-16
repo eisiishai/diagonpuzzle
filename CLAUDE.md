@@ -178,6 +178,14 @@ e2e/            browser smoke tests (Playwright) and their helpers
   is added in one place.
 - Update `docs/ROADMAP.md` checkboxes when a task is completed, and
   `docs/DESIGN.md` when a rule changes.
+- Never commit paths outside the repository that are specific to this
+  machine (drives, WSL or Windows folders, home folders, install folders)
+  or keys and tokens: the repository is public. Use a placeholder or a
+  command that finds the path, and keep the real value in the git-ignored
+  `docs/backup.local.md`. The pre-commit hook stops such commits
+  (`.githooks/private-lines`); if it does, show the user the lines and
+  ask. Commit with `ALLOW_PRIVATE_LINES=1` only when the user says they
+  are fine to publish.
 - Every commit runs `npm run build` first (pre-commit hook), plus
   `npm run e2e` when it changes `src/`, `public/`, `e2e/`, the build
   config or dependencies, and is stopped if either fails: fix the problem rather than bypassing it. Use `--no-verify` only

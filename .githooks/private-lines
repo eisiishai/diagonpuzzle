@@ -1,0 +1,22 @@
+#!/bin/sh
+# Prints the lines added in `git diff ARGS...` that look private, as
+# "file: line": paths on this machine outside the repository (drives, WSL
+# and Windows folders, home folders, Windows install folders) and keys or
+# tokens. Generic places (~/.nvm/, /tmp, /mnt/c as an example) and
+# placeholders (\\wsl.localhost\<distro>\..., /mnt/<drive>/...) pass.
+# pre-commit runs it on the staged changes and stops the commit; npm run
+# github on the commits GitHub doesn't have yet. See docs/WORKFLOW.md,
+# "3. Commit".
+
+PATTERN='/mnt/[a-z]/'
+PATTERN="$PATTERN"'|\\\\wsl(\.localhost|\$)\\[A-Za-z]' # \\wsl.localhost\Ubuntu
+PATTERN="$PATTERN"'|/home/[a-z_]|/Users/[A-Za-z]'     # home folders
+PATTERN="$PATTERN"'|(^|[^A-Za-z])[A-Za-z]:[\\/][A-Za-z]' # C:\Users, E:/PixiJS
+PATTERN="$PATTERN"'|Program( |\\ )Files[\\/]'   # Windows install folders
+PATTERN="$PATTERN"'|BEGIN [A-Z ]*PRIVATE KEY|password *[:=]'
+PATTERN="$PATTERN"'|gh[pousr]_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9_]{20}|sk-[A-Za-z0-9_-]{20}'
+
+# This file is left out: its patterns would match themselves.
+git diff --no-color --no-ext-diff "$@" -- . ':(exclude).githooks/private-lines' |
+  awk '/^\+\+\+ /{ file = substr($0, 7); next } /^\+/{ print file ": " substr($0, 2) }' |
+  grep -E "$PATTERN" || true
