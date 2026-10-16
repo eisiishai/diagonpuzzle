@@ -73,6 +73,23 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   `grid:` block to paste into `src/levels/levels.ts`, with its solution and
   its alternative. Try other `--seed` values for different boards, then adjust the
   board by hand and check it with `npm run levels`.
+- The generator's best boards still need a look before one is chosen:
+  play their solutions with `npm run trace` (it prints each shot's cells,
+  with `⇒` where the pellet comes out of a portal). Options that drop
+  the usual misses:
+  - `--varied-rows`: no shortest solution fires one row only. Repeating a
+    row makes random play look harder than the level is
+  - `--portal-gap N`: the portals at least N cells apart (default 2).
+    Portals side by side make the beam's jump hard to see
+  - `--return-trip`: a shot goes through the portals, off a reflector and
+    back through them
+  - `--bonus-needs portal` (or another piece): only boards that already
+    have a bonus target that needs the piece; it prints the target in the
+    grid and its `bonusShots`. Slower: it searches every board for one
+- Random odds have a ceiling: with R rows and par P, random play can't do
+  worse than 1 in R^P (1 in 125 for five rows at par 3). For a level
+  harder than that, raise par or add a row; foresight (`npm run levels`)
+  measures the planning a level needs regardless.
 - For levels with a player-placed mirror, add `--player-mirror slash` (or
   `backslash`): only boards that need the mirror for par are kept, and
   `--place-later` also drops boards where a shortest solution places it
@@ -94,6 +111,14 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   cells first, keeping par, the par solution and the number of shortest
   solutions. Paste the printed grid, set `bonusShots` and confirm with
   `npm run levels`.
+- A bonus target in a chapter's levels should need the chapter's piece,
+  not only be reachable along a route through it: find it with `npm run
+  bonus -- --needs portal` (the piece's name; `--uses` only checks that
+  a route passes the piece). Portal levels have a test for it. If no cell
+  works even with `--changes 2`, the board itself rules it out (the cells
+  the piece leads to are on the par route or out of reach): rather than
+  search longer, pick a new board with `npm run generate --
+  --bonus-needs portal` (level 33 got its board that way).
 - To see the different ways to solve the levels, run `npm run
   alternatives` (`--help` lists the options). Without `--level` it counts,
   for every level, the solutions at par and with one more shot
@@ -159,12 +184,15 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
     (`src/scenes/scoreText.ts`, newest piece first) and its fact in
     `GameScene.introMessage()`
   - `src/levels/levels.test.ts`: a "needs a … " test, so every level
-    with it can't reach par with it swapped for a plainer piece
+    with it can't reach par with it swapped for a plainer piece, and one
+    that its levels' bonus targets need it too (as "needs its portals
+    for the bonus target")
   - The level tools, for searching levels with it: the same swap in
     `SWAPS` in `scripts/pieces.ts` (so `npm run bonus` and `npm run
     alternatives` keep it needed), an option in `scripts/levelGenerator.ts`
-    and `scripts/generate.ts` (as `--fixed`), a name for `--uses` in
-    `scripts/bonus.ts`, and its group in the pieces list of
+    and `scripts/generate.ts` (as `--fixed`), a name for `--uses` and
+    `--needs` in `scripts/bonus.ts` and for `--bonus-needs` in
+    `scripts/generate.ts`, and its group in the pieces list of
     `findAlternativeChanges()` (`scripts/alternativeSearch.ts`)
   - A screenshot of its first level in `e2e/screenshots.e2e.ts`
 - To look up a level's solution, open `docs/solutions.local.md`: a table of

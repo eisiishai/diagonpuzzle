@@ -2,9 +2,12 @@
 // keeps the ones the solver says need exactly the wanted number of shots.
 // Rows are 0-based here, like the solver's.
 
+import { cellPositions } from "../src/game/board";
 import { fire } from "../src/game/simulate";
+import type { ShotResult } from "../src/game/simulate";
 import {
   eachCompletion,
+  playMoves,
   setupRoutes,
   shotRows,
   solve,
@@ -13,6 +16,7 @@ import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType } from "../src/game/types";
 import { formatLevel } from "../src/levels/parse";
 import { findAlternative, pathKey } from "./alternativeSearch";
+import type { Placement } from "./bonusPlacement";
 import {
   withFlippingMirrors,
   withSolidGlass,
@@ -69,6 +73,20 @@ export interface GeneratorOptions {
   requireSetup: boolean;
   /** Reject boards where a shortest solution fires the same row twice in a row. */
   noRepeat: boolean;
+  /**
+   * With portals: the fewest cells between them, counting a diagonal step
+   * as one (1 lets them touch, 0 keeps every board). Portals side by side
+   * make the beam's jump hard to see.
+   */
+  portalGap: number;
+  /** Reject boards where a shortest solution fires one row only. */
+  variedRows: boolean;
+  /**
+   * Keep only boards where every shortest solution has a shot that goes
+   * through the portals, off a reflector and back through them (see
+   * returnsThroughPortals).
+   */
+  returnTrip: boolean;
 }
 
 export interface Candidate {
@@ -83,6 +101,11 @@ export interface Candidate {
   setupRoutes: [number, number][];
   /** An alternative solution above par, once withAlternatives() found it. */
   alternative?: Move[];
+  /**
+   * A bonus target needing given pieces, once withBonusNeeding() (in
+   * bonusPlacement.ts) found it, and the shots it takes.
+   */
+  bonus?: Placement & { shots: number };
 }
 
 /** A small, seedable random number generator (xorshift32), giving [0, 1). */
@@ -153,6 +176,34 @@ export function randomBoard(
 }
 
 /**
+ * How far apart the board's two portals are, in cells, a diagonal step
+ * counting as one; null without portals.
+ */
+export function portalDistance(board: Board): number | null {
+  const [a, b] = cellPositions(board, (cell) => cell === "portal");
+  return b === undefined
+    ? null
+    : Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
+/**
+ * True if the shot goes through the portals, then hits a reflector, then
+ * goes through the portals again: the trip back meets what the way there
+ * changed, on both sides of the portals.
+ */
+export function returnsThroughPortals({ path }: ShotResult): boolean {
+  const there = path.findIndex((step) => step.throughPortal);
+  const reflector = path.findIndex(
+    (step, i) => i > there && step.cell === "reflector",
+  );
+  return (
+    there >= 0 &&
+    reflector > there &&
+    path.some((step, i) => i > reflector && step.throughPortal)
+  );
+}
+
+/**
  * Every sequence of exactly `shots` shots that completes the level on its
  * last shot, placing `playerMirror` (if given) on an empty cell before any
  * of them (searches all sequences, so keep `shots` small). Solutions that
@@ -193,6 +244,10 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
     const board = randomBoard(options, random);
     const key = formatLevel(board);
     if (found.has(key)) {
+      continue;
+    }
+    const gap = portalDistance(board);
+    if (gap !== null && gap < options.portalGap) {
       continue;
     }
     const { shots, goalHits, playerMirror } = options;
@@ -240,6 +295,20 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
       solutions
         .map(shotRows)
         .some((rows) => rows.some((row, j) => row === rows[j - 1]))
+    ) {
+      continue;
+    }
+    if (
+      options.variedRows &&
+      solutions.some((moves) => new Set(shotRows(moves)).size < 2)
+    ) {
+      continue;
+    }
+    if (
+      options.returnTrip &&
+      !solutions.every((moves) =>
+        playMoves(board, moves).shots.some(returnsThroughPortals),
+      )
     ) {
       continue;
     }

@@ -10,7 +10,11 @@ import {
 } from "../src/game/solver";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
-import { findPlacements, firstEntries } from "./bonusPlacement";
+import {
+  findPlacements,
+  firstEntries,
+  withBonusNeeding,
+} from "./bonusPlacement";
 import { withWalls } from "./pieces";
 
 describe("firstEntries", () => {
@@ -146,5 +150,31 @@ describe("findPlacements", () => {
     expect(
       findPlacements(parseLevel(level.grid), options).length,
     ).toBeGreaterThanOrEqual(needing.length);
+  });
+});
+
+describe("withBonusNeeding", () => {
+  // Level 31 without its bonus target, as the generator would find it.
+  const level = LEVELS.find((candidate) => candidate.id === "other-side")!;
+  const candidate = {
+    board: withBonuses(parseLevel(level.grid)),
+    solutions: [[1]],
+    rowsHittingAtStart: 1,
+    setupRoutes: [],
+  };
+  const options = { shots: 1, goalHits: 1 };
+
+  it("adds a bonus target that needs the pieces, par + 1 or + 2 away", () => {
+    const [kept] = withBonusNeeding([candidate], options, ["portal"]);
+    expect(kept.bonus).toBeDefined();
+    const { board, bonus, shots } = kept.bonus!;
+    expect([2, 3]).toContain(shots);
+    expect(solveBonus(board, bonus, shots, 1)).toHaveLength(shots);
+    expect(solveBonus(withWalls(board, "portal"), bonus, shots, 1)).toBeNull();
+  });
+
+  it("drops boards without one", () => {
+    // The level has no cracked wall, so no target can need one.
+    expect(withBonusNeeding([candidate], options, ["breakable"])).toEqual([]);
   });
 });

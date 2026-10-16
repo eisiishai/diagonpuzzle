@@ -20,6 +20,7 @@ import {
 import type { Move } from "../src/game/solver";
 import type { Board, CellType, MirrorType, Position } from "../src/game/types";
 import { shortestSolutions } from "./levelGenerator";
+import type { Candidate, GeneratorOptions } from "./levelGenerator";
 import { neededPieces, withoutPiece } from "./pieces";
 import type { Piece } from "./pieces";
 
@@ -320,4 +321,36 @@ export function findPlacements(
       variety(b) - variety(a) ||
       a.changes.length - b.changes.length,
   );
+}
+
+/**
+ * The generator's candidates, in order, that have a bonus target needing
+ * `needs` (see PlacementOptions.needs) without any board change, taking
+ * par + 1 or par + 2 shots; each with the first such placement. Some
+ * boards have none, as every cell the pieces lead to is on the par route
+ * or out of reach, and are better replaced than searched with changes.
+ */
+export function withBonusNeeding(
+  candidates: readonly Candidate[],
+  options: Pick<GeneratorOptions, "shots" | "goalHits" | "playerMirror">,
+  needs: readonly Piece[],
+): Candidate[] {
+  const kept: Candidate[] = [];
+  for (const candidate of candidates) {
+    for (const bonusShots of [options.shots + 1, options.shots + 2]) {
+      const [placement] = findPlacements(candidate.board, {
+        minShots: options.shots,
+        goalHits: options.goalHits,
+        playerMirror: options.playerMirror,
+        bonusShots,
+        changes: 0,
+        needs,
+      });
+      if (placement !== undefined) {
+        kept.push({ ...candidate, bonus: { ...placement, shots: bonusShots } });
+        break;
+      }
+    }
+  }
+  return kept;
 }

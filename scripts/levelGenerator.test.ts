@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { shotRows, solve } from "../src/game/solver";
+import { fire } from "../src/game/simulate";
+import { playMoves, shotRows, solve } from "../src/game/solver";
 import { parseLevel } from "../src/levels/parse";
 import {
   createRandom,
   findCandidates,
+  portalDistance,
   randomBoard,
+  returnsThroughPortals,
   shortestSolutions,
   withAlternatives,
 } from "./levelGenerator";
@@ -33,6 +36,9 @@ const OPTIONS: GeneratorOptions = {
   seed: 7,
   requireSetup: false,
   noRepeat: false,
+  portalGap: 0,
+  variedRows: false,
+  returnTrip: false,
 };
 
 describe("createRandom", () => {
@@ -195,6 +201,49 @@ describe("findCandidates", () => {
     }
   });
 
+  it("keeps portals apart and solutions firing more than one row", () => {
+    const options = { ...OPTIONS, portals: true, portalGap: 2 };
+    const apart = findCandidates(options);
+    expect(apart.length).toBeGreaterThan(0);
+    for (const { board } of apart) {
+      expect(portalDistance(board)).toBeGreaterThanOrEqual(2);
+    }
+    // Some boards in the same search have them touching.
+    expect(
+      findCandidates({ ...options, portalGap: 0 }).some(
+        ({ board }) => portalDistance(board) === 1,
+      ),
+    ).toBe(true);
+    const varied = findCandidates({ ...OPTIONS, variedRows: true });
+    expect(varied.length).toBeGreaterThan(0);
+    for (const { solutions } of varied) {
+      for (const moves of solutions) {
+        expect(new Set(shotRows(moves)).size).toBeGreaterThan(1);
+      }
+    }
+  });
+
+  it("keeps only boards whose solution comes back through the portals", () => {
+    const candidates = findCandidates({
+      ...OPTIONS,
+      width: 6,
+      height: 5,
+      mirrors: 5,
+      portals: true,
+      reflectors: 1,
+      returnTrip: true,
+      tries: 2000,
+    });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board, solutions } of candidates) {
+      for (const moves of solutions) {
+        expect(playMoves(board, moves).shots.some(returnsThroughPortals)).toBe(
+          true,
+        );
+      }
+    }
+  });
+
   it("keeps only boards that need the player's mirror, later if asked", () => {
     const candidates = findCandidates({
       ...OPTIONS,
@@ -227,5 +276,25 @@ describe("withAlternatives", () => {
       expect(shots).toBeGreaterThan(OPTIONS.shots);
       expect(shots).toBeLessThanOrEqual(OPTIONS.shots + 2);
     }
+  });
+});
+
+describe("portalDistance", () => {
+  it("counts a diagonal step as one, and is null without portals", () => {
+    expect(portalDistance(parseLevel("O . G\n. O ."))).toBe(1);
+    expect(portalDistance(parseLevel("O . O G"))).toBe(2);
+    expect(portalDistance(parseLevel(". G"))).toBeNull();
+  });
+});
+
+describe("returnsThroughPortals", () => {
+  it("is true for a shot through the portals, off a reflector and back", () => {
+    // Into the left portal, out of the right one, back off the reflector
+    // through both portals and out at the launcher.
+    expect(returnsThroughPortals(fire(parseLevel(". O O @ G"), 0))).toBe(true);
+    // Through the portals, but not back.
+    expect(returnsThroughPortals(fire(parseLevel(". O . O G"), 0))).toBe(false);
+    // Off a reflector, without portals.
+    expect(returnsThroughPortals(fire(parseLevel(". @ G"), 0))).toBe(false);
   });
 });
