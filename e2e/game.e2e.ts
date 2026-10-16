@@ -153,10 +153,15 @@ test("the Skip button skips on its second press", async ({ game }) => {
   await game.open();
   await game.press("PLAY");
   await game.waitForLevel(1);
+  // The second press must come within 3 s of the game's time: slowed
+  // down, so a machine where each step of the test takes a second still
+  // makes it.
+  await game.setSpeed(0.1);
   await game.press("SKIP LEVEL · 3/3");
   await game.button("PRESS AGAIN TO SKIP");
   expect((await game.level()).number).toBe(1);
   await game.press("PRESS AGAIN TO SKIP");
+  await game.setSpeed(1);
   await game.waitForLevel(2);
   await game.button("SKIP LEVEL · 2/3");
 });
@@ -186,13 +191,14 @@ test("holding the level's name is the hidden skip too", async ({ game }) => {
 test("with no skips left, Skip waits until time on levels gives one back", async ({
   game,
 }) => {
-  // Two seconds short of earning a skip back. Level 1 was skipped, which
-  // unlocks level 2.
+  // Eight seconds short of earning a skip back: enough for a slow machine
+  // to see the button before then, and well within the wait for it after.
+  // Level 1 was skipped, which unlocks level 2.
   await game.seedProgress({
     ...EMPTY_PROGRESS,
     skipped: [LEVELS[FIRST].id],
     skipsLeft: 0,
-    skipWaitMs: SKIP_WAIT_MS - 2000,
+    skipWaitMs: SKIP_WAIT_MS - 8000,
   });
   await game.open();
   expect((await game.state()).title!.levels[FIRST].state).toBe("skipped");

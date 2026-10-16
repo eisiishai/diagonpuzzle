@@ -608,9 +608,12 @@ under *Settings → Pages* set *Source* to *Deploy from a branch*, branch
    tag by hand on the current `main`, outside the hooks' numbering.
    A Release marked as a pre-release isn't put online.
 4. Follow the run under *Actions* (`gh run watch`). If a check fails,
-   nothing goes online; the failed browser tests' traces are in the run's
-   `e2e-results` artifact (`npx playwright show-trace`). Fix, commit, and
-   release the new version.
+   nothing goes online. On GitHub a failed browser test runs once more,
+   recording a trace (recording one for every test slows GitHub's 4 cores
+   until tests time out); the traces are in the run's `e2e-results`
+   artifact (`npx playwright show-trace`). A test that passed only on its
+   second run is listed as flaky and doesn't stop the release. Fix,
+   commit, and release the new version.
 5. Open the site and check it as in steps 4 and 5 above, phone included.
 
 To run a release again, or to point the main page back at an earlier

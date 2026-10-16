@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { CI } from "./e2e/ci";
 import { COVERAGE } from "./e2e/coverage";
 
 // Browser smoke tests (e2e/): `npm run e2e` for the quick set (also run
@@ -9,9 +10,14 @@ export default defineConfig({
   testMatch: "*.e2e.ts",
   fullyParallel: true,
   // The browser draws in software (no GPU): more browsers at once slow
-  // each one down until frames drop and the game's time runs slow.
+  // each one down, to about 3 frames a second on GitHub's 4 cores.
   workers: 4,
   reporter: "list",
+  // The longest tests play a level twice and take about 30 s locally,
+  // where a trace is recorded for every test, and on GitHub's 4 cores.
+  timeout: 60_000,
+  // On GitHub (CI is set) a failed test runs once more, recording a trace.
+  retries: CI ? 1 : 0,
   // Shots animate at their normal speed; the longest take a few seconds.
   expect: { timeout: 15_000 },
   use: {
@@ -19,7 +25,10 @@ export default defineConfig({
     // Skips the build-in, transitions and ambient motion; the game
     // respects the player's setting.
     reducedMotion: "reduce",
-    trace: "retain-on-failure",
+    // Recording a trace makes every look at the page about three times
+    // slower, which on GitHub's 4 cores is enough to time tests out, so
+    // there only a retry records one.
+    trace: CI ? "on-first-retry" : "retain-on-failure",
   },
   projects: [
     {

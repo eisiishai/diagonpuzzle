@@ -1,6 +1,7 @@
 import { placeMirror } from "../src/game/placement";
 import { fire } from "../src/game/simulate";
 import { LEVELS } from "../src/levels/levels";
+import { CI } from "./ci";
 import { expect, solution, startBoard, test } from "./game";
 
 // Every level played by its shortest solution, as on a first visit. This
@@ -10,8 +11,8 @@ import { expect, solution, startBoard, test } from "./game";
 // level's state and the cells as drawn (a mirror by its rotation).
 
 // The longest levels take most of the default 30 s with 4 browsers drawing
-// in software at once.
-test.describe.configure({ timeout: 60_000 });
+// in software at once, and longer on GitHub's 4 cores.
+test.describe.configure({ timeout: CI ? 120_000 : 60_000 });
 
 LEVELS.forEach((level, index) => {
   const number = index + 1;

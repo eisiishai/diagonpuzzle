@@ -1,7 +1,8 @@
 // A view of the running game for the browser smoke tests in e2e/: the game
 // is drawn on one canvas, so tests can't find buttons or cells in the page.
 // Loaded only when the page's URL has the parameter ?e2e (see main.ts);
-// it changes nothing in the game unless a test sets the game's speed.
+// it changes nothing in the game unless a test sets the game's speed,
+// except that the game's time keeps up with real time at low frame rates.
 
 import type { Container, Ticker } from "pixi.js";
 import { Button } from "./render/ui";
@@ -31,6 +32,12 @@ export function installTestHook(
   currentScene: () => Scene | undefined,
   ticker: Ticker,
 ): void {
+  // The game's time keeps up with real time down to 1 frame a second
+  // (PixiJS: 10). Browsers drawing in software on a machine with few
+  // cores, as on GitHub, manage 3 frames a second: without this the
+  // game's time would run at a third of real time, and tests that wait
+  // a shot's real duration would look too early.
+  ticker.minFPS = 1;
   window.__diagonTest = {
     setSpeed: (speed) => {
       ticker.speed = speed;
