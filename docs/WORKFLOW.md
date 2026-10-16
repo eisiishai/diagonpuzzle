@@ -178,7 +178,19 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
     gives for it. A new piece gets its own hit sound and its chapter its
     own music track, chosen on a sound lab page (variants with a
     suggestion; the user pastes back the picks); until then it borrows
-    the mirror bell and an existing track
+    the mirror bell and an existing track. The sound lab pages are not in
+    the repository: they are private artifacts on the user's claude.ai
+    account, titled "Diagon Puzzle Sound Lab N" (list them with the
+    Artifact tool). Build the next one from the newest: it carries its
+    own copy of the game's synth (`synth.ts`) and mix (`GameAudio.ts`),
+    so the variants sound as they will in the game. Each lab shows the
+    current sound as "now", marks the suggestion with a dot, has a demo
+    shot strip for hit sounds and a button that plays the chapter
+    change from the previous chapter's track, and a bar whose *Copy
+    picks* gives the text to paste back. When building the picks into
+    the game, make a track's occasional detail a little quieter and
+    rarer than on the lab page (about 10 % on both); every track since
+    sound lab 4 has been
   - Ambient motion, if any: `BoardView.updateAmbient()`
   - The first level using it: an intro message in `introMessage()`
     (`src/scenes/scoreText.ts`, newest piece first) and its fact in
