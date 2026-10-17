@@ -127,11 +127,8 @@ in the curve and which combinations a chapter has. Random odds
   bonus -- --needs portal` (the piece's name; `--uses` only checks that
   a route passes the piece). Portal and one-way gate levels have a test
   for it (for gates, `--needs gate` means a gate must be passed).
-  `--needs` searches with no limit on shots, so a longer way round the
-  piece rules a cell out too; the gate test does the same, the portal
-  test only within `bonusShots` (level 36 has a 5-shot way round). If no
-  cell
-  works even with `--changes 2`, the board itself rules it out (the cells
+  `--needs` and both tests search with no limit on shots, so a longer
+  way round the piece rules a cell out too. If no cell works even with `--changes 2`, the board itself rules it out (the cells
   the piece leads to are on the par route or out of reach): rather than
   search longer, pick a new board with `npm run generate --
   --bonus-needs portal` (level 38 got its board that way; level 25's

@@ -103,18 +103,17 @@ it.each(idsWith("portal"))("%s needs its portals", (id) => {
 });
 
 // Their bonus targets need the portals too: with both portals walls, the
-// bonus target is out of reach in its shots. (Gate levels below are held
-// to more: no route at all. Other side's target can be reached without
-// its portals in 5 shots, and it was released before that rule.)
+// bonus target is out of reach however many shots are fired (the search
+// ends when no new board is left).
 it.each(idsWith("portal"))(
   "%s needs its portals for the bonus target",
   (id) => {
     const { level, board } = replaced(id, ["portal"], () => "wall", true);
-    const { bonusShots, goalHits = 1, playerMirror } = level;
+    const { goalHits = 1, playerMirror } = level;
     const [bonus] = bonusPositions(board);
     expect(bonus).toBeDefined();
     expect(
-      solveBonus(board, bonus, bonusShots, goalHits, playerMirror),
+      solveBonus(board, bonus, Infinity, goalHits, playerMirror),
     ).toBeNull();
   },
 );

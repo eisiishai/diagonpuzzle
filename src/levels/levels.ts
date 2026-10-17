@@ -554,14 +554,14 @@ export const LEVELS: readonly LevelDefinition[] = [
     id: "other-side",
     name: "Other side",
     minShots: 1,
-    bonusShots: 2,
+    bonusShots: 3,
     music: "wormhole",
     grid: String.raw`
-      \ . . # * .
+      \ . . # . .
       . O . . . .
       / . . . \ \
-      . / . # O G
-      . . . . . .
+      . / * # O G
+      \ . . . . .
     `,
   },
   {
