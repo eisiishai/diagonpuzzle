@@ -150,13 +150,19 @@ with flipping mirrors, before it is built.
   - [x] Portal pair (`O`): the pellet enters one and leaves the other in
     the same direction. No state of its own, so no cost to the solver;
     reaches rows and routes the left edge can't. One pair per level.
-    Levels 36–39 teach it (chapter *Portals*). Design in
+    Levels 36–40 teach it (chapter *Portals*). Design in
     `docs/DESIGN.md`, *Portals*
     - [x] Its own music track: *Wormhole*, chosen on sound lab 7
     - [x] Its own sound as the pellet goes through: *Phase drop*, chosen
       on sound lab 7
     - [x] Harder portal levels: 38 with a breakable wall, 39 with a
       reflector
+    - [x] A fifth portal level, *Looking glass* (40, par 4, 2026-10-17),
+      ending the chapter and the game with a glass mirror and a fixed
+      mirror: the first shot shatters the glass, two more set up the
+      mirrors through its gap, and the last goes through the portals
+      into the fixed mirror from its other side. Its bonus target needs
+      the portals. Odds 1 in 625, as 39
     - [ ] Optional: several pairs per level, each with its own symbol and
       colour
   - [ ] One-way gate: the pellet passes in one direction and is stopped
@@ -179,8 +185,8 @@ with flipping mirrors, before it is built.
 Measured on 2026-10-10 (v0.34) by `npm run levels`, level 19 added and level 20 given alternatives on
 2026-10-11, *Down and around* moved from 7 to 5, *Trapdoor* added as
 level 12, *Hairpin* as level 17, *Double back* as level 25, *Glass
-and stone* as level 30 and *Strike twice* as level 33 on 2026-10-17,
-which
+and stone* as level 30, *Strike twice* as level 33 and *Looking glass*
+as level 40 on 2026-10-17, which
 ends with this curve: the chance that random play completes a level within par (a random
 row each shot; in player-mirror levels a random cell for the mirror, or
 keeping it). Lower is harder. It dips at each new mechanic (6, 11,
@@ -215,16 +221,20 @@ goal):
 |---|---|---|---|---|---|
 | 1 in | 16 | 125 | 625 | 125 | 3,387 |
 
-Levels 36–39 (portals, added 2026-10-16): two easy teaching levels at
+Levels 36–40 (portals, added 2026-10-16): two easy teaching levels at
 the start of the chapter like 21, 26 and 31, then 38 with a breakable
 wall and 39 with a reflector, which sends the pellet back through the
 portals. 39 is par 4 so that it is harder than 38 (with five rows, par 3
-can't be harder than 1 in 125), well below *Mirror image* (24):
+can't be harder than 1 in 125), well below *Mirror image* (24).
+*Looking glass* (40, added 2026-10-17) ends the chapter with a glass
+mirror and a fixed mirror, as hard as 39 by both measures: like *Steel
+echo* (34) it has three kinds of special piece, so its difficulty is in
+reading the board more than in the odds:
 
-| Level | 36 | 37 | 38 | 39 |
-|---|---|---|---|---|
-| 1 in | 5 | 25 | 125 | 625 |
-| Foresight | 0 | 1 | 4 | 3 |
+| Level | 36 | 37 | 38 | 39 | 40 |
+|---|---|---|---|---|---|
+| 1 in | 5 | 25 | 125 | 625 | 625 |
+| Foresight | 0 | 1 | 4 | 3 | 3 |
 
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).

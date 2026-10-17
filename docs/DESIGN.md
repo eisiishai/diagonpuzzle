@@ -237,9 +237,9 @@ off from the left, or the goal from above.
 - The player's mirror can't go on a portal (only on empty cells).
 - One pair per level for now; several pairs would need a symbol and a
   colour per pair.
-- Levels 36–39 teach it (chapter *Portals*), 38 with a breakable wall
-  and 39 with a reflector, which sends the pellet back through the
-  portals. Their bonus targets need the portals too (the tests check
+- Levels 36–40 teach it (chapter *Portals*), 38 with a breakable wall,
+  39 with a reflector, which sends the pellet back through the
+  portals, and 40 with a glass mirror and a fixed mirror. Their bonus targets need the portals too (the tests check
   it).
 
 ## Cell types
@@ -346,6 +346,16 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 37 | Shortcut | 2 | Portals with a setup shot. Row 4 turns up at (1,4) into the wall and flips it; row 4 again turns down there and right at (1,5), along the bottom row into the portal at (4,5), and comes out of the one in the top left corner, running along the top row to the goal. Alternative in 3 shots: rows 5, 5, 4. The bonus target shows that portals work both ways: row 1 goes straight into the top left portal and out of the bottom one; three row 1 shots flip the mirrors beyond it until the last turns up at (5,5) and right at (5,4) onto it. |
 | 38 | Knock first | 3 | Portals with a breakable wall. Row 3 turns down at (4,3) and left at (4,4) into the lower portal, comes out of the upper one moving left and leaves at the top, flipping (1,1). Row 5 climbs column 1 and turns right at (1,1) into the upper portal; it comes out of the lower one and turns down at (4,4), now `\`, into the cracked wall, breaking it. Row 1 then runs down column 1 and along the bottom row through the gap to the goal. Alternative in 5 shots: rows 1, 1, 1, 3, 1. The bonus target, at the end of row 3, needs the portals: rows 3, 3, 3, 5, the last coming out of the lower portal and turning up at (4,4) and right at (4,3) onto it. |
 | 39 | Boomerang | 4 | Portals with a reflector. Row 3 flips the `\` at (1,3) and leaves at the bottom; row 3 again climbs column 1 and leaves at the top, flipping (1,2) and (2,2); row 2 turns down column 1 into the left portal and comes out of the right one, leaving the board. Row 3 then turns down at (2,2) into the left portal, comes out of the right one moving down into the reflector, goes back up through both portals and meets (2,2), which it flipped on the way in: it now turns the pellet right along row 2 to the goal. Alternative in 5 shots: rows 2, 2, 3, 2, 3. The bonus target sits between the portals and needs them: rows 4, 1, 4, 4, 4, all but the fourth going through the portals and up column 5; the last turns left at (5,1) and down at (4,1) onto it. |
+| 40 | Looking glass | 4 | Portals with a glass mirror and a fixed mirror. Row 3 turns down at (1,3) onto the glass `\` at (1,4), which turns it right and shatters; it leaves up column 3, flipping (3,4). Row 4 runs through the gap the glass left, turns down at (3,4) and left at (3,5) into the fixed `/` at (2,5), which sends it out at the bottom. Row 4 again only flips (3,4) back, leaving (3,5) turned the new way. Row 4 then turns down at (3,4) and right at (3,5) along the bottom row into the right portal, comes out of the left one into the same fixed `/` from the other side, which turns it up column 2, and (2,2) turns it right into the goal. Alternative in 5 shots: rows 3, 3, 2, 3, 4. The bonus target needs the portals: rows 3, 3, 2, 4, 3, the last coming down column 2 into the fixed `/`, which turns it left into the left portal; out of the right one, moving left, it turns up at (3,5) and right at (3,4) onto it. |
+
+*Looking glass* (40, added 2026-10-17 to end the portal chapter with a
+glass mirror and a fixed mirror) came from `npm run generate --
+--portals --glass 1 --fixed 1 --shots 4 --bonus-needs portal` on a 6×5
+board with 5 mirrors and 1 wall, which keeps only boards that need the
+portals, the glass shattered and the fixed mirror for par: about one
+board in 2,000 does, and 2 of 30 had a bonus target needing the portals.
+Random-play odds 1 in 625, as *Boomerang* (39); the only boards found
+at 1 in 1,296 fired one row four times.
 
 Levels 31–32 were found with `npm run generate -- --fixed N`, which
 keeps only boards that can't reach par with their fixed mirrors made
@@ -507,7 +517,7 @@ from four and six).
   in `src/levels/levels.ts`, following the music groups): 1–5 *Basics*,
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
-  36–39 *Portals*. Each
+  36–40 *Portals*. Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one
@@ -784,7 +794,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 21–25 (reflectors) | **Return**: pads and bass on Dm9 – B♭maj7♯11. Now and then a two-note pluck phrase on the left is answered from the right by its mirror image (the step turned upside down), quieter and further away, like a shot coming back from a reflector, changed |
 | Levels 26–30 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 | Levels 31–35 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
-| Levels 36–39 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
+| Levels 36–40 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,

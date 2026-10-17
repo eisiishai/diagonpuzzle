@@ -606,6 +606,20 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . # . @ .
     `,
   },
+  {
+    id: "looking-glass",
+    name: "Looking glass",
+    minShots: 4,
+    bonusShots: 5,
+    music: "wormhole",
+    grid: String.raw`
+      # . . . . .
+      / / . . . G
+      \ . . . . .
+      N . / * . .
+      O J / . O .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
