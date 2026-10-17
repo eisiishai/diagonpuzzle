@@ -377,7 +377,10 @@ test's retry records one, and tests get longer time limits (`CI` set:
 `CI` value too). Under `?e2e` the game's time keeps up with real time at
 low frame rates (`ticker.minFPS` in `src/testHook.ts`); a test that needs
 something done within a few seconds of the game's time slows the game
-with `game.setSpeed()` instead of relying on speed. Two local cores
+with `game.setSpeed()` instead of relying on speed, or stops it with
+`game.setSpeed(0)` while it acts (as the tests interrupting a shot do:
+a slowed shot still ended before a pointer move and a key press on
+GitHub while it recorded a trace). Two local cores
 behave about like GitHub:
 
 ```bash

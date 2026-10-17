@@ -17,8 +17,9 @@ declare global {
     __diagonTest?: {
       state(): TestState;
       /**
-       * How fast the game's time runs: 1 as usual, below 1 slower. A test
-       * slows a shot down to act while the pellet is moving.
+       * How fast the game's time runs: 1 as usual, below 1 slower, 0
+       * stopped. A test slows or stops a shot to act while the pellet is
+       * moving.
        */
       setSpeed(speed: number): void;
     };

@@ -330,9 +330,11 @@ test("the game runs with localStorage blocked", async ({ game }) => {
 test.describe("interrupting a shot", () => {
   // Level 1's top row: a shot that flips mirrors and leaves the board
   // without reaching the goal, so a restart has something to undo. The
-  // game's time is slowed while it flies, so the test's input surely
-  // arrives before it ends (input to a browser drawing in software takes
-  // a large part of a second).
+  // game's time is slowed for the click that fires it, then stopped once
+  // it is on its way, so the test's input surely arrives before it ends:
+  // on GitHub, a browser drawing in software at 3 frames a second (and
+  // three times slower while recording a trace) took longer than the
+  // slowed shot for a pointer move and a key press.
   const ROW = 0;
   const start = startBoard(FIRST);
   const shot = fire(start, ROW);
@@ -349,10 +351,12 @@ test.describe("interrupting a shot", () => {
     await game.waitForLevel(1);
   });
 
-  /** Fires the slowed shot; returns once it is on its way. */
+  /** Fires the slowed shot and stops the game's time once it is on its way. */
   async function startSlowShot(game: Game) {
     await game.setSpeed(SLOW);
     await game.startShot(ROW, "mouse");
+    await game.setSpeed(0);
+    expect((await game.level()).phase).toBe("firing");
   }
 
   /** Checks the shot was still on its way, then lets time run again. */
