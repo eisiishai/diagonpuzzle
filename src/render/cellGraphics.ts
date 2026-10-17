@@ -23,9 +23,18 @@ const SLASHES: readonly CellType[] = [
   "fixedSlash",
 ];
 
+/** How far drawCell() turns each one-way gate, drawn pointing right. */
+const GATE_ROTATIONS: Partial<Record<CellType, number>> = {
+  gateRight: 0,
+  gateDown: Math.PI / 2,
+  gateLeft: Math.PI,
+  gateUp: -Math.PI / 2,
+};
+
 /**
  * How each cell type looks. Mirrors (and glass and fixed mirrors) are drawn as
- * "\"; drawCell() rotates "/" by 90°. New block types are added here (the type check fails
+ * "\"; drawCell() rotates "/" by 90°, and one-way gates, drawn pointing
+ * right, to their direction. New block types are added here (the type check fails
  * until they are).
  */
 const CELL_DRAWERS: Record<CellType, CellDrawer> = {
@@ -36,6 +45,10 @@ const CELL_DRAWERS: Record<CellType, CellDrawer> = {
   glassSlash: drawGlassMirror,
   fixedBackslash: drawFixedMirror,
   fixedSlash: drawFixedMirror,
+  gateRight: drawGate,
+  gateLeft: drawGate,
+  gateUp: drawGate,
+  gateDown: drawGate,
   wall: (g, half) => {
     // A dark block with diagonal hatching.
     const edge = half * 0.87;
@@ -218,6 +231,28 @@ function drawFixedMirror(g: Graphics, half: number): void {
 }
 
 /**
+ * A one-way gate, drawn pointing right: an amber arrow between two dark
+ * rails, the way the pellet may go through; from any other side it stops.
+ */
+function drawGate(g: Graphics, half: number): void {
+  const rail = half * 0.8;
+  for (const y of [-half * 0.82, half * 0.68]) {
+    g.roundRect(-rail, y, rail * 2, half * 0.14, 2);
+  }
+  g.fill(COLORS.gateRail);
+  const tip = half * 0.42;
+  const back = -half * 0.12;
+  const wing = half * 0.4;
+  g.moveTo(-half * 0.5, 0)
+    .lineTo(tip - 3, 0)
+    .stroke({ width: 4, color: COLORS.gate, cap: "round" })
+    .moveTo(back, -wing)
+    .lineTo(tip, 0)
+    .lineTo(back, wing)
+    .stroke({ width: 4, color: COLORS.gate, cap: "round", join: "round" });
+}
+
+/**
  * Draws `cell` into `g`, centred on g's origin, resetting any rotation,
  * scale and fade left from animations.
  */
@@ -228,7 +263,8 @@ export function drawCell(
   goalHits: GoalHits,
 ): void {
   g.clear();
-  g.rotation = SLASHES.includes(cell) ? Math.PI / 2 : 0;
+  g.rotation =
+    GATE_ROTATIONS[cell] ?? (SLASHES.includes(cell) ? Math.PI / 2 : 0);
   g.scale.set(1);
   g.alpha = 1;
   CELL_DRAWERS[cell](g, cellSize / 2, goalHits);

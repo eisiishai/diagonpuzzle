@@ -33,6 +33,12 @@ const REVERSED: Record<Direction, Direction> = {
   down: "up",
 };
 
+function gate(direction: Direction, through: Direction): CellEffect {
+  return direction === through
+    ? { kind: "pass", direction }
+    : { kind: "stop", reason: "blocked" };
+}
+
 /**
  * Behavior of each cell type, given the direction the pellet is moving when
  * it enters the cell. New block types are added here.
@@ -80,6 +86,12 @@ export const CELL_BEHAVIORS: Record<
   // A portal sends the pellet on from its partner, the board's other
   // portal, moving the same way; it never changes.
   portal: () => ({ kind: "teleport" }),
+  // A one-way gate lets the pellet through moving the way its arrow
+  // points, and stops it like a wall from any other side.
+  gateRight: (direction) => gate(direction, "right"),
+  gateLeft: (direction) => gate(direction, "left"),
+  gateUp: (direction) => gate(direction, "up"),
+  gateDown: (direction) => gate(direction, "down"),
   // A cracked wall stops the pellet and breaks: the next shot passes through.
   breakable: () => ({ kind: "stop", reason: "blocked", becomes: "empty" }),
   goal: () => ({ kind: "stop", reason: "goal" }),
@@ -106,6 +118,17 @@ export const FIXED_MIRRORS: readonly CellType[] = [
   "fixedSlash",
 ];
 
+/** The one-way gates, by the direction they let the pellet through. */
+export const GATES: Readonly<Record<Direction, CellType>> = {
+  right: "gateRight",
+  left: "gateLeft",
+  up: "gateUp",
+  down: "gateDown",
+};
+
+/** The one-way gates, which let the pellet through one way only. */
+export const GATE_CELLS: readonly CellType[] = Object.values(GATES);
+
 export function isMirror(cell: CellType): cell is MirrorType {
   return MIRRORS.includes(cell as MirrorType);
 }
@@ -129,6 +152,10 @@ const BOUNCE_KINDS: Record<CellType, BounceKind | null> = {
   fixedSlash: "fixed",
   reflector: "reflector",
   portal: "portal",
+  gateRight: null,
+  gateLeft: null,
+  gateUp: null,
+  gateDown: null,
   wall: null,
   breakable: null,
   goal: null,

@@ -183,9 +183,24 @@ with flipping mirrors, before it is built.
       the portals. Odds 1 in 625, as 39
     - [ ] Optional: several pairs per level, each with its own symbol and
       colour
-  - [ ] One-way gate: the pellet passes in one direction and is stopped
-    from the others (shown with an arrow). Closes off routes, which helps
-    keep a level's alternatives in check
+  - [x] One-way gate (`>` `<` `^` `v`): the pellet passes in the
+    arrow's direction and is stopped like a wall from the others. No state
+    of its own, so no cost to the solver. Levels are built around both
+    sides: one gate passed, one blocking another way. Design in
+    `docs/DESIGN.md`, *One-way gates*
+    - [x] Two teaching levels in a new chapter *One-way gates*: *One way*
+      (41, par 2, 2026-10-17), where the obvious shot is stopped head-on
+      and a setup shot opens the way through the other gate, and *No way
+      back* (42, par 3), where a gate stops the pellet from the side after
+      it climbed through the other. Odds 1 in 25 and 1 in 125
+    - [ ] Three more gate levels, combining gates with earlier pieces (a
+      reflector behind a gate, which lets light in but not out, is a
+      natural one), ending the chapter
+    - [ ] Its own music track, chosen on a sound lab page (*Photon* for
+      now)
+    - [ ] Its own sound when a gate stops the pellet, and perhaps a soft
+      one when it passes, chosen on a sound lab page (the wall's knock
+      for now)
   - [ ] Switch and doors: hitting a switch stops the pellet and toggles
     every door on the board between open and closed. Needs cell
     behaviours that can change other cells, not only their own
@@ -253,6 +268,14 @@ reading the board more than in the odds:
 |---|---|---|---|---|---|
 | 1 in | 5 | 25 | 125 | 625 | 625 |
 | Foresight | 0 | 1 | 4 | 3 | 3 |
+
+Levels 41–42 (one-way gates, added 2026-10-17): two teaching levels with
+only gates, the first easy like 36, the second a step up:
+
+| Level | 41 | 42 |
+|---|---|---|
+| 1 in | 25 | 125 |
+| Foresight | 1 | 3 |
 
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).

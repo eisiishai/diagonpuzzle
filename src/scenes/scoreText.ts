@@ -80,11 +80,13 @@ export interface IntroFacts {
   hasFixed: boolean;
   /** The level has portals. */
   hasPortal: boolean;
+  /** The level has one-way gates. */
+  hasGate: boolean;
 }
 
 /**
  * The message shown when a level starts or restarts: about the newest thing
- * in it, in this order: a bonus target to find, portals, fixed mirrors, glass
+ * in it, in this order: a bonus target to find, one-way gates, portals, fixed mirrors, glass
  * mirrors, reflectors,
  * the player's mirror, a goal needing several hits, breakable walls; else how to play.
  */
@@ -98,9 +100,13 @@ export function introMessage(facts: IntroFacts): string {
     hasGlass,
     hasFixed,
     hasPortal,
+    hasGate,
   } = facts;
   if (bonusToFind) {
     return "A bonus target has appeared! Hitting it is optional and turns this level's star golden.";
+  }
+  if (hasGate) {
+    return "One-way gates let the pellet through only the way their arrow points, and stop it from any other side.";
   }
   if (hasPortal) {
     return "Portals come in pairs: the pellet goes into one and comes out of the other, moving the same way.";

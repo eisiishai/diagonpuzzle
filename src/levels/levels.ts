@@ -620,6 +620,34 @@ export const LEVELS: readonly LevelDefinition[] = [
       O J / . O .
     `,
   },
+  {
+    id: "one-way",
+    name: "One way",
+    minShots: 2,
+    bonusShots: 3,
+    music: "photon",
+    grid: String.raw`
+      . \ . . .
+      v / . * .
+      / > . . G
+      . . \ . .
+      \ / . . .
+    `,
+  },
+  {
+    id: "no-way-back",
+    name: "No way back",
+    minShots: 3,
+    bonusShots: 4,
+    music: "photon",
+    grid: String.raw`
+      . \ . / . G
+      . / . \ # .
+      . ^ . . * .
+      . \ ^ / \ .
+      . . . \ . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
@@ -643,6 +671,7 @@ export const CHAPTERS: readonly ChapterDefinition[] = [
   { name: "Glass mirrors", firstLevel: "glass-house" },
   { name: "Fixed mirrors", firstLevel: "bolted-down" },
   { name: "Portals", firstLevel: "other-side" },
+  { name: "One-way gates", firstLevel: "one-way" },
 ];
 
 /** A chapter's levels: indices `start` up to, not including, `end`. */

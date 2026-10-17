@@ -7,7 +7,12 @@
 import { boardHas, withCell } from "../src/game/board";
 import type { CellChange } from "../src/game/board";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
-import { FIXED_MIRRORS, GLASS_MIRRORS, MIRRORS } from "../src/game/cells";
+import {
+  FIXED_MIRRORS,
+  GATE_CELLS,
+  GLASS_MIRRORS,
+  MIRRORS,
+} from "../src/game/cells";
 import type { ShotResult } from "../src/game/simulate";
 import {
   completesLevel,
@@ -159,8 +164,8 @@ function playedShots(board: Board, moves: readonly Move[]): string | null {
  * the bonus target where it is, still taking `bonusShots` shots. Changes
  * may put an empty cell, a mirror or a wall in any cell but the goal and
  * the bonus target (or a portal, as they come in pairs), and a breakable
- * wall, a reflector, glass mirrors or fixed mirrors only in levels that
- * already have one.
+ * wall, a reflector, glass mirrors, fixed mirrors or one-way gates only in
+ * levels that already have one.
  */
 export function findAlternativeChanges(
   levelBoard: Board,
@@ -187,6 +192,7 @@ export function findAlternativeChanges(
     ["reflector"],
     GLASS_MIRRORS,
     FIXED_MIRRORS,
+    GATE_CELLS,
   ];
   // Pieces the level already has may go elsewhere too.
   for (const piece of pieces) {

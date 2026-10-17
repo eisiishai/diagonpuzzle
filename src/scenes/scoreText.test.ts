@@ -60,6 +60,7 @@ describe("introMessage", () => {
     hasGlass: false,
     hasFixed: false,
     hasPortal: false,
+    hasGate: false,
   };
 
   it("explains how to play on a plain level", () => {
@@ -77,8 +78,12 @@ describe("introMessage", () => {
         hasGlass: true,
         hasFixed: true,
         hasPortal: true,
+        hasGate: true,
       }),
     ).toContain("bonus target");
+    expect(
+      introMessage({ ...plain, hasPortal: true, hasGate: true }),
+    ).toContain("One-way gates");
     expect(
       introMessage({ ...plain, hasFixed: true, hasPortal: true }),
     ).toContain("Portals");

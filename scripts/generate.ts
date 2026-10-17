@@ -23,6 +23,7 @@ const NEEDS: Record<string, Piece> = {
   glass: "glass",
   fixed: "fixed",
   portal: "portal",
+  gate: "gate",
   "player-mirror": "playerMirror",
 };
 
@@ -40,6 +41,7 @@ const DEFAULTS: GeneratorOptions & {
   glass: 0,
   fixed: 0,
   portals: false,
+  gates: 0,
   playerMirror: undefined,
   placeLater: false,
   shots: 2,
@@ -75,6 +77,10 @@ const HELP = `Usage: npm run generate -- [options]
                     counting as one (default ${DEFAULTS.portalGap}; 1 lets them touch)
   --return-trip     a shot of the shortest solution goes through the
                     portals, off a reflector and back through them
+  --gates N         one-way gates, each pointing a random way; boards must
+                    need one passed for par, and one blocking another way
+                    (without them, par would be lower or reached more ways)
+                    (default ${DEFAULTS.gates})
   --player-mirror M the player may place one mirror M (slash or backslash)
                     on any empty cell; boards must need it for par
   --place-later     no shortest solution needs the mirror placed before the
@@ -115,6 +121,7 @@ const FLAGS: Record<string, keyof typeof DEFAULTS> = {
   "--glass": "glass",
   "--fixed": "fixed",
   "--portals": "portals",
+  "--gates": "gates",
   "--place-later": "placeLater",
   "--shots": "shots",
   "--goal-hits": "goalHits",
@@ -169,7 +176,10 @@ function parseArgs(args: string[]): typeof DEFAULTS | null {
     if (
       !Number.isInteger(value) ||
       value <
-        (key === "walls" || key === "alternatives" || key === "portalGap"
+        (key === "walls" ||
+        key === "alternatives" ||
+        key === "portalGap" ||
+        key === "gates"
           ? 0
           : 1)
     ) {

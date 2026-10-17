@@ -198,6 +198,7 @@ const PIECE_NAMES: Record<Piece, string> = {
   glass: "glass",
   fixed: "fixed",
   portal: "portals",
+  gate: "gate",
   playerMirror: "player mirror",
 };
 

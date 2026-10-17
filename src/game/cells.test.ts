@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { CELL_SYMBOLS, parseLevel } from "../levels/parse";
 import { boardHas } from "./board";
-import { bounceKind, isGlassMirror, isMirror } from "./cells";
-import type { CellType } from "./types";
+import {
+  CELL_BEHAVIORS,
+  GATE_CELLS,
+  GATES,
+  bounceKind,
+  isGlassMirror,
+  isMirror,
+} from "./cells";
+import type { CellType, Direction } from "./types";
 
 const ALL_CELLS = Object.keys(CELL_SYMBOLS) as CellType[];
 
@@ -36,6 +43,28 @@ describe("cell groups", () => {
       reflector: "reflector",
       portal: "portal",
     });
+  });
+});
+
+describe("one-way gates", () => {
+  const DIRECTIONS: Direction[] = ["right", "left", "up", "down"];
+
+  it("let the pellet through only the way they point", () => {
+    for (const through of DIRECTIONS) {
+      for (const direction of DIRECTIONS) {
+        expect(CELL_BEHAVIORS[GATES[through]](direction)).toEqual(
+          direction === through
+            ? { kind: "pass", direction }
+            : { kind: "stop", reason: "blocked" },
+        );
+      }
+    }
+  });
+
+  it("are the cells with arrows", () => {
+    expect(GATE_CELLS.map((cell) => CELL_SYMBOLS[cell]).sort()).toEqual(
+      ["<", ">", "^", "v"].sort(),
+    );
   });
 });
 

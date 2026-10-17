@@ -3,8 +3,8 @@
 // needs for par. src/levels/levels.test.ts checks every level the same way.
 
 import { boardHas } from "../src/game/board";
-import { FIXED_MIRRORS, GLASS_MIRRORS } from "../src/game/cells";
-import { solve } from "../src/game/solver";
+import { FIXED_MIRRORS, GATE_CELLS, GLASS_MIRRORS } from "../src/game/cells";
+import { eachCompletion, solve } from "../src/game/solver";
 import type { Board, CellType, MirrorType } from "../src/game/types";
 
 /** The board with every cell of type `cell` made a wall. */
@@ -31,6 +31,69 @@ export function withFlippingMirrors(board: Board): Board {
   });
 }
 
+/** The board with every one-way gate made a wall, which nothing passes. */
+export function withClosedGates(board: Board): Board {
+  return withReplaced(
+    board,
+    Object.fromEntries(GATE_CELLS.map((gate) => [gate, "wall"])),
+  );
+}
+
+/** The board with every one-way gate taken away, which lets anything pass. */
+export function withOpenGates(board: Board): Board {
+  return withReplaced(
+    board,
+    Object.fromEntries(GATE_CELLS.map((gate) => [gate, "empty"])),
+  );
+}
+
+/**
+ * True if `board`'s one-way gates stop another way to par: with them taken
+ * away, the level takes fewer than `shots` shots, or has more shortest
+ * solutions.
+ */
+export function gatesBlock(
+  board: Board,
+  shots: number,
+  goalHits = 1,
+  playerMirror?: MirrorType,
+): boolean {
+  const open = withOpenGates(board);
+  return (
+    solve(open, shots - 1, goalHits, playerMirror) !== null ||
+    waysToPar(open, shots, goalHits, playerMirror) >
+      waysToPar(board, shots, goalHits, playerMirror)
+  );
+}
+
+/**
+ * How many different ways complete the level in exactly `shots` shots,
+ * counting those whose shots pass the same cells once.
+ */
+function waysToPar(
+  board: Board,
+  shots: number,
+  goalHits: number,
+  playerMirror?: MirrorType,
+): number {
+  const ways = new Set<string>();
+  for (const completion of eachCompletion(
+    board,
+    shots,
+    goalHits,
+    playerMirror,
+  )) {
+    if (completion.shots.length === shots) {
+      ways.add(
+        completion.shots
+          .map(({ path }) => path.map(({ x, y }) => `${x},${y}`).join(" "))
+          .join("|"),
+      );
+    }
+  }
+  return ways.size;
+}
+
 function withReplaced(
   board: Board,
   replacements: Partial<Record<CellType, CellType>>,
@@ -48,7 +111,13 @@ export function withSolidWalls(board: Board): Board {
 
 /** A kind of piece a level can be built around. */
 export type Piece =
-  "breakable" | "reflector" | "glass" | "fixed" | "portal" | "playerMirror";
+  | "breakable"
+  | "reflector"
+  | "glass"
+  | "fixed"
+  | "portal"
+  | "gate"
+  | "playerMirror";
 
 /** Each kind of piece on a board, and the board with it swapped for a plainer one. */
 const SWAPS: {
@@ -65,6 +134,7 @@ const SWAPS: {
   { piece: "glass", cells: GLASS_MIRRORS, swap: withSolidGlass },
   { piece: "fixed", cells: FIXED_MIRRORS, swap: withFlippingMirrors },
   { piece: "portal", cells: ["portal"], swap: (b) => withWalls(b, "portal") },
+  { piece: "gate", cells: GATE_CELLS, swap: withClosedGates },
 ];
 
 /**
@@ -91,7 +161,9 @@ export function withoutPiece(board: Board, piece: Piece): Board {
 /**
  * The kinds of piece `board` needs for par in `shots` shots: those it has
  * (and the player's mirror, if given) without which par is out of reach,
- * with breakable walls made solid, reflectors and portals made walls, glass
+ * with breakable walls made solid, reflectors, portals and one-way gates
+ * made walls (gates count only if they also block another way, see
+ * gatesBlock), glass
  * and fixed mirrors made ordinary ones, or no mirror for the player.
  */
 export function neededPieces(
@@ -101,9 +173,10 @@ export function neededPieces(
   playerMirror?: MirrorType,
 ): Piece[] {
   const needed: Piece[] = SWAPS.filter(
-    ({ cells, swap }) =>
+    ({ piece, cells, swap }) =>
       boardHas(board, cells) &&
-      solve(swap(board), shots, goalHits, playerMirror) === null,
+      solve(swap(board), shots, goalHits, playerMirror) === null &&
+      (piece !== "gate" || gatesBlock(board, shots, goalHits, playerMirror)),
   ).map(({ piece }) => piece);
   if (playerMirror !== undefined && solve(board, shots, goalHits) === null) {
     needed.push("playerMirror");

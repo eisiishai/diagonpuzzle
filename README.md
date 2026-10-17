@@ -7,9 +7,9 @@ board, and the puzzle is planning shots that set up the next ones.
 
 **[Play it in the browser](https://eisiishai.github.io/diagonpuzzle/)**
 
-- 40 levels in chapters, each introducing a new piece: the player's own
-  mirror, breakable walls, reflectors, glass mirrors, fixed mirrors and
-  portals
+- 42 levels in chapters, each introducing a new piece: the player's own
+  mirror, breakable walls, reflectors, glass mirrors, fixed mirrors,
+  portals and one-way gates
 - Par and stars for the fewest shots, and a hidden bonus target in every
   level once it's solved at par
 - Mouse, touch and keyboard controls; synthesized music and sound effects

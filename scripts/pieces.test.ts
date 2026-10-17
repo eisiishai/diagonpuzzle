@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { parseLevel } from "../src/levels/parse";
-import { neededPieces, piecesOn, withFlippingMirrors } from "./pieces";
+import {
+  gatesBlock,
+  neededPieces,
+  piecesOn,
+  withFlippingMirrors,
+} from "./pieces";
 
 describe("piecesOn", () => {
   it("counts each kind of piece on the board, in the game's order", () => {
@@ -63,10 +68,26 @@ describe("neededPieces", () => {
     ).toEqual(["playerMirror"]);
   });
 
+  it("finds one-way gates needed only if one is passed and one blocks", () => {
+    // Row 1 is stopped by the "<"; row 2 passes the ">" to the goal.
+    expect(neededPieces(parseLevel(". < G\n> . G"), 1)).toEqual(["gate"]);
+    // Passed, but blocking nothing.
+    expect(neededPieces(parseLevel(". > G\n. . #"), 1)).toEqual([]);
+  });
+
   it("leaves out pieces par can do without", () => {
     expect(neededPieces(parseLevel(". G\n% @"), 1)).toEqual([]);
     expect(neededPieces(parseLevel(". G\n. ."), 1, 1, "mirrorSlash")).toEqual(
       [],
     );
+  });
+});
+
+describe("gatesBlock", () => {
+  it("is true when taking the gates away makes par lower or adds a way", () => {
+    // Without the "<", row 1 reaches the goal too.
+    expect(gatesBlock(parseLevel(". < G\n> . G"), 1)).toBe(true);
+    // Without it, row 1 still hits the wall.
+    expect(gatesBlock(parseLevel(". > G\n. . #"), 1)).toBe(false);
   });
 });

@@ -3,6 +3,7 @@
 // Rows are 0-based here, like the solver's.
 
 import { cellPositions } from "../src/game/board";
+import { GATE_CELLS } from "../src/game/cells";
 import { fire } from "../src/game/simulate";
 import type { ShotResult } from "../src/game/simulate";
 import {
@@ -18,6 +19,8 @@ import { formatLevel } from "../src/levels/parse";
 import { findAlternative, pathKey } from "./alternativeSearch";
 import type { Placement } from "./bonusPlacement";
 import {
+  gatesBlock,
+  withClosedGates,
   withFlippingMirrors,
   withSolidGlass,
   withSolidWalls,
@@ -54,6 +57,12 @@ export interface GeneratorOptions {
    * (with the portals made walls, par would be higher).
    */
   portals: boolean;
+  /**
+   * One-way gates, each pointing a random way. With any, only boards that
+   * need one passed (with them made walls, par would be higher) and one
+   * blocking another way (see gatesBlock) are kept.
+   */
+  gates: number;
   /**
    * A mirror the player may place on any empty cell. With one, only boards
    * that need it placed for par are kept.
@@ -123,8 +132,8 @@ export function createRandom(seed: number): () => number {
 
 /**
  * A random board: the goal somewhere in the rightmost column, mirrors,
- * walls, breakable walls, reflectors, glass mirrors, fixed mirrors and a
- * pair of portals in random empty cells left of it.
+ * walls, breakable walls, reflectors, glass mirrors, fixed mirrors, a
+ * pair of portals and one-way gates in random empty cells left of it.
  * Asks for no more pieces than fit.
  */
 export function randomBoard(
@@ -139,14 +148,15 @@ export function randomBoard(
     | "glass"
     | "fixed"
     | "portals"
+    | "gates"
   >,
   random: () => number,
 ): Board {
   const { width, height, mirrors, walls, breakable } = options;
-  const { reflectors, glass, fixed } = options;
+  const { reflectors, glass, fixed, gates } = options;
   const portals = options.portals ? 2 : 0;
   const pieces =
-    mirrors + walls + breakable + reflectors + glass + fixed + portals;
+    mirrors + walls + breakable + reflectors + glass + fixed + portals + gates;
   if (pieces > (width - 1) * height) {
     throw new Error("Too many pieces for the board size");
   }
@@ -172,6 +182,7 @@ export function randomBoard(
   place(() => (random() < 0.5 ? "glassBackslash" : "glassSlash"), glass);
   place(() => (random() < 0.5 ? "fixedBackslash" : "fixedSlash"), fixed);
   place(() => "portal", portals);
+  place(() => GATE_CELLS[Math.floor(random() * GATE_CELLS.length)], gates);
   return { width, height, cells };
 }
 
@@ -283,6 +294,13 @@ export function findCandidates(options: GeneratorOptions): Candidate[] {
     if (
       options.portals &&
       solve(withWalls(board, "portal"), shots, goalHits, playerMirror) !== null
+    ) {
+      continue;
+    }
+    if (
+      options.gates > 0 &&
+      (solve(withClosedGates(board), shots, goalHits, playerMirror) !== null ||
+        !gatesBlock(board, shots, goalHits, playerMirror))
     ) {
       continue;
     }

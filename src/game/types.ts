@@ -26,6 +26,10 @@ export type CellType =
   | "fixedBackslash"
   | "fixedSlash"
   | "portal"
+  | "gateRight"
+  | "gateLeft"
+  | "gateUp"
+  | "gateDown"
   | "goal"
   | "bonus";
 

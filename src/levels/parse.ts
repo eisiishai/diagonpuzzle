@@ -13,6 +13,10 @@ export const CELL_SYMBOLS: Readonly<Record<CellType, string>> = {
   fixedBackslash: "L",
   fixedSlash: "J",
   portal: "O",
+  gateRight: ">",
+  gateLeft: "<",
+  gateUp: "^",
+  gateDown: "v",
   goal: "G",
   bonus: "*",
 };

@@ -2,7 +2,7 @@ import { Container, Text } from "pixi.js";
 import { columnPan } from "../audio/effects";
 import type { GameAudio } from "../audio/GameAudio";
 import { boardHas, cellPositions } from "../game/board";
-import { FIXED_MIRRORS, GLASS_MIRRORS } from "../game/cells";
+import { FIXED_MIRRORS, GATE_CELLS, GLASS_MIRRORS } from "../game/cells";
 import { LevelSession } from "../game/LevelSession";
 import { MirrorPlacement } from "../game/MirrorPlacement";
 import type { PlacementKey, PlacementResult } from "../game/MirrorPlacement";
@@ -483,6 +483,12 @@ export class GameScene extends Container implements Scene {
     }
     if (outcome === "blocked") {
       audio.play("wall", pan);
+      if (GATE_CELLS.includes(last.cell)) {
+        this.showMessage(
+          "A one-way gate stopped the pellet from the wrong side.",
+        );
+        return;
+      }
     } else {
       audio.play(outcome);
     }
@@ -698,6 +704,7 @@ export class GameScene extends Container implements Scene {
       hasGlass: boardHas(board, GLASS_MIRRORS),
       hasFixed: boardHas(board, FIXED_MIRRORS),
       hasPortal: boardHas(board, ["portal"]),
+      hasGate: boardHas(board, GATE_CELLS),
     });
   }
 }

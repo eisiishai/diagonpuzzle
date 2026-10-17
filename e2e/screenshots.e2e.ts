@@ -16,6 +16,7 @@ const RETURN_TRIP = levelIndex("return-trip"); // the first with a reflector
 const GLASS_HOUSE = levelIndex("glass-house"); // the first with a glass mirror
 const BOLTED_DOWN = levelIndex("bolted-down"); // the first with a fixed mirror
 const OTHER_SIDE = levelIndex("other-side"); // the first with portals
+const ONE_WAY = levelIndex("one-way"); // the first with one-way gates
 
 for (const [device, size] of Object.entries(SIZES)) {
   const shoot = (game: Game, name: string) =>
@@ -92,6 +93,16 @@ for (const [device, size] of Object.entries(SIZES)) {
       const [first] = solution(OTHER_SIDE);
       await game.play([first], "mouse");
       await shoot(game, `level-${OTHER_SIDE + 1}-first-shot`);
+    });
+
+    test("one-way gates", async ({ game }) => {
+      await game.seedCompleted(ONE_WAY);
+      await game.open();
+      await game.press(`${ONE_WAY + 1}. `);
+      await game.waitForLevel(ONE_WAY + 1);
+      await shoot(game, `level-${ONE_WAY + 1}-start`);
+      await game.play([2], "mouse");
+      await shoot(game, `level-${ONE_WAY + 1}-blocked`);
     });
 
     test("last level", async ({ game }) => {

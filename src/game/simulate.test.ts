@@ -369,6 +369,37 @@ describe("fixed mirrors", () => {
   });
 });
 
+describe("one-way gates", () => {
+  it("let the pellet through the way they point, and never change", () => {
+    const board = parseLevel(". > G");
+    const result = fire(board, 0);
+    expect(result.outcome).toBe("goal");
+    expect(result.board.cells).toEqual(board.cells);
+  });
+
+  it("stop it like a wall from any other side", () => {
+    // Head-on (row 0), and from the side (row 1, turned down by the "\"
+    // into a gate pointing right).
+    const grid = String.raw`
+      . < G
+      \ . G
+      > . .
+    `;
+    const result = fire(parseLevel(grid), 0);
+    expect(result.outcome).toBe("blocked");
+    expect(result.board.cells[0][1]).toBe("gateLeft");
+    expect(cells(grid, 0)).toEqual(["0,0", "1,0"]);
+    expect(cells(grid, 1)).toEqual(["0,1", "0,2"]);
+    expect(fire(parseLevel(grid), 1).outcome).toBe("blocked");
+  });
+
+  it("stop a pellet a reflector sends back through them", () => {
+    // Through the gate to the reflector, and back into the gate's back.
+    expect(cells(". > @ G", 0)).toEqual(["0,0", "1,0", "2,0", "1,0"]);
+    expect(fire(parseLevel(". > @ G"), 0).outcome).toBe("blocked");
+  });
+});
+
 describe("path steps", () => {
   it("name each cell as the pellet found it, before the hit changed it", () => {
     const result = fire(

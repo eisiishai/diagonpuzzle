@@ -31,6 +31,9 @@ export const COLORS = {
   /** Portals: a violet ring, the one piece in this colour. */
   portal: 0xa98bff,
   portalCore: 0x1a1236,
+  /** One-way gates: an amber arrow between two rails. */
+  gate: 0xffb547,
+  gateRail: 0x4a5d82,
   emitterIdle: 0x3b5a86,
   emitterSelected: 0x11223a,
   /** Corner ticks around the board, and their labels (4.9:1 contrast). */

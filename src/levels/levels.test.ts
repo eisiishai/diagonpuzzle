@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { MUSIC_TRACKS } from "../audio/music";
 import { bonusPositions, withBonuses } from "../game/bonus";
-import { setupRoutes, solve, solveBonus } from "../game/solver";
+import { GATE_CELLS } from "../game/cells";
+import { boardStateKey } from "../game/simulate";
+import { eachCompletion, setupRoutes, solve, solveBonus } from "../game/solver";
+import type { Board } from "../game/types";
 import { CHAPTERS, LEVELS, chapterRanges } from "./levels";
 import type { CellType } from "../game/types";
 import { parseLevel } from "./parse";
@@ -106,6 +109,37 @@ it.each(idsWith("portal"))(
     expect(
       solveBonus(board, bonus, bonusShots, goalHits, playerMirror),
     ).toBeNull();
+  },
+);
+
+// Levels with one-way gates are built around them both ways: with every
+// gate a wall, par is out of reach (the pellet must pass one), and with
+// every gate taken away, par is lower or reached more ways (one blocks).
+it.each(idsWith(...GATE_CELLS))("%s needs a one-way gate passed", (id) => {
+  const { level, board } = replaced(id, [...GATE_CELLS], () => "wall");
+  const { minShots, goalHits = 1, playerMirror } = level;
+  expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
+});
+
+it.each(idsWith(...GATE_CELLS))(
+  "%s needs a one-way gate to stop the pellet",
+  (id) => {
+    const { level, board: open } = replaced(id, [...GATE_CELLS], () => "empty");
+    const board = withBonuses(parseLevel(level.grid));
+    const { minShots, goalHits = 1, playerMirror } = level;
+    /** The different ways to par: the boards each shot leaves. */
+    const waysToPar = (start: Board) =>
+      new Set(
+        [...eachCompletion(start, minShots, goalHits, playerMirror)]
+          .filter(({ shots }) => shots.length === minShots)
+          .map(({ shots }) =>
+            shots.map((shot) => boardStateKey(shot.board)).join("|"),
+          ),
+      ).size;
+    expect(
+      solve(open, minShots - 1, goalHits, playerMirror) !== null ||
+        waysToPar(open) > waysToPar(board),
+    ).toBe(true);
   },
 );
 

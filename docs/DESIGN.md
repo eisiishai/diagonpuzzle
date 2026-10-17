@@ -242,6 +242,34 @@ off from the left, or the goal from above.
   portals, and 40 with a glass mirror and a fixed mirror. Their bonus targets need the portals too (the tests check
   it).
 
+## One-way gates
+
+A one-way gate (`>` `<` `^` `v` in level grids, after the way the arrow
+points) lets the pellet through moving the way its arrow points, and
+stops it like a wall when it comes from any other side: head-on or from
+either side. It never changes. Gates close off routes: a shot that would
+find a short way to the goal is stopped, while another gets through in
+the gate's direction.
+
+- Passing a gate is like passing an empty cell; being stopped by one is
+  like hitting a wall (outcome `blocked`, the wall's sparks and *Soft
+  knock*), with the message "A one-way gate stopped the pellet from the
+  wrong side."
+- A reflector behind a gate sends the pellet back into the gate's back,
+  which stops it: the gate lets light in but not out.
+- It has no state of its own, so it doesn't add to the solver's search.
+- Shots stay finite: passing changes nothing and a stop ends the shot, so
+  every step can still be traced back uniquely.
+- Levels are built around both of its sides: with every gate a wall, par
+  is out of reach (the pellet must pass one), and with every gate taken
+  away, par is lower or reached more ways (one stops a pellet that would
+  otherwise get through). The tests check both; `npm run generate --
+  --gates N` keeps only such boards, and `npm run bonus` and `npm run
+  alternatives` keep both when they change a board.
+- The player's mirror can't go on a gate (only on empty cells).
+- Levels 41–42 teach it (chapter *One-way gates*). It borrows the wall's
+  knock and the *Photon* track until it has its own (see Sound).
+
 ## Cell types
 
 | Symbol | Name | Behavior |
@@ -254,6 +282,7 @@ off from the left, or the goal from above.
 | `N` `Z` | Glass mirror (`\`, `/`) | Turns the pellet like the mirror of the same direction (`N` like `\`, `Z` like `/`, after the letters' diagonals), then shatters: it becomes empty. See *Glass mirrors*. |
 | `L` `J` | Fixed mirror (`\`, `/`) | Turns the pellet like the mirror of the same direction (`L` like `\`, `J` like `/`), and never flips. See *Fixed mirrors*. |
 | `O` | Portal | The pellet comes out of the level's other portal, moving the same way; a level has two or none. Never changes. See *Portals*. |
+| `>` `<` `^` `v` | One-way gate | Lets the pellet through moving the way the arrow points (`>` right, `<` left, `^` up, `v` down); stops it like a wall from any other side. Never changes. See *One-way gates*. |
 | `@` | Reflector | Sends the pellet straight back the way it came: right → left, left → right, up → down, down → up. Never changes. See *Reflectors*. |
 | `G` | Goal | Pellet reaches the goal; level complete. |
 | `*` | Bonus target | Stops the pellet and is collected (becomes empty). Hidden (empty) until the level is completed at par; see *Bonus targets*. |
@@ -347,6 +376,17 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 38 | Knock first | 3 | Portals with a breakable wall. Row 3 turns down at (4,3) and left at (4,4) into the lower portal, comes out of the upper one moving left and leaves at the top, flipping (1,1). Row 5 climbs column 1 and turns right at (1,1) into the upper portal; it comes out of the lower one and turns down at (4,4), now `\`, into the cracked wall, breaking it. Row 1 then runs down column 1 and along the bottom row through the gap to the goal. Alternative in 5 shots: rows 1, 1, 1, 3, 1. The bonus target, at the end of row 3, needs the portals: rows 3, 3, 3, 5, the last coming out of the lower portal and turning up at (4,4) and right at (4,3) onto it. |
 | 39 | Boomerang | 4 | Portals with a reflector. Row 3 flips the `\` at (1,3) and leaves at the bottom; row 3 again climbs column 1 and leaves at the top, flipping (1,2) and (2,2); row 2 turns down column 1 into the left portal and comes out of the right one, leaving the board. Row 3 then turns down at (2,2) into the left portal, comes out of the right one moving down into the reflector, goes back up through both portals and meets (2,2), which it flipped on the way in: it now turns the pellet right along row 2 to the goal. Alternative in 5 shots: rows 2, 2, 3, 2, 3. The bonus target sits between the portals and needs them: rows 4, 1, 4, 4, 4, all but the fourth going through the portals and up column 5; the last turns left at (5,1) and down at (4,1) onto it. |
 | 40 | Looking glass | 4 | Portals with a glass mirror and a fixed mirror. Row 3 turns down at (1,3) onto the glass `\` at (1,4), which turns it right and shatters; it leaves up column 3, flipping (3,4). Row 4 runs through the gap the glass left, turns down at (3,4) and left at (3,5) into the fixed `/` at (2,5), which sends it out at the bottom. Row 4 again only flips (3,4) back, leaving (3,5) turned the new way. Row 4 then turns down at (3,4) and right at (3,5) along the bottom row into the right portal, comes out of the left one into the same fixed `/` from the other side, which turns it up column 2, and (2,2) turns it right into the goal. Alternative in 5 shots: rows 3, 3, 2, 3, 4. The bonus target needs the portals: rows 3, 3, 2, 4, 3, the last coming down column 2 into the fixed `/`, which turns it left into the left portal; out of the right one, moving left, it turns up at (3,5) and right at (3,4) onto it. |
+| 41 | One way | 2 | Introduces one-way gates. Row 3, the obvious shot along the goal's row, turns up at (1,3) into the `v` gate at (1,2), which stops it head-on. Row 5 turns down at (1,5) and leaves at the bottom, flipping it; row 5 again climbs column 1 and turns right at (1,3), through the `>` gate, along row 3 to the goal. Without the gates there would be two more ways to par: row 1 or row 2, then row 2, past where the `v` gate stands. Alternative in 3 shots: rows 3, 3, 5. The bonus target shows the gate's sides: rows 1, 1, 1, the first turning down at (2,1) and left at (2,2) into the side of the `v` gate, which stops it. |
+| 42 | No way back | 3 | Two `^` gates, one passed and one stopping from the side. Row 4 turns down at (2,4) and leaves at the bottom, flipping it; row 4 again climbs column 2 through the lower `^` gate, right at (2,2) and down at (4,2), then left at (4,4) into the side of the second `^` gate at (3,4), which stops it, having flipped all four mirrors on its way. Row 1 then turns down at (2,1), right at (2,2), up at (4,2) and right at (4,1) along the top row to the goal. Alternative in 5 shots: rows 1, 1, 1, 4, 4. The bonus target, beside the goal column, needs rows 4, 5, 5, 4, the last climbing through the lower gate and round onto it. |
+
+*One way* (41) and *No way back* (42, added 2026-10-17 to start a new
+chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2`
+on a 5×5 board with 5 mirrors and no walls, 42 with `--shots 3
+--varied-rows` on a 6×5 board with 6 mirrors and 1 wall (seed 3). Both
+have a unique shortest solution; random-play odds 1 in 25 and 1 in 125.
+Their bonus targets came from `npm run bonus -- --changes 2` (41 with
+`--uses gate`, after two changed mirrors at (2,1) and (2,2); 42 after two
+added mirrors, at (5,4) and (4,5)).
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --
@@ -517,7 +557,7 @@ from four and six).
   in `src/levels/levels.ts`, following the music groups): 1–5 *Basics*,
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
-  36–40 *Portals*. Each
+  36–40 *Portals*, 41–42 *One-way gates*. Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one
@@ -609,6 +649,7 @@ Colours and fonts are defined once in `src/render/theme.ts`.
 | Bonus prism | `#ff5fd2` `#ffa45c` `#ffe08a` `#3dffb4` `#5fd8ff` `#a98bff` | Bonus target facets, its sparkles and bursts (the only multicoloured piece) |
 | Wall | `#18233a`, edge `#34466b` | Walls |
 | Stone | `#323846`, edge `#5d6680`, cracks `#0d111b` | Breakable walls |
+| Gate | `#ffb547`, rails `#4a5d82` | One-way gates' arrow and rails |
 | Idle emitter | `#3b5a86` | Launchers not selected |
 | Marking | `#2f4670`, labels `#6482b0` | Corner ticks and labels around the board |
 
@@ -641,6 +682,9 @@ Text colours keep at least 4.5:1 contrast on the background.
   swirling into a bright centre dot; the vanes turn slowly (they stay
   still with reduced motion). Violet is used for no other piece, so a level's two
   portals read as a pair.
+- **One-way gates**: an amber arrow pointing the way the pellet may
+  pass, between two dark rails along its sides, without glow of its own
+  beyond the arrow. Amber is used for no other piece.
 - **Breakable walls**: lighter stone blocks with dark jagged cracks
   running through them instead of hatching, no glow. When hit, they burst
   into stone pieces that fall away and fade.
@@ -795,6 +839,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 26–30 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 | Levels 31–35 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
 | Levels 36–40 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
+| Levels 41–42 (one-way gates) | **Photon** for now, until the chapter has its own track |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,
@@ -834,7 +879,7 @@ track crossfades in over about a second.
 
 ## Future ideas (not yet designed)
 
-- More block types (e.g. one-way gates, switches and doors; listed in
+- More block types (e.g. switches and doors; listed in
   `docs/ROADMAP.md`), and several portal pairs per level.
 - More player-placed blocks: several mirrors, or other kinds of blocks
   (see *Player-placed mirror*).

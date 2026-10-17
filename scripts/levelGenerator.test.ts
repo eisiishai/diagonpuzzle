@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GATE_CELLS } from "../src/game/cells";
 import { fire } from "../src/game/simulate";
 import { playMoves, shotRows, solve } from "../src/game/solver";
 import { parseLevel } from "../src/levels/parse";
@@ -12,6 +13,8 @@ import {
   withAlternatives,
 } from "./levelGenerator";
 import {
+  gatesBlock,
+  withClosedGates,
   withFlippingMirrors,
   withSolidGlass,
   withSolidWalls,
@@ -29,6 +32,7 @@ const OPTIONS: GeneratorOptions = {
   glass: 0,
   fixed: 0,
   portals: false,
+  gates: 0,
   placeLater: false,
   shots: 2,
   goalHits: 1,
@@ -89,6 +93,7 @@ describe("randomBoard", () => {
           glass: 0,
           fixed: 0,
           portals: false,
+          gates: 0,
         },
         Math.random,
       ),
@@ -198,6 +203,25 @@ describe("findCandidates", () => {
     for (const { board } of candidates) {
       expect(board.cells.flat().filter((c) => c === "portal")).toHaveLength(2);
       expect(solve(withWalls(board, "portal"), 2)).toBeNull();
+    }
+  });
+
+  it("keeps only boards whose gates are passed and block another way", () => {
+    const candidates = findCandidates({
+      ...OPTIONS,
+      height: 5,
+      mirrors: 5,
+      walls: 0,
+      gates: 2,
+      tries: 4000,
+    });
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const { board } of candidates) {
+      expect(
+        board.cells.flat().filter((c) => GATE_CELLS.includes(c)),
+      ).toHaveLength(2);
+      expect(solve(withClosedGates(board), 2)).toBeNull();
+      expect(gatesBlock(board, 2)).toBe(true);
     }
   });
 
