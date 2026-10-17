@@ -68,7 +68,10 @@ One level, playable with the mouse, plain graphics.
 
 Suggested order from here (2026-10-11): playtesters' feedback would
 settle the items that wait on how people play: the step to *Rebuild*
-and the difficulty measure.
+and the difficulty measure. Since the review of all 40 levels
+(2026-10-17, *Difficulty curve*), the game's finale is the main open
+level design question; a better difficulty measure (Engineering track,
+*Later*) would help judge it.
 
 ### Next
 
@@ -278,6 +281,54 @@ reflector, like the dip at each new combination earlier.
 The two agree that 10 and 15 are the hardest of 1–15. They disagree on
 *Rebuild* (20): the hardest by odds, but a foresight of only 2, so its
 difficulty is in finding the moves, not in planning their effects.
+
+Review of all 40 levels (2026-10-17, after every chapter got five):
+
+- **Chapters teach their piece well.** Each chapter from 3 on has two or
+  three levels with only its new piece, then levels combining it with
+  earlier ones, and every new piece gets its own opening message.
+  Breakable walls come back in every later chapter, the two-hit goal in
+  every one but *Portals*, reflectors in all three after their own;
+  glass and fixed mirrors once or twice, as the game's end allows.
+- **Thinnest combinations:** the player's mirror comes back only in 24
+  and 35, never with glass or portals; portals never get a two-hit
+  goal.
+- **Within chapters the curve is a healthy sawtooth:** each starts easy
+  (1 in 4 to 36) and climbs. Deliberate dips where a new combination
+  starts mid-chapter (33 → 34) are fine.
+- **Across chapters the peaks fall:** the hardest level of chapters 2–8
+  by odds is 1 in 2,048, 7,776, 45,000, 3,143, 1,296, 3,387 and 625, so
+  the last level is easier by odds than level 10. Foresight agrees: its
+  5s are at 10, 15, 24 and 30, and *Portals* peaks at 4. Later levels
+  are all par 3–4 on boards of about 6×5, and with a unique solution
+  odds can't pass rows^par; the new pieces add reading difficulty
+  neither measure sees, so the real decline is gentler, but the game
+  doesn't build to a climax.
+- **Steepest steps:** 14 → 15 (*Rubble run*, about 62 times by odds, par
+  5 with foresight 5), 19 → 20 (*Rebuild*, 18 times) and 23 → 24
+  (*Mirror image*, 25 times).
+- **Odds overstate player-mirror levels:** random play puts the mirror
+  on a random cell, so *Your move* (par 1) looks as hard as 1 in 112,
+  and part of *Rebuild*'s 45,000 is the same effect; foresight is the
+  better guide there.
+- **Naming:** *Flip tricks* opens with the two-hit goal (6–7), while
+  flipping is taught in *Basics* (3); the name fits 8–10 better.
+
+- [ ] A finale for the game: harden the last level of the later
+  chapters (par 5, or 6–7 rows, so the odds can rise), or add a short
+  final chapter of mixed levels using several pieces on larger boards,
+  which would also bring every piece back once more. Decide which
+  after the difficulty measure is reviewed (Engineering track, *Later*)
+- [ ] Check by playing (or watching testers) whether the step to
+  *Rubble run* (15), about 62 times *Crack and double* (14) by odds, is
+  too steep, together with the steps to *Rebuild* and *Mirror image*
+  below
+- [ ] Optional: fill the thinnest combinations when a level is added
+  or replaced anyway: the player's mirror with glass mirrors or portals,
+  portals with a two-hit goal
+- [ ] Optional: rename *Flip tricks* (6–10) after what it starts with,
+  the two-hit goal. Chapter names are only shown, not saved, so this
+  is cosmetic
 
 - [ ] Check by playing (or watching testers) whether the step to *Mirror
   image* (24) is too steep. If it is, `npm run generate -- --reflectors 1
@@ -583,6 +634,25 @@ lab page on 2026-10-11:
   - [x] Second measure, foresight: the changes the par solution makes
     for its later shots (*Difficulty curve* above), next to the odds in
     `npm run levels`
+  - [ ] Review how difficulty is calculated, looking for a method that
+    better matches the difficulty people feel (the 2026-10-17 review of
+    all 40 levels, *Difficulty curve* above, found its limits). Known
+    weaknesses: with a unique solution the odds are just rows^par, so
+    they depend on board height and par more than on the puzzle; random
+    placement of the player's mirror inflates those levels' odds;
+    neither measure sees how hard a board is to read (kinds of pieces,
+    board size, path length and turns, portal jumps) or how obvious the
+    key move is. Ideas to compare:
+    - A simulated player that tries plausible shots first (rows whose
+      pellet reaches new cells or nears the goal, not ones that exit
+      at once) and counts the shots or states it needs, instead of
+      uniform random play
+    - The solver's search effort with obviously useless moves pruned
+    - A score combining a few board features (piece kinds, path length,
+      shots that must be planned ahead) with weights fitted to testers
+    - Calibrating whichever is chosen against real play: testers'
+      attempts and time per level, or the shot counts the game saves
+      (best shots only, so a count of attempts would need adding)
 - [x] Unit test coverage, `npm run coverage` (`@vitest/coverage-v8`):
   the rules are nearly fully covered (`src/game/` 97% of branches,
   `src/levels/` and `src/save/` 100%); drawing, scenes and audio are
