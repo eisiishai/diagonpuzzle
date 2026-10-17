@@ -54,8 +54,8 @@ Changes never touch a cell the par solution reaches, so it plays out
 exactly as before.
 
 Example: npm run bonus -- --level 14 --shots 4 --changes 1
-         npm run bonus -- --level 26 --changes 1 --uses reflector,glass
-         npm run bonus -- --level 34 --changes 1 --needs portal`;
+         npm run bonus -- --level 27 --changes 1 --uses reflector,glass
+         npm run bonus -- --level 35 --changes 1 --needs portal`;
 
 interface Args {
   level: string;

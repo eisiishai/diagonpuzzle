@@ -275,6 +275,21 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "hairpin",
+    name: "Hairpin",
+    minShots: 2,
+    bonusShots: 3,
+    playerMirror: "mirrorSlash",
+    music: "photon",
+    grid: String.raw`
+      . # * . . .
+      . \ # . / .
+      . / . . . .
+      . . . / . .
+      . . . . / G
+    `,
+  },
+  {
     id: "double-duty",
     name: "Double duty",
     minShots: 3,
