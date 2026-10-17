@@ -276,7 +276,8 @@ the gate's direction.
   so no longer way round the gates gets there either (the tests check
   it; `npm run bonus -- --needs gate`, which searches until no new board
   is left).
-- Levels 41–42 teach it (chapter *One-way gates*). It borrows the wall's
+- Levels 41–42 teach it (chapter *One-way gates*), and 43 adds a
+  reflector and a breakable wall. It borrows the wall's
   knock and the *Photon* track until it has its own (see Sound).
 
 ## Cell types
@@ -387,6 +388,7 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 40 | Looking glass | 4 | Portals with a glass mirror and a fixed mirror. Row 3 turns down at (1,3) onto the glass `\` at (1,4), which turns it right and shatters; it leaves up column 3, flipping (3,4). Row 4 runs through the gap the glass left, turns down at (3,4) and left at (3,5) into the fixed `/` at (2,5), which sends it out at the bottom. Row 4 again only flips (3,4) back, leaving (3,5) turned the new way. Row 4 then turns down at (3,4) and right at (3,5) along the bottom row into the right portal, comes out of the left one into the same fixed `/` from the other side, which turns it up column 2, and (2,2) turns it right into the goal. Alternative in 5 shots: rows 3, 3, 2, 3, 4. The bonus target needs the portals: rows 3, 3, 2, 4, 3, the last coming down column 2 into the fixed `/`, which turns it left into the left portal; out of the right one, moving left, it turns up at (3,5) and right at (3,4) onto it. |
 | 41 | One way | 2 | Introduces one-way gates. Row 4 runs straight into the side of the `^` gate at (3,4) and stops; without the gate it would turn up at (4,4) and (4,3) into the goal in one shot. Row 1 turns down at (3,1) into the same gate head-on and stops too. Row 3 instead turns up at (4,3) and (4,2) and leaves, flipping both; row 2 then passes the `>` gate at (2,2) and turns down at (4,2) and right at (4,3) to the goal. Alternative in 4 shots: row 2 four times. The bonus target, in the top right corner, needs a gate passed: rows 1, 5, 5, the last climbing column 3 up through the `^` gate that stopped row 1 coming down, and right at (3,1) onto it. |
 | 42 | No way back | 3 | Two `^` gates, one passed and one stopping from the side. Row 4 turns down at (2,4) and leaves at the bottom, flipping it; row 4 again climbs column 2 through the lower `^` gate, right at (2,2) and down at (4,2), then left at (4,4) into the side of the second `^` gate at (3,4), which stops it, having flipped all four mirrors on its way. Row 1 then turns down at (2,1), right at (2,2), up at (4,2) and right at (4,1) along the top row to the goal. Alternative in 5 shots: rows 1, 1, 1, 4, 4. The bonus target, at the end of row 3, needs a gate passed: four row 5 shots. The second climbs column 3 through the lower `^` gate and turns left at (3,3) into the side of the other gate, which stops it; the fourth climbs through the lower gate again, and (3,3), turned back, sends it right along row 3 onto the target. With the gates made walls, no number of shots reaches it. |
+| 43 | Echo chamber | 3 | One-way gates with a reflector and a breakable wall, all three in the first shot. Row 1 turns down at (1,1) into the reflector, comes back up into the same mirror, now `/`, and runs right along the top row through the `>` gate; (5,1) turns it down and (5,3) left along row 3 into the cracked wall at the left edge, breaking it. Row 3 runs through the gap, turns down at (5,3) and left at (5,4) into the side of the `v` gate, which stops it. Row 3 again turns up at (5,3) and right at (5,1), both flipped, into the goal. Without the `v` gate, row 4 would be a second way to set up. Alternatives in 4 shots: rows 1, 1, 1, 3 and rows 3, 3, 3, 3. The bonus target, at the right end of the `v` gate's row, needs a gate passed: rows 1, 1, 3, 1, 3, every row 1 shot running through the `>` gate. |
 
 *One way* (41) and *No way back* (42, added 2026-10-17 to start a new
 chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2
@@ -404,6 +406,16 @@ a gate, so the check now allows no route at all, and the two mirrors
 added for that target were taken out again. The only board changes `npm run
 alternatives` finds for a par + 1 alternative on 41 replace its `^`
 gate, so its alternative stays at par + 2.
+
+*Echo chamber* (43, added 2026-10-18), the first of three levels with
+two earlier pieces each to end the game, came from `npm run generate --
+--gates 2 --reflectors 1 --breakable 1 --shots 3 --varied-rows
+--bonus-needs gate --seed 3` on a 6×5 board with 5 mirrors and no walls,
+which keeps only boards that need every piece named: about one board in
+30,000 does, and the only other found (in 240,000 tries) had four
+shortest solutions and both gates on the left edge. It has a unique
+shortest solution, random-play odds 1 in 125 and foresight 3, as *No way
+back* (42): its step up is in reading three kinds of piece.
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --
@@ -574,7 +586,7 @@ from four and six).
   in `src/levels/levels.ts`, following the music groups): 1–5 *Basics*,
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
-  36–40 *Portals*, 41–42 *One-way gates*. Each
+  36–40 *Portals*, 41–43 *One-way gates*. Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one
@@ -856,7 +868,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 26–30 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 | Levels 31–35 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
 | Levels 36–40 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
-| Levels 41–42 (one-way gates) | **Photon** for now, until the chapter has its own track |
+| Levels 41–43 (one-way gates) | **Photon** for now, until the chapter has its own track |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,

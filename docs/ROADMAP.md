@@ -195,9 +195,19 @@ with flipping mirrors, before it is built.
       pellet from the side after it climbed through the other. Odds 1 in
       25 and 1 in 125. Their bonus targets need a gate passed, by any route
       (41 got a new board for it and 42 a new target before release)
-    - [ ] Three more gate levels, combining gates with earlier pieces (a
-      reflector behind a gate, which lets light in but not out, is a
-      natural one), ending the chapter
+    - [ ] Three more gate levels to end the game, each with two earlier
+      pieces besides the gates (chosen 2026-10-18 for the combinations
+      the review found missing, and to end on the hardest level)
+      - [x] *Echo chamber* (43, par 3): a reflector and a breakable wall.
+        Row 1 bounces off the reflector, passes a gate and breaks the wall
+        in one shot; a gate stops row 3 from the side. Odds 1 in 125,
+        foresight 3, as 42
+      - [ ] 44: portals and a two-hit goal (portals have never had one); a
+        gate beside a portal makes the pair one-way, so the second hit
+        needs another route. Par 4, about 1 in 625–1,300
+      - [ ] 45, the finale: the player's mirror and a glass mirror (the
+        player's mirror has never met glass); par 5, foresight about 5,
+        the hardest level of the game by both measures
     - [ ] Its own music track, chosen on a sound lab page (*Photon* for
       now)
     - [ ] Its own sound when a gate stops the pellet, and perhaps a soft
@@ -271,13 +281,15 @@ reading the board more than in the odds:
 | 1 in | 5 | 25 | 125 | 625 | 625 |
 | Foresight | 0 | 1 | 4 | 3 | 3 |
 
-Levels 41–42 (one-way gates, added 2026-10-17): two teaching levels with
-only gates, the first easy like 36, the second a step up:
+Levels 41–43 (one-way gates, added 2026-10-17 and 18): two teaching
+levels with only gates, the first easy like 36, the second a step up;
+then *Echo chamber* (43) with a reflector and a breakable wall, as hard
+as 42 by both measures, its step being three kinds of piece to read:
 
-| Level | 41 | 42 |
-|---|---|---|
-| 1 in | 25 | 125 |
-| Foresight | 2 | 3 |
+| Level | 41 | 42 | 43 |
+|---|---|---|---|
+| 1 in | 25 | 125 | 125 |
+| Foresight | 2 | 3 | 3 |
 
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { MUSIC_TRACKS } from "../audio/music";
 import { bonusPositions, withBonuses } from "../game/bonus";
 import { GATE_CELLS } from "../game/cells";
-import { boardStateKey } from "../game/simulate";
 import { eachCompletion, setupRoutes, solve, solveBonus } from "../game/solver";
 import type { Board } from "../game/types";
 import { CHAPTERS, LEVELS, chapterRanges } from "./levels";
@@ -133,13 +132,19 @@ it.each(idsWith(...GATE_CELLS))(
     const { level, board: open } = replaced(id, [...GATE_CELLS], () => "empty");
     const board = withBonuses(parseLevel(level.grid));
     const { minShots, goalHits = 1, playerMirror } = level;
-    /** The different ways to par: the boards each shot leaves. */
+    /**
+     * The different ways to par: the cells each shot passes, as the level
+     * tools count them (gatesBlock in scripts/pieces.ts). Another row that
+     * flips the same mirrors is another way for the player.
+     */
     const waysToPar = (start: Board) =>
       new Set(
         [...eachCompletion(start, minShots, goalHits, playerMirror)]
           .filter(({ shots }) => shots.length === minShots)
           .map(({ shots }) =>
-            shots.map((shot) => boardStateKey(shot.board)).join("|"),
+            shots
+              .map(({ path }) => path.map(({ x, y }) => `${x},${y}`).join(" "))
+              .join("|"),
           ),
       ).size;
     expect(

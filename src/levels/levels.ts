@@ -648,6 +648,20 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . \ . . .
     `,
   },
+  {
+    id: "echo-chamber",
+    name: "Echo chamber",
+    minShots: 3,
+    bonusShots: 5,
+    music: "photon",
+    grid: String.raw`
+      \ . > . \ G
+      @ . . / . .
+      % . . . / .
+      . . . v / *
+      . . . . . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
