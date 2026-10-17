@@ -55,7 +55,7 @@ exactly as before.
 
 Example: npm run bonus -- --level 14 --shots 4 --changes 1
          npm run bonus -- --level 28 --changes 1 --uses reflector,glass
-         npm run bonus -- --level 36 --changes 1 --needs portal`;
+         npm run bonus -- --level 37 --changes 1 --needs portal`;
 
 interface Args {
   level: string;

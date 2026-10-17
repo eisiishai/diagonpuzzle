@@ -465,6 +465,21 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "glass-and-stone",
+    name: "Glass and stone",
+    minShots: 4,
+    bonusShots: 5,
+    music: "glassHarp",
+    grid: String.raw`
+      \ . . . . .
+      % . . / % G
+      N . . / Z *
+      . . . \ . .
+      \ . . . . .
+      . . . \ . .
+    `,
+  },
+  {
     id: "bolted-down",
     name: "Bolted down",
     minShots: 2,

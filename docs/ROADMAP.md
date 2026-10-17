@@ -106,18 +106,25 @@ with flipping mirrors, before it is built.
       1 in 625, between 11 (216) and 13 (2,401)
   - [x] Fixed mirror (`L` `\`, `J` `/`): turns the pellet like a mirror
     but never flips (drawn in matte steel, bolted down). Gives levels
-    fixed points to plan around. Levels 30–33 teach it (chapter *Fixed
+    fixed points to plan around. Levels 31–34 teach it (chapter *Fixed
     mirrors*). Design in `docs/DESIGN.md`, *Fixed mirrors*
     - [x] Its own music track: *Anchor*, chosen on sound lab 6
     - [x] Its own hit sound: *Anvil ring*, chosen on sound lab 6
-    - [x] Harder fixed mirror levels: 32 with breakable walls and a
-      reflector, 33 with the player's mirror and a glass mirror
+    - [x] Harder fixed mirror levels: 33 with breakable walls and a
+      reflector, 34 with the player's mirror and a glass mirror
   - [x] Glass mirror (`N` `\`, `Z` `/`): turns the pellet once, then
     shatters and leaves an empty cell, the mirror version of the
-    breakable wall. Levels 26–29 teach it (chapter *Glass mirrors*).
+    breakable wall. Levels 26–30 teach it (chapter *Glass mirrors*).
     Design in `docs/DESIGN.md`, *Glass mirrors*
     - [x] Harder glass mirror levels: 28 with a reflector, 29 with a
       two-hit goal
+    - [x] A fifth glass mirror level, *Glass and stone* (30, par 4,
+      2026-10-17), ending the chapter with breakable walls: one row
+      breaks a wall to open column 1, the next shatters a glass mirror
+      and breaks the second wall, a third shatters the other glass while
+      resetting the mirrors, and the last runs through the gaps to the
+      goal. Its bonus target needs the glass. Odds 1 in 1,296, the
+      chapter's hardest
     - [x] Its own music track: *Glass harp*, chosen on sound lab 4
     - [x] A shattering sound: *Crack and tinkle*, chosen on sound lab 5
   - [x] Reflector (`@`): sends the pellet straight back the way it came.
@@ -137,12 +144,12 @@ with flipping mirrors, before it is built.
   - [x] Portal pair (`O`): the pellet enters one and leaves the other in
     the same direction. No state of its own, so no cost to the solver;
     reaches rows and routes the left edge can't. One pair per level.
-    Levels 34–37 teach it (chapter *Portals*). Design in
+    Levels 35–38 teach it (chapter *Portals*). Design in
     `docs/DESIGN.md`, *Portals*
     - [x] Its own music track: *Wormhole*, chosen on sound lab 7
     - [x] Its own sound as the pellet goes through: *Phase drop*, chosen
       on sound lab 7
-    - [x] Harder portal levels: 36 with a breakable wall, 37 with a
+    - [x] Harder portal levels: 37 with a breakable wall, 38 with a
       reflector
     - [ ] Optional: several pairs per level, each with its own symbol and
       colour
@@ -165,8 +172,8 @@ with flipping mirrors, before it is built.
 
 Measured on 2026-10-10 (v0.34) by `npm run levels`, level 19 added and level 20 given alternatives on
 2026-10-11, *Down and around* moved from 7 to 5, *Trapdoor* added as
-level 12, *Hairpin* as level 17 and *Double back* as level 25 on
-2026-10-17, which
+level 12, *Hairpin* as level 17, *Double back* as level 25 and *Glass
+and stone* as level 30 on 2026-10-17, which
 ends with this curve: the chance that random play completes a level within par (a random
 row each shot; in player-mirror levels a random cell for the mirror, or
 keeping it). Lower is harder. It dips at each new mechanic (6, 11,
@@ -186,21 +193,27 @@ keeping it). Lower is harder. It dips at each new mechanic (6, 11,
 last two combine the chapter's piece with breakable walls and the
 two-hit goal.
 
-Levels 21–33 (reflectors, then glass mirrors, then fixed mirrors; added
-2026-10-11, v1.26–v1.28 and v2.3–v2.5, and *Double back* (25) on
-2026-10-17, which ends the reflector chapter with a two-hit goal):
+Levels 21–34 (reflectors, then glass mirrors, then fixed mirrors; added
+2026-10-11, v1.26–v1.28 and v2.3–v2.5; *Double back* (25) on
+2026-10-17, which ends the reflector chapter with a two-hit goal, and
+*Glass and stone* (30), which ends the glass chapter with breakable
+walls):
 
-| Level | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 in | 4 | 25 | 125 | 3,143 | 1,296 | 16 | 125 | 125 | 625 | 16 | 125 | 125 | 3,387 |
+| Level | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 in | 4 | 25 | 125 | 3,143 | 1,296 | 16 | 125 | 125 | 625 | 1,296 |
 
-Levels 34–37 (portals, added 2026-10-16): two easy teaching levels at
-the start of the chapter like 21, 26 and 30, then 36 with a breakable
-wall and 37 with a reflector, which sends the pellet back through the
-portals. 37 is par 4 so that it is harder than 36 (with five rows, par 3
+| Level | 31 | 32 | 33 | 34 |
+|---|---|---|---|---|
+| 1 in | 16 | 125 | 125 | 3,387 |
+
+Levels 35–38 (portals, added 2026-10-16): two easy teaching levels at
+the start of the chapter like 21, 26 and 31, then 37 with a breakable
+wall and 38 with a reflector, which sends the pellet back through the
+portals. 38 is par 4 so that it is harder than 37 (with five rows, par 3
 can't be harder than 1 in 125), well below *Mirror image* (24):
 
-| Level | 34 | 35 | 36 | 37 |
+| Level | 35 | 36 | 37 | 38 |
 |---|---|---|---|---|
 | 1 in | 5 | 25 | 125 | 625 |
 | Foresight | 0 | 1 | 4 | 3 |
@@ -222,17 +235,24 @@ the solver's par solution only, and not the second goal hit:
 |---|---|---|---|---|---|---|---|---|---|---|
 | Foresight | 3 | 4 | 3 | 2 | 5 | 1 | 3 | 3 | 4 | 2 |
 
-| Level | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Foresight | 0 | 2 | 4 | 5 | 3 | 1 | 3 | 3 | 3 | 1 | 3 | 3 | 2 |
+| Level | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Foresight | 0 | 2 | 4 | 5 | 3 | 1 | 3 | 3 | 3 | 5 |
 
-Each new chapter starts easy again (21, 26 and 30 are among the easiest levels
+| Level | 31 | 32 | 33 | 34 |
+|---|---|---|---|---|
+| Foresight | 1 | 3 | 3 | 2 |
+
+Each new chapter starts easy again (21, 26 and 31 are among the easiest levels
 in the game) and climbs. The steepest step is to *Mirror image* (24),
 reflectors with the player's mirror: about 25 times harder than 23 by
 odds, with the highest foresight of 21–29, about as hard as *Double duty*
 (18). *Double back* (25) comes after it, but at about 10 times *Ricochet*
 (23) and less than half of *Mirror image* by odds: the chapter ends on a
-new combination rather than a harder level.
+new combination rather than a harder level. *Glass and stone* (30) ends
+the glass chapter as its hardest level, twice *Double glazing* (29) by
+odds and with a foresight of 5, as high as any level: each of its four
+shots uses a different piece.
 
 The two agree that 10 and 15 are the hardest of 1–15. They disagree on
 *Rebuild* (20): the hardest by odds, but a foresight of only 2, so its

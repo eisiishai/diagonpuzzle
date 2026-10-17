@@ -118,8 +118,9 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   works even with `--changes 2`, the board itself rules it out (the cells
   the piece leads to are on the par route or out of reach): rather than
   search longer, pick a new board with `npm run generate --
-  --bonus-needs portal` (level 36 got its board that way; level 25's
-  bonus target needs its reflector the same way).
+  --bonus-needs portal` (level 37 got its board that way; level 25's
+  bonus target needs its reflector and level 30's its glass the same
+  way).
 - To see the different ways to solve the levels, run `npm run
   alternatives` (`--help` lists the options). Without `--level` it counts,
   for every level, the solutions at par and with one more shot
@@ -374,9 +375,9 @@ level at par and every bonus target found except level 1's.
 ```js
 localStorage.setItem("diagonpuzzle.progress", JSON.stringify({
   version: 1,
-  levels: {"first-light":{"bestShots":1},"up-and-over":{"bestShots":1},"second-try":{"bestShots":2},"set-the-stage":{"bestShots":2},"double-take":{"bestShots":2},"encore":{"bestShots":3},"down-and-around":{"bestShots":2},"third-time-lucky":{"bestShots":3},"back-and-forth":{"bestShots":3},"two-step":{"bestShots":4},"breakthrough":{"bestShots":3},"trapdoor":{"bestShots":4},"stone-by-stone":{"bestShots":4},"crack-and-double":{"bestShots":3},"rubble-run":{"bestShots":5},"your-move":{"bestShots":1},"hairpin":{"bestShots":2},"double-duty":{"bestShots":3},"clear-the-way":{"bestShots":3},"rebuild":{"bestShots":4},"return-trip":{"bestShots":1},"there-and-back":{"bestShots":2},"glass-house":{"bestShots":2},"clean-break":{"bestShots":3},"ricochet":{"bestShots":3},"mirror-image":{"bestShots":3},"double-back":{"bestShots":4},"glass-echo":{"bestShots":3},"double-glazing":{"bestShots":4},"bolted-down":{"bestShots":2},"cold-steel":{"bestShots":3},"steel-echo":{"bestShots":3},"true-north":{"bestShots":3},"other-side":{"bestShots":1},"shortcut":{"bestShots":2},"knock-first":{"bestShots":3},"boomerang":{"bestShots":4}},
+  levels: {"first-light":{"bestShots":1},"up-and-over":{"bestShots":1},"second-try":{"bestShots":2},"set-the-stage":{"bestShots":2},"double-take":{"bestShots":2},"encore":{"bestShots":3},"down-and-around":{"bestShots":2},"third-time-lucky":{"bestShots":3},"back-and-forth":{"bestShots":3},"two-step":{"bestShots":4},"breakthrough":{"bestShots":3},"trapdoor":{"bestShots":4},"stone-by-stone":{"bestShots":4},"crack-and-double":{"bestShots":3},"rubble-run":{"bestShots":5},"your-move":{"bestShots":1},"hairpin":{"bestShots":2},"double-duty":{"bestShots":3},"clear-the-way":{"bestShots":3},"rebuild":{"bestShots":4},"return-trip":{"bestShots":1},"there-and-back":{"bestShots":2},"glass-house":{"bestShots":2},"clean-break":{"bestShots":3},"ricochet":{"bestShots":3},"mirror-image":{"bestShots":3},"double-back":{"bestShots":4},"glass-echo":{"bestShots":3},"double-glazing":{"bestShots":4},"glass-and-stone":{"bestShots":4},"bolted-down":{"bestShots":2},"cold-steel":{"bestShots":3},"steel-echo":{"bestShots":3},"true-north":{"bestShots":3},"other-side":{"bestShots":1},"shortcut":{"bestShots":2},"knock-first":{"bestShots":3},"boomerang":{"bestShots":4}},
   skipped: [],
-  bonuses: {"up-and-over":[0],"second-try":[0],"set-the-stage":[0],"double-take":[0],"encore":[0],"down-and-around":[0],"third-time-lucky":[0],"back-and-forth":[0],"two-step":[0],"breakthrough":[0],"trapdoor":[0],"stone-by-stone":[0],"crack-and-double":[0],"rubble-run":[0],"your-move":[0],"hairpin":[0],"double-duty":[0],"clear-the-way":[0],"rebuild":[0],"return-trip":[0],"there-and-back":[0],"glass-house":[0],"clean-break":[0],"ricochet":[0],"mirror-image":[0],"double-back":[0],"glass-echo":[0],"double-glazing":[0],"bolted-down":[0],"cold-steel":[0],"steel-echo":[0],"true-north":[0],"other-side":[0],"shortcut":[0],"knock-first":[0],"boomerang":[0]},
+  bonuses: {"up-and-over":[0],"second-try":[0],"set-the-stage":[0],"double-take":[0],"encore":[0],"down-and-around":[0],"third-time-lucky":[0],"back-and-forth":[0],"two-step":[0],"breakthrough":[0],"trapdoor":[0],"stone-by-stone":[0],"crack-and-double":[0],"rubble-run":[0],"your-move":[0],"hairpin":[0],"double-duty":[0],"clear-the-way":[0],"rebuild":[0],"return-trip":[0],"there-and-back":[0],"glass-house":[0],"clean-break":[0],"ricochet":[0],"mirror-image":[0],"double-back":[0],"glass-echo":[0],"double-glazing":[0],"glass-and-stone":[0],"bolted-down":[0],"cold-steel":[0],"steel-echo":[0],"true-north":[0],"other-side":[0],"shortcut":[0],"knock-first":[0],"boomerang":[0]},
   skipsLeft: 3,
   skipWaitMs: 0
 }));
@@ -391,7 +392,7 @@ location.reload();
 - **Clearing it:** *Reset progress* on the title screen.
 - On a phone, use remote debugging (`chrome://inspect` in desktop Chrome
   for Android).
-- The snippet lists the 37 levels up to *Boomerang* by `id` and `minShots`
+- The snippet lists the 38 levels up to *Boomerang* by `id` and `minShots`
   (`src/levels/levels.ts`). Add new levels to both lists, or level 1's
   bonus target is not the last one left and the ending doesn't play. The
   `[0]` is each level's first bonus target, by its index in reading
