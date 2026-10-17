@@ -3,13 +3,16 @@
 // two rough difficulty measures (how likely random play is to finish
 // within par, and the foresight the shortest solution needs) and what each
 // row's first shot does (bonus targets hidden, as before par). Ends with
-// the difficulty of every level in a row.
+// the difficulty of every level in a row, by chapter, with the pieces each
+// level is built from.
 // Rows are numbered from 1 at the top, as the player counts them.
 
+import { CHAPTERS, LEVELS, chapterRanges } from "../src/levels/levels";
 import { CELL_SYMBOLS } from "../src/levels/parse";
 import { oneIn } from "./difficulty";
 import {
   analyzeLevels,
+  pieceList,
   rowList,
   SEARCH_EXTRA_SHOTS,
   shotCount,
@@ -48,6 +51,7 @@ for (const analysis of analyses) {
   console.log(
     `  Alternative:  ${alternative ? `${rowList(alternative)} (${shotCount(alternative)})` : `none within par + ${SEARCH_EXTRA_SHOTS}  ✗`}`,
   );
+  console.log(`  Pieces:       ${pieceList(board, level)}`);
   console.log(`  Setup routes: ${routes}`);
   const { bonusSolution } = analysis;
   if (bonusSolution !== undefined) {
@@ -66,12 +70,18 @@ for (const analysis of analyses) {
   console.log();
 }
 
-// The difficulty curve: random play's chance of finishing within par, and
-// the foresight the shortest solution needs.
-console.log("Difficulty curve (random play wins at par, 1 in N; foresight):");
-for (const { number, level, randomWinChance, foresight } of analyses) {
-  const odds = oneIn(randomWinChance).replace("1 in ", "");
-  console.log(
-    `  ${String(number).padStart(2)} ${level.name.padEnd(20)} par ${level.minShots}  ${odds.padStart(8)}  ${String(foresight ?? "-").padStart(2)}`,
-  );
+// The difficulty curve: random play's chance of finishing within par, the
+// foresight the shortest solution needs, and the pieces, by chapter.
+console.log(
+  "Difficulty curve (random play wins at par, 1 in N; foresight; pieces):",
+);
+for (const { name, start, end } of chapterRanges(LEVELS, CHAPTERS)) {
+  console.log(`  ${name}`);
+  for (const analysis of analyses.slice(start, end)) {
+    const { number, level, board, randomWinChance, foresight } = analysis;
+    const odds = oneIn(randomWinChance).replace("1 in ", "");
+    console.log(
+      `  ${String(number).padStart(2)} ${level.name.padEnd(20)} par ${level.minShots}  ${odds.padStart(8)}  ${String(foresight ?? "-").padStart(2)}  ${pieceList(board, level)}`,
+    );
+  }
 }

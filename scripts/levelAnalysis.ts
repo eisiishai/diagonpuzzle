@@ -15,6 +15,8 @@ import {
 import type { Move, Placement } from "../src/game/solver";
 import { CELL_SYMBOLS } from "../src/levels/parse";
 import { findAlternative } from "./alternativeSearch";
+import { piecesOn } from "./pieces";
+import type { Piece } from "./pieces";
 import { foresight, randomWinChance } from "./difficulty";
 import { shortestSolutions } from "./levelGenerator";
 import type { Board, Position } from "../src/game/types";
@@ -188,6 +190,40 @@ export function rowList(moves: readonly Move[]): string {
         : `${CELL_SYMBOLS[move.mirror]} at ${cellName(move)}`,
     )
     .join(" → ");
+}
+
+const PIECE_NAMES: Record<Piece, string> = {
+  breakable: "cracked wall",
+  reflector: "reflector",
+  glass: "glass",
+  fixed: "fixed",
+  portal: "portals",
+  playerMirror: "player mirror",
+};
+
+/**
+ * What a level is built from besides ordinary mirrors and walls, e.g.
+ * "cracked wall ×2, reflector, player mirror /, goal 2 hits"; "-" for
+ * none. Portals always come as one pair, so they get no count.
+ */
+export function pieceList(
+  board: Board,
+  level: Pick<LevelDefinition, "playerMirror" | "goalHits">,
+): string {
+  const parts = piecesOn(board).map(({ piece, count }) =>
+    count > 1 && piece !== "portal"
+      ? `${PIECE_NAMES[piece]} ×${count}`
+      : PIECE_NAMES[piece],
+  );
+  if (level.playerMirror) {
+    parts.push(
+      `${PIECE_NAMES.playerMirror} ${CELL_SYMBOLS[level.playerMirror]}`,
+    );
+  }
+  if ((level.goalHits ?? 1) > 1) {
+    parts.push(`goal ${level.goalHits} hits`);
+  }
+  return parts.length > 0 ? parts.join(", ") : "-";
 }
 
 /** The number of shots in `moves`, which may also place the mirror. */

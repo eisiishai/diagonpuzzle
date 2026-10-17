@@ -77,7 +77,8 @@ const HELP = `Usage: npm run generate -- [options]
                     portals, off a reflector and back through them
   --player-mirror M the player may place one mirror M (slash or backslash)
                     on any empty cell; boards must need it for par
-  --place-later     no shortest solution places the mirror before the first shot
+  --place-later     no shortest solution needs the mirror placed before the
+                    first shot (placing it early may still work)
   --shots N         par: fewest shots that complete the level (default ${DEFAULTS.shots})
   --goal-hits N     goal hits needed (default ${DEFAULTS.goalHits})
   --tries N         random boards to try (default ${DEFAULTS.tries})

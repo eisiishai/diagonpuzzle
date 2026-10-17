@@ -56,7 +56,9 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   that a later shot then passes through) and what each
   row's first shot does, and marks with ✗ any level whose declared
   `minShots` doesn't match the solver. It ends with the difficulty of every
-  level in a row, to see where a new level fits in the curve. Random odds
+  level in a row, grouped by chapter with the pieces each level uses (a
+*Pieces* line per level shows them too), to see where a new level fits
+in the curve and which combinations a chapter has. Random odds
   measure how many plays there are; foresight how much a solution must
   plan ahead, which the odds understate (e.g. an easy-to-see key move).
 - To find a new level, run `npm run generate` with the size, number of
@@ -92,8 +94,10 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
   measures the planning a level needs regardless.
 - For levels with a player-placed mirror, add `--player-mirror slash` (or
   `backslash`): only boards that need the mirror for par are kept, and
-  `--place-later` also drops boards where a shortest solution places it
-  before the first shot. Solutions show a placement as `place the /
+  `--place-later` also drops boards where some shortest solution needs
+  the mirror placed before the first shot. Placing it early may still
+  work when the first shot doesn't pass its cell (as in *Hairpin*), so
+  the option doesn't make placement timing part of the puzzle. Solutions show a placement as `place the /
   mirror at (column,row)`; copy the printed `playerMirror` line into the
   level too. These searches are slower: try `--tries 4000` (about 15 s
   for a 6×5 board at par 3).
@@ -158,6 +162,19 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
     music groups, how levels were found)
   - `docs/ROADMAP.md`: the difficulty curve table, from `npm run levels`
   - The console snippet in *Seeing the game's ending by hand* below
+  - A level placed before others shifts every later level's number.
+    Tests and scripts find levels by `id`, so only text needs changing:
+    find it with a grep for the shifted numbers over `docs/`, `scripts/`
+    and `README.md` (for a level inserted as 12 of 40,
+    `grep -nE "\b(1[2-9]|[23][0-9])\b"`), and leave dates, board sizes,
+    coordinates and counts of shots alone. Easy to miss: the
+    level table's rows and the levels its descriptions mention; each
+    piece's "Levels N–M teach it" line in `docs/DESIGN.md`; the chapter
+    list and the music table's ranges; the "found with" notes; in
+    `docs/ROADMAP.md` the game track items naming levels, the difficulty
+    tables and the text around them; the help examples in
+    `scripts/bonus.ts` and `scripts/trace.ts` (check they still name the
+    intended level); the counts in `README.md` and the console snippet
   - Run `npm run e2e:full`, which plays every level through
 - A new block type (cell type) touches these places, after its design in
   `docs/DESIGN.md` (rule, grid symbol, look). Only the first four are
@@ -224,10 +241,10 @@ npm run dev          # dev server at http://localhost:8080, reloads on save
 | `npm run coverage` | The unit tests, and which code they run (below). |
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
-| `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 2 minutes. Run before commits that change the game (see *3. Commit*). |
-| `npm run e2e:full` | The quick set plus every level played through. About 3½ minutes. |
+| `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 3 minutes. Run before commits that change the game (see *3. Commit*). |
+| `npm run e2e:full` | The quick set plus every level played through. About 7 minutes with 40 levels; each level adds about 10 s. |
 | `npm run mutation` | Mutation testing of the rules: how well the unit tests check them (below). Minutes; run by hand. |
-| `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). About 4 minutes. |
+| `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). A little longer than `e2e:full`. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
 `npm run build` is the full check. **It runs automatically before every
@@ -341,7 +358,8 @@ changes the game. A failure leaves a trace to open with
 
 **Browser tests as on GitHub.** GitHub's machines have no GPU and 4 slow
 cores: the browsers draw in software at about 3 frames a second, and the
-full set takes about 12 minutes instead of 4. Recording a trace makes
+full set takes about three times as long as locally (12 minutes when it
+took 4 here, at v2.13; more since levels were added). Recording a trace makes
 every step of a test about three times slower, so there only a failed
 test's retry records one, and tests get longer time limits (`CI` set:
 `playwright.config.ts`, `e2e/ci.ts`; a test file's own
@@ -412,7 +430,7 @@ git commit -m "Short summary of the change"
   (lint, type check, tests, production build; about 5 seconds). When the
   commit changes the game (`src/`, `public/`, `e2e/`, `index.html`, the
   Vite or Playwright config, or `package.json` and its lock file), it also
-  runs the quick browser smoke tests, `npm run e2e` (about 2 minutes); commits
+  runs the quick browser smoke tests, `npm run e2e` (about 3 minutes); commits
   of only docs skip them. If Playwright's Chromium isn't installed, the
   hook warns and skips them. If anything fails, the commit is stopped and
   the errors are shown; fix them and commit again. Merge commits are

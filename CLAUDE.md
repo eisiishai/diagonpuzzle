@@ -22,8 +22,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   alternative solution above par, setup routes,
   difficulty (random play's odds of finishing at par, and foresight: the
   changes the par solution makes for its later shots) and first-shot
-  outcomes for every level, then the difficulty curve (`scripts/levels.ts`,
-  runs with tsx)
+  outcomes for every level, then the difficulty curve by chapter with the
+  pieces each level uses (`scripts/levels.ts`, runs with tsx)
 - `npm run generate -- [options]` — searches random boards for new levels
   with a given par, best (unique shortest solution) first, only those with
   an alternative solution within par + 2, printed ready to paste into
@@ -45,10 +45,10 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   lists the options
 - `npm run e2e` — quick browser smoke tests (Playwright, headless
   Chromium, `e2e/`): every screen and flow at desktop and phone size,
-  about 2 minutes. The pre-commit hook runs it when a commit changes the game
+  about 3 minutes. The pre-commit hook runs it when a commit changes the game
 - `npm run e2e:full` — the quick set plus every level played through,
-  about 3½ minutes. Run before a release and after changes to drawing,
-  levels or block types
+  about 7 minutes with 40 levels. Run before a release and after changes
+  to drawing, levels or block types
 - `npm run mutation` — mutation testing (Stryker) of the rules
   (`src/game/`, `src/save/`, `src/levels/parse.ts`): small changes to the
   code that some unit test should notice; report in
@@ -56,8 +56,8 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   then, in the background
 - `npm run e2e:coverage` — the full browser set with code coverage of the
   game in the browser: a table of files with uncovered code, and a
-  line-by-line report in `coverage-e2e/index.html` (git-ignored). About
-  4 minutes; run now and then, not with each commit
+  line-by-line report in `coverage-e2e/index.html` (git-ignored). A little
+  longer than `e2e:full`; run now and then, not with each commit
 - `npm run screenshots` — pictures of the main screens in `screenshots/`
   (git-ignored). Look at them after a visual change; they don't show
   phone-only GPU bugs, so phone checks stay

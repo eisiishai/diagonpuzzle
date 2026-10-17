@@ -68,6 +68,18 @@ const SWAPS: {
 ];
 
 /**
+ * How many cells of each kind of piece `board` has, in the order the game
+ * adds them (a portal pair counts 2); kinds it doesn't have are left out.
+ * The player's mirror is not on the board, so it is never listed.
+ */
+export function piecesOn(board: Board): { piece: Piece; count: number }[] {
+  return SWAPS.map(({ piece, cells }) => ({
+    piece,
+    count: board.cells.flat().filter((cell) => cells.includes(cell)).length,
+  })).filter(({ count }) => count > 0);
+}
+
+/**
  * The board with every `piece` swapped for a plainer one, as neededPieces
  * does; unchanged for the player's mirror, which is not on the board.
  */

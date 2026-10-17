@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fire } from "../src/game/simulate";
 import { parseLevel } from "../src/levels/parse";
-import { describeShot, rowList } from "./levelAnalysis";
+import { describeShot, pieceList, rowList } from "./levelAnalysis";
 
 describe("describeShot", () => {
   it("tells the outcome and counts flipped mirrors", () => {
@@ -42,6 +42,31 @@ describe("describeShot with glass mirrors", () => {
     expect(describeShot(fire(board, 0))).toBe(
       "exit, flips 1 mirror, shatters 1 glass mirror",
     );
+  });
+});
+
+describe("pieceList", () => {
+  it("names each piece, with a count when there are several", () => {
+    const board = parseLevel(String.raw`
+      O % Z G
+      @ % . O
+    `);
+    expect(pieceList(board, {})).toBe(
+      "cracked wall ×2, reflector, glass, portals",
+    );
+  });
+
+  it("adds the player's mirror and a goal needing several hits", () => {
+    expect(
+      pieceList(parseLevel(". % G"), {
+        playerMirror: "mirrorSlash",
+        goalHits: 2,
+      }),
+    ).toBe("cracked wall, player mirror /, goal 2 hits");
+  });
+
+  it("is a dash for a board of ordinary mirrors and walls", () => {
+    expect(pieceList(parseLevel(String.raw`/ # G`), { goalHits: 1 })).toBe("-");
   });
 });
 

@@ -1,6 +1,26 @@
 import { describe, expect, it } from "vitest";
 import { parseLevel } from "../src/levels/parse";
-import { neededPieces, withFlippingMirrors } from "./pieces";
+import { neededPieces, piecesOn, withFlippingMirrors } from "./pieces";
+
+describe("piecesOn", () => {
+  it("counts each kind of piece on the board, in the game's order", () => {
+    const board = parseLevel(String.raw`
+      O % Z J G
+      @ % N O .
+    `);
+    expect(piecesOn(board)).toEqual([
+      { piece: "breakable", count: 2 },
+      { piece: "reflector", count: 1 },
+      { piece: "glass", count: 2 },
+      { piece: "fixed", count: 1 },
+      { piece: "portal", count: 2 },
+    ]);
+  });
+
+  it("leaves out ordinary mirrors, walls and kinds not on the board", () => {
+    expect(piecesOn(parseLevel(String.raw`/ \ # G`))).toEqual([]);
+  });
+});
 
 describe("neededPieces", () => {
   it("lists the pieces without which par is out of reach", () => {
