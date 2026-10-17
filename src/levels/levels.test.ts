@@ -101,10 +101,17 @@ it.each(idsWith("portal"))("%s needs its portals", (id) => {
   expect(solve(board, minShots, goalHits, playerMirror)).toBeNull();
 });
 
-// Their bonus targets need the portals too: with both portals walls, the
-// bonus target is out of reach however many shots are fired (the search
-// ends when no new board is left).
-it.each(idsWith("portal"))(
+/** The ids of the levels in the chapter called `name`. */
+const chapterIds = (name: string) => {
+  const range = chapterRanges(LEVELS, CHAPTERS).find((c) => c.name === name)!;
+  return LEVELS.slice(range.start, range.end).map((level) => level.id);
+};
+
+// A bonus target needs its chapter's piece. In the Portals chapter: with
+// both portals walls, the bonus target is out of reach however many shots
+// are fired (the search ends when no new board is left). Portal levels in
+// later chapters need that chapter's piece instead.
+it.each(chapterIds("Portals"))(
   "%s needs its portals for the bonus target",
   (id) => {
     const { level, board } = replaced(id, ["portal"], () => "wall", true);

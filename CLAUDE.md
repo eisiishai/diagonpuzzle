@@ -47,7 +47,7 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   Chromium, `e2e/`): every screen and flow at desktop and phone size,
   about 3 minutes. The pre-commit hook runs it when a commit changes the game
 - `npm run e2e:full` — the quick set plus every level played through,
-  about 7 minutes with 43 levels. Run before a release and after changes
+  about 7 minutes with 44 levels. Run before a release and after changes
   to drawing, levels or block types
 - `npm run mutation` — mutation testing (Stryker) of the rules
   (`src/game/`, `src/save/`, `src/levels/parse.ts`): small changes to the

@@ -662,6 +662,21 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . . . .
     `,
   },
+  {
+    id: "double-crossing",
+    name: "Double crossing",
+    minShots: 4,
+    goalHits: 2,
+    bonusShots: 6,
+    music: "photon",
+    grid: String.raw`
+      . \ . / . .
+      . ^ . * . .
+      O . > . . G
+      . \ . . O .
+      . \ \ . . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {

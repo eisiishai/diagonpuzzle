@@ -244,7 +244,9 @@ off from the left, or the goal from above.
   tests check it). *Other side* (36) got a new bonus target for this
   after its release (2026-10-17): its first, in the top right corner,
   could be reached without the portals in 5 shots. A player who
-  collected it keeps it, as targets are saved by index.
+  collected it keeps it, as targets are saved by index. A bonus target
+  needs its own chapter's piece: portals in a later chapter's level (44)
+  leave the bonus target to that chapter's piece.
 
 ## One-way gates
 
@@ -276,8 +278,8 @@ the gate's direction.
   so no longer way round the gates gets there either (the tests check
   it; `npm run bonus -- --needs gate`, which searches until no new board
   is left).
-- Levels 41–42 teach it (chapter *One-way gates*), and 43 adds a
-  reflector and a breakable wall. It borrows the wall's
+- Levels 41–42 teach it (chapter *One-way gates*), 43 adds a
+  reflector and a breakable wall, and 44 portals and a two-hit goal. It borrows the wall's
   knock and the *Photon* track until it has its own (see Sound).
 
 ## Cell types
@@ -389,6 +391,7 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 41 | One way | 2 | Introduces one-way gates. Row 4 runs straight into the side of the `^` gate at (3,4) and stops; without the gate it would turn up at (4,4) and (4,3) into the goal in one shot. Row 1 turns down at (3,1) into the same gate head-on and stops too. Row 3 instead turns up at (4,3) and (4,2) and leaves, flipping both; row 2 then passes the `>` gate at (2,2) and turns down at (4,2) and right at (4,3) to the goal. Alternative in 4 shots: row 2 four times. The bonus target, in the top right corner, needs a gate passed: rows 1, 5, 5, the last climbing column 3 up through the `^` gate that stopped row 1 coming down, and right at (3,1) onto it. |
 | 42 | No way back | 3 | Two `^` gates, one passed and one stopping from the side. Row 4 turns down at (2,4) and leaves at the bottom, flipping it; row 4 again climbs column 2 through the lower `^` gate, right at (2,2) and down at (4,2), then left at (4,4) into the side of the second `^` gate at (3,4), which stops it, having flipped all four mirrors on its way. Row 1 then turns down at (2,1), right at (2,2), up at (4,2) and right at (4,1) along the top row to the goal. Alternative in 5 shots: rows 1, 1, 1, 4, 4. The bonus target, at the end of row 3, needs a gate passed: four row 5 shots. The second climbs column 3 through the lower `^` gate and turns left at (3,3) into the side of the other gate, which stops it; the fourth climbs through the lower gate again, and (3,3), turned back, sends it right along row 3 onto the target. With the gates made walls, no number of shots reaches it. |
 | 43 | Echo chamber | 3 | One-way gates with a reflector and a breakable wall, all three in the first shot. Row 1 turns down at (1,1) into the reflector, comes back up into the same mirror, now `/`, and runs right along the top row through the `>` gate; (5,1) turns it down and (5,3) left along row 3 into the cracked wall at the left edge, breaking it. Row 3 runs through the gap, turns down at (5,3) and left at (5,4) into the side of the `v` gate, which stops it. Row 3 again turns up at (5,3) and right at (5,1), both flipped, into the goal. Without the `v` gate, row 4 would be a second way to set up. Alternatives in 4 shots: rows 1, 1, 1, 3 and rows 3, 3, 3, 3. The bonus target, at the right end of the `v` gate's row, needs a gate passed: rows 1, 1, 3, 1, 3, every row 1 shot running through the `>` gate. |
+| 44 | Double crossing | 4 | One-way gates with portals and a two-hit goal; the `>` gate stands on the row the left portal sends the pellet along. Row 4 turns down at (2,4) and right at (2,5), and (3,5) sends it out at the bottom, flipping all three. Row 5 turns up at (2,5) and right at (2,4) into the right portal, comes out of the left one, and runs along row 3 through the `>` gate into the goal, flipping the first two back. Row 4 again turns down and right the same way, but (3,5) now turns it up into the side of the `>` gate, which stops it, and so sets (3,5) back; row 5 then makes the same trip through the portals for the second hit. Alternative in 6 shots: rows 4, 5, 5, 5, 5, 5. The bonus target, below the top row, needs a gate passed: rows 1, 4, 4, 1, 4, 4. The `^` gate stops row 1 coming down column 2 head-on, and the last row 4 climbs up through it and turns right and down onto the target. |
 
 *One way* (41) and *No way back* (42, added 2026-10-17 to start a new
 chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2
@@ -416,6 +419,16 @@ which keeps only boards that need every piece named: about one board in
 shortest solutions and both gates on the left edge. It has a unique
 shortest solution, random-play odds 1 in 125 and foresight 3, as *No way
 back* (42): its step up is in reading three kinds of piece.
+
+*Double crossing* (44, added 2026-10-18) came from `npm run generate --
+--gates 2 --portals --goal-hits 2 --shots 4 --varied-rows --bonus-needs
+gate --seed 3` on a 6×5 board with 5 mirrors and no walls: about one
+board in 2,000 needs all three, and 7 of 437 had a bonus target needing a
+gate; three of those had a unique shortest solution. It was chosen for
+its gates inside the board (the others had a gate or portal at the left
+edge, where row 1 enters a portal at once). Random-play odds 1 in 625 and
+foresight 3, a step above 43 by odds. No bonus target needs both the
+gates and the portals, even with a board change.
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --
@@ -586,7 +599,7 @@ from four and six).
   in `src/levels/levels.ts`, following the music groups): 1–5 *Basics*,
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
-  36–40 *Portals*, 41–43 *One-way gates*. Each
+  36–40 *Portals*, 41–44 *One-way gates*. Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one
@@ -868,7 +881,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 26–30 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 | Levels 31–35 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
 | Levels 36–40 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
-| Levels 41–43 (one-way gates) | **Photon** for now, until the chapter has its own track |
+| Levels 41–44 (one-way gates) | **Photon** for now, until the chapter has its own track |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,

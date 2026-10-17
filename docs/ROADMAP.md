@@ -202,9 +202,11 @@ with flipping mirrors, before it is built.
         Row 1 bounces off the reflector, passes a gate and breaks the wall
         in one shot; a gate stops row 3 from the side. Odds 1 in 125,
         foresight 3, as 42
-      - [ ] 44: portals and a two-hit goal (portals have never had one); a
-        gate beside a portal makes the pair one-way, so the second hit
-        needs another route. Par 4, about 1 in 625–1,300
+      - [x] *Double crossing* (44, par 4): portals and a two-hit goal
+        (portals had never had one). Row 5 goes through the portals and a
+        gate on the exit's row into the goal; a setup shot stopped by the
+        same gate's side resets a mirror for the second hit. Odds 1 in
+        625, foresight 3
       - [ ] 45, the finale: the player's mirror and a glass mirror (the
         player's mirror has never met glass); par 5, foresight about 5,
         the hardest level of the game by both measures
@@ -281,15 +283,17 @@ reading the board more than in the odds:
 | 1 in | 5 | 25 | 125 | 625 | 625 |
 | Foresight | 0 | 1 | 4 | 3 | 3 |
 
-Levels 41–43 (one-way gates, added 2026-10-17 and 18): two teaching
+Levels 41–44 (one-way gates, added 2026-10-17 and 18): two teaching
 levels with only gates, the first easy like 36, the second a step up;
 then *Echo chamber* (43) with a reflector and a breakable wall, as hard
-as 42 by both measures, its step being three kinds of piece to read:
+as 42 by both measures, its step being three kinds of piece to read, and
+*Double crossing* (44) with portals and a two-hit goal, five times
+harder by odds:
 
-| Level | 41 | 42 | 43 |
-|---|---|---|---|
-| 1 in | 25 | 125 | 125 |
-| Foresight | 2 | 3 | 3 |
+| Level | 41 | 42 | 43 | 44 |
+|---|---|---|---|---|
+| 1 in | 25 | 125 | 125 | 625 |
+| Foresight | 2 | 3 | 3 | 3 |
 
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
