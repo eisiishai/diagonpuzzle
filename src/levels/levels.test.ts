@@ -41,8 +41,8 @@ const idsWith = (...cells: CellType[]) =>
   ).map((level) => level.id);
 
 // Levels with breakable walls are built around them: with every breakable
-// wall solid, par is out of reach (levels 11-14 can't be solved at all that
-// way; a player mirror makes a longer way round possible on levels 17-18).
+// wall solid, par is out of reach (levels 11-15 can't be solved at all that
+// way; a player mirror makes a longer way round possible on levels 18-19).
 it.each(idsWith("breakable"))("%s needs a breakable wall broken", (id) => {
   const { level, board } = replaced(id, ["breakable"], () => "wall");
   const { minShots, goalHits = 1, playerMirror } = level;

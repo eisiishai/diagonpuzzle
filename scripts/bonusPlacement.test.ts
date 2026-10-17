@@ -45,12 +45,12 @@ describe("findPlacements", () => {
   });
 
   it.each([
-    [3, 0],
-    [13, 1],
-  ])(
-    "level %i (%i board changes) keeps par and the bonus shots",
-    (n, changes) => {
-      const level = LEVELS[n - 1];
+    ["second-try", 0],
+    ["crack-and-double", 1],
+  ] as const)(
+    "%s (%i board changes) keeps par and the bonus shots",
+    (id, changes) => {
+      const level = LEVELS.find((candidate) => candidate.id === id)!;
       const goalHits = level.goalHits ?? 1;
       const bonusShots = level.minShots + 1;
       const placements = findPlacements(parseLevel(level.grid), {
@@ -85,7 +85,7 @@ describe("findPlacements", () => {
   );
 
   it("never changes a cell the par solution reaches", () => {
-    // Level 19's par shot turns at (2,3) and the reflector; removing the
+    // Return trip's par shot turns at (2,3) and the reflector; removing the
     // mirror at (2,3) used to pass, as row 3 still reached the goal.
     const level = LEVELS.find((candidate) => candidate.id === "return-trip")!;
     const board = parseLevel(level.grid);
@@ -135,7 +135,7 @@ describe("findPlacements", () => {
   });
 
   it("keeps only bonus targets that need the pieces asked for", () => {
-    // Level 33's bonus target needs its portals (the search removes it
+    // Knock first's bonus target needs its portals (the search removes it
     // first and finds its cell again).
     const level = LEVELS.find((candidate) => candidate.id === "knock-first")!;
     const options = { minShots: 3, goalHits: 1, bonusShots: 4, changes: 0 };
@@ -154,7 +154,7 @@ describe("findPlacements", () => {
 });
 
 describe("withBonusNeeding", () => {
-  // Level 31 without its bonus target, as the generator would find it.
+  // Other side without its bonus target, as the generator would find it.
   const level = LEVELS.find((candidate) => candidate.id === "other-side")!;
   const candidate = {
     board: withBonuses(parseLevel(level.grid)),

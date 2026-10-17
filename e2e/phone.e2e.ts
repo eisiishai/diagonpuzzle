@@ -1,9 +1,9 @@
 import { LEVELS } from "../src/levels/levels";
-import { expect, solution, test } from "./game";
+import { expect, levelIndex, solution, test } from "./game";
 
 // Run on a phone-sized screen with touch input (playwright.config.ts).
 
-const YOUR_MOVE = 14; // the first level with the player's mirror
+const YOUR_MOVE = levelIndex("your-move"); // the first with the player's mirror
 
 test("everything fits on the screen", async ({ game }) => {
   await game.seedCompleted(YOUR_MOVE);

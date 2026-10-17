@@ -200,6 +200,20 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "trapdoor",
+    name: "Trapdoor",
+    minShots: 4,
+    bonusShots: 5,
+    music: "prism",
+    grid: String.raw`
+      . . . \ / . .
+      \ / . . . . .
+      % . . . \ \ .
+      . . . / # * .
+      \ . . . . % G
+    `,
+  },
+  {
     id: "stone-by-stone",
     name: "Stone by stone",
     minShots: 4,

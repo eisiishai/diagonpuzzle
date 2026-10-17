@@ -8,6 +8,7 @@ import type { MirrorType } from "../src/game/types";
 import { CELL_SYMBOLS, formatLevel } from "../src/levels/parse";
 import { cellName, describeShot, rowList, shotCount } from "./levelAnalysis";
 import { withBonusNeeding } from "./bonusPlacement";
+import { foresight, oneIn, randomWinChance } from "./difficulty";
 import { findCandidates, withAlternatives } from "./levelGenerator";
 import type { GeneratorOptions } from "./levelGenerator";
 import type { Piece } from "./pieces";
@@ -237,6 +238,15 @@ if (options === null) {
         `  alternative: ${rowList(alternative)} (${shotCount(alternative)} shots)`,
       );
     }
+    const chance = randomWinChance(
+      board,
+      options.shots,
+      options.goalHits,
+      options.playerMirror,
+    );
+    console.log(
+      `  difficulty: random play wins at par ${oneIn(chance)}, foresight ${foresight(board, solutions[0])}`,
+    );
     console.log();
   });
   console.log(

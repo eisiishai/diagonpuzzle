@@ -24,7 +24,7 @@ const HELP = `Usage: npm run trace -- (--level N | --grid TEXT) [options] MOVES.
 MOVES are rows to fire (counted from 1 at the top) and cells "x,y" where
 the player's mirror goes (column x, row y, from 1), in order.
 
-Examples: npm run trace -- --level 22 4 2 5,3 4
+Examples: npm run trace -- --level 23 4 2 5,3 4
           npm run trace -- --grid ". \\ G|. @ ." 1`;
 
 const MIRRORS: Record<string, MirrorType> = {

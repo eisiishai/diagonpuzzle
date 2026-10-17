@@ -1,12 +1,12 @@
 import { fire } from "../src/game/simulate";
 import { CHAPTERS, LEVELS, chapterRanges } from "../src/levels/levels";
 import { EMPTY_PROGRESS, SKIP_WAIT_MS } from "../src/save/progress";
-import { expect, solution, startBoard, test } from "./game";
+import { expect, levelIndex, solution, startBoard, test } from "./game";
 import type { Game } from "./game";
 
 // Level indices (0-based) used below.
 const FIRST = 0;
-const YOUR_MOVE = 14; // the first level with the player's mirror
+const YOUR_MOVE = levelIndex("your-move"); // the first with the player's mirror
 
 test("the main page plays the game from its version folder", async ({
   game,

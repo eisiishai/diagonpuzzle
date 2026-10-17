@@ -1,5 +1,5 @@
 import { LEVELS } from "../src/levels/levels";
-import { solution, test } from "./game";
+import { levelIndex, solution, test } from "./game";
 import type { Game } from "./game";
 
 // `npm run screenshots`: pictures of the main screens at desktop and phone
@@ -11,11 +11,11 @@ const SIZES = {
   desktop: { width: 1280, height: 800 },
   phone: { width: 412, height: 839 },
 };
-const YOUR_MOVE = 14; // the first level with the player's mirror
-const RETURN_TRIP = 18; // the first level with a reflector
-const GLASS_HOUSE = 22; // the first level with a glass mirror
-const BOLTED_DOWN = 26; // the first level with a fixed mirror
-const OTHER_SIDE = 30; // the first level with portals
+const YOUR_MOVE = levelIndex("your-move"); // the first with the player's mirror
+const RETURN_TRIP = levelIndex("return-trip"); // the first with a reflector
+const GLASS_HOUSE = levelIndex("glass-house"); // the first with a glass mirror
+const BOLTED_DOWN = levelIndex("bolted-down"); // the first with a fixed mirror
+const OTHER_SIDE = levelIndex("other-side"); // the first with portals
 
 for (const [device, size] of Object.entries(SIZES)) {
   const shoot = (game: Game, name: string) =>
@@ -48,7 +48,7 @@ for (const [device, size] of Object.entries(SIZES)) {
       await game.press(`${YOUR_MOVE + 1}. `);
       await game.waitForLevel(YOUR_MOVE + 1);
       await game.page.keyboard.press("p");
-      await shoot(game, "level-15-placing");
+      await shoot(game, `level-${YOUR_MOVE + 1}-placing`);
     });
 
     test("reflector", async ({ game }) => {
@@ -56,9 +56,9 @@ for (const [device, size] of Object.entries(SIZES)) {
       await game.open();
       await game.press(`${RETURN_TRIP + 1}. `);
       await game.waitForLevel(RETURN_TRIP + 1);
-      await shoot(game, "level-19-start");
+      await shoot(game, `level-${RETURN_TRIP + 1}-start`);
       await game.play(solution(RETURN_TRIP), "mouse");
-      await shoot(game, "level-19-complete");
+      await shoot(game, `level-${RETURN_TRIP + 1}-complete`);
     });
 
     test("glass mirror", async ({ game }) => {
@@ -66,10 +66,10 @@ for (const [device, size] of Object.entries(SIZES)) {
       await game.open();
       await game.press(`${GLASS_HOUSE + 1}. `);
       await game.waitForLevel(GLASS_HOUSE + 1);
-      await shoot(game, "level-23-start");
+      await shoot(game, `level-${GLASS_HOUSE + 1}-start`);
       const [first] = solution(GLASS_HOUSE);
       await game.play([first], "mouse");
-      await shoot(game, "level-23-first-shot");
+      await shoot(game, `level-${GLASS_HOUSE + 1}-first-shot`);
     });
 
     test("fixed mirror", async ({ game }) => {
@@ -77,10 +77,10 @@ for (const [device, size] of Object.entries(SIZES)) {
       await game.open();
       await game.press(`${BOLTED_DOWN + 1}. `);
       await game.waitForLevel(BOLTED_DOWN + 1);
-      await shoot(game, "level-27-start");
+      await shoot(game, `level-${BOLTED_DOWN + 1}-start`);
       const [first] = solution(BOLTED_DOWN);
       await game.play([first], "mouse");
-      await shoot(game, "level-27-first-shot");
+      await shoot(game, `level-${BOLTED_DOWN + 1}-first-shot`);
     });
 
     test("portals", async ({ game }) => {
@@ -88,10 +88,10 @@ for (const [device, size] of Object.entries(SIZES)) {
       await game.open();
       await game.press(`${OTHER_SIDE + 1}. `);
       await game.waitForLevel(OTHER_SIDE + 1);
-      await shoot(game, "level-31-start");
+      await shoot(game, `level-${OTHER_SIDE + 1}-start`);
       const [first] = solution(OTHER_SIDE);
       await game.play([first], "mouse");
-      await shoot(game, "level-31-first-shot");
+      await shoot(game, `level-${OTHER_SIDE + 1}-first-shot`);
     });
 
     test("last level", async ({ game }) => {

@@ -86,45 +86,51 @@ with flipping mirrors, before it is built.
 
 - [ ] Player-placed blocks
   - [x] One player-placed mirror of a fixed direction, on any empty cell,
-    placed between shots without taking one; levels 15–16 use it. Design
+    placed between shots without taking one; levels 16–17 use it. Design
     in `docs/DESIGN.md`, *Player-placed mirror*
   - [ ] More mirrors per level, or other placeable blocks
 - [ ] New block types
   - [x] Breakable walls (`%`): stop the pellet once and break; levels
-    11–14 use them (13–14 with two-hit goals)
+    11–15 use them (14–15 with two-hit goals)
+    - [x] A fifth breakable wall level in the middle of the chapter,
+      *Trapdoor* (12, par 4, 2026-10-17), so that only the last two
+      combine breakable walls with the two-hit goal: one row breaks a
+      wall to open a column, another breaks a second wall along the
+      bottom, and a third shot repairs the mirrors it flipped. Odds
+      1 in 625, between 11 (216) and 13 (2,401)
   - [x] Fixed mirror (`L` `\`, `J` `/`): turns the pellet like a mirror
     but never flips (drawn in matte steel, bolted down). Gives levels
-    fixed points to plan around. Levels 27–30 teach it (chapter *Fixed
+    fixed points to plan around. Levels 28–31 teach it (chapter *Fixed
     mirrors*). Design in `docs/DESIGN.md`, *Fixed mirrors*
     - [x] Its own music track: *Anchor*, chosen on sound lab 6
     - [x] Its own hit sound: *Anvil ring*, chosen on sound lab 6
-    - [x] Harder fixed mirror levels: 29 with breakable walls and a
-      reflector, 30 with the player's mirror and a glass mirror
+    - [x] Harder fixed mirror levels: 30 with breakable walls and a
+      reflector, 31 with the player's mirror and a glass mirror
   - [x] Glass mirror (`N` `\`, `Z` `/`): turns the pellet once, then
     shatters and leaves an empty cell, the mirror version of the
-    breakable wall. Levels 23–26 teach it (chapter *Glass mirrors*).
+    breakable wall. Levels 24–27 teach it (chapter *Glass mirrors*).
     Design in `docs/DESIGN.md`, *Glass mirrors*
-    - [x] Harder glass mirror levels: 25 with a reflector, 26 with a
+    - [x] Harder glass mirror levels: 26 with a reflector, 27 with a
       two-hit goal
     - [x] Its own music track: *Glass harp*, chosen on sound lab 4
     - [x] A shattering sound: *Crack and tinkle*, chosen on sound lab 5
   - [x] Reflector (`@`): sends the pellet straight back the way it came.
     The return trip meets the mirrors it already flipped, so it goes
-    somewhere new. Levels 19–22 teach it (chapter *Reflectors*). Design
+    somewhere new. Levels 20–23 teach it (chapter *Reflectors*). Design
     in `docs/DESIGN.md`, *Reflectors*
-    - [x] Harder reflector levels: 21 with breakable walls, 22 with the
+    - [x] Harder reflector levels: 22 with breakable walls, 23 with the
       player's mirror
     - [x] Its own music track: *Return*, chosen on sound lab 4
     - [x] Its own hit sound: *Echo ping*, chosen on sound lab 5
   - [x] Portal pair (`O`): the pellet enters one and leaves the other in
     the same direction. No state of its own, so no cost to the solver;
     reaches rows and routes the left edge can't. One pair per level.
-    Levels 31–34 teach it (chapter *Portals*). Design in
+    Levels 32–35 teach it (chapter *Portals*). Design in
     `docs/DESIGN.md`, *Portals*
     - [x] Its own music track: *Wormhole*, chosen on sound lab 7
     - [x] Its own sound as the pellet goes through: *Phase drop*, chosen
       on sound lab 7
-    - [x] Harder portal levels: 33 with a breakable wall, 34 with a
+    - [x] Harder portal levels: 34 with a breakable wall, 35 with a
       reflector
     - [ ] Optional: several pairs per level, each with its own symbol and
       colour
@@ -145,40 +151,45 @@ with flipping mirrors, before it is built.
 
 ### Difficulty curve
 
-Measured on 2026-10-10 (v0.34) by `npm run levels`, level 17 added and level 18 given alternatives on
-2026-10-11, and *Down and around* moved from 7 to 5 on 2026-10-17, which
+Measured on 2026-10-10 (v0.34) by `npm run levels`, level 18 added and level 19 given alternatives on
+2026-10-11, *Down and around* moved from 7 to 5 and *Trapdoor* added as
+level 12 on 2026-10-17, which
 ends with this curve: the chance that random play completes a level within par (a random
 row each shot; in player-mirror levels a random cell for the mirror, or
 keeping it). Lower is harder. It dips at each new mechanic (6, 11,
-13, 15, 17), as intended:
+14, 16, 18), as intended:
 
 | Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 in | 5 | 6 | 25 | 36 | 36 | 16 | 64 | 343 | 343 |
 
-| Level | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 in | 2,048 | 216 | 2,401 | 125 | 7,776 | 112 | 3,333 | 2,553 | 45,000 |
+| Level | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 in | 2,048 | 216 | 625 | 2,401 | 125 | 7,776 | 112 | 3,333 | 2,553 | 45,000 |
 
-Levels 19–30 (reflectors, then glass mirrors, then fixed mirrors; added
+*Trapdoor* (12) sits between *Breakthrough* (11) and *Stone by stone*
+(13), so the chapter climbs through its single-hit levels before the
+two-hit goal joins in at 14.
+
+Levels 20–31 (reflectors, then glass mirrors, then fixed mirrors; added
 2026-10-11, v1.26–v1.28 and v2.3–v2.5):
 
-| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+| Level | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 in | 4 | 25 | 125 | 3,143 | 16 | 125 | 125 | 625 | 16 | 125 | 125 | 3,387 |
 
-Levels 31–34 (portals, added 2026-10-16): two easy teaching levels at
-the start of the chapter like 19, 23 and 27, then 33 with a breakable
-wall and 34 with a reflector, which sends the pellet back through the
-portals. 34 is par 4 so that it is harder than 33 (with five rows, par 3
-can't be harder than 1 in 125), well below *Mirror image* (22):
+Levels 32–35 (portals, added 2026-10-16): two easy teaching levels at
+the start of the chapter like 20, 24 and 28, then 34 with a breakable
+wall and 35 with a reflector, which sends the pellet back through the
+portals. 35 is par 4 so that it is harder than 34 (with five rows, par 3
+can't be harder than 1 in 125), well below *Mirror image* (23):
 
-| Level | 31 | 32 | 33 | 34 |
+| Level | 32 | 33 | 34 | 35 |
 |---|---|---|---|---|
 | 1 in | 5 | 25 | 125 | 625 |
 | Foresight | 0 | 1 | 4 | 3 |
 
-Random odds understate how easy level 15 feels (the mirror's cell is easy
+Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
 
 Foresight (added 2026-10-11, also in `npm run levels`): how many cells
@@ -187,39 +198,39 @@ the player's mirror, that a later shot then passes through. It measures
 how much a solution must plan ahead, which random odds miss. It counts
 the solver's par solution only, and not the second goal hit:
 
-| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Foresight | 0 | 0 | 1 | 2 | 2 | 1 | 2 | 2 | 3 | 5 | 3 | 3 | 2 | 5 | 1 | 3 | 4 | 2 |
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Foresight | 0 | 0 | 1 | 2 | 2 | 1 | 2 | 2 | 3 | 5 | 3 | 4 | 3 | 2 | 5 | 1 | 3 | 4 | 2 |
 
-| Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+| Level | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Foresight | 0 | 2 | 4 | 5 | 1 | 3 | 3 | 3 | 1 | 3 | 3 | 2 |
 
-Each new chapter starts easy again (19, 23 and 27 are among the easiest levels
-in the game) and climbs. The steepest step is to *Mirror image* (22),
-reflectors with the player's mirror: about 25 times harder than 21 by
-odds, with the highest foresight of 19–26, about as hard as *Double duty*
-(16).
+Each new chapter starts easy again (20, 24 and 28 are among the easiest levels
+in the game) and climbs. The steepest step is to *Mirror image* (23),
+reflectors with the player's mirror: about 25 times harder than 22 by
+odds, with the highest foresight of 20–27, about as hard as *Double duty*
+(17).
 
-The two agree that 10 and 14 are the hardest of 1–14. They disagree on
-*Rebuild* (18): the hardest by odds, but a foresight of only 2, so its
+The two agree that 10 and 15 are the hardest of 1–15. They disagree on
+*Rebuild* (19): the hardest by odds, but a foresight of only 2, so its
 difficulty is in finding the moves, not in planning their effects.
 
 - [ ] Check by playing (or watching testers) whether the step to *Mirror
-  image* (22) is too steep. If it is, `npm run generate -- --reflectors 1
+  image* (23) is too steep. If it is, `npm run generate -- --reflectors 1
   --player-mirror backslash --place-later --shots 3` can find an easier
-  board (or a bridge level before it, as *Clear the way* is for 18)
-- [x] Smooth the step to *Rebuild* (then level 17), about 14 times
-  harder than 16 and 6 times harder than 14: a bridge level,
-  *Clear the way* (par 3), now level 17, combines the same three
+  board (or a bridge level before it, as *Clear the way* is for 19)
+- [x] Smooth the step to *Rebuild* (then level 17, now 19), about 14
+  times harder than *Double duty* and 6 times harder than *Rubble run*:
+  a bridge level, *Clear the way* (par 3), now level 18, combines the same three
   mechanics (breakable walls, player mirror, two-hit goal) in an easy
   first form. Found with `npm run generate -- --player-mirror slash
   --breakable 2 --goal-hits 2 --shots 3 --width 5 --height 5 --mirrors 5
   --walls 1`; its bonus target with `npm run bonus -- --changes 1`
-  - [ ] By random-play odds the bridge level is about as hard as 16, so
-    the step from it to *Rebuild* (18) is now about 18 times. The
+  - [ ] By random-play odds the bridge level is about as hard as 17, so
+    the step from it to *Rebuild* (19) is now about 18 times. The
     bridge teaches the combination rather than the difficulty; whether
-    18 still feels too steep is best judged by playing it (or seeing
+    19 still feels too steep is best judged by playing it (or seeing
     testers play it)
 - [x] Five levels in each of the first two chapters (2026-10-17): *Down
   and around*, as hard as *Set the stage* and a dip after the two-hit
@@ -229,12 +240,13 @@ difficulty is in finding the moves, not in planning their effects.
   former level 7's dip
 - [x] Alternative solutions one shot above par, so a player who strays
   from the par route can still finish: `npm run alternatives` lists them
-  and finds board changes that add them. Levels 3, 9, 13 and 18 got one
+  and finds board changes that add them. Levels 3, 9, 13 and 18 (now 14
+  and 19) got one
   added mirror each with a route different from par; levels 6 and 8 (now
   7 and 8) one
   that lets a player recover after the par route's first shots (8's
   replaces the wall at (1,7)). Par, par solutions and bonus targets are
-  unchanged; 18's random-play odds went from 1 in 47,500 to 45,000.
+  unchanged; *Rebuild*'s random-play odds went from 1 in 47,500 to 45,000.
   Levels 4 and 7 (now 4 and 5) got two added mirrors each, for a route that starts
   differently from par. Level 11 still has no alternative one shot above
   par: board changes only add variants of its par route
@@ -370,7 +382,7 @@ lab page on 2026-10-11:
 - [x] Level design tools for the new pieces (2026-10-11, v1.31):
   `npm run bonus` no longer changes cells the par solution reaches (it
   kept only the rows of par, and once suggested removing the mirror
-  level 19's par shot turns on), and its `--uses` option keeps bonus
+  level 19's (now 20) par shot turns on), and its `--uses` option keeps bonus
   routes that pass a given piece (reflector, glass, breakable, mirror);
   `npm run trace` prints a shot sequence's paths cell by cell on a level
   or any board; the generator's shot descriptions count shattered glass
@@ -502,7 +514,7 @@ lab page on 2026-10-11:
   (`scripts/difficulty.ts`)
   - [ ] Likely needs adjusting later: it measures how many ways there are
     to play, not how much insight a level needs, so it overrates levels
-    whose key move is easy to see (15) and those repeating a row (8, 11).
+    whose key move is easy to see (16) and those repeating a row (8, 11).
     Compare it with how testers actually do, then refine it (e.g. weight
     moves a player would try first) or add a second measure
   - [x] Second measure, foresight: the changes the par solution makes

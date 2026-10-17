@@ -53,6 +53,15 @@ export function startBoard(index: number): Board {
   return withBonuses(parseLevel(LEVELS[index].grid));
 }
 
+/** The index (0-based) of the level with this id, which stays put when levels are added. */
+export function levelIndex(id: string): number {
+  const index = LEVELS.findIndex((level) => level.id === id);
+  if (index < 0) {
+    throw new Error(`No level "${id}"`);
+  }
+  return index;
+}
+
 /** The shortest solution of level `index` (0-based), as on a first visit. */
 export function solution(index: number): Move[] {
   const level = LEVELS[index];
