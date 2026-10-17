@@ -677,6 +677,21 @@ export const LEVELS: readonly LevelDefinition[] = [
       . \ \ . . .
     `,
   },
+  {
+    id: "last-light",
+    name: "Last light",
+    minShots: 5,
+    bonusShots: 6,
+    playerMirror: "mirrorBackslash",
+    music: "photon",
+    grid: String.raw`
+      \ / . / . *
+      v . . . . G
+      / . N . . .
+      . . \ . / .
+      . < . . . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {

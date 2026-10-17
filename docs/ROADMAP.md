@@ -207,9 +207,12 @@ with flipping mirrors, before it is built.
         gate on the exit's row into the goal; a setup shot stopped by the
         same gate's side resets a mirror for the second hit. Odds 1 in
         625, foresight 3
-      - [ ] 45, the finale: the player's mirror and a glass mirror (the
-        player's mirror has never met glass); par 5, foresight about 5,
-        the hardest level of the game by both measures
+      - [x] *Last light* (45, par 5), the finale: the player's mirror and
+        a glass mirror (the player's mirror had never met glass). One gate
+        works three ways: passed by row 1, stopped head-on by row 3 and
+        from the side by row 4 off the player's mirror. Odds 1 in 71,918,
+        the game's highest; foresight 4. A board with foresight 6 was set
+        aside, as no bonus target on it could need a gate
     - [ ] Its own music track, chosen on a sound lab page (*Photon* for
       now)
     - [ ] Its own sound when a gate stops the pellet, and perhaps a soft
@@ -288,12 +291,13 @@ levels with only gates, the first easy like 36, the second a step up;
 then *Echo chamber* (43) with a reflector and a breakable wall, as hard
 as 42 by both measures, its step being three kinds of piece to read, and
 *Double crossing* (44) with portals and a two-hit goal, five times
-harder by odds:
+harder by odds, and *Last light* (45), the finale, at par 5 with the
+player's mirror, the hardest level of the game by odds:
 
-| Level | 41 | 42 | 43 | 44 |
-|---|---|---|---|---|
-| 1 in | 25 | 125 | 125 | 625 |
-| Foresight | 2 | 3 | 3 | 3 |
+| Level | 41 | 42 | 43 | 44 | 45 |
+|---|---|---|---|---|---|
+| 1 in | 25 | 125 | 125 | 625 | 71,918 |
+| Foresight | 2 | 3 | 3 | 3 | 4 |
 
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
@@ -359,7 +363,10 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
   are all par 3–4 on boards of about 6×5, and with a unique solution
   odds can't pass rows^par; the new pieces add reading difficulty
   neither measure sees, so the real decline is gentler, but the game
-  doesn't build to a climax.
+  doesn't build to a climax. (2026-10-18: the gate chapter ends the game
+  with *Last light* (45) at par 5 and 1 in 71,918, above every level by
+  odds, though random play overstates its player's mirror; its foresight
+  of 4 is below the 5s.)
 - **Steepest steps:** 14 → 15 (*Rubble run*, about 62 times by odds, par
   5 with foresight 5), 19 → 20 (*Rebuild*, 18 times) and 23 → 24
   (*Mirror image*, 25 times).
