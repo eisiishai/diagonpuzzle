@@ -10,6 +10,7 @@ export type SoundEffect =
   | "fire"
   | "wall"
   | "break"
+  | "gatePass"
   | "place"
   | "levelStart"
   | "tick"
@@ -178,6 +179,24 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
         index: 1,
         dest,
         wet: 0.2,
+      });
+    },
+  },
+  // A pellet passing a one-way gate (sound lab 8, "Air through"): a short
+  // breath of air that brightens, as if through a narrow slot; softer
+  // than a bounce's swish.
+  gatePass: {
+    seconds: 0.1,
+    play: (s, dest, t, pitch) => {
+      s.noise({
+        t,
+        a: 0.02,
+        d: 0.08,
+        vol: 0.016,
+        f: 1500 * pitch,
+        f2: 5000 * pitch,
+        q: 1.4,
+        dest,
       });
     },
   },
@@ -576,6 +595,66 @@ export function bounceNote(
     } while (!scale.includes(note % 12));
   }
   return note;
+}
+
+/**
+ * The two notes of a one-way gate stopping the pellet (MIDI): the note
+ * bounce number `bounceNumber` would ring on the ladder, then the note of
+ * `scale` just below it.
+ */
+export function gateStopNotes(
+  bounceNumber: number,
+  scale: readonly number[],
+): [number, number] {
+  const high = bounceNote(bounceNumber, scale);
+  let low = high - 1;
+  while (!scale.includes(low % 12)) {
+    low--;
+  }
+  return [high, low];
+}
+
+/** Seconds the gate stop sound lasts, for limiting overlapping sounds. */
+export const GATE_STOP_SECONDS = 0.25;
+
+/**
+ * A one-way gate stopping the pellet at stereo position `pan` (sound lab
+ * 8, "Shut"): a soft, short step down on the music's scale over a muted
+ * thud, a quiet "no". Its first note is where the shot's next bounce
+ * (`bounceNumber`) would have rung, so it stays in key.
+ */
+export function playGateStop(
+  s: Synth,
+  dest: AudioNode,
+  t: number,
+  bounceNumber: number,
+  harmony: Harmony,
+  pan = 0,
+): void {
+  const [high, low] = gateStopNotes(bounceNumber, harmony.scale);
+  s.tone({ type: "triangle", f: 170, f2: 90, t, d: 0.08, vol: 0.1, dest, pan });
+  s.tone({
+    type: "triangle",
+    f: midi(high),
+    t,
+    d: 0.09,
+    vol: 0.06,
+    filter: { f: 2200 },
+    dest,
+    pan,
+    wet: 0.15,
+  });
+  s.tone({
+    type: "triangle",
+    f: midi(low),
+    t: t + 0.09,
+    d: 0.16,
+    vol: 0.055,
+    filter: { f: 1800 },
+    dest,
+    pan,
+    wet: 0.2,
+  });
 }
 
 /**

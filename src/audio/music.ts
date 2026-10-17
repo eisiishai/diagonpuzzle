@@ -14,7 +14,8 @@ export type MusicTrackId =
   | "return"
   | "glassHarp"
   | "anchor"
-  | "wormhole";
+  | "wormhole"
+  | "current";
 
 /** The notes that fit the music at a moment, for tuning effects to it. */
 export interface Harmony {
@@ -199,6 +200,17 @@ const WORMHOLE = {
   scale: [1, 4, 6, 8, 11],
   tonic: 1,
   jumps: { last: -Infinity },
+};
+const CURRENT = {
+  chords: [
+    [51, 55, 56, 60],
+    [53, 56, 60, 61],
+  ],
+  roots: [41, 37],
+  // Fm9 – D♭maj7, F minor.
+  scale: [5, 8, 10, 0, 3],
+  tonic: 5,
+  flows: { last: -Infinity },
 };
 const GLASS_BELLS = [69, 72, 74, 76, 79, 81, 84];
 const glassBells = { last: -Infinity };
@@ -651,6 +663,56 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrack> = {
           wet: 0.4,
         });
         s.bell({ ...ring, t: t + 0.7, pan: 0.5 * side, wet: 0.5, echo: 0.25 });
+      }
+    },
+  },
+
+  // Ambient on Fm9 – D♭maj7, for the one-way gate levels: now and then a
+  // soft breath of air swells and drifts from the left to the right, with
+  // a faint high tone on top, always the same way, like air through a
+  // valve (sound lab 8). Its pads are a little quieter than the others'.
+  current: {
+    name: "Current",
+    bpm: 60,
+    stepsPerBeat: 2,
+    harmony: (i) => ({
+      root: CURRENT.roots[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      chord: CURRENT.chords[Math.floor(i / AMBIENT_CHORD_STEPS) % 2],
+      scale: CURRENT.scale,
+      tonic: CURRENT.tonic,
+    }),
+    step: (s, dest, i, t, step) => {
+      const k = Math.floor(i / AMBIENT_CHORD_STEPS);
+      const chord = CURRENT.chords[k % 2];
+      if (i % AMBIENT_CHORD_STEPS === 0) {
+        const seconds = step * AMBIENT_CHORD_STEPS;
+        ambientBed(s, dest, t, seconds, chord, CURRENT.roots[k % 2], k, 0.9);
+      }
+      if (sparse(CURRENT.flows, i, 10, 0.125)) {
+        [-0.6, -0.2, 0.2, 0.6].forEach((pan, j) =>
+          s.noise({
+            t: t + j * 0.45,
+            a: 0.4,
+            d: 0.6,
+            vol: 0.0054,
+            f: 1800 + j * 400,
+            q: 1.2,
+            dest,
+            pan,
+            wet: 0.5,
+          }),
+        );
+        s.tone({
+          f: midi(pick(chord) + 24),
+          t: t + 0.3,
+          a: 0.6,
+          d: 1.6,
+          vol: 0.0072,
+          dest,
+          pan: 0.3,
+          wet: 0.6,
+          echo: 0.3,
+        });
       }
     },
   },

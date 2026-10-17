@@ -1,6 +1,12 @@
 import type { BounceKind } from "../game/types";
 import { readStorage, writeStorage } from "../save/storage";
-import { BOUNCE_SECONDS, EFFECTS, playBounce } from "./effects";
+import {
+  BOUNCE_SECONDS,
+  EFFECTS,
+  GATE_STOP_SECONDS,
+  playBounce,
+  playGateStop,
+} from "./effects";
 import type { SoundEffect } from "./effects";
 import { DEFAULT_HARMONY, MUSIC_TRACKS } from "./music";
 import type { Harmony, MusicTrack, MusicTrackId } from "./music";
@@ -220,6 +226,28 @@ export class GameAudio {
         kind,
         pan,
         exitPan,
+      );
+    }
+  }
+
+  /**
+   * A one-way gate stopping the pellet at stereo position `pan`, tuned to
+   * where the shot's next bounce, `bounceNumber`, would be on the ladder.
+   */
+  playGateStop(bounceNumber: number, pan = 0): void {
+    const graph = this.graph;
+    if (!graph || !this.enabled.effects) {
+      return;
+    }
+    const t = graph.ctx.currentTime;
+    if (this.limiter.tryStart(t, GATE_STOP_SECONDS)) {
+      playGateStop(
+        graph.effectsSynth,
+        graph.channels.effects,
+        t,
+        bounceNumber,
+        this.harmonyAt(t),
+        pan,
       );
     }
   }

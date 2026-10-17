@@ -89,6 +89,16 @@ describe("pathPoints", () => {
       changedCell: { x: 1, y: 0 },
     });
   });
+
+  it("marks a gate the pellet passes, and stops at the edge of one it doesn't", () => {
+    expect(points(". > G", 0)[2]).toEqual({
+      x: 1,
+      y: 0,
+      bounce: false,
+      passesGate: true,
+    });
+    expect(lastPoint(". < G", 0)).toEqual({ x: 0.5, y: 0, bounce: false });
+  });
 });
 
 describe("splitAtJumps", () => {

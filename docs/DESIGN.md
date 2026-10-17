@@ -257,10 +257,11 @@ either side. It never changes. Gates close off routes: a shot that would
 find a short way to the goal is stopped, while another gets through in
 the gate's direction.
 
-- Passing a gate is like passing an empty cell; being stopped by one is
-  like hitting a wall (outcome `blocked`, the wall's sparks and *Soft
-  knock*), with the message "A one-way gate stopped the pellet from the
-  wrong side."
+- Passing a gate is like passing an empty cell, with a soft breath of
+  air (*Air through*); being stopped by one is like hitting a wall
+  (outcome `blocked`, the wall's sparks), with its own quiet step down
+  (*Shut*, see Sound) and the message "A one-way gate stopped the pellet
+  from the wrong side."
 - A reflector behind a gate sends the pellet back into the gate's back,
   which stops it: the gate lets light in but not out.
 - It has no state of its own, so it doesn't add to the solver's search.
@@ -280,8 +281,8 @@ the gate's direction.
   is left).
 - Levels 41–42 teach it (chapter *One-way gates*), 43 adds a
   reflector and a breakable wall, 44 portals and a two-hit goal, and 45,
-  the finale, the player's mirror and a glass mirror. It borrows the wall's
-  knock and the *Photon* track until it has its own (see Sound).
+  the finale, the player's mirror and a glass mirror. Its sounds and the
+  chapter's track, *Current*, were chosen on sound lab 8 (see Sound).
 
 ## Cell types
 
@@ -866,6 +867,8 @@ celebrations (final star, bonus targets) keep their full level.
 |---|---|
 | Fire | *Soft pulse*: a gentle falling tone with a breath of air |
 | Mirror bounce | *Crystal ping*: a small bell; each further bounce in a shot is one note higher on the music's scale, from E5 (capped after ten), so long shots stay in key. With a quiet glassy swish as the mirror turns (sound lab 2) |
+| One-way gate stops the pellet | *Shut* (sound lab 8): a soft, short step down on the music's scale over a muted thud, a quiet "no". Its first note is where the shot's next bounce would have rung on the ladder, so it stays in key; panned by column like a wall |
+| Pellet passes a one-way gate | *Air through* (sound lab 8): a short breath of air that brightens, as if through a narrow slot; softer than a bounce's swish |
 | Portal | *Phase drop* (sound lab 7): a quick tone dropping an octave into the bounce's ladder note, panned to the portal the pellet goes into, landing 60 ms later as a soft bell panned to the one it comes out of |
 | Fixed mirror bounce | *Anvil ring* (sound lab 6): a round note on the bounce's ladder note with a bright metallic overtone above it, like a small steel bar; no swish, as nothing turns. A little quieter than on the lab page |
 | Reflector hit | *Echo ping* (sound lab 5): the bounce's bell on the same ladder note, answered by two quick, quieter repeats that move back towards the centre, as the beam goes back; no swish, as nothing turns |
@@ -897,7 +900,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 26–30 (glass mirrors) | **Glass harp**: softer pads and bass on F♯m(add9) – Dmaj7, with slow glass-harmonica tones (a wavering, bowed-glass sound) rising out of them now and then, sometimes two at once |
 | Levels 31–35 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
 | Levels 36–40 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
-| Levels 41–45 (one-way gates) | **Photon** for now, until the chapter has its own track |
+| Levels 41–45 (one-way gates) | **Current**: slightly quieter pads on Fm9 – D♭maj7. Now and then a soft breath of air swells and drifts from the left to the right, with a faint high tone on top, always the same way, like air through a valve |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,
@@ -909,10 +912,12 @@ tunes were tried on sound lab 2 and found too distracting.)
 Return and Glass harp were chosen on sound lab 4 (2026-10-11), and play a
 little quieter and rarer than on the lab page; Anchor on sound lab 6
 (2026-10-11), its tine a little quieter and rarer too; Wormhole on sound
-lab 7 (2026-10-16), its bells likewise. Most music sits in the
+lab 7 (2026-10-16), its bells likewise; Current on sound lab 8
+(2026-10-18), its breath of air likewise. Most music sits in the
 centre; off centre are Return's answering phrase (35 % to either side),
-Anchor's tine (20 % right) and Wormhole's two bells (50 % to either
-side, one each).
+Anchor's tine (20 % right), Wormhole's two bells (50 % to either
+side, one each) and Current's breath, drifting from 60 % left to 60 %
+right with its tone at 30 % right.
 
 Each level names its track (`music` in `src/levels/levels.ts`). Moving
 between levels with the same track keeps the music playing; a different

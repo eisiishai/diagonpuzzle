@@ -213,11 +213,9 @@ with flipping mirrors, before it is built.
         from the side by row 4 off the player's mirror. Odds 1 in 71,918,
         the game's highest; foresight 4. A board with foresight 6 was set
         aside, as no bonus target on it could need a gate
-    - [ ] Its own music track, chosen on a sound lab page (*Photon* for
-      now)
-    - [ ] Its own sound when a gate stops the pellet, and perhaps a soft
-      one when it passes, chosen on a sound lab page (the wall's knock
-      for now)
+    - [x] Its own music track: *Current*, chosen on sound lab 8
+    - [x] Its own sounds: *Shut* when a gate stops the pellet and *Air
+      through* when it passes one, chosen on sound lab 8
   - [ ] Switch and doors: hitting a switch stops the pellet and toggles
     every door on the board between open and closed. Needs cell
     behaviours that can change other cells, not only their own

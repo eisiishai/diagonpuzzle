@@ -26,6 +26,8 @@ export interface ShotCallbacks {
    * bounces are numbered from 1 per shot.
    */
   onBounce: (bounceNumber: number, at: PathPoint) => void;
+  /** Called as the pellet goes through a one-way gate, at point `at`. */
+  onGatePass?: (at: PathPoint) => void;
   /** Called as the pellet changes a cell, at the moment it hits it. */
   onCellChange: (x: number, y: number, cell: CellType) => void;
   /** Called once when the pellet reaches the end of its path. */
@@ -243,6 +245,9 @@ export class PelletAnimator extends Container {
       }
       if (bounce) {
         this.callbacks?.onBounce(++this.bounces, to.cell);
+      }
+      if (to.cell.passesGate) {
+        this.callbacks?.onGatePass?.(to.cell);
       }
     }
 

@@ -625,7 +625,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "One way",
     minShots: 2,
     bonusShots: 3,
-    music: "photon",
+    music: "current",
     grid: String.raw`
       . . \ . *
       . > . / .
@@ -639,7 +639,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "No way back",
     minShots: 3,
     bonusShots: 4,
-    music: "photon",
+    music: "current",
     grid: String.raw`
       . \ . / . G
       . / . \ # .
@@ -653,7 +653,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Echo chamber",
     minShots: 3,
     bonusShots: 5,
-    music: "photon",
+    music: "current",
     grid: String.raw`
       \ . > . \ G
       @ . . / . .
@@ -668,7 +668,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 4,
     goalHits: 2,
     bonusShots: 6,
-    music: "photon",
+    music: "current",
     grid: String.raw`
       . \ . / . .
       . ^ . * . .
@@ -683,7 +683,7 @@ export const LEVELS: readonly LevelDefinition[] = [
     minShots: 5,
     bonusShots: 6,
     playerMirror: "mirrorBackslash",
-    music: "photon",
+    music: "current",
     grid: String.raw`
       \ / . / . *
       v . . . . G

@@ -15,6 +15,7 @@ import { BoardSurround } from "../render/BoardSurround";
 import { BoardView } from "../render/BoardView";
 import { Celebration } from "../render/Celebration";
 import { fitToScreen } from "../render/fitToScreen";
+import { pathPoints } from "../render/pathPoints";
 import { COLORS, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
 import type { LevelTestState } from "../testState";
@@ -393,6 +394,8 @@ export class GameScene extends Container implements Scene {
           at.bounceKind === "portal" && exit ? columnPan(exit.x, width) : pan,
         );
       },
+      onGatePass: (at) =>
+        this.options.audio.play("gatePass", columnPan(at.x, width)),
       onFinish: () => this.finishShot(result),
     });
   }
@@ -481,14 +484,17 @@ export class GameScene extends Container implements Scene {
       this.showMessage("The pellet broke a cracked wall.");
       return;
     }
+    if (outcome === "blocked" && GATE_CELLS.includes(last.cell)) {
+      // In key with the shot: where its next bounce would have rung.
+      const bounces = pathPoints(result).filter((p) => p.bounce).length;
+      audio.playGateStop(bounces + 1, pan);
+      this.showMessage(
+        "A one-way gate stopped the pellet from the wrong side.",
+      );
+      return;
+    }
     if (outcome === "blocked") {
       audio.play("wall", pan);
-      if (GATE_CELLS.includes(last.cell)) {
-        this.showMessage(
-          "A one-way gate stopped the pellet from the wrong side.",
-        );
-        return;
-      }
     } else {
       audio.play(outcome);
     }

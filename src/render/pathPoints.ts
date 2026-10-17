@@ -1,4 +1,4 @@
-import { bounceKind } from "../game/cells";
+import { GATE_CELLS, bounceKind } from "../game/cells";
 import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
 import type { BounceKind, CellType } from "../game/types";
@@ -25,6 +25,8 @@ export interface PathPoint {
    * the point before, so nothing is drawn between them.
    */
   jump?: true;
+  /** Set where the pellet passes through a one-way gate. */
+  passesGate?: true;
   /** Set if the cell at this point changes when hit (e.g. a mirror flips). */
   becomes?: CellType;
   /**
@@ -58,11 +60,14 @@ export function pathPoints(result: ShotResult): PathPoint[] {
       const entersPortal = step.cell === "portal" && !step.throughPortal;
       const bounce = step.directionIn !== step.directionOut || entersPortal;
       const kind = bounce ? bounceKind(step.cell) : null;
+      // A gate the pellet stops at is replaced below, as for a wall.
+      const passesGate = GATE_CELLS.includes(step.cell);
       return {
         x: step.x - delta.x * offset,
         y: step.y - delta.y * offset,
         bounce,
         ...(kind && { bounceKind: kind }),
+        ...(passesGate && { passesGate: true as const }),
         ...(step.becomes && { becomes: step.becomes }),
         ...(step.throughPortal && { jump: true as const }),
       };

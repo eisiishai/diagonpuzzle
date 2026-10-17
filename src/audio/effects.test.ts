@@ -3,6 +3,7 @@ import {
   bounceNote,
   columnPan,
   endingNotes,
+  gateStopNotes,
   goalChimeNotes,
   shardNotes,
 } from "./effects";
@@ -27,6 +28,25 @@ describe("bounceNote", () => {
       const { scale } = track.harmony(0);
       for (let n = 1; n <= 12; n++) {
         expect(scale).toContain(bounceNote(n, scale) % 12);
+      }
+    }
+  });
+});
+
+describe("gateStopNotes", () => {
+  it("steps down from the next bounce's note to the scale note below", () => {
+    // A minor pentatonic: bounce 2 is G5 (79), and E5 (76) is below it.
+    expect(gateStopNotes(2, A_MINOR_PENTATONIC)).toEqual([79, 76]);
+    expect(gateStopNotes(1, A_MINOR_PENTATONIC)).toEqual([76, 74]);
+  });
+
+  it("stays in every track's scale", () => {
+    for (const track of Object.values(MUSIC_TRACKS)) {
+      const { scale } = track.harmony(0);
+      for (let n = 1; n <= 12; n++) {
+        for (const note of gateStopNotes(n, scale)) {
+          expect(scale).toContain(note % 12);
+        }
       }
     }
   });
