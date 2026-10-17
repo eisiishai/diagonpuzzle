@@ -93,6 +93,21 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "down-and-around",
+    name: "Down and around",
+    minShots: 2,
+    bonusShots: 3,
+    music: "afterglow",
+    grid: String.raw`
+      # . . . * . . .
+      / # . . / . / G
+      . . \ . . / . .
+      . . . . / . . .
+      . . \ . . . . \
+      / . . . . . / .
+    `,
+  },
+  {
     id: "double-take",
     name: "Double take",
     minShots: 2,
@@ -118,21 +133,6 @@ export const LEVELS: readonly LevelDefinition[] = [
       / . . . / G
       . . . . \ /
       \ . . . # .
-    `,
-  },
-  {
-    id: "down-and-around",
-    name: "Down and around",
-    minShots: 2,
-    bonusShots: 3,
-    music: "glassGarden",
-    grid: String.raw`
-      # . . . * . . .
-      / # . . / . / G
-      . . \ . . / . .
-      . . . . / . . .
-      . . \ . . . . \
-      / . . . . . / .
     `,
   },
   {

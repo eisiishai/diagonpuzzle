@@ -67,8 +67,8 @@ One level, playable with the mouse, plain graphics.
 ## Game track
 
 Suggested order from here (2026-10-11): playtesters' feedback would
-settle the items that wait on how people play: the step to *Rebuild*,
-level 7's dip and the difficulty measure.
+settle the items that wait on how people play: the step to *Rebuild*
+and the difficulty measure.
 
 ### Next
 
@@ -140,21 +140,21 @@ with flipping mirrors, before it is built.
   `docs/DESIGN.md`, *Bonus targets*
 - [x] Multi-hit goal: a goal that must be hit several times to complete the
   level, showing the hits remaining. Decided: each hit is a separate shot,
-  mirror flips stay between hits, and par counts all shots. Levels 5–6
-  teach it
+  mirror flips stay between hits, and par counts all shots. *Double
+  take* and *Warm-up* (levels 6–7) teach it
 
 ### Difficulty curve
 
 Measured on 2026-10-10 (v0.34) by `npm run levels`, level 17 added and level 18 given alternatives on
-2026-10-11, which ends with this
-curve: the chance that random play completes a level within par (a random
+2026-10-11, and *Down and around* moved from 7 to 5 on 2026-10-17, which
+ends with this curve: the chance that random play completes a level within par (a random
 row each shot; in player-mirror levels a random cell for the mirror, or
-keeping it). Lower is harder. It dips at each new mechanic (5, 11,
+keeping it). Lower is harder. It dips at each new mechanic (6, 11,
 13, 15, 17), as intended:
 
 | Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 in | 5 | 6 | 25 | 36 | 16 | 64 | 36 | 343 | 343 |
+| 1 in | 5 | 6 | 25 | 36 | 36 | 16 | 64 | 343 | 343 |
 
 | Level | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -189,7 +189,7 @@ the solver's par solution only, and not the second goal hit:
 
 | Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Foresight | 0 | 0 | 1 | 2 | 1 | 2 | 2 | 2 | 3 | 5 | 3 | 3 | 2 | 5 | 1 | 3 | 4 | 2 |
+| Foresight | 0 | 0 | 1 | 2 | 2 | 1 | 2 | 2 | 3 | 5 | 3 | 3 | 2 | 5 | 1 | 3 | 4 | 2 |
 
 | Level | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -221,15 +221,21 @@ difficulty is in finding the moves, not in planning their effects.
     bridge teaches the combination rather than the difficulty; whether
     18 still feels too steep is best judged by playing it (or seeing
     testers play it)
-- [ ] Optional: level 7 is a slight dip after levels 5–6 (as hard as 4)
+- [x] Five levels in each of the first two chapters (2026-10-17): *Down
+  and around*, as hard as *Set the stage* and a dip after the two-hit
+  goal levels, moved from level 7 to 5 and closes *Basics* (now 1–5,
+  with *Afterglow*); *Flip tricks* is 6–10 and opens with the two-hit
+  goal. Ids are unchanged, so saves keep working. This also removes the
+  former level 7's dip
 - [x] Alternative solutions one shot above par, so a player who strays
   from the par route can still finish: `npm run alternatives` lists them
   and finds board changes that add them. Levels 3, 9, 13 and 18 got one
-  added mirror each with a route different from par; levels 6 and 8 one
+  added mirror each with a route different from par; levels 6 and 8 (now
+  7 and 8) one
   that lets a player recover after the par route's first shots (8's
   replaces the wall at (1,7)). Par, par solutions and bonus targets are
   unchanged; 18's random-play odds went from 1 in 47,500 to 45,000.
-  Levels 4 and 7 got two added mirrors each, for a route that starts
+  Levels 4 and 7 (now 4 and 5) got two added mirrors each, for a route that starts
   differently from par. Level 11 still has no alternative one shot above
   par: board changes only add variants of its par route
   - [x] Keep it so for new levels: `npm run generate` shows only boards

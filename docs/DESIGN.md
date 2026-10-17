@@ -110,7 +110,7 @@ puzzle on top of the level for players who have mastered it.
 - **Harder than par.** A bonus target needs more shots than par: one
   more on levels 2–9 and 11–18, two more on level 10. Only level 1's
   takes as few as par (1). A test checks `bonusShots` > `minShots` beyond level 1.
-  To get there, levels 3, 4 and 6–10 each got one extra mirror (on level
+  To get there, levels 3–5 and 7–10 each got one extra mirror (on level
   10 in place of a wall), chosen so that par and the par solution stay
   the same. Targets sit where they don't block the par solution, and
   their routes mix several rows rather than repeating one; `npm run
@@ -310,9 +310,9 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 2 | Up and over | 1 | Row 5 reaches the goal directly. Alternative: row 1 runs down column 3 and flips the mirrors at both ends; row 6 then runs back up it and round to the goal. |
 | 3 | Second try | 2 | The first shot from row 2 flips the mirror at the edge; the same row then reaches the goal. Teaches flipping. Alternative in 3 shots: row 4 twice, the second time up and round through the top row, so that row 1 turns down at (3,1) and runs along row 2 to the goal. |
 | 4 | Set the stage | 2 | A shot from row 4 flips two mirrors in column 4, which the next shot from row 3 needs. A different row must set up the board. Alternative in 3 shots: rows 2, 4, 5. |
-| 5 | Double take | 2 | Goal needs 2 hits. Row 3 climbs two mirrors into the goal, flipping them; that lets row 1 come down into the goal too. Repeating row 3 misses. Teaches the multi-hit goal. |
-| 6 | Warm-up | 3 | Goal needs 2 hits. Row 3 first hits a wall (a setup shot), then climbs into the goal; that lets row 1 hit it too. First level needing three shots. Alternative in 4 shots, after the same first goal hit: rows 4, 4 hit it a second time. |
-| 7 | Down and around | 2 | Row 6 climbs column 1 and flips its corner mirrors; row 2 then runs down and around the board. Alternative in 3 shots: rows 3, 5, 3. |
+| 5 | Down and around | 2 | Row 6 climbs column 1 and flips its corner mirrors; row 2 then runs down and around the board. Alternative in 3 shots: rows 3, 5, 3. |
+| 6 | Double take | 2 | Goal needs 2 hits. Row 3 climbs two mirrors into the goal, flipping them; that lets row 1 come down into the goal too. Repeating row 3 misses. Teaches the multi-hit goal. |
+| 7 | Warm-up | 3 | Goal needs 2 hits. Row 3 first hits a wall (a setup shot), then climbs into the goal; that lets row 1 hit it too. First level needing three shots. Alternative in 4 shots, after the same first goal hit: rows 4, 4 hit it a second time. |
 | 8 | Third time lucky | 3 | Row 5 twice turns the pellet a step further each time; row 2 then loops to the goal. Alternative in 4 shots, after the same two row 5 shots: rows 6, 7. |
 | 9 | Back and forth | 3 | Rows 4, 6, 4: two different setup shots, and a final shot that crosses its own path. Alternatives in 4 shots: rows 2, 4, 4, 4 and rows 4, 5, 5, 4. |
 | 10 | Two-step | 4 | Rows 3, 5, 3, 5: each shot flips mirrors the other row's next shot needs. |
@@ -402,9 +402,12 @@ way; levels 17 and 18 can, in 8 and 6 shots, using the player mirror.
 
 Levels 5–10 were found by searching random boards with the solver, keeping
 ones with exactly one shortest solution, and choosing by readability and
-variety of solutions. Levels 5–6 are deliberately small, to teach the
-multi-hit goal, and come before the harder single-hit levels 7–10, so the
-difficulty doesn't dip at the end.
+variety of solutions. *Down and around* (5) is about as hard as *Set the
+stage* (4), so it closes *Basics*. Levels 6–7 are deliberately small, to
+teach the multi-hit goal at the start of *Flip tricks*, and come before
+the harder single-hit levels 8–10, so the difficulty doesn't dip at the
+end. Each of the two chapters has five levels (regrouped on 2026-10-17,
+from four and six).
 
 ## Controls
 
@@ -468,8 +471,8 @@ difficulty doesn't dip at the end.
 - Completed levels show the best (lowest) shot count. Completing a level again
   reports a new best or the existing one.
 - The level list is split into **chapters**, one per mechanic (`CHAPTERS`
-  in `src/levels/levels.ts`, following the music groups): 1–4 *Basics*,
-  5–10 *Flip tricks*, 11–14 *Breakable walls*, 15–18 *Your mirror*,
+  in `src/levels/levels.ts`, following the music groups): 1–5 *Basics*,
+  6–10 *Flip tricks*, 11–14 *Breakable walls*, 15–18 *Your mirror*,
   19–22 *Reflectors*, 23–26 *Glass mirrors*, 27–30 *Fixed mirrors*. Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
@@ -740,8 +743,8 @@ celebrations (final star, bonus targets) keep their full level.
 | Where | Track |
 |---|---|
 | Title screen | **Night lab**: calm synthwave, pads and an echoing arpeggio, 84 BPM |
-| Levels 1–4 (basics) | **Afterglow**: warm pads whose filter slowly opens and closes, a soft sine bass, an occasional echoing pluck. Am9 – Fmaj7 – Cmaj7 – G6, a chord every 8 s |
-| Levels 5–10 (multi-hit goals, harder flips) | **Glass garden**: a slow, dark drone with a soft bell now and then; the calmest track, for the hardest levels before breakable walls |
+| Levels 1–5 (basics) | **Afterglow**: warm pads whose filter slowly opens and closes, a soft sine bass, an occasional echoing pluck. Am9 – Fmaj7 – Cmaj7 – G6, a chord every 8 s |
+| Levels 6–10 (multi-hit goals, harder flips) | **Glass garden**: a slow, dark drone with a soft bell now and then; the calmest track, for the hardest levels before breakable walls |
 | Levels 11–14 (breakable walls) | **Prism drift**: two swaying chords (Fmaj7♯11 – Cmaj9), a faint high shimmer, glassy bells now and then with a long tail |
 | Levels 15–18 (player mirror) | **Photon**: dark pads and sub bass on Em9 – Cmaj9, crossed now and then by a soft gliding tone with a long echo, like a slow laser streak |
 | Levels 19–22 (reflectors) | **Return**: pads and bass on Dm9 – B♭maj7♯11. Now and then a two-note pluck phrase on the left is answered from the right by its mirror image (the step turned upside down), quieter and further away, like a shot coming back from a reflector, changed |
