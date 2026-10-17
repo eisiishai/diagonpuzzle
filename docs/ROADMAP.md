@@ -14,6 +14,21 @@ tracks:
 Ordering: finish *Engineering → Next* before starting the next new mechanic,
 since those items make mechanic changes safer to build and test.
 
+## Version 3.0 — complete (2026-10-17)
+
+The third major version overhauls the level list: two more pieces, each
+with its own chapter, music and sound, fixed mirrors (levels 31–35,
+*Anchor*, *Anvil ring*) and portals (levels 36–40, *Wormhole*, *Phase
+drop*), and every chapter regrouped or extended to five levels, so each
+teaches its piece first and combines it with earlier ones in its last
+levels. Six new levels fill the chapters: *Trapdoor* (12), *Hairpin*
+(17), *Double back* (25), *Glass and stone* (30), *Strike twice* (33)
+and *Looking glass* (40), and *Down and around* moved from 7 to 5. 40
+levels in eight chapters. Saves from earlier versions keep working:
+progress is saved by level id, and no id, board or par changed, though
+many levels have new numbers. The level list now scrolls, with a scroll
+bar, and a restart after first reaching par brings in the bonus target.
+
 ## Version 2.0 — complete (2026-10-11)
 
 The second major version adds two new pieces, each with a chapter of four
