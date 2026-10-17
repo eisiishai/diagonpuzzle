@@ -20,14 +20,18 @@ it.each(LEVELS_WITH_SETUP_ROUTE)("%s has a two-shot setup route", (id) => {
   expect(setupRoutes(board).length).toBeGreaterThan(0);
 });
 
-/** The level's starting board with every `from` cell made `to`. */
+/**
+ * The level's starting board with every `from` cell made `to`; its bonus
+ * target hidden, as before par, unless `showBonus`.
+ */
 function replaced(
   id: string,
   from: CellType[],
   to: (cell: CellType) => CellType,
+  showBonus = false,
 ) {
   const level = LEVELS.find((candidate) => candidate.id === id)!;
-  const board = withBonuses(parseLevel(level.grid));
+  const board = withBonuses(parseLevel(level.grid), () => showBonus);
   return {
     level,
     board: {
@@ -99,13 +103,16 @@ it.each(idsWith("portal"))("%s needs its portals", (id) => {
 });
 
 // Their bonus targets need the portals too: with both portals walls, the
-// bonus target is out of reach in its shots.
+// bonus target is out of reach in its shots. (Gate levels below are held
+// to more: no route at all. Other side's target can be reached without
+// its portals in 5 shots, and it was released before that rule.)
 it.each(idsWith("portal"))(
   "%s needs its portals for the bonus target",
   (id) => {
-    const { level, board } = replaced(id, ["portal"], () => "wall");
+    const { level, board } = replaced(id, ["portal"], () => "wall", true);
     const { bonusShots, goalHits = 1, playerMirror } = level;
-    const [bonus] = bonusPositions(parseLevel(level.grid));
+    const [bonus] = bonusPositions(board);
+    expect(bonus).toBeDefined();
     expect(
       solveBonus(board, bonus, bonusShots, goalHits, playerMirror),
     ).toBeNull();
@@ -140,6 +147,21 @@ it.each(idsWith(...GATE_CELLS))(
       solve(open, minShots - 1, goalHits, playerMirror) !== null ||
         waysToPar(open) > waysToPar(board),
     ).toBe(true);
+  },
+);
+
+// Their bonus targets need a gate passed too: with every gate a wall, the
+// bonus target is out of reach however many shots are fired.
+it.each(idsWith(...GATE_CELLS))(
+  "%s needs a one-way gate passed for the bonus target",
+  (id) => {
+    const { level, board } = replaced(id, [...GATE_CELLS], () => "wall", true);
+    const { goalHits = 1, playerMirror } = level;
+    const [bonus] = bonusPositions(board);
+    expect(bonus).toBeDefined();
+    expect(
+      solveBonus(board, bonus, Infinity, goalHits, playerMirror),
+    ).toBeNull();
   },
 );
 

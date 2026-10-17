@@ -239,8 +239,11 @@ off from the left, or the goal from above.
   colour per pair.
 - Levels 36–40 teach it (chapter *Portals*), 38 with a breakable wall,
   39 with a reflector, which sends the pellet back through the
-  portals, and 40 with a glass mirror and a fixed mirror. Their bonus targets need the portals too (the tests check
-  it).
+  portals, and 40 with a glass mirror and a fixed mirror. Their bonus targets need the portals too: with the
+  portals made walls, out of reach within their shots (the tests check
+  it). That is weaker than the rule for gates: *Other side* (36) can
+  reach its target without the portals in 5 shots. It was released
+  before the stricter check, so it was left alone.
 
 ## One-way gates
 
@@ -267,6 +270,11 @@ the gate's direction.
   --gates N` keeps only such boards, and `npm run bonus` and `npm run
   alternatives` keep both when they change a board.
 - The player's mirror can't go on a gate (only on empty cells).
+- Bonus targets in gate levels need a gate passed too: with every gate a
+  wall, the bonus target is out of reach however many shots are fired,
+  so no longer way round the gates gets there either (the tests check
+  it; `npm run bonus -- --needs gate`, which searches until no new board
+  is left).
 - Levels 41–42 teach it (chapter *One-way gates*). It borrows the wall's
   knock and the *Photon* track until it has its own (see Sound).
 
@@ -376,17 +384,25 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 38 | Knock first | 3 | Portals with a breakable wall. Row 3 turns down at (4,3) and left at (4,4) into the lower portal, comes out of the upper one moving left and leaves at the top, flipping (1,1). Row 5 climbs column 1 and turns right at (1,1) into the upper portal; it comes out of the lower one and turns down at (4,4), now `\`, into the cracked wall, breaking it. Row 1 then runs down column 1 and along the bottom row through the gap to the goal. Alternative in 5 shots: rows 1, 1, 1, 3, 1. The bonus target, at the end of row 3, needs the portals: rows 3, 3, 3, 5, the last coming out of the lower portal and turning up at (4,4) and right at (4,3) onto it. |
 | 39 | Boomerang | 4 | Portals with a reflector. Row 3 flips the `\` at (1,3) and leaves at the bottom; row 3 again climbs column 1 and leaves at the top, flipping (1,2) and (2,2); row 2 turns down column 1 into the left portal and comes out of the right one, leaving the board. Row 3 then turns down at (2,2) into the left portal, comes out of the right one moving down into the reflector, goes back up through both portals and meets (2,2), which it flipped on the way in: it now turns the pellet right along row 2 to the goal. Alternative in 5 shots: rows 2, 2, 3, 2, 3. The bonus target sits between the portals and needs them: rows 4, 1, 4, 4, 4, all but the fourth going through the portals and up column 5; the last turns left at (5,1) and down at (4,1) onto it. |
 | 40 | Looking glass | 4 | Portals with a glass mirror and a fixed mirror. Row 3 turns down at (1,3) onto the glass `\` at (1,4), which turns it right and shatters; it leaves up column 3, flipping (3,4). Row 4 runs through the gap the glass left, turns down at (3,4) and left at (3,5) into the fixed `/` at (2,5), which sends it out at the bottom. Row 4 again only flips (3,4) back, leaving (3,5) turned the new way. Row 4 then turns down at (3,4) and right at (3,5) along the bottom row into the right portal, comes out of the left one into the same fixed `/` from the other side, which turns it up column 2, and (2,2) turns it right into the goal. Alternative in 5 shots: rows 3, 3, 2, 3, 4. The bonus target needs the portals: rows 3, 3, 2, 4, 3, the last coming down column 2 into the fixed `/`, which turns it left into the left portal; out of the right one, moving left, it turns up at (3,5) and right at (3,4) onto it. |
-| 41 | One way | 2 | Introduces one-way gates. Row 3, the obvious shot along the goal's row, turns up at (1,3) into the `v` gate at (1,2), which stops it head-on. Row 5 turns down at (1,5) and leaves at the bottom, flipping it; row 5 again climbs column 1 and turns right at (1,3), through the `>` gate, along row 3 to the goal. Without the gates there would be two more ways to par: row 1 or row 2, then row 2, past where the `v` gate stands. Alternative in 3 shots: rows 3, 3, 5. The bonus target shows the gate's sides: rows 1, 1, 1, the first turning down at (2,1) and left at (2,2) into the side of the `v` gate, which stops it. |
-| 42 | No way back | 3 | Two `^` gates, one passed and one stopping from the side. Row 4 turns down at (2,4) and leaves at the bottom, flipping it; row 4 again climbs column 2 through the lower `^` gate, right at (2,2) and down at (4,2), then left at (4,4) into the side of the second `^` gate at (3,4), which stops it, having flipped all four mirrors on its way. Row 1 then turns down at (2,1), right at (2,2), up at (4,2) and right at (4,1) along the top row to the goal. Alternative in 5 shots: rows 1, 1, 1, 4, 4. The bonus target, beside the goal column, needs rows 4, 5, 5, 4, the last climbing through the lower gate and round onto it. |
+| 41 | One way | 2 | Introduces one-way gates. Row 4 runs straight into the side of the `^` gate at (3,4) and stops; without the gate it would turn up at (4,4) and (4,3) into the goal in one shot. Row 1 turns down at (3,1) into the same gate head-on and stops too. Row 3 instead turns up at (4,3) and (4,2) and leaves, flipping both; row 2 then passes the `>` gate at (2,2) and turns down at (4,2) and right at (4,3) to the goal. Alternative in 4 shots: row 2 four times. The bonus target, in the top right corner, needs a gate passed: rows 1, 5, 5, the last climbing column 3 up through the `^` gate that stopped row 1 coming down, and right at (3,1) onto it. |
+| 42 | No way back | 3 | Two `^` gates, one passed and one stopping from the side. Row 4 turns down at (2,4) and leaves at the bottom, flipping it; row 4 again climbs column 2 through the lower `^` gate, right at (2,2) and down at (4,2), then left at (4,4) into the side of the second `^` gate at (3,4), which stops it, having flipped all four mirrors on its way. Row 1 then turns down at (2,1), right at (2,2), up at (4,2) and right at (4,1) along the top row to the goal. Alternative in 5 shots: rows 1, 1, 1, 4, 4. The bonus target, at the end of row 3, needs a gate passed: four row 5 shots. The second climbs column 3 through the lower `^` gate and turns left at (3,3) into the side of the other gate, which stops it; the fourth climbs through the lower gate again, and (3,3), turned back, sends it right along row 3 onto the target. With the gates made walls, no number of shots reaches it. |
 
 *One way* (41) and *No way back* (42, added 2026-10-17 to start a new
-chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2`
-on a 5×5 board with 5 mirrors and no walls, 42 with `--shots 3
---varied-rows` on a 6×5 board with 6 mirrors and 1 wall (seed 3). Both
-have a unique shortest solution; random-play odds 1 in 25 and 1 in 125.
-Their bonus targets came from `npm run bonus -- --changes 2` (41 with
-`--uses gate`, after two changed mirrors at (2,1) and (2,2); 42 after two
-added mirrors, at (5,4) and (4,5)).
+chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2
+--bonus-needs gate --seed 2` on a 5×5 board with 5 mirrors and no walls,
+42 with `--shots 3 --varied-rows` on a 6×5 board with 6 mirrors and 1
+wall (seed 3). Both have a unique shortest solution; random-play odds 1
+in 25 and 1 in 125. Their bonus targets need a gate passed (the tests
+check it, as for portals): 41's came with its board (its first board had
+none, even with `npm run bonus -- --changes 2 --needs gate`, and was
+replaced before release), 42's from `npm run bonus -- --changes 2
+--needs gate` after two added mirrors, at (3,3) and (3,5). 42's first
+target, beside the goal column, was out of reach without the gates only
+within its 4 shots: a player found it in 6 shots of row 5 that never pass
+a gate, so the check now allows no route at all, and the two mirrors
+added for that target were taken out again. The only board changes `npm run
+alternatives` finds for a par + 1 alternative on 41 replace its `^`
+gate, so its alternative stays at par + 2.
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --

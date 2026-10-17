@@ -189,10 +189,12 @@ with flipping mirrors, before it is built.
     sides: one gate passed, one blocking another way. Design in
     `docs/DESIGN.md`, *One-way gates*
     - [x] Two teaching levels in a new chapter *One-way gates*: *One way*
-      (41, par 2, 2026-10-17), where the obvious shot is stopped head-on
-      and a setup shot opens the way through the other gate, and *No way
-      back* (42, par 3), where a gate stops the pellet from the side after
-      it climbed through the other. Odds 1 in 25 and 1 in 125
+      (41, par 2, 2026-10-17), where a gate stops the obvious one-shot
+      route from the side and a setup shot opens the way through the
+      other gate, and *No way back* (42, par 3), where a gate stops the
+      pellet from the side after it climbed through the other. Odds 1 in
+      25 and 1 in 125. Their bonus targets need a gate passed, by any route
+      (41 got a new board for it and 42 a new target before release)
     - [ ] Three more gate levels, combining gates with earlier pieces (a
       reflector behind a gate, which lets light in but not out, is a
       natural one), ending the chapter
@@ -275,7 +277,7 @@ only gates, the first easy like 36, the second a step up:
 | Level | 41 | 42 |
 |---|---|---|
 | 1 in | 25 | 125 |
-| Foresight | 1 | 3 |
+| Foresight | 2 | 3 |
 
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).

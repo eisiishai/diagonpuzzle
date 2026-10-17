@@ -101,7 +101,7 @@ for (const [device, size] of Object.entries(SIZES)) {
       await game.press(`${ONE_WAY + 1}. `);
       await game.waitForLevel(ONE_WAY + 1);
       await shoot(game, `level-${ONE_WAY + 1}-start`);
-      await game.play([2], "mouse");
+      await game.play([3], "mouse");
       await shoot(game, `level-${ONE_WAY + 1}-blocked`);
     });
 

@@ -99,7 +99,7 @@ const HELP = `Usage: npm run generate -- [options]
   --bonus-needs P[,P...]
                     only boards with a bonus target, par + 1 or par + 2
                     shots away, out of reach without each of these
-                    pieces: ${Object.keys(NEEDS).join(", ")} (slower)
+                    pieces however many shots are fired: ${Object.keys(NEEDS).join(", ")} (slower)
 
 Example: npm run generate -- --width 7 --height 6 --mirrors 8 --shots 3`;
 

@@ -145,7 +145,9 @@ describe("findPlacements", () => {
     });
     expect(needing.length).toBeGreaterThan(0);
     for (const { board, bonus } of needing) {
-      expect(solveBonus(withWalls(board, "portal"), bonus, 4, 1)).toBeNull();
+      expect(
+        solveBonus(withWalls(board, "portal"), bonus, Infinity, 1),
+      ).toBeNull();
     }
     expect(
       findPlacements(parseLevel(level.grid), options).length,
@@ -154,23 +156,26 @@ describe("findPlacements", () => {
 });
 
 describe("withBonusNeeding", () => {
-  // Other side without its bonus target, as the generator would find it.
-  const level = LEVELS.find((candidate) => candidate.id === "other-side")!;
+  // Shortcut without its bonus target, as the generator would find it.
+  const level = LEVELS.find((candidate) => candidate.id === "shortcut")!;
   const candidate = {
     board: withBonuses(parseLevel(level.grid)),
-    solutions: [[1]],
-    rowsHittingAtStart: 1,
+    solutions: [[3, 3]],
+    rowsHittingAtStart: 0,
     setupRoutes: [],
   };
-  const options = { shots: 1, goalHits: 1 };
+  const options = { shots: 2, goalHits: 1 };
 
   it("adds a bonus target that needs the pieces, par + 1 or + 2 away", () => {
     const [kept] = withBonusNeeding([candidate], options, ["portal"]);
     expect(kept.bonus).toBeDefined();
     const { board, bonus, shots } = kept.bonus!;
-    expect([2, 3]).toContain(shots);
+    expect([3, 4]).toContain(shots);
     expect(solveBonus(board, bonus, shots, 1)).toHaveLength(shots);
-    expect(solveBonus(withWalls(board, "portal"), bonus, shots, 1)).toBeNull();
+    // Out of reach without the portals, however many shots are fired.
+    expect(
+      solveBonus(withWalls(board, "portal"), bonus, Infinity, 1),
+    ).toBeNull();
   });
 
   it("drops boards without one", () => {

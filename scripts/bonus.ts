@@ -54,8 +54,9 @@ const HELP = `Usage: npm run bonus -- --level N [options]
   --uses P[,P...]   only routes that pass through one of these pieces:
                     ${Object.keys(PIECES).join(", ")} (glass counts the gap
                     a shattered one leaves too)
-  --needs P[,P...]  only bonus targets out of reach in --shots shots
-                    without each of these pieces: ${Object.keys(NEEDS).join(", ")}
+  --needs P[,P...]  only bonus targets out of reach without each of these
+                    pieces, however many shots are fired (gate: a gate
+                    must be passed): ${Object.keys(NEEDS).join(", ")}
 
 Changes never touch a cell the par solution reaches, so it plays out
 exactly as before.

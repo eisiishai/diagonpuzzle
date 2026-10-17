@@ -125,13 +125,19 @@ in the curve and which combinations a chapter has. Random odds
 - A bonus target in a chapter's levels should need the chapter's piece,
   not only be reachable along a route through it: find it with `npm run
   bonus -- --needs portal` (the piece's name; `--uses` only checks that
-  a route passes the piece). Portal levels have a test for it. If no cell
+  a route passes the piece). Portal and one-way gate levels have a test
+  for it (for gates, `--needs gate` means a gate must be passed).
+  `--needs` searches with no limit on shots, so a longer way round the
+  piece rules a cell out too; the gate test does the same, the portal
+  test only within `bonusShots` (level 36 has a 5-shot way round). If no
+  cell
   works even with `--changes 2`, the board itself rules it out (the cells
   the piece leads to are on the par route or out of reach): rather than
   search longer, pick a new board with `npm run generate --
   --bonus-needs portal` (level 38 got its board that way; level 25's
   bonus target needs its reflector, level 30's its glass and level 33's
-  its fixed mirrors the same way).
+  its fixed mirrors the same way; level 41 got its board with
+  `--bonus-needs gate`).
 - To see the different ways to solve the levels, run `npm run
   alternatives` (`--help` lists the options). Without `--level` it counts,
   for every level, the solutions at par and with one more shot

@@ -41,10 +41,10 @@ export interface PlacementOptions {
    */
   uses?: readonly CellType[];
   /**
-   * Keep only placements whose bonus target is out of reach in
-   * `bonusShots` shots without each of these pieces (swapped for a plainer
-   * one, see withoutPiece, or no mirror for the player), so the bonus
-   * target needs them.
+   * Keep only placements whose bonus target is out of reach without each
+   * of these pieces (swapped for a plainer one, see withoutPiece, or no
+   * mirror for the player), however many shots are fired, so no longer
+   * route gets round them either.
    */
   needs?: readonly Piece[];
 }
@@ -261,8 +261,9 @@ export function findPlacements(
     const needsPieces = (withBonus: Board, bonus: Position) =>
       (options.needs ?? []).every(
         (piece) =>
+          // The search ends when no new board is left, so it needs no limit.
           solveBonusMoves(withoutPiece(withBonus, piece), bonus, {
-            maxShots: bonusShots,
+            maxShots: Infinity,
             goalHits,
             playerMirror: piece === "playerMirror" ? undefined : playerMirror,
           }) === null,
