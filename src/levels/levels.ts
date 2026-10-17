@@ -507,6 +507,21 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "strike-twice",
+    name: "Strike twice",
+    minShots: 4,
+    goalHits: 2,
+    bonusShots: 5,
+    music: "anchor",
+    grid: String.raw`
+      . . / L . .
+      . . . / \ *
+      / . . . / .
+      J . / . . G
+      # . . . . .
+    `,
+  },
+  {
     id: "steel-echo",
     name: "Steel echo",
     minShots: 3,
