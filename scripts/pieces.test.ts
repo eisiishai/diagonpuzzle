@@ -29,7 +29,7 @@ describe("neededPieces", () => {
   });
 
   it("finds fixed mirrors and the player's mirror needed", () => {
-    // Bolted down (level 29): row 3 twice, the fixed "/" turning both.
+    // Bolted down (level 30): row 3 twice, the fixed "/" turning both.
     const bolted = parseLevel(String.raw`
       . \ . \ G
       . . . . .

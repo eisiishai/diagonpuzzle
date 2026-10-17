@@ -393,6 +393,22 @@ export const LEVELS: readonly LevelDefinition[] = [
     `,
   },
   {
+    id: "double-back",
+    name: "Double back",
+    minShots: 4,
+    goalHits: 2,
+    bonusShots: 5,
+    music: "return",
+    grid: String.raw`
+      / . / . . .
+      \ . . / / .
+      . . . \ . G
+      @ . / . . .
+      . # * . . .
+      . . . . . .
+    `,
+  },
+  {
     id: "glass-house",
     name: "Glass house",
     minShots: 2,
