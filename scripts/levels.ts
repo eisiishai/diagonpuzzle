@@ -1,5 +1,7 @@
 // Level design report: `npm run levels`. For each level, prints the shortest
-// solution, an alternative solution above par, two-shot setup routes, the shortest way to hit the bonus target,
+// solution, its text hint and the second hint's first shot (to check
+// them against the solution), an alternative solution above par, two-shot
+// setup routes, the shortest way to hit the bonus target,
 // two rough difficulty measures (how likely random play is to finish
 // within par, and the foresight the shortest solution needs) and what each
 // row's first shot does (bonus targets hidden, as before par). Ends with
@@ -7,6 +9,7 @@
 // level is built from.
 // Rows are numbered from 1 at the top, as the player counts them.
 
+import { firstShotHint } from "../src/game/hints";
 import { CHAPTERS, LEVELS, chapterRanges } from "../src/levels/levels";
 import { CELL_SYMBOLS } from "../src/levels/parse";
 import { oneIn } from "./difficulty";
@@ -46,6 +49,15 @@ for (const analysis of analyses) {
   console.log(
     `  Shortest:     ${shortest}  ${status}` +
       (shortestCount > 1 ? `  (${shortestCount} shortest solutions)` : ""),
+  );
+  console.log(`  Hint:         ${level.hint}`);
+  // The second hint, as the game works it out from the starting board.
+  const second = firstShotHint(board, level.minShots, {
+    goalHits: level.goalHits,
+    playerMirror: level.playerMirror,
+  });
+  console.log(
+    `  Hint 2:       ${second ? `${second.placeFirst ? "place the mirror, then " : ""}row ${second.row + 1} first` : "none found  ✗"}`,
   );
   const { alternative } = analysis;
   console.log(

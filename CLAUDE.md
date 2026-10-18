@@ -18,9 +18,9 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run coverage` — the unit tests with code coverage: a table of files
   with uncovered code, and a line-by-line report in `coverage/index.html`
   (git-ignored)
-- `npm run levels` — level design report: shortest solution, an
-  alternative solution above par, setup routes,
-  difficulty (random play's odds of finishing at par, and foresight: the
+- `npm run levels` — level design report: shortest solution, the text
+  hint and the second hint's first shot, an alternative solution above
+  par, setup routes, difficulty (random play's odds of finishing at par, and foresight: the
   changes the par solution makes for its later shots) and first-shot
   outcomes for every level, then the difficulty curve by chapter with the
   pieces each level uses (`scripts/levels.ts`, runs with tsx)
