@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
+import type { BounceKind } from "../game/types";
 import {
+  EFFECTS,
   bounceNote,
   columnPan,
   endingNotes,
   gateStopNotes,
   goalChimeNotes,
+  playBounce,
+  playGateStop,
   shardNotes,
 } from "./effects";
 import { MUSIC_TRACKS, mirrorPhrase, scaleNotes } from "./music";
+import { nonFiniteValues, recordingSynth } from "./recordingSynth";
 
 const A_MINOR_PENTATONIC = [9, 0, 2, 4, 7];
 
@@ -161,5 +166,54 @@ describe("shardNotes", () => {
         }
       });
     }
+  });
+});
+
+describe("playing the effects", () => {
+  // Each track's harmony at the start and halfway through its chords.
+  const harmonies = Object.values(MUSIC_TRACKS).flatMap((track) => [
+    track.harmony(0),
+    track.harmony(24),
+  ]);
+  const dest = {} as AudioNode;
+
+  it.each(Object.keys(EFFECTS))(
+    "%s gives the synth only finite values, with any music",
+    (effect) => {
+      const { synth, voices } = recordingSynth();
+      for (const harmony of harmonies) {
+        for (const pitch of [0.95, 1, 1.05]) {
+          EFFECTS[effect as keyof typeof EFFECTS].play(
+            synth,
+            dest,
+            1,
+            pitch,
+            harmony,
+          );
+        }
+      }
+      expect(voices.length).toBeGreaterThan(0);
+      expect(nonFiniteValues(voices)).toEqual([]);
+    },
+  );
+
+  it("plays every bounce and gate stop with finite values, with any music", () => {
+    const kinds: BounceKind[] = [
+      "mirror",
+      "fixed",
+      "reflector",
+      "glass",
+      "portal",
+    ];
+    const { synth, voices } = recordingSynth();
+    for (const harmony of harmonies) {
+      for (let bounce = 0; bounce < 14; bounce++) {
+        for (const kind of kinds) {
+          playBounce(synth, dest, 1, bounce, harmony, kind, -0.4, 0.4);
+        }
+        playGateStop(synth, dest, 1, bounce, harmony, 0.2);
+      }
+    }
+    expect(nonFiniteValues(voices)).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { withBonuses } from "../src/game/bonus";
+import { GLASS_MIRRORS } from "../src/game/cells";
 import { playMoves, shotRows, solve } from "../src/game/solver";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
@@ -10,6 +11,7 @@ import {
   isEssential,
 } from "./alternativeSearch";
 import { SEARCH_EXTRA_SHOTS } from "./levelAnalysis";
+import { neededPieces } from "./pieces";
 
 describe("isEssential", () => {
   // Row 1 runs straight to the goal; row 2 exits after flipping (1, 1).
@@ -104,6 +106,28 @@ describe("findAlternativeChanges", () => {
       const shots = change.added.map((moves) => shotRows(moves).length);
       expect(Math.min(...shots)).toBeGreaterThanOrEqual(level.minShots);
       expect(Math.max(...shots)).toBeLessThanOrEqual(level.minShots + 1);
+    }
+  });
+
+  it("moves the level's own pieces too, keeping them needed for par", () => {
+    const level = LEVELS.find((candidate) => candidate.id === "glass-house")!;
+    const options = {
+      minShots: level.minShots,
+      goalHits: 1,
+      bonusShots: level.bonusShots,
+      extraShots: 1,
+      changes: 1,
+    };
+    const changes = findAlternativeChanges(parseLevel(level.grid), options);
+    expect(
+      changes.some(({ changes }) =>
+        changes.some(({ cell }) => GLASS_MIRRORS.includes(cell)),
+      ),
+    ).toBe(true);
+    for (const { board } of changes) {
+      expect(neededPieces(withBonuses(board), level.minShots, 1)).toContain(
+        "glass",
+      );
     }
   });
 });

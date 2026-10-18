@@ -270,7 +270,11 @@ in the curve and which combinations a chapter has. Random odds
 commit** (see *3. Commit*); run it yourself any time to check earlier.
 
 What the tests cover: game rules, simulation, solver, `LevelSession`, level
-parser, saved progress and path geometry. Every level is checked against its
+parser, saved progress, path geometry, the level design tools' searches,
+and what the music and sound effects play: every track's notes stay in
+its key, and no track or effect gives Web Audio a value it refuses (NaN
+or infinite), checked with a stand-in synth that records what it is
+asked to play (`src/audio/recordingSynth.ts`). Every level is checked against its
 declared `minShots` with the solver, and levels 1–2 must keep their two-shot
 setup route.
 
@@ -284,8 +288,10 @@ in the Windows browser.
 
 On 2026-10-11 (v1.17) the rules were nearly fully covered: `src/levels/`
 and `src/save/` 100%, `src/game/` 99% of statements and 98% of
-branches (what is left is the unreachable `loop` guard and a fallback). The PixiJS views, scenes and audio playback are mostly
-uncovered, as expected: the browser smoke tests run them, and the
+branches (what is left is the unreachable `loop` guard and a fallback).
+Since v3.12 the music and sound effects are fully covered too. The
+PixiJS views, scenes and the Web Audio side of audio (`synth.ts`,
+`GameAudio.ts`) are uncovered, as expected: the browser smoke tests run them, and the
 coverage report doesn't see those. Neither do the level design tools'
 command-line parts (`scripts/levels.ts`, `generate.ts` and the like),
 which are run by hand. Branch coverage is the most telling figure: a

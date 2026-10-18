@@ -47,6 +47,7 @@ describe("findPlacements", () => {
   it.each([
     ["second-try", 0],
     ["crack-and-double", 1],
+    ["hairpin", 0],
   ] as const)(
     "%s (%i board changes) keeps par and the bonus shots",
     (id, changes) => {
@@ -58,6 +59,7 @@ describe("findPlacements", () => {
         goalHits,
         bonusShots,
         changes,
+        playerMirror: level.playerMirror,
       });
       expect(placements.length).toBeGreaterThan(0);
       for (const placement of placements.slice(0, 20)) {
@@ -152,6 +154,40 @@ describe("findPlacements", () => {
     expect(
       findPlacements(parseLevel(level.grid), options).length,
     ).toBeGreaterThanOrEqual(needing.length);
+  });
+
+  it("keeps only bonus targets out of reach without the player's mirror", () => {
+    // Hairpin's bonus target in the top row is reached off the player's
+    // mirror placed beside it.
+    const level = LEVELS.find((candidate) => candidate.id === "hairpin")!;
+    const board = parseLevel(level.grid);
+    const options = {
+      minShots: level.minShots,
+      goalHits: 1,
+      bonusShots: level.minShots + 1,
+      changes: 0,
+      playerMirror: level.playerMirror,
+    };
+    const needing = findPlacements(board, {
+      ...options,
+      needs: ["playerMirror"],
+    });
+    expect(needing.length).toBeGreaterThan(0);
+    for (const { board: withBonus, bonus, route } of needing) {
+      expect(route.some((move) => typeof move !== "number")).toBe(true);
+      expect(solveBonus(withBonus, bonus, Infinity, 1)).toBeNull();
+    }
+    // Your move's targets can all be hit without it.
+    const yourMove = LEVELS.find((candidate) => candidate.id === "your-move")!;
+    expect(
+      findPlacements(parseLevel(yourMove.grid), {
+        ...options,
+        minShots: yourMove.minShots,
+        bonusShots: yourMove.minShots + 1,
+        playerMirror: yourMove.playerMirror,
+        needs: ["playerMirror"],
+      }),
+    ).toEqual([]);
   });
 });
 

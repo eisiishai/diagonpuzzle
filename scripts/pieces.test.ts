@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parseLevel } from "../src/levels/parse";
+import { formatLevel, parseLevel } from "../src/levels/parse";
 import {
   gatesBlock,
   neededPieces,
   piecesOn,
   withFlippingMirrors,
+  withoutPiece,
 } from "./pieces";
 
 describe("piecesOn", () => {
@@ -80,6 +81,28 @@ describe("neededPieces", () => {
     expect(neededPieces(parseLevel(". G\n. ."), 1, 1, "mirrorSlash")).toEqual(
       [],
     );
+  });
+});
+
+describe("withoutPiece", () => {
+  const board = parseLevel(String.raw`
+    % @ N Z L
+    J O O > G
+  `);
+  const without = (piece: Parameters<typeof withoutPiece>[1]) =>
+    formatLevel(withoutPiece(board, piece));
+
+  it("swaps every cell of the piece for a plainer one", () => {
+    expect(without("breakable")).toBe("# @ N Z L\nJ O O > G");
+    expect(without("reflector")).toBe("% # N Z L\nJ O O > G");
+    expect(without("glass")).toBe("% @ \\ / L\nJ O O > G");
+    expect(without("fixed")).toBe("% @ N Z \\\n/ O O > G");
+    expect(without("portal")).toBe("% @ N Z L\nJ # # > G");
+    expect(without("gate")).toBe("% @ N Z L\nJ O O # G");
+  });
+
+  it("leaves the board alone for the player's mirror, which isn't on it", () => {
+    expect(withoutPiece(board, "playerMirror")).toBe(board);
   });
 });
 

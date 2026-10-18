@@ -83,6 +83,14 @@ describe("dragVelocity", () => {
     expect(dragVelocity(samples, 500)).toBe(0);
     expect(dragVelocity([], 0)).toBe(0);
   });
+
+  it("is 0 when its last moments all came in the same millisecond", () => {
+    const samples = [
+      { time: 1000, scroll: 100 },
+      { time: 1000, scroll: 120 },
+    ];
+    expect(dragVelocity(samples, 1000)).toBe(0);
+  });
 });
 
 describe("scroll bar", () => {
