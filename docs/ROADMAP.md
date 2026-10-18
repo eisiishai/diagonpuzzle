@@ -14,6 +14,23 @@ tracks:
 Ordering: finish *Engineering → Next* before starting the next new mechanic,
 since those items make mechanic changes safer to build and test.
 
+## Version 4.0 — complete (2026-10-18)
+
+The fourth major version completes the game. A ninth piece, one-way
+gates, gets its chapter (levels 41–45, *Current*, *Shut* and *Air
+through*), ending the main levels with *Last light* (45). After them
+comes a secret chapter, *Prism* (46–50): hidden from the level list
+until every bonus target is found, five par-5 levels that bring every
+piece back in new combinations, each playing an earlier chapter's
+music, the last *Afterglow*, level 1's. Its levels earn a rainbow star
+at par, the last of them plays its own ending, *Prism ripple*, and the
+title then turns to the bonus colours. Reaching par on every level now
+hints that there is more to find. 50 levels in ten chapters. Saves from
+earlier versions keep working: no released level's id, board or par
+changed. For testing, `?setup=` in the address loads a save one step
+short of each once-per-player moment, on a desktop or a phone, and the
+browser tests also run in WebKit.
+
 ## Version 3.0 — complete (2026-10-17)
 
 The third major version overhauls the level list: two more pieces, each
