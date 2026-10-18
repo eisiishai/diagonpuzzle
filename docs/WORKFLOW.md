@@ -253,6 +253,26 @@ in the curve and which combinations a chapter has. Random odds
   `npm run build`, so it is always current after a commit. It is git-ignored
   and never part of `dist/`, so it is neither committed, backed up nor
   published; regenerate it any time.
+- Visual choices (a new piece's look, effects, screens, buttons) are made
+  on a visual lab page, like sounds on the sound lab pages: private
+  artifacts on the user's claude.ai account, titled "Diagon Puzzle
+  Visual Lab N" (list them with the Artifact tool). Build the next one
+  from the newest, reusing its drawing code so its "Now" matches the
+  game as it is; each lab carries its own copy of the board, the pieces
+  and the shot rules in plain canvas code. A lab has one bench per
+  decision: a stage playing its moment in a loop (buttons also answer
+  the pointer), "Now" first, the suggestion marked with a dot, shared
+  picks so later benches show earlier choices, a last *All together*
+  bench comparing Now with the picks, and a bar whose *Copy picks* gives
+  the text to paste back. Before publishing one, check that each bench's
+  shot does what its text says (run the page's own simulation in Node)
+  and look at a screenshot of every stage. To build the picks: add a
+  section listing them to `docs/ROADMAP.md`, write them into
+  `docs/DESIGN.md` (*Art direction*) as each is built, keep pieces lab
+  hardware standing on the optical table with their direction readable
+  at a glance, look at `npm run screenshots` and, for effects, a
+  throwaway spec with motion on, and run `npm run e2e:full`; the user
+  checks the result on a phone.
 
 ## 2. Check
 
