@@ -83,10 +83,11 @@ One level, playable with the mouse, plain graphics.
 
 Suggested order from here (2026-10-11): playtesters' feedback would
 settle the items that wait on how people play: the step to *Rebuild*
-and the difficulty measure. Since the review of all 40 levels
-(2026-10-17, *Difficulty curve*), the game's finale is the main open
-level design question; a better difficulty measure (Engineering track,
-*Later*) would help judge it.
+and the difficulty measure. The game's finale, the main open level
+design question after the review of all 40 levels (2026-10-17,
+*Difficulty curve*), is answered by *Last light* (45) and the secret
+chapter (46–50); a better difficulty measure (Engineering track,
+*Later*) would still help judge the curve.
 
 ### Next
 
@@ -195,9 +196,11 @@ with flipping mirrors, before it is built.
       pellet from the side after it climbed through the other. Odds 1 in
       25 and 1 in 125. Their bonus targets need a gate passed, by any route
       (41 got a new board for it and 42 a new target before release)
-    - [ ] Three more gate levels to end the game, each with two earlier
-      pieces besides the gates (chosen 2026-10-18 for the combinations
-      the review found missing, and to end on the hardest level)
+    - [x] Three more gate levels to end the chapter and the main levels,
+      each with two earlier pieces besides the gates (chosen 2026-10-18
+      for the combinations the review found missing, and to end on the
+      hardest level; complete 2026-10-18). They ended the game until the
+      secret chapter, *Prism* (46–50), came after them
       - [x] *Echo chamber* (43, par 3): a reflector and a breakable wall.
         Row 1 bounces off the reflector, passes a gate and breaks the wall
         in one shot; a gate stops row 3 from the side. Odds 1 in 125,
@@ -207,11 +210,11 @@ with flipping mirrors, before it is built.
         gate on the exit's row into the goal; a setup shot stopped by the
         same gate's side resets a mirror for the second hit. Odds 1 in
         625, foresight 3
-      - [x] *Last light* (45, par 5), the finale: the player's mirror and
-        a glass mirror (the player's mirror had never met glass). One gate
-        works three ways: passed by row 1, stopped head-on by row 3 and
-        from the side by row 4 off the player's mirror. Odds 1 in 71,918,
-        the game's highest; foresight 4. A board with foresight 6 was set
+      - [x] *Last light* (45, par 5), the main levels' finale: the
+        player's mirror and a glass mirror (the player's mirror had never
+        met glass). One gate works three ways: passed by row 1, stopped
+        head-on by row 3 and from the side by row 4 off the player's
+        mirror. Odds 1 in 71,918, the game's highest; foresight 4. A board with foresight 6 was set
         aside, as no bonus target on it could need a gate
     - [x] Its own music track: *Current*, chosen on sound lab 8
     - [x] Its own sounds: *Shut* when a gate stops the pellet and *Air
@@ -394,14 +397,21 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
 - **Naming:** *Flip tricks* opens with the two-hit goal (6–7), while
   flipping is taught in *Basics* (3); the name fits 8–10 better.
 
-- [ ] A finale for the game: harden the last level of the later
+- [x] A finale for the game: harden the last level of the later
   chapters (par 5, or 6–7 rows, so the odds can rise), or add a short
   final chapter of mixed levels using several pieces on larger boards,
-  which would also bring every piece back once more. Decide which
-  after the difficulty measure is reviewed (Engineering track, *Later*)
-- [ ] A secret chapter, *Prism*, shown only once every bonus target is
+  which would also bring every piece back once more. Answered
+  (2026-10-18) by *Last light* (45, par 5) ending the main levels and
+  the secret chapter, *Prism* (46–50, below): five par-5 levels of mixed
+  pieces, every piece back once more, with foresight 5–8 (the highest
+  before was 5). Its boards stayed 6×5, so its odds stop at 1 in 3,125
+  (rows^par); foresight is what sets them apart
+- [x] A secret chapter, *Prism*, shown only once every bonus target is
   found: harder levels with no new pieces, combining several earlier
-  ones. Design in `docs/DESIGN.md`, *Secret chapter*
+  ones (complete 2026-10-18, v3.13–v3.20). Design in `docs/DESIGN.md`,
+  *Secret chapter*. Its levels stay in the order they were added
+  (foresight 7, 5, 8, 6, 7) rather than climbing, by choice: each
+  combines different pieces, and *Full circle* (50) ends it with four
   - [x] The chapter itself (2026-10-18): hidden from the level list until
     the last bonus target, which opens it (its ending's second line says
     A HIDDEN CHAPTER HAS OPENED), stars counted over the open levels,
@@ -423,8 +433,8 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
     lacked, and portals, never combined with it before: *Far corner*
     (49, par 5), foresight 6
   - [x] A fifth and last level, *Full circle* (50, par 5): four pieces,
-    a glass mirror, a fixed mirror, portals and a two-hit goal, the last
-    missing combination (portals with a two-hit goal); foresight 7. Five
+    a glass mirror, a fixed mirror, portals and a two-hit goal (together
+    before only in *Double crossing*, 44); foresight 7. Five
     levels fill the chapter's row
   - [x] The title screen once the whole game is done (every bonus
     target found and the secret chapter at par): the title's letters in
@@ -440,7 +450,7 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
   below
 - [x] Fill the thinnest combinations: the player's mirror met glass in
   *Last light* (45) and portals in *Far corner* (49), and portals met a
-  two-hit goal in *Full circle* (50)
+  two-hit goal in *Double crossing* (44) and again in *Full circle* (50)
 - [ ] Optional: rename *Flip tricks* (6–10) after what it starts with,
   the two-hit goal. Chapter names are only shown, not saved, so this
   is cosmetic
