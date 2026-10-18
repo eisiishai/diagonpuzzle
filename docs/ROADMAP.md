@@ -673,7 +673,7 @@ rule and is checked on a phone. In order:
 - [x] Title logo: the words step down diagonally, and the title beam
   bounces off two mirrors between DIAGON and PUZZLE on its way to the
   crystal
-- [ ] Check every item on a phone
+- [x] Check every item on a phone (2026-10-18)
 
 Then the rest of the pieces, brought into the lab as hardware standing
 on the table (visual lab 3, all chosen on 2026-10-18): round mounts for
@@ -698,7 +698,24 @@ each piece keeps the sign players know it by.
   its corners
 - [x] Bonus target: the gem held by six prongs on a round mount,
   pulsing less
-- [ ] Check every piece on a phone
+- [x] Check every piece on a phone (2026-10-18)
+
+Then the buttons (visual lab 4, all chosen on 2026-10-18), so the
+interface matches the lab; the text stays as readable as before, and the
+font stays Chakra Petch (Oxanium, Saira, Exo 2 and Rajdhani were tried):
+
+- [x] Buttons: instrument keys, a steel plate with a recessed face and a
+  status light on the left that comes on when highlighted
+- [x] Highlight: a beam fires under the label from the left and stays
+  while the button is highlighted (along a tile's bottom edge), instead
+  of the outline and halo
+- [x] Main action (Play, Continue, Next level): lit green glass with dark
+  text, brightening and glowing when highlighted
+- [x] Level tiles: the same steel plate
+- [x] Next level, on reaching the goal: a green beam runs under the
+  button from the left and it lights as the beam arrives, with one soft
+  pulse
+- [x] Check the buttons on a phone (2026-10-18)
 
 ## Engineering track
 

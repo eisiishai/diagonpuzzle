@@ -712,9 +712,17 @@ export class GameScene extends Container implements Scene {
    * this visit; before that an ordinary button, shown only if the level was
    * completed before (e.g. while going for its bonus target).
    */
+  /**
+   * Shows Next level once the level is passed; on completing it, Next
+   * level lights up as the main action (see Button.lightUp()).
+   */
   private showNextButton(complete: boolean): void {
     this.nextButton.visible = complete || this.passed;
-    this.nextButton.setVariant(complete ? "primary" : "secondary");
+    if (complete) {
+      this.nextButton.lightUp();
+    } else {
+      this.nextButton.setVariant("secondary");
+    }
     this.skipButton.visible = !this.nextButton.visible;
     this.disarmSkip();
   }

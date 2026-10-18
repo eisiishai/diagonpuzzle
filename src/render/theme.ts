@@ -93,6 +93,15 @@ export const COLORS = {
   emitterFin: 0x0a101e,
   emitterLens: 0x070b14,
   emitterLed: 0x2a3a58,
+  /** Buttons: a steel instrument key with a recessed face. */
+  keyLight: 0x1c2740,
+  keyDark: 0x121a2c,
+  keyFace: 0x050810,
+  /** The main action: green glass lit from inside, with dark text. */
+  glassTop: 0x7dffd0,
+  glassBottom: 0x22c48b,
+  glassEdge: 0x1aa877,
+  glassText: 0x05231a,
 } as const;
 
 /**

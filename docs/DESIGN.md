@@ -978,11 +978,25 @@ and left edges. Each keeps the sign players know it by.
   own colours. In the secret chapter, Prism, the light behind the board
   turns slowly through the bonus colours (once every 24 s; still with
   reduced motion), and the table takes no tint.
-- **Buttons**: rounded rectangles with a thin outline; the primary action
-  (*Next level*) is filled with the success colour. The selected or hovered
-  button eases in a soft halo (0.12 s) in its accent colour (beam colour,
-  or the success colour for the primary button); pressing one squeezes it
-  slightly (97 %).
+- **Buttons**: instrument keys, like the lab's hardware: a steel plate
+  with a bevelled edge, a shadow, a recessed face and a small status light
+  left of the label. Level tiles are the same plate without the recess or
+  light. The main action (*Play*, *Continue*, *Next level*) is green glass
+  lit from inside, bevelled, with dark text, the strongest contrast the
+  game has. Labels stay plain Chakra Petch in light text on the dark
+  plates; nothing sits over them.
+- **Highlight** (the selected or hovered button): a beam fires under the
+  label from the left, as the title beam does, and stays while the button
+  is highlighted (0.12 s to ease in; on a tile it runs along the bottom
+  edge). The beam is pink, or green on the main action; a key's status
+  light comes on in the same colour and its label brightens and lifts a
+  little, and the main action brightens and glows. Pressing a button
+  squeezes it slightly (97 %).
+- **Next level lighting up**: on completing a level, *Next level* takes
+  *Skip level*'s place as a key, a green beam runs under it from the left
+  (0.38 s), like the light running back along the shot, and the button
+  fades to lit glass as the beam arrives, with one soft pulse spreading
+  from it. At once with reduced motion.
 
 ### Light and motion
 
