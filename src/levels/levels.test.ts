@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MUSIC_TRACKS } from "../audio/music";
 import { bonusPositions, withBonuses } from "../game/bonus";
 import { GATE_CELLS } from "../game/cells";
+import { firstShotHint } from "../game/hints";
 import { eachCompletion, setupRoutes, solve, solveBonus } from "../game/solver";
 import type { Board } from "../game/types";
 import { CHAPTERS, LEVELS, chapterRanges, secretLevels } from "./levels";
@@ -273,6 +274,9 @@ it("gives each secret level a different earlier chapter's track", () => {
   expect(tracks[tracks.length - 1]).toBe(LEVELS[0].music);
 });
 
+/** Longest text hint that fits two lines under the narrowest board. */
+const MAX_HINT_LENGTH = 125;
+
 it("has unique level ids", () => {
   const ids = LEVELS.map((level) => level.id);
   expect(new Set(ids).size).toBe(ids.length);
@@ -280,9 +284,35 @@ it("has unique level ids", () => {
 
 describe.each(LEVELS.map((level, index) => ({ ...level, number: index + 1 })))(
   "level $number ($name)",
-  ({ grid, minShots, goalHits = 1, bonusShots, playerMirror, number }) => {
+  ({
+    grid,
+    minShots,
+    goalHits = 1,
+    bonusShots,
+    playerMirror,
+    number,
+    hint,
+  }) => {
     it("parses", () => {
       expect(() => parseLevel(grid)).not.toThrow();
+    });
+
+    // The text hint fits two lines under the board, and points at the idea
+    // rather than naming rows or cells (docs/DESIGN.md, Hints).
+    it("has a short text hint without numbers", () => {
+      expect(hint.trim().length).toBeGreaterThan(0);
+      expect(hint.length).toBeLessThanOrEqual(MAX_HINT_LENGTH);
+      expect(hint).not.toMatch(/\d/);
+    });
+
+    // The second hint is worked out from the board in play, with the bonus
+    // target hidden or, after par, showing.
+    it("has a first shot for the second hint, bonus target or not", () => {
+      for (const board of [withBonuses(parseLevel(grid)), parseLevel(grid)]) {
+        expect(
+          firstShotHint(board, minShots, { goalHits, playerMirror }),
+        ).not.toBeNull();
+      }
     });
 
     // Bonus targets are hidden until the level is completed at par, so par

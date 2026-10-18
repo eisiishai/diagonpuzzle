@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { GameProgress, SAVE_WAIT_EVERY_MS } from "./GameProgress";
-import { EMPTY_PROGRESS, MAX_SKIPS, SKIP_WAIT_MS } from "./progress";
+import {
+  EMPTY_PROGRESS,
+  HINT_WAIT_MS,
+  MAX_SKIPS,
+  SKIP_WAIT_MS,
+} from "./progress";
 import type { LevelSummary, Progress } from "./progress";
 
 // Levels 0 and 2 have bonus targets (two and one); level 1 has none.
@@ -22,6 +27,8 @@ describe("GameProgress.levelStart", () => {
       bonusesCollected: 0,
       passedBefore: false,
       skipsLeft: MAX_SKIPS,
+      hintStage: 0,
+      hintWaitLeft: HINT_WAIT_MS,
     });
     game.complete(0, 3);
     expect(game.levelStart(0).bonusesShown).toBe(false);
@@ -213,8 +220,9 @@ describe("GameProgress.addLevelTime", () => {
   it("changes and saves nothing while skips are left", () => {
     const game = newGame();
     const before = game.progress;
-    expect(game.addLevelTime(SKIP_WAIT_MS)).toEqual({
+    expect(game.addLevelTime(0, SKIP_WAIT_MS)).toEqual({
       skipsChanged: false,
+      hintOpened: false,
       save: false,
     });
     expect(game.progress).toBe(before);
@@ -224,7 +232,7 @@ describe("GameProgress.addLevelTime", () => {
     const game = newGame({ skipsLeft: 0 });
     let saves = 0;
     for (let ms = 0; ms < 3 * SAVE_WAIT_EVERY_MS; ms += 16) {
-      if (game.addLevelTime(16).save) {
+      if (game.addLevelTime(0, 16).save) {
         saves++;
       }
     }
@@ -233,9 +241,60 @@ describe("GameProgress.addLevelTime", () => {
 
   it("gives back a skip after the wait, and asks for a save", () => {
     const game = newGame({ skipsLeft: 0, skipWaitMs: SKIP_WAIT_MS - 10 });
-    expect(game.addLevelTime(5)).toEqual({ skipsChanged: false, save: false });
-    expect(game.addLevelTime(5)).toEqual({ skipsChanged: true, save: true });
+    expect(game.addLevelTime(0, 5)).toEqual({
+      skipsChanged: false,
+      hintOpened: false,
+      save: false,
+    });
+    expect(game.addLevelTime(0, 5)).toEqual({
+      skipsChanged: true,
+      hintOpened: false,
+      save: true,
+    });
     expect(game.progress.skipsLeft).toBe(1);
     expect(game.progress.skipWaitMs).toBe(0);
+  });
+});
+
+describe("GameProgress hints", () => {
+  it("opens a level's text hint, then the second after time on that level", () => {
+    const game = newGame();
+    game.openHint(1);
+    expect(game.levelStart(1).hintStage).toBe(1);
+    // Time on another level doesn't count.
+    game.addLevelTime(0, HINT_WAIT_MS);
+    expect(game.hintWaitLeft(1)).toBe(HINT_WAIT_MS);
+    expect(game.addLevelTime(1, HINT_WAIT_MS - 10).hintOpened).toBe(false);
+    expect(game.hintWaitLeft(1)).toBe(10);
+    expect(game.addLevelTime(1, 10)).toEqual({
+      skipsChanged: false,
+      hintOpened: true,
+      save: true,
+    });
+    expect(game.levelStart(1)).toMatchObject({ hintStage: 2, hintWaitLeft: 0 });
+    expect(game.addLevelTime(1, 1000).hintOpened).toBe(false);
+  });
+
+  it("opening a hint again doesn't restart its wait", () => {
+    const game = newGame({ hints: { a: 5000 } });
+    game.openHint(0);
+    expect(game.hintWaitLeft(0)).toBe(HINT_WAIT_MS - 5000);
+  });
+
+  it("saves the wait for the second hint every few seconds", () => {
+    const game = newGame({ hints: { a: 0 } });
+    let saves = 0;
+    for (let ms = 0; ms < 3 * SAVE_WAIT_EVERY_MS; ms += 16) {
+      if (game.addLevelTime(0, 16).save) {
+        saves++;
+      }
+    }
+    expect(saves).toBe(3);
+  });
+
+  it("forgets hints on reset", () => {
+    const game = newGame({ hints: { a: HINT_WAIT_MS } });
+    game.reset();
+    expect(game.levelStart(0).hintStage).toBe(0);
   });
 });

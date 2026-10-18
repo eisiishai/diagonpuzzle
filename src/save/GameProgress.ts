@@ -1,5 +1,6 @@
 import {
   EMPTY_PROGRESS,
+  addHintTime,
   addLevelTime,
   collectedBonuses,
   completesAllBonuses,
@@ -7,9 +8,12 @@ import {
   completesSecretPar,
   earnsStar,
   hasAllBonuses,
+  hintStage,
+  hintWaitLeft,
   isCompleted,
   isSkipped,
   openLevelCount,
+  openHint,
   opensSecretLevels,
   recordBonus,
   recordCompletion,
@@ -21,7 +25,7 @@ import type { LevelSummary, Progress } from "./progress";
 
 /**
  * Time on level screens is saved this often, rather than every frame, so a
- * closed tab loses at most this much of the wait for a skip.
+ * closed tab loses at most this much of the wait for a skip or a hint.
  */
 export const SAVE_WAIT_EVERY_MS = 5000;
 
@@ -40,6 +44,10 @@ export interface LevelStart {
   passedBefore: boolean;
   /** Visible skips left. */
   skipsLeft: number;
+  /** How far the level's hints are open: see hintStage(). */
+  hintStage: 0 | 1 | 2;
+  /** Time on the level's screen left before its second hint opens. */
+  hintWaitLeft: number;
 }
 
 export interface CompletionReport {
@@ -80,13 +88,16 @@ export interface BonusReport {
 export interface LevelTimeReport {
   /** Skips left changed: a skip was earned back by waiting. */
   skipsChanged: boolean;
+  /** The level's second hint opened. */
+  hintOpened: boolean;
   /** The progress should be saved now. */
   save: boolean;
 }
 
 /**
  * The player's progress through the game, and the rules for how events in
- * play change it: completions, bonus targets, skips and the wait for a skip.
+ * play change it: completions, bonus targets, skips, hints and the waits
+ * for a skip and for a level's second hint.
  * The only owner of the progress while the game runs; the caller reads and
  * writes storage and saves after every event, and after level time when
  * addLevelTime() says so. Levels are given by their index in `levels`.
@@ -125,6 +136,8 @@ export class GameProgress {
       passedBefore:
         isCompleted(this._progress, id) || isSkipped(this._progress, id),
       skipsLeft: this._progress.skipsLeft,
+      hintStage: hintStage(this._progress, id),
+      hintWaitLeft: hintWaitLeft(this._progress, id),
     };
   }
 
@@ -184,20 +197,39 @@ export class GameProgress {
     this._progress = recordSkip(this._progress, this.levels[index].id);
   }
 
+  /** Opens level `index`'s text hint, which starts the wait for the second. */
+  openHint(index: number): void {
+    this._progress = openHint(this._progress, this.levels[index].id);
+  }
+
+  /** Time on level `index`'s screen left before its second hint opens. */
+  hintWaitLeft(index: number): number {
+    return hintWaitLeft(this._progress, this.levels[index].id);
+  }
+
   /**
-   * Counts time on a level screen, which earns a skip back when none are
-   * left. Asks for a save when a skip comes back, and every
-   * SAVE_WAIT_EVERY_MS of waiting.
+   * Counts time on level `index`'s screen, which earns a skip back when
+   * none are left, and opens the level's second hint once its text hint
+   * has been open long enough. Asks for a save when a skip comes back or
+   * the hint opens, and every SAVE_WAIT_EVERY_MS of either wait.
    */
-  addLevelTime(ms: number): LevelTimeReport {
+  addLevelTime(index: number, ms: number): LevelTimeReport {
+    const { id } = this.levels[index];
     const before = this._progress;
-    this._progress = addLevelTime(before, ms);
+    this._progress = addHintTime(addLevelTime(before, ms), id, ms);
     const skipsChanged = this._progress.skipsLeft !== before.skipsLeft;
+    const hintOpened =
+      hintStage(before, id) === 1 && hintStage(this._progress, id) === 2;
     const waitSaves = (progress: Progress) =>
-      Math.floor(progress.skipWaitMs / SAVE_WAIT_EVERY_MS);
+      Math.floor(progress.skipWaitMs / SAVE_WAIT_EVERY_MS) +
+      Math.floor((progress.hints[id] ?? 0) / SAVE_WAIT_EVERY_MS);
     return {
       skipsChanged,
-      save: skipsChanged || waitSaves(this._progress) !== waitSaves(before),
+      hintOpened,
+      save:
+        skipsChanged ||
+        hintOpened ||
+        waitSaves(this._progress) !== waitSaves(before),
     };
   }
 

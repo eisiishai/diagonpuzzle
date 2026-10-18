@@ -27,6 +27,11 @@ import {
   returnSkip,
   addLevelTime,
   SKIP_WAIT_MS,
+  HINT_WAIT_MS,
+  addHintTime,
+  hintStage,
+  hintWaitLeft,
+  openHint,
 } from "./progress";
 
 const IDS = ["a", "b", "c"];
@@ -253,6 +258,7 @@ describe("parseProgress", () => {
       bonuses: {},
       skipsLeft: MAX_SKIPS,
       skipWaitMs: 0,
+      hints: {},
     });
   });
 });
@@ -423,5 +429,45 @@ describe("visible skips", () => {
   it("restarts the wait when the last skip is spent", () => {
     const one = { ...EMPTY_PROGRESS, skipsLeft: 1, skipWaitMs: 99 };
     expect(spendSkip(one, "a")).toMatchObject({ skipsLeft: 0, skipWaitMs: 0 });
+  });
+});
+
+describe("hints", () => {
+  it("opens the text hint, then the second after the wait", () => {
+    expect(hintStage(EMPTY_PROGRESS, "a")).toBe(0);
+    const opened = openHint(EMPTY_PROGRESS, "a");
+    expect(hintStage(opened, "a")).toBe(1);
+    expect(hintStage(opened, "b")).toBe(0);
+    const almost = addHintTime(opened, "a", HINT_WAIT_MS - 1);
+    expect(hintStage(almost, "a")).toBe(1);
+    expect(hintWaitLeft(almost, "a")).toBe(1);
+    const open = addHintTime(almost, "a", 1000);
+    expect(hintStage(open, "a")).toBe(2);
+    expect(open.hints.a).toBe(HINT_WAIT_MS);
+    expect(addHintTime(open, "a", 1000)).toBe(open);
+  });
+
+  it("counts no time before the text hint is opened", () => {
+    expect(addHintTime(EMPTY_PROGRESS, "a", 1000)).toBe(EMPTY_PROGRESS);
+    expect(hintWaitLeft(EMPTY_PROGRESS, "a")).toBe(HINT_WAIT_MS);
+  });
+
+  it("opening it again changes nothing", () => {
+    const waited = addHintTime(openHint(EMPTY_PROGRESS, "a"), "a", 500);
+    expect(openHint(waited, "a")).toBe(waited);
+  });
+
+  it("saves hints, clamped, and starts old saves with none", () => {
+    const saved = { ...EMPTY_PROGRESS, hints: { a: 1234, b: HINT_WAIT_MS } };
+    expect(parseProgress(serializeProgress(saved)).hints).toEqual(saved.hints);
+    const load = (hints: unknown) =>
+      parseProgress(JSON.stringify({ version: 1, levels: {}, hints })).hints;
+    expect(load({ a: -5, b: HINT_WAIT_MS * 2, c: "1", d: null })).toEqual({
+      a: 0,
+      b: HINT_WAIT_MS,
+    });
+    expect(load([1])).toEqual({});
+    expect(load(null)).toEqual({});
+    expect(parseProgress('{"version":1,"levels":{}}').hints).toEqual({});
   });
 });

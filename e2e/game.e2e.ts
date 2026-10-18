@@ -1,6 +1,10 @@
 import { fire } from "../src/game/simulate";
 import { CHAPTERS, LEVELS, chapterRanges } from "../src/levels/levels";
-import { EMPTY_PROGRESS, SKIP_WAIT_MS } from "../src/save/progress";
+import {
+  EMPTY_PROGRESS,
+  HINT_WAIT_MS,
+  SKIP_WAIT_MS,
+} from "../src/save/progress";
 import {
   MAIN_LEVELS,
   expect,
@@ -288,6 +292,57 @@ test("with no skips left, Skip waits until time on levels gives one back", async
   await game.waitForLevel(2);
   expect((await game.button("NO SKIPS LEFT")).disabled).toBe(true);
   expect((await game.button("SKIP LEVEL · 1/3")).disabled).toBe(false);
+});
+
+test("the hint button shows the level's text hint and starts the wait", async ({
+  game,
+}) => {
+  await game.open();
+  await game.press("PLAY");
+  await game.waitForLevel(1);
+  expect((await game.level()).hintStage).toBe(0);
+  await game.press("HINT · H");
+  await game.button("HINT 2 IN ");
+  const level = await game.level();
+  expect(level.hintStage).toBe(1);
+  expect(level.message).toBe(`Hint: ${LEVELS[FIRST].hint}`);
+  expect(JSON.parse((await game.storedProgress())!).hints).toHaveProperty(
+    LEVELS[FIRST].id,
+  );
+  // H shows it again after a shot cleared the message.
+  await game.fire(0, "keyboard");
+  await game.page.keyboard.press("h");
+  await expect
+    .poll(async () => (await game.level()).message)
+    .toBe(`Hint: ${LEVELS[FIRST].hint}`);
+});
+
+test("the second hint frames the emitter of a par solution's first shot", async ({
+  game,
+}) => {
+  // Eight seconds short of the second hint, as with the skip's wait.
+  await game.seedProgress({
+    ...EMPTY_PROGRESS,
+    hints: { [LEVELS[FIRST].id]: HINT_WAIT_MS - 8000 },
+  });
+  await game.open();
+  await game.press("PLAY");
+  await game.waitForLevel(1);
+  await game.button("HINT 2 IN 0:0");
+  await game.press("HINT 2 · H");
+  const row = solution(FIRST)[0] as number;
+  await expect.poll(async () => (await game.level()).hintRow).toBe(row);
+  expect((await game.level()).message).toContain("framed emitter");
+  // The next press shows the text hint again; the frame stays.
+  await game.press("HINT 2 · H");
+  await expect
+    .poll(async () => (await game.level()).message)
+    .toBe(`Hint: ${LEVELS[FIRST].hint}`);
+  expect((await game.level()).hintRow).toBe(row);
+  await game.fire(row, "mouse");
+  const level = await game.level();
+  expect(level.hintRow).toBeNull();
+  expect(level.phase).toBe("complete");
 });
 
 test("M and F switch music and sounds, on a level and the title", async ({

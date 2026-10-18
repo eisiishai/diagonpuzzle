@@ -7,6 +7,7 @@ export type GameAction =
   | "place"
   | "back"
   | "restart"
+  | "hint"
   | "toggleMusic"
   | "toggleEffects"
   | "skipLevel";
@@ -25,6 +26,7 @@ const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   p: "place",
   Escape: "back",
   r: "restart",
+  h: "hint",
   m: "toggleMusic",
   f: "toggleEffects",
 };
@@ -40,6 +42,7 @@ const NO_REPEAT: ReadonlySet<GameAction> = new Set([
   "place",
   "back",
   "restart",
+  "hint",
   "toggleMusic",
   "toggleEffects",
   "skipLevel",

@@ -55,6 +55,10 @@ export interface LevelTestState {
   shown: (CellType | null)[][];
   /** The big celebration's banner text while it shows, else null. */
   banner: string | null;
+  /** How far the level's hints are open: 0 none, 1 text, 2 first shot. */
+  hintStage: 0 | 1 | 2;
+  /** The row whose emitter the second hint frames, if any. */
+  hintRow: number | null;
 }
 
 export interface TitleTestState {

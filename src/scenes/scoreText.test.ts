@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { completionMessage, introMessage, levelListRow } from "./scoreText";
+import {
+  completionMessage,
+  firstShotHintMessage,
+  hintLabel,
+  introMessage,
+  levelListRow,
+} from "./scoreText";
 
 describe("completionMessage", () => {
   it("awards a star at par", () => {
@@ -137,5 +143,25 @@ describe("introMessage", () => {
     expect(
       introMessage({ ...plain, playerMirror: "mirrorBackslash" }),
     ).toContain("Place your \\ mirror");
+  });
+});
+
+describe("hints", () => {
+  it("labels the hint button by how far the hints are open", () => {
+    expect(hintLabel(0, 120_000)).toBe("HINT · H");
+    expect(hintLabel(1, 120_000)).toBe("HINT 2 IN 2:00");
+    expect(hintLabel(1, 84_500)).toBe("HINT 2 IN 1:25");
+    expect(hintLabel(1, 9_000)).toBe("HINT 2 IN 0:09");
+    expect(hintLabel(1, -5)).toBe("HINT 2 IN 0:00");
+    expect(hintLabel(2, 0)).toBe("HINT 2 · H");
+  });
+
+  it("names the first move, and asks for a restart after shots", () => {
+    expect(firstShotHintMessage(false, 0)).toBe(
+      "Hint 2: from the start, fire the framed emitter first: it begins a par solution.",
+    );
+    expect(firstShotHintMessage(true, 2)).toBe(
+      "Hint 2: from the start, place your mirror, then fire the framed emitter first: it begins a par solution. Restart to try it.",
+    );
   });
 });

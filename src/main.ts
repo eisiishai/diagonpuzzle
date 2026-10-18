@@ -136,11 +136,25 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
       });
     }, "left");
 
-  /** Time on level screens counts towards earning a skip back. */
+  /** The level on screen, while a level screen shows. */
+  let levelIndex = 0;
+
+  /**
+   * Time on level screens counts towards earning a skip back, and on a
+   * level's screen towards its second hint.
+   */
   const countLevelTime = (gameScene: GameScene, deltaMs: number) => {
-    const { skipsChanged, save: shouldSave } = game.addLevelTime(deltaMs);
+    const {
+      skipsChanged,
+      hintOpened,
+      save: shouldSave,
+    } = game.addLevelTime(levelIndex, deltaMs);
     if (skipsChanged) {
       gameScene.setSkipsLeft(game.progress.skipsLeft);
+    }
+    gameScene.setHintWaitLeft(game.hintWaitLeft(levelIndex));
+    if (hintOpened) {
+      gameScene.openSecondHint();
     }
     if (shouldSave) {
       save();
@@ -156,6 +170,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
       audio.setMusic(level.music);
       const fullBoard = parseLevel(level.grid);
       const start = game.levelStart(index);
+      levelIndex = index;
       return new GameScene({
         board: withBonuses(fullBoard, () => start.bonusesShown),
         levelNumber: index + 1,
@@ -173,7 +188,16 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
           collected: start.bonusesCollected,
           board: fullBoard,
         },
+        hint: {
+          text: level.hint,
+          stage: start.hintStage,
+          waitLeftMs: start.hintWaitLeft,
+        },
         audio,
+        onOpenHint: () => {
+          game.openHint(index);
+          save();
+        },
         onComplete: (shots) => {
           const report = game.complete(index, shots);
           save();

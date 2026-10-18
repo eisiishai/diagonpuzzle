@@ -113,6 +113,9 @@ export class BoardView extends Container {
   /** Time into a shake of the board, while it shakes. */
   private shakeMs: number | null = null;
   private selectedRow: number | null = null;
+  /** A frame around the emitter the second hint points at; see setHintRow(). */
+  private readonly hintMark = new Graphics();
+  private _hintRow: number | null = null;
   /** Time for the ambient pulses of the goal and the selected emitter. */
   private ambientMs = 0;
   private wave: FinaleWave | null = null;
@@ -179,6 +182,18 @@ export class BoardView extends Container {
       this.createCellPointer(handlers),
     );
 
+    this.hintMark
+      .roundRect(
+        -cellSize * 0.44,
+        -cellSize * 0.4,
+        cellSize * 0.88,
+        cellSize * 0.8,
+        10,
+      )
+      .stroke({ width: 2.5, color: COLORS.hint });
+    this.hintMark.x = cellSize / 2;
+    this.hintMark.visible = false;
+    this.addChild(this.hintMark);
     for (let row = 0; row < board.height; row++) {
       const launcher = this.createLauncher(row, handlers);
       this.launchers.push(launcher);
@@ -283,6 +298,20 @@ export class BoardView extends Container {
         }
       }),
     );
+  }
+
+  /** Frames the emitter of `row` for the second hint, or nothing if null. */
+  setHintRow(row: number | null): void {
+    this._hintRow = row;
+    this.hintMark.visible = row !== null;
+    if (row !== null) {
+      this.hintMark.y = (row + 0.5) * this.cellSize;
+    }
+  }
+
+  /** The row whose emitter the second hint frames, if any. */
+  get hintRow(): number | null {
+    return this._hintRow;
   }
 
   /** Highlights the launcher and board row of `row`, or nothing if null. */
@@ -510,7 +539,7 @@ export class BoardView extends Container {
 
   /**
    * Goal crystals breathe (grow slightly and glow), and the selected
-   * emitter's glow pulses. Bonus targets turn, pulse faster and deeper, and
+   * emitter's glow and the hint's frame pulse. Bonus targets turn, pulse faster and deeper, and
    * give off sparkles; portals' vanes swirl. Still when the player prefers
    * reduced motion.
    */
@@ -546,6 +575,7 @@ export class BoardView extends Container {
       }),
     );
     this.placePreview.alpha = 0.65 + 0.35 * breath;
+    this.hintMark.alpha = 0.55 + 0.45 * breath;
     if (this.selectedRow !== null) {
       this.launchers[this.selectedRow].alpha = 0.75 + 0.25 * breath;
     }

@@ -653,6 +653,43 @@ the harder single-hit levels 8–10, so the difficulty doesn't dip at the
 end. Each of the two chapters has five levels (regrouped on 2026-10-17,
 from four and six).
 
+## Hints
+
+Every level has two hints, for a player who is stuck but doesn't want to
+skip (chosen 2026-10-18). They cost nothing: stars, golden stars and
+skips are unchanged.
+
+- **The hint button:** *Hint · H* at the right of the row under the
+  message (the music and sound buttons are on a row of their own below
+  it), or the H key, on every level, completed ones and the secret
+  chapter's included.
+- **Hint 1, text.** The first press shows the level's text hint in the
+  message, in the hint colour, starting "Hint:". It names the idea or
+  the key piece, never rows, cells or a whole route: e.g. "A broken wall
+  leaves an empty cell, and your mirror can go there." It is written by
+  hand (`hint` in `src/levels/levels.ts`), at most 125 characters so it
+  fits two lines on the narrowest board, with no numbers (a test checks
+  both).
+- **Hint 2, the first shot.** Opening hint 1 starts a wait of 2 minutes
+  on that level's screen (counted like the wait for a skip: the title
+  screen and a hidden browser tab don't count), saved per level, so it
+  adds up across visits. Meanwhile the button counts down, *Hint 2 in
+  1:24*; then it reads *Hint 2 · H*, lit until pressed. Hint 2 frames
+  the emitter of a par solution's first shot with a pulsing outline (still
+  with reduced motion) and says "Hint 2: from the start, fire the framed
+  emitter first: it begins a par solution." If the solution places the
+  player's mirror before that shot, the message says to place the mirror
+  first, without the cell, which is the puzzle. After shots in the try it
+  adds "Restart to try it."; the frame stays through a restart and goes
+  with the next shot.
+- **Worked out, not written.** Hint 2 comes from the solver, from the
+  board the level starts with (its bonus target showing once the level is
+  at par); a test checks there is one for every level, either way.
+- **Pressing again** alternates: once hint 2 is open, a press shows it,
+  the next shows hint 1 again, and so on.
+- **No third hint.** Past the first shot, the Skip button is the way out;
+  hints never play the level for the player.
+
 ## Controls
 
 - **Mouse:** hovering over a launch position selects its row; clicking fires.
@@ -672,6 +709,7 @@ from four and six).
   can move on at any time; Enter/Space still fires until the level is
   completed again.
 - **Esc** or the *Menu* label returns to the title screen at any time.
+- **H** or the *Hint* button shows the level's hints (see *Hints*).
 - **Skip button:** *Skip level · 3/3* at the bottom left skips a level
   not yet completed or skipped, on a second press within 3 seconds ("Press
   again to skip"), so a stray tap doesn't waste one. The player has 3
@@ -830,6 +868,7 @@ Colours and fonts are defined once in `src/render/theme.ts`.
 | Stone | `#323846`, edge `#5d6680`, cracks `#0d111b` | Breakable walls |
 | Gate | `#ffb547`, rails `#4a5d82` | One-way gates' arrow and rails |
 | Idle emitter | `#3b5a86` | Launchers not selected |
+| Hint | `#7fe3ff` | Hint messages, the frame around the emitter hint 2 points at |
 | Marking | `#2f4670`, labels `#6482b0` | Corner ticks and labels around the board |
 
 Text colours keep at least 4.5:1 contrast on the background.

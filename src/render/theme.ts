@@ -34,6 +34,8 @@ export const COLORS = {
   /** One-way gates: an amber arrow between two rails. */
   gate: 0xffb547,
   gateRail: 0x4a5d82,
+  /** Hints: their message, and the frame around the emitter they point at. */
+  hint: 0x7fe3ff,
   emitterIdle: 0x3b5a86,
   emitterSelected: 0x11223a,
   /** Corner ticks around the board, and their labels (4.9:1 contrast). */

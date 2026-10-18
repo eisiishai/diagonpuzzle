@@ -24,6 +24,7 @@ describe("keyAction", () => {
     expect(press("p").action).toBe("place");
     expect(press("Escape").action).toBe("back");
     expect(press("r").action).toBe("restart");
+    expect(press("h").action).toBe("hint");
   });
 
   it("leaves unused keys to the browser", () => {

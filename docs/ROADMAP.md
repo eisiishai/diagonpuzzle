@@ -115,6 +115,13 @@ chapter (46–50); a better difficulty measure (Engineering track,
 - [x] Scale the game to fit the window, so larger levels work on small
   screens and phones (touch input already works through pointer events)
 
+- [x] Hints (2026-10-18): a hand-written text hint on every level, and
+  after 2 minutes on the level a second hint that frames the emitter of
+  a par solution's first shot (`docs/DESIGN.md`, *Hints*)
+  - [ ] Playtest the 50 text hints: does each help without giving the
+    level away? Reword the ones that say too much or too little
+  - [ ] Check the hint frame on a phone
+
 ### Mechanic ideas
 
 Each needs a design in `docs/DESIGN.md`, and a decision on how it interacts

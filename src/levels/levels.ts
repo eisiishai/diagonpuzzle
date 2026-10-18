@@ -6,6 +6,12 @@ export interface LevelDefinition {
   id: string;
   name: string;
   /**
+   * The level's text hint (see docs/DESIGN.md, Hints): the idea or the key
+   * piece, never rows or a whole route. At most two lines on the level
+   * screen; a test checks its length.
+   */
+  hint: string;
+  /**
    * Fewest shots that solve the level, as designed. Tests check it with the
    * solver, so a level that is accidentally easier or harder fails.
    */
@@ -37,6 +43,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "first-light",
     name: "First light",
+    hint: "Work backwards: from the goal, follow its row left until a mirror turns that line towards an emitter.",
     minShots: 1,
     bonusShots: 1,
     music: "afterglow",
@@ -51,6 +58,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "up-and-over",
     name: "Up and over",
+    hint: "The pellet can climb: a mirror low on the board can send it up to the goal's row.",
     minShots: 1,
     bonusShots: 2,
     music: "afterglow",
@@ -66,6 +74,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "second-try",
     name: "Second try",
+    hint: "The leftmost mirror on the goal's row sends shots the wrong way. A shot that bounces off it turns it around.",
     minShots: 2,
     bonusShots: 3,
     music: "afterglow",
@@ -80,6 +89,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "set-the-stage",
     name: "Set the stage",
+    hint: "The mirror on the goal's row turns shots away. Flip it with one shot, then reach it from above.",
     minShots: 2,
     bonusShots: 3,
     music: "afterglow",
@@ -95,6 +105,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "down-and-around",
     name: "Down and around",
+    hint: "The long way round: the route to the goal runs down the left edge and along the bottom. Set its corners first.",
     minShots: 2,
     bonusShots: 3,
     music: "afterglow",
@@ -110,6 +121,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "double-take",
     name: "Double take",
+    hint: "Each goal hit flips the mirrors it passes. Look for a second way in that the first hit opens up.",
     minShots: 2,
     goalHits: 2,
     bonusShots: 3,
@@ -124,6 +136,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "encore",
     name: "Warm-up",
+    hint: "Start with a shot that misses: it turns a mirror in the column beside the goal.",
     minShots: 3,
     goalHits: 2,
     bonusShots: 4,
@@ -138,6 +151,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "third-time-lucky",
     name: "Third time lucky",
+    hint: "The mirror beside the goal ends up as it started, but reaching the one above it means passing it twice.",
     minShots: 3,
     bonusShots: 4,
     music: "glassGarden",
@@ -154,6 +168,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "back-and-forth",
     name: "Back and forth",
+    hint: "The winning shot comes from the same emitter as the first. Two setup shots turn the mirrors in its way.",
     minShots: 3,
     bonusShots: 4,
     music: "glassGarden",
@@ -170,6 +185,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "two-step",
     name: "Two-step",
+    hint: "Two emitters take turns: each shot sets up the other's next one.",
     minShots: 4,
     bonusShots: 6,
     music: "glassGarden",
@@ -187,6 +203,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "breakthrough",
     name: "Breakthrough",
+    hint: "Break the cracked wall, then keep going: each shot through the gap turns more mirrors.",
     minShots: 3,
     bonusShots: 4,
     music: "prism",
@@ -202,6 +219,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "trapdoor",
     name: "Trapdoor",
+    hint: "Two cracked walls: the one in the left column opens a way down, the one by the goal a way in.",
     minShots: 4,
     bonusShots: 5,
     music: "prism",
@@ -216,6 +234,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "stone-by-stone",
     name: "Stone by stone",
+    hint: "The two lowest emitters share their mirrors: take turns with them, and break the cracked wall on the way.",
     minShots: 4,
     bonusShots: 5,
     music: "prism",
@@ -232,6 +251,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "crack-and-double",
     name: "Crack and double",
+    hint: "Break the cracked wall in front of the goal first; then two different emitters can each reach it.",
     minShots: 3,
     goalHits: 2,
     bonusShots: 4,
@@ -247,6 +267,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "rubble-run",
     name: "Rubble run",
+    hint: "A goal hit and the shot that sets it up can be played twice. Find the pair, and the cracked wall that stops it at first.",
     minShots: 5,
     goalHits: 2,
     bonusShots: 6,
@@ -263,6 +284,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "your-move",
     name: "Your move",
+    hint: "The goal can be reached from below. Your mirror can turn a shot upwards.",
     minShots: 1,
     bonusShots: 2,
     playerMirror: "mirrorSlash",
@@ -277,6 +299,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "hairpin",
     name: "Hairpin",
+    hint: "The name says it: the winning shot goes up, then comes back down to the goal's row.",
     minShots: 2,
     bonusShots: 3,
     playerMirror: "mirrorSlash",
@@ -292,6 +315,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "double-duty",
     name: "Double duty",
+    hint: "Your mirror has two jobs: it helps a setup shot turn the mirrors by the goal, then turns the winning shot.",
     minShots: 3,
     bonusShots: 4,
     playerMirror: "mirrorSlash",
@@ -307,6 +331,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "clear-the-way",
     name: "Clear the way",
+    hint: "Break the cracked wall in the corner first. Your mirror is best where shots can come up into the goal.",
     minShots: 3,
     goalHits: 2,
     bonusShots: 4,
@@ -323,6 +348,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "rebuild",
     name: "Rebuild",
+    hint: "A broken wall leaves an empty cell, and your mirror can go there.",
     minShots: 4,
     goalHits: 2,
     bonusShots: 5,
@@ -339,6 +365,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "return-trip",
     name: "Return trip",
+    hint: "A reflector sends the pellet back the way it came, but the mirror it just passed has flipped.",
     minShots: 1,
     bonusShots: 2,
     music: "return",
@@ -352,6 +379,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "there-and-back",
     name: "There and back",
+    hint: "The mirror before the goal gets two chances: the pellet can bounce off a reflector and meet it flipped.",
     minShots: 2,
     bonusShots: 3,
     music: "return",
@@ -366,6 +394,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "ricochet",
     name: "Ricochet",
+    hint: "Shots up the middle column come back down off the reflector. A cracked wall stands between that column and the goal.",
     minShots: 3,
     bonusShots: 4,
     music: "return",
@@ -380,6 +409,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "mirror-image",
     name: "Mirror image",
+    hint: "The reflector sends the pellet back through mirrors it has just flipped. Use that to reach the top right.",
     minShots: 3,
     bonusShots: 4,
     playerMirror: "mirrorBackslash",
@@ -395,6 +425,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "double-back",
     name: "Double back",
+    hint: "The reflector at the left edge bounces shots back up the first column. One emitter can hit the goal twice.",
     minShots: 4,
     goalHits: 2,
     bonusShots: 5,
@@ -411,6 +442,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "glass-house",
     name: "Glass house",
+    hint: "The glass mirror is in the goal's way. A shot that bounces off it shatters it for good.",
     minShots: 2,
     bonusShots: 4,
     music: "glassHarp",
@@ -424,6 +456,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "clean-break",
     name: "Clean break",
+    hint: "One well-aimed shot can shatter both glass mirrors by the goal.",
     minShots: 3,
     bonusShots: 4,
     music: "glassHarp",
@@ -438,6 +471,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "glass-echo",
     name: "Glass echo",
+    hint: "A shot that shatters glass on its way to the reflector passes straight through on the way back.",
     minShots: 3,
     bonusShots: 4,
     music: "glassHarp",
@@ -452,6 +486,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "double-glazing",
     name: "Double glazing",
+    hint: "Between the two goal hits, a shot from the same emitter as before puts the mirrors by the goal back.",
     minShots: 4,
     goalHits: 2,
     bonusShots: 5,
@@ -467,6 +502,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "glass-and-stone",
     name: "Glass and stone",
+    hint: "Break the two cracked walls on the left edge first, and spend the glass mirrors wisely.",
     minShots: 4,
     bonusShots: 5,
     music: "glassHarp",
@@ -482,6 +518,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "bolted-down",
     name: "Bolted down",
+    hint: "The steel mirror never flips, so shots through it always go the same way. Change the mirrors around it instead.",
     minShots: 2,
     bonusShots: 3,
     music: "anchor",
@@ -495,6 +532,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "cold-steel",
     name: "Cold steel",
+    hint: "The steel mirror beside the goal turns shots coming down into it. Find a way to reach the cell above it.",
     minShots: 3,
     bonusShots: 4,
     music: "anchor",
@@ -509,6 +547,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "strike-twice",
     name: "Strike twice",
+    hint: "The same emitter can hit the goal twice, if a shot in between puts the mirrors back.",
     minShots: 4,
     goalHits: 2,
     bonusShots: 5,
@@ -524,6 +563,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "steel-echo",
     name: "Steel echo",
+    hint: "The reflector throws shots back into the left column. Break the cracked wall in front of the goal on the way.",
     minShots: 3,
     bonusShots: 5,
     music: "anchor",
@@ -538,6 +578,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "true-north",
     name: "True north",
+    hint: "Your mirror goes where a shot turned up by the steel mirror arrives. It may need a flip before it points right.",
     minShots: 3,
     bonusShots: 4,
     playerMirror: "mirrorBackslash",
@@ -553,6 +594,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "other-side",
     name: "Other side",
+    hint: "A portal sends the pellet out of the other portal, still moving the same way.",
     minShots: 1,
     bonusShots: 3,
     music: "wormhole",
@@ -567,6 +609,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "shortcut",
     name: "Shortcut",
+    hint: "The portal in the bottom row leads to the top one, right on the goal's row. Find a way into it.",
     minShots: 2,
     bonusShots: 3,
     music: "wormhole",
@@ -581,6 +624,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "knock-first",
     name: "Knock first",
+    hint: "Break the cracked wall by the goal first. The way to it goes through a portal.",
     minShots: 3,
     bonusShots: 4,
     music: "wormhole",
@@ -595,6 +639,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "boomerang",
     name: "Boomerang",
+    hint: "A shot can go through a portal, bounce off the reflector and come back through the same portal.",
     minShots: 4,
     bonusShots: 5,
     music: "wormhole",
@@ -609,6 +654,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "looking-glass",
     name: "Looking glass",
+    hint: "The winning shot comes out of the bottom-left portal and climbs. Turn the mirrors on its way up.",
     minShots: 4,
     bonusShots: 5,
     music: "wormhole",
@@ -623,6 +669,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "one-way",
     name: "One way",
+    hint: "Shots through the gate need the two mirrors after it turned. Another emitter can turn both.",
     minShots: 2,
     bonusShots: 3,
     music: "current",
@@ -637,6 +684,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "no-way-back",
     name: "No way back",
+    hint: "The winning shot comes from the top emitter. Shots from below can turn its mirrors; the gates keep them from coming back.",
     minShots: 3,
     bonusShots: 4,
     music: "current",
@@ -651,6 +699,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "echo-chamber",
     name: "Echo chamber",
+    hint: "The cracked wall in the left column blocks an emitter's way in. A shot off the reflector can break it from inside.",
     minShots: 3,
     bonusShots: 5,
     music: "current",
@@ -665,6 +714,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "double-crossing",
     name: "Double crossing",
+    hint: "The goal is on the left portal's row. The route into the other portal is set up by a different emitter.",
     minShots: 4,
     goalHits: 2,
     bonusShots: 6,
@@ -680,6 +730,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "last-light",
     name: "Last light",
+    hint: "Your mirror belongs near the goal's row, and it will be hit more than once before the winning shot.",
     minShots: 5,
     bonusShots: 6,
     playerMirror: "mirrorBackslash",
@@ -698,6 +749,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "long-game",
     name: "Long game",
+    hint: "The winning shot climbs the fifth column to the goal. Everything before it turns that column's mirrors.",
     minShots: 5,
     music: "wormhole",
     grid: String.raw`
@@ -711,6 +763,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "headwind",
     name: "Headwind",
+    hint: "Both goal hits can come from the same emitter. The shot between them is the puzzle.",
     minShots: 5,
     goalHits: 2,
     music: "anchor",
@@ -725,6 +778,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "aftershock",
     name: "Aftershock",
+    hint: "Shots that bounce off the bottom reflector turn the middle mirrors for the top emitter's winning shot.",
     minShots: 5,
     music: "return",
     grid: String.raw`
@@ -738,6 +792,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "far-corner",
     name: "Far corner",
+    hint: "The bottom-right portal's shots run along the bottom row. Your mirror can turn them towards the goal.",
     minShots: 5,
     playerMirror: "mirrorBackslash",
     music: "photon",
@@ -752,6 +807,7 @@ export const LEVELS: readonly LevelDefinition[] = [
   {
     id: "full-circle",
     name: "Full circle",
+    hint: "Shatter the glass first. Both goal hits run along the bottom and up the fourth column; the portals set them up.",
     minShots: 5,
     goalHits: 2,
     music: "afterglow",

@@ -167,7 +167,9 @@ in the curve and which combinations a chapter has. Random odds
   in the background.
 - A new level touches these places besides its entry in
   `src/levels/levels.ts` (a new `id`; `music` from its mechanic's group,
-  see *Sound* in `docs/DESIGN.md`). It may go anywhere in the list, also
+  see *Sound* in `docs/DESIGN.md`; a `hint`, see *Hints* there: the idea
+  or key piece of its par solution, from `npm run levels` and
+  `npm run trace`, with no numbers). It may go anywhere in the list, also
   between released levels: progress is saved by `id`, and a level after
   it stays unlocked once passed. It joins the chapter it is placed in
   (`CHAPTERS` in the same file; a chapter holds at most six levels, one

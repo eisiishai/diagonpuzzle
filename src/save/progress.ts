@@ -1,7 +1,7 @@
 // Player progress: which levels are completed and the best shot count for
 // each, which levels were skipped, which bonus targets were collected, and
-// how many visible skips are left. Pure functions; reading and writing
-// storage is done by the caller.
+// how many visible skips are left, and which levels' hints were opened.
+// Pure functions; reading and writing storage is done by the caller.
 
 export interface LevelProgress {
   bestShots: number;
@@ -31,6 +31,12 @@ export interface Progress {
    * while none are left; reaching SKIP_WAIT_MS gives one back.
    */
   readonly skipWaitMs: number;
+  /**
+   * Levels whose text hint was opened, keyed by level id: time spent on
+   * the level's screen since then, up to HINT_WAIT_MS, which opens the
+   * second hint (see docs/DESIGN.md, Hints).
+   */
+  readonly hints: Readonly<Partial<Record<string, number>>>;
 }
 
 /** Visible skips a player starts with and can hold at most. */
@@ -38,6 +44,9 @@ export const MAX_SKIPS = 3;
 
 /** Time on level screens with no skips left that earns one back. */
 export const SKIP_WAIT_MS = 5 * 60 * 1000;
+
+/** Time on a level's screen after opening its text hint that opens the second. */
+export const HINT_WAIT_MS = 2 * 60 * 1000;
 
 /** What progress needs to know about a level for stars and bonus targets. */
 export interface LevelSummary {
@@ -55,6 +64,7 @@ export const EMPTY_PROGRESS: Progress = {
   bonuses: {},
   skipsLeft: MAX_SKIPS,
   skipWaitMs: 0,
+  hints: {},
 };
 
 const FORMAT_VERSION = 1;
@@ -133,6 +143,52 @@ export function addLevelTime(progress: Progress, ms: number): Progress {
   return skipWaitMs >= SKIP_WAIT_MS
     ? returnSkip(progress)
     : { ...progress, skipWaitMs };
+}
+
+/**
+ * How far a level's hints are open: 0 none, 1 the text hint, 2 also the
+ * first shot of a par solution.
+ */
+export function hintStage(progress: Progress, levelId: string): 0 | 1 | 2 {
+  const waited = progress.hints[levelId];
+  if (waited === undefined) {
+    return 0;
+  }
+  return waited >= HINT_WAIT_MS ? 2 : 1;
+}
+
+/** Time on the level's screen left before its second hint opens. */
+export function hintWaitLeft(progress: Progress, levelId: string): number {
+  return HINT_WAIT_MS - (progress.hints[levelId] ?? 0);
+}
+
+/** Opens a level's text hint, which starts the wait for the second. */
+export function openHint(progress: Progress, levelId: string): Progress {
+  return progress.hints[levelId] !== undefined
+    ? progress
+    : { ...progress, hints: { ...progress.hints, [levelId]: 0 } };
+}
+
+/**
+ * Counts `ms` spent on a level's screen towards its second hint, if its
+ * text hint is open and the second isn't yet.
+ */
+export function addHintTime(
+  progress: Progress,
+  levelId: string,
+  ms: number,
+): Progress {
+  const waited = progress.hints[levelId];
+  if (waited === undefined || waited >= HINT_WAIT_MS) {
+    return progress;
+  }
+  return {
+    ...progress,
+    hints: {
+      ...progress.hints,
+      [levelId]: Math.min(HINT_WAIT_MS, waited + ms),
+    },
+  };
 }
 
 export function isSkipped(progress: Progress, levelId: string): boolean {
@@ -346,6 +402,7 @@ export function serializeProgress(progress: Progress): string {
     bonuses: progress.bonuses,
     skipsLeft: progress.skipsLeft,
     skipWaitMs: progress.skipWaitMs,
+    hints: progress.hints,
   });
 }
 
@@ -421,5 +478,19 @@ export function parseProgress(json: string | null): Progress {
     Number.isFinite(data.skipWaitMs)
       ? Math.max(0, Math.min(SKIP_WAIT_MS, data.skipWaitMs))
       : 0;
-  return { levels, skipped, bonuses, skipsLeft, skipWaitMs };
+  // Saves from before hints existed have none open.
+  const hints: Record<string, number> = {};
+  if (
+    "hints" in data &&
+    typeof data.hints === "object" &&
+    data.hints !== null &&
+    !Array.isArray(data.hints)
+  ) {
+    for (const [id, waited] of Object.entries(data.hints)) {
+      if (typeof waited === "number" && Number.isFinite(waited)) {
+        hints[id] = Math.max(0, Math.min(HINT_WAIT_MS, waited));
+      }
+    }
+  }
+  return { levels, skipped, bonuses, skipsLeft, skipWaitMs, hints };
 }

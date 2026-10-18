@@ -3,6 +3,7 @@ import { columnPan } from "../audio/effects";
 import type { GameAudio } from "../audio/GameAudio";
 import { boardHas, cellPositions } from "../game/board";
 import { FIXED_MIRRORS, GATE_CELLS, GLASS_MIRRORS } from "../game/cells";
+import { firstShotHint } from "../game/hints";
 import { LevelSession } from "../game/LevelSession";
 import { MirrorPlacement } from "../game/MirrorPlacement";
 import type { PlacementKey, PlacementResult } from "../game/MirrorPlacement";
@@ -20,7 +21,13 @@ import { COLORS, textStyle } from "../render/theme";
 import { AudioControls, Button } from "../render/ui";
 import type { LevelTestState } from "../testState";
 import type { Scene } from "./Scene";
-import { STAR, completionMessage, introMessage } from "./scoreText";
+import {
+  STAR,
+  completionMessage,
+  firstShotHintMessage,
+  hintLabel,
+  introMessage,
+} from "./scoreText";
 
 const CELL_SIZE = 64;
 /** Height of a row of buttons. */
@@ -31,6 +38,8 @@ const MESSAGE_HEIGHT = 64;
 /** Narrowest the screen's content gets, whatever the board size. */
 const MIN_SCENE_WIDTH = 600;
 
+/** Wide enough for the hint button's longest label, so it doesn't jump. */
+const HINT_BUTTON_WIDTH = 168;
 /** How long the Skip button waits for its confirming second press. */
 const SKIP_CONFIRM_MS = 3000;
 const PLACED_MESSAGE = "Mirror placed. It flips when hit, like the others.";
@@ -86,7 +95,15 @@ export interface GameSceneOptions {
    * is completed at par in this visit.
    */
   bonus: { shown: boolean; total: number; collected: number; board: Board };
+  /**
+   * The level's hints (see docs/DESIGN.md, Hints): its text hint, how far
+   * they are open at the start (see hintStage() in src/save/progress.ts),
+   * and the time on the level's screen left before the second opens.
+   */
+  hint: { text: string; stage: 0 | 1 | 2; waitLeftMs: number };
   audio: GameAudio;
+  /** Called when the player opens the level's text hint for the first time. */
+  onOpenHint: () => void;
   /** Records a completion in `shots`; returns what it earned. */
   onComplete: (shots: number) => CompletionReport;
   /** Records a bonus target hit at board cell (x, y); returns what it earned. */
@@ -119,6 +136,17 @@ export class GameScene extends Container implements Scene {
   private readonly messageText: Text;
   private readonly nextButton: Button;
   private readonly skipButton: Button;
+  private readonly hintButton: Button;
+  /** How far the level's hints are open; see hintStage(). */
+  private hintStage: 0 | 1 | 2;
+  /** Time on the level's screen left before the second hint opens. */
+  private hintWaitLeftMs: number;
+  /** The hint the message shows now, if any; the next press shows the other. */
+  private hintShown: 0 | 1 | 2 = 0;
+  /** The hint button is lit: see updateHintButton(). */
+  private hintLit = false;
+  /** The second hint has been shown in this visit. */
+  private secondHintSeen = false;
   /** Time left for the Skip button's confirming press; 0 when not armed. */
   private skipConfirmMs = 0;
   private skipsLeft: number;
@@ -149,6 +177,8 @@ export class GameScene extends Container implements Scene {
     this.bonusesInPlay = options.bonus.shown;
     this.passed = options.passedBefore;
     this.skipsLeft = options.skipsLeft;
+    this.hintStage = options.hint.stage;
+    this.hintWaitLeftMs = options.hint.waitLeftMs;
     const { board, levelNumber, levelCount, levelName } = options;
     this.session = new LevelSession(
       board,
@@ -210,8 +240,9 @@ export class GameScene extends Container implements Scene {
     });
     this.messageText.y = HEADER_HEIGHT + this.boardView.contentHeight + 18;
 
-    // Bottom row, below room for a two-line message: next or skip button on
-    // the left, sound buttons on the right.
+    // Bottom rows, below room for a two-line message: next or skip button
+    // on the left and the hint button on the right, then the sound buttons
+    // on the right of a row of their own.
     const bottomRow = this.messageText.y + MESSAGE_HEIGHT;
     const isLastLevel = options.levelNumber === options.levelCount;
     this.nextButton = new Button({
@@ -225,10 +256,18 @@ export class GameScene extends Container implements Scene {
       onTap: () => this.pressSkip(),
     });
     this.skipButton.y = bottomRow;
+    this.hintButton = new Button({
+      label: hintLabel(this.hintStage, this.hintWaitLeftMs),
+      width: HINT_BUTTON_WIDTH,
+      onTap: () => this.showHint(),
+    });
+    this.updateHintButton();
+    this.hintButton.position.set(width - HINT_BUTTON_WIDTH, bottomRow);
     this.showNextButton(false);
     this.audioControls = new AudioControls(options.audio, "right");
-    this.audioControls.position.set(width, bottomRow);
-    this.contentHeight = bottomRow + ROW_HEIGHT;
+    const audioRow = bottomRow + ROW_HEIGHT + ROW_GAP;
+    this.audioControls.position.set(width, audioRow);
+    this.contentHeight = audioRow + ROW_HEIGHT;
 
     this.addChild(
       levelText,
@@ -241,6 +280,7 @@ export class GameScene extends Container implements Scene {
       this.messageText,
       this.nextButton,
       this.skipButton,
+      this.hintButton,
       this.celebration,
     );
     this.updateShots();
@@ -301,6 +341,10 @@ export class GameScene extends Container implements Scene {
       case "restart":
         this.restart();
         break;
+      case "hint":
+        this.options.audio.play("click");
+        this.showHint();
+        break;
       case "skipLevel":
         this.options.onSkip();
         break;
@@ -349,6 +393,8 @@ export class GameScene extends Container implements Scene {
       ),
       shown: boardView.shownCells(),
       banner: this.celebration.bannerText,
+      hintStage: this.hintStage,
+      hintRow: boardView.hintRow,
     };
   }
 
@@ -377,6 +423,8 @@ export class GameScene extends Container implements Scene {
     this.placement.clear();
     this.showPreview();
     this.boardView.setSelectedRow(this.session.selectedRow);
+    this.boardView.setHintRow(null);
+    this.hintShown = 0;
     this.updateShots();
     this.showMessage("");
     this.options.audio.play("fire");
@@ -670,6 +718,65 @@ export class GameScene extends Container implements Scene {
     }
     this.skipConfirmMs = SKIP_CONFIRM_MS;
     this.skipButton.setLabel(this.skipLabel());
+  }
+
+  /**
+   * The hint button: opens the text hint the first time; once the second
+   * hint is open, shows it, and the text hint again on the next press.
+   */
+  private showHint(): void {
+    if (this.hintStage === 0) {
+      this.hintStage = 1;
+      this.options.onOpenHint();
+    }
+    if (this.hintStage === 2 && this.hintShown !== 2) {
+      // From the board the level starts with now: a restart after par
+      // brings in the bonus target.
+      const { goalHits, playerMirror, par } = this.options;
+      const firstShot = firstShotHint(this.session.startBoard, par, {
+        goalHits,
+        playerMirror,
+      });
+      if (firstShot) {
+        this.boardView.setHintRow(firstShot.row);
+        this.showMessage(
+          firstShotHintMessage(firstShot.placeFirst, this.session.shots),
+          COLORS.hint,
+        );
+        this.hintShown = 2;
+        this.secondHintSeen = true;
+        this.updateHintButton();
+        return;
+      }
+    }
+    this.showMessage(`Hint: ${this.options.hint.text}`, COLORS.hint);
+    this.hintShown = 1;
+    this.updateHintButton();
+  }
+
+  /** Counts down the wait for the second hint on the hint button. */
+  setHintWaitLeft(ms: number): void {
+    this.hintWaitLeftMs = ms;
+    this.updateHintButton();
+  }
+
+  /** The second hint has opened: the hint button offers it. */
+  openSecondHint(): void {
+    this.hintStage = 2;
+    this.updateHintButton();
+  }
+
+  private updateHintButton(): void {
+    const label = hintLabel(this.hintStage, this.hintWaitLeftMs);
+    if (this.hintButton.label !== label) {
+      this.hintButton.setLabel(label);
+    }
+    // Lit until the newly opened second hint has been seen.
+    const lit = this.hintStage === 2 && !this.secondHintSeen;
+    if (lit !== this.hintLit) {
+      this.hintLit = lit;
+      this.hintButton.setVariant(lit ? "primary" : "secondary");
+    }
   }
 
   /** Updates the Skip button when skips change while playing. */
