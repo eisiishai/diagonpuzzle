@@ -426,6 +426,10 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
     a glass mirror, a fixed mirror, portals and a two-hit goal, the last
     missing combination (portals with a two-hit goal); foresight 7. Five
     levels fill the chapter's row
+  - [x] The title screen once the whole game is done (every bonus
+    target found and the secret chapter at par): the title's letters in
+    the bonus colours, lit one by one as the title beam passes under
+    them when the screen opens
   - [x] Music: no track of its own; each level plays a different earlier
     chapter's track (46 *Wormhole*, 47 *Anchor*, 48 *Return*, 49
     *Photon*), and 50 plays *Afterglow*, level 1's, so the game ends on

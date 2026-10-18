@@ -24,6 +24,7 @@ import {
   goldenStarCount,
   hasAllBonuses,
   hasFoundAllBonuses,
+  hasSecretLevelsAtPar,
   isCompleted,
   isSkipped,
   isUnlocked,
@@ -136,7 +137,13 @@ export class TitleScene extends Container implements Scene {
   private readonly detailScore: Text;
   private readonly version: Text;
   private readonly play: MenuItem;
-  private readonly title: Text;
+  private readonly title: Container;
+  /**
+   * The title in the bonus colours once the whole game is done (every
+   * bonus target found and the secret chapter at par); its letters light
+   * up as the title beam passes under them.
+   */
+  private readonly prismTitle: SpectrumText | null;
   /** The full height of the level list's content, and of the footer. */
   private listHeight = 0;
   private footerHeight = 0;
@@ -153,17 +160,33 @@ export class TitleScene extends Container implements Scene {
     const levelIds = levels.map((level) => level.id);
 
     this.audio = audio;
-    const title = new Text({ text: GAME_TITLE, style: textStyle("title") });
-    title.anchor.set(0.5, 0);
-    this.titleGlow = createGlow(COLORS.beam, TITLE_GLOW);
+    const allFound = hasFoundAllBonuses(progress, summaries);
+    this.prismTitle =
+      allFound && hasSecretLevelsAtPar(progress, summaries)
+        ? new SpectrumText(GAME_TITLE, textStyle("title"))
+        : null;
+    let title: Container;
+    if (this.prismTitle) {
+      title = this.prismTitle;
+      if (prefersReducedMotion()) {
+        this.prismTitle.light();
+      } else {
+        this.prismTitle.unlit();
+      }
+    } else {
+      const text = new Text({ text: GAME_TITLE, style: textStyle("title") });
+      text.anchor.set(0.5, 0);
+      title = text;
+    }
+    // A white glow suits the many-coloured title better than the beam's.
+    this.titleGlow = createGlow(
+      this.prismTitle ? COLORS.beamCore : COLORS.beam,
+      TITLE_GLOW,
+    );
     title.filters = [this.titleGlow];
     this.addChild(title);
     this.title = title;
-    this.titleBeam = new TitleBeam(
-      title.width,
-      title.height + 10,
-      hasFoundAllBonuses(progress, summaries),
-    );
+    this.titleBeam = new TitleBeam(title.width, title.height + 10, allFound);
     this.titleBeam.draw(prefersReducedMotion() ? 1 : 0);
     this.addChild(this.titleBeam);
 
@@ -322,6 +345,7 @@ export class TitleScene extends Container implements Scene {
         (view) => `${view.number.text} ${view.name.text} ${view.stars.text}`,
       ),
       detail: `${this.detailName.text} · ${this.detailScore.text}`,
+      prismTitle: this.prismTitle !== null,
       listView: this.levelList.viewBounds(),
       scrollBar: this.levelList.barBounds(),
     };
@@ -416,8 +440,9 @@ export class TitleScene extends Container implements Scene {
    * The title crystal pulses like the goal in the game. As the screen
    * appears, the title beam fires once: it shoots across from the left,
    * the title flares as it passes and the crystal flashes when it arrives;
-   * then it stays still. Still from the start (the beam drawn in full) when
-   * the player prefers reduced motion.
+   * then it stays still. A prism title's letters light up in their colours
+   * as the beam passes under them. Still from the start (the beam drawn in
+   * full, the letters lit) when the player prefers reduced motion.
    */
   update(deltaMs: number): void {
     this.levelList.update(deltaMs);
@@ -432,6 +457,14 @@ export class TitleScene extends Container implements Scene {
     const shotMs = Math.max(TITLE_FLARE_MS, BEAM_TRAVEL_MS + CRYSTAL_FLASH_MS);
     if (cycle >= 0 && cycle < shotMs + deltaMs) {
       const arrived = cycle - BEAM_TRAVEL_MS;
+      const travelled = easeInOutCubic(Math.min(1, cycle / BEAM_TRAVEL_MS));
+      if (this.prismTitle) {
+        const half = this.title.width / 2;
+        this.prismTitle.lightUpTo(-half + 2 * half * travelled);
+        if (arrived >= 0) {
+          this.prismTitle.light();
+        }
+      }
       this.titleBeam.draw(
         easeInOutCubic(cycle / BEAM_TRAVEL_MS),
         arrived < 0 ? 0 : easeOutCubic(Math.min(1, arrived / CRYSTAL_FLASH_MS)),

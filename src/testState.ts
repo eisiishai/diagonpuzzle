@@ -66,6 +66,11 @@ export interface TitleTestState {
   chapters: string[];
   /** The selected level's name and score, e.g. "1. First light · par 1". */
   detail: string;
+  /**
+   * The title is in the bonus colours: every bonus target found and the
+   * secret chapter at par.
+   */
+  prismTitle: boolean;
   /** The part of the screen where the scrolling level list shows. */
   listView: Rect;
   /** The list's scroll bar, while it doesn't all fit. */

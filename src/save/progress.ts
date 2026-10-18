@@ -314,6 +314,18 @@ export function opensSecretLevels(
 }
 
 /**
+ * True when there are secret levels in `levels` and all of them are at
+ * par: with every bonus target found, the whole game is done.
+ */
+export function hasSecretLevelsAtPar(
+  progress: Progress,
+  levels: readonly LevelSummary[],
+): boolean {
+  const secret = levels.filter((level) => level.secret);
+  return secret.length > 0 && starCount(progress, secret) === secret.length;
+}
+
+/**
  * True when going from `before` to `after` earned the last missing star of
  * the secret levels (there are some), so all of them are at par.
  */

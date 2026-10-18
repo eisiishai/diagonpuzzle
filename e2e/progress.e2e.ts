@@ -93,6 +93,8 @@ test("the secret chapter's last star plays the prism celebration and a prism sta
   const title = await backToTitle(game);
   expect(title.levels[last].state).toBe("prism");
   expect(title.header).toContain("ALL AT PAR!");
+  // The whole game is done: the title turns to the bonus colours.
+  expect(title.prismTitle).toBe(true);
 });
 
 test("the last bonus target plays the All bonus targets celebration and opens the secret chapter", async ({
@@ -121,6 +123,8 @@ test("the last bonus target plays the All bonus targets celebration and opens th
   expect(title.header).toContain(
     `GOLDEN ${STAR} ${MAIN_LEVELS.length}/${MAIN_LEVELS.length}  ·  ALL FOUND!`,
   );
+  // Not yet the prism title: the secret chapter is still to play.
+  expect(title.prismTitle).toBe(false);
   // The secret chapter is in the list now, its first level open.
   expect(title.levels).toHaveLength(LEVELS.length);
   expect(title.chapters[title.chapters.length - 1]).toContain("PRISM");

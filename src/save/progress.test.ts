@@ -21,6 +21,7 @@ import {
   openLevelCount,
   opensSecretLevels,
   completesSecretPar,
+  hasSecretLevelsAtPar,
   MAX_SKIPS,
   spendSkip,
   returnSkip,
@@ -338,6 +339,22 @@ describe("bonus targets", () => {
     expect(completesSecretPar(both, both, withSecret)).toBe(false);
     // A game without secret levels has none to complete.
     expect(completesSecretPar(EMPTY_PROGRESS, both, LEVELS)).toBe(false);
+  });
+
+  it("knows when every secret level is at par", () => {
+    const withSecret = [
+      ...LEVELS,
+      { id: "s", minShots: 3, bonusCount: 0, secret: true },
+      { id: "t", minShots: 2, bonusCount: 0, secret: true },
+    ];
+    const one = recordCompletion(EMPTY_PROGRESS, "s", 3).progress;
+    const above = recordCompletion(one, "t", 3).progress;
+    const both = recordCompletion(above, "t", 2).progress;
+    expect(hasSecretLevelsAtPar(one, withSecret)).toBe(false);
+    expect(hasSecretLevelsAtPar(above, withSecret)).toBe(false);
+    expect(hasSecretLevelsAtPar(both, withSecret)).toBe(true);
+    // A game without secret levels has none to complete.
+    expect(hasSecretLevelsAtPar(both, LEVELS)).toBe(false);
   });
 });
 

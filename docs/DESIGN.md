@@ -147,6 +147,14 @@ harder levels with no new pieces, combining several of the earlier ones.
   "★ PRISM AT PAR! ★" lit in the bonus colours by a sweeping light, with
   THANK YOU FOR PLAYING under it; its sound is in *Sound*, *Effects*.
   With reduced motion nothing rains and the banner is lit at once.
+- **The title screen afterwards.** With every bonus target found and
+  the secret chapter at par, the whole game is done: the title's letters
+  turn to the bonus colours, each letter the next colour, with a white
+  glow instead of the beam's. As the screen opens they start white and
+  light up in their colours as the title beam passes under them, once;
+  then they stay lit. With reduced motion they are lit from the start.
+  This adds to the bonus targets' title screen (ALL FOUND! and the prism
+  crystal), which stays as it is.
 - *Play* continues to its first level not yet completed once it is open;
   *Next level* on the level before it reads *Back to title* on the visit
   that opens it (the level screen keeps the level count it started with),
