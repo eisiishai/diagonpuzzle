@@ -3,7 +3,7 @@
 // play levels by their solver solutions.
 
 import { expect, test as base } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Dialog, Page } from "@playwright/test";
 import { bonusPositions, withBonuses } from "../src/game/bonus";
 import { solveBonusMoves, solveMoves } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
@@ -174,6 +174,22 @@ export class Game {
   async open(): Promise<void> {
     await this.page.goto("./?e2e");
     await this.waitForScene("title");
+  }
+
+  /**
+   * Opens the game again with a test setup (`?setup=`; src/save/testSetup.ts),
+   * accepting its confirmation (or message) with `accept`, and waits for the
+   * title screen.
+   */
+  async openSetup(setup: string, accept = true): Promise<void> {
+    const answer = (dialog: Dialog) =>
+      accept ? dialog.accept() : dialog.dismiss();
+    this.page.once("dialog", answer);
+    await addCoverage(this.page);
+    await startCoverage(this.page);
+    await this.page.goto(`./?e2e&setup=${setup}`);
+    await this.waitForScene("title");
+    this.page.off("dialog", answer);
   }
 
   async reload(): Promise<void> {

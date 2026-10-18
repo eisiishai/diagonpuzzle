@@ -136,6 +136,50 @@ test("the last bonus target plays the All bonus targets celebration and opens th
   await game.button(`CONTINUE: LEVEL ${MAIN_LEVELS.length + 1}`);
 });
 
+// Test setups (?setup=, docs/WORKFLOW.md) replace the saved progress with
+// one a step short of a once-per-player moment, keeping the player's own
+// until ?setup=restore.
+test("a test setup leaves one step to the ending, and restore brings progress back", async ({
+  game,
+}) => {
+  await game.seedCompleted(2);
+  await game.open();
+  const own = await game.storedProgress();
+
+  // Declined: nothing changes.
+  await game.openSetup("all-bonus", false);
+  expect(await game.storedProgress()).toBe(own);
+  expect((await game.state()).title!.notice).toBeNull();
+
+  await game.openSetup("all-bonus");
+  // The address loses the setup, so a reload doesn't apply it again.
+  expect(game.page.url()).not.toContain("setup=");
+  const title = (await game.state()).title!;
+  expect(title.notice).toBe("Test setup: level 1, its bonus target with row 1");
+  expect(title.header).toContain(`GOLDEN ${STAR} 44/45`);
+  await game.press("1. ");
+  await game.waitForLevel(1);
+  await game.play(bonusRoute(FIRST), "mouse");
+  await expect
+    .poll(async () => (await game.level()).banner)
+    .toContain("ALL BONUS TARGETS FOUND!");
+
+  // A second setup keeps the first backup, the player's own progress.
+  await game.openSetup("all-par");
+  expect((await game.state()).title!.notice).toBe(
+    "Test setup: level 1, par with row 4",
+  );
+  await game.openSetup("prism");
+  expect((await game.state()).title!.notice).toMatch(
+    new RegExp(`^Test setup: level ${MAIN_LEVELS.length + 1}, par with rows `),
+  );
+  await game.openSetup("restore");
+  expect(await game.storedProgress()).toBe(own);
+  // Nothing more to restore.
+  await game.openSetup("restore");
+  expect(await game.storedProgress()).toBe(own);
+});
+
 test("Reset progress erases saved progress on its second press", async ({
   game,
 }) => {

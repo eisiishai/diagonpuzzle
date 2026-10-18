@@ -696,6 +696,12 @@ from four and six).
   unlocks the level after it. Completing it later makes it an ordinary
   completed level. *Continue* on the title screen goes to the first level
   that is neither completed nor skipped, and only then back to skipped ones.
+- **Test setups:** opening the game with `?setup=all-par`, `all-bonus`
+  or `prism` in the address replaces the saved progress, after the
+  browser asks, with one a single step short of a once-per-player moment,
+  and `?setup=restore` brings the player's own back; the title screen
+  shows the step left. A testing aid like the hidden skip, but nothing in
+  play leads to it. Details in `docs/WORKFLOW.md`, *Test setups*.
 - A new shot can't be fired while the pellet is still moving.
 
 ## Title screen and progress

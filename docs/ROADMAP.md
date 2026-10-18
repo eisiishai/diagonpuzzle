@@ -744,6 +744,13 @@ lab page on 2026-10-11:
   - [x] Browser tests pass on GitHub's machines (no GPU, 4 slow cores,
     about 3 frames a second): traces only on a retry, longer limits
     there, the game's time keeping up at low frame rates under `?e2e`
+- [x] Test setups for the once-per-player moments, on a desktop or a
+  phone (2026-10-18): `?setup=all-par`, `all-bonus` and `prism` in the
+  address replace the saved progress with one a step short of the
+  moment, after the browser asks; `?setup=restore` brings the player's
+  own back. Built from the level list, so they replace the console
+  snippets that listed every level by hand (`docs/WORKFLOW.md`, *Test
+  setups*)
 
 ### Later
 

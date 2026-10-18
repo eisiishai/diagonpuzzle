@@ -110,8 +110,11 @@ src/
   audio/        synthesized sound (Web Audio): synth.ts building blocks,
                 effects.ts, music.ts tracks, GameAudio.ts mixing and playback
   save/         saved progress: pure rules (progress.ts), GameProgress (the
-                game's progress and how play changes it, tested) and
-                localStorage helpers
+                game's progress and how play changes it, tested),
+                localStorage helpers, and the test setups (testSetup.ts:
+                `?setup=` in the address loads a save one step short of a
+                once-per-player moment, for checking by hand on any
+                device; docs/WORKFLOW.md, Test setups)
   scenes/       TitleScene and GameScene; main.ts switches between them
   testHook.ts   the smoke tests' view of the game (scene, buttons, level
                 state with screen positions, level list, celebration

@@ -173,15 +173,13 @@ in the curve and which combinations a chapter has. Random odds
   (`CHAPTERS` in the same file; a chapter holds at most six levels, one
   row of tiles); a new mechanic starts a new chapter there, named after
   it. Levels of the secret chapter (*Prism*, last in `CHAPTERS`, marked
-  `secret`) get no bonus target, and need no entry in the console
-  snippet below.
+  `secret`) get no bonus target.
   - `src/levels/levels.test.ts`: the lists of levels with a setup route
     or needing a breakable wall broken, if it belongs in one
   - `docs/DESIGN.md`: the level table (and renumber the levels after it),
     the counts and ranges that mention level numbers (bonus targets,
     music groups, how levels were found)
   - `docs/ROADMAP.md`: the difficulty curve table, from `npm run levels`
-  - The console snippet in *Seeing the game's ending by hand* below
   - A level placed before others shifts every later level's number.
     Tests and scripts find levels by `id`, so only text needs changing:
     find it with a grep for the shifted numbers over `docs/`, `scripts/`
@@ -194,7 +192,8 @@ in the curve and which combinations a chapter has. Random odds
     `docs/ROADMAP.md` the game track items naming levels, the difficulty
     tables and the text around them; the help examples in
     `scripts/bonus.ts` and `scripts/trace.ts` (check they still name the
-    intended level); the counts in `README.md` and the console snippet
+    intended level); the counts in `README.md` and the steps named in *Test setups*
+    below
   - Run `npm run e2e:full`, which plays every level through
 - A new block type (cell type) touches these places, after its design in
   `docs/DESIGN.md` (rule, grid symbol, look). Only the first four are
@@ -424,68 +423,42 @@ CLAUDE.md). Before committing a change that affects them, play it in
 `npm run dev`: fire a few shots, restart, complete a level, and return to
 the title screen.
 
-### Seeing the game's ending by hand
+### Test setups: the once-per-player moments by hand
 
-The ending (the last bonus target found) and the title screen after it
-happen once per player. To see them without playing every level, set the
-saved progress in the browser console (F12 → Console) and reload: every
-level at par and every bonus target found except level 1's.
+Some moments happen once per player: every level reaching par (with its
+hint that there is more to find), the last bonus target (the ending,
+which opens the secret chapter), and the secret chapter at par (its
+ending, and the title screen of a finished game). To see them without
+playing the whole game, on a desktop or a phone, open the game with a
+test setup in the address. It replaces the saved progress with one a
+single step short of the moment:
 
-```js
-localStorage.setItem("diagonpuzzle.progress", JSON.stringify({
-  version: 1,
-  levels: {"first-light":{"bestShots":1},"up-and-over":{"bestShots":1},"second-try":{"bestShots":2},"set-the-stage":{"bestShots":2},"double-take":{"bestShots":2},"encore":{"bestShots":3},"down-and-around":{"bestShots":2},"third-time-lucky":{"bestShots":3},"back-and-forth":{"bestShots":3},"two-step":{"bestShots":4},"breakthrough":{"bestShots":3},"trapdoor":{"bestShots":4},"stone-by-stone":{"bestShots":4},"crack-and-double":{"bestShots":3},"rubble-run":{"bestShots":5},"your-move":{"bestShots":1},"hairpin":{"bestShots":2},"double-duty":{"bestShots":3},"clear-the-way":{"bestShots":3},"rebuild":{"bestShots":4},"return-trip":{"bestShots":1},"there-and-back":{"bestShots":2},"glass-house":{"bestShots":2},"clean-break":{"bestShots":3},"ricochet":{"bestShots":3},"mirror-image":{"bestShots":3},"double-back":{"bestShots":4},"glass-echo":{"bestShots":3},"double-glazing":{"bestShots":4},"glass-and-stone":{"bestShots":4},"bolted-down":{"bestShots":2},"cold-steel":{"bestShots":3},"strike-twice":{"bestShots":4},"steel-echo":{"bestShots":3},"true-north":{"bestShots":3},"other-side":{"bestShots":1},"shortcut":{"bestShots":2},"knock-first":{"bestShots":3},"boomerang":{"bestShots":4},"looking-glass":{"bestShots":4},"one-way":{"bestShots":2},"no-way-back":{"bestShots":3},"echo-chamber":{"bestShots":3},"double-crossing":{"bestShots":4},"last-light":{"bestShots":5}},
-  skipped: [],
-  bonuses: {"up-and-over":[0],"second-try":[0],"set-the-stage":[0],"double-take":[0],"encore":[0],"down-and-around":[0],"third-time-lucky":[0],"back-and-forth":[0],"two-step":[0],"breakthrough":[0],"trapdoor":[0],"stone-by-stone":[0],"crack-and-double":[0],"rubble-run":[0],"your-move":[0],"hairpin":[0],"double-duty":[0],"clear-the-way":[0],"rebuild":[0],"return-trip":[0],"there-and-back":[0],"glass-house":[0],"clean-break":[0],"ricochet":[0],"mirror-image":[0],"double-back":[0],"glass-echo":[0],"double-glazing":[0],"glass-and-stone":[0],"bolted-down":[0],"cold-steel":[0],"strike-twice":[0],"steel-echo":[0],"true-north":[0],"other-side":[0],"shortcut":[0],"knock-first":[0],"boomerang":[0],"looking-glass":[0],"one-way":[0],"no-way-back":[0],"echo-chamber":[0],"double-crossing":[0],"last-light":[0]},
-  skipsLeft: 3,
-  skipWaitMs: 0
-}));
-location.reload();
-```
+| Address ends with | Saved progress | Then |
+|---|---|---|
+| `?setup=all-par` | every level before the secret chapter at par but level 1, no bonus targets | level 1, row 4: "All levels at par!" and its hint; the title shows `GOLDEN ★ 0/45` |
+| `?setup=all-bonus` | those levels all at par, every bonus target but level 1's | level 1, row 1: the ending; the title shows ALL FOUND! and the secret chapter |
+| `?setup=prism` | all of that, and the secret chapter at par but its first level | level 46, par (rows 1, 5, 3, 1, 3): *Prism ripple*; then the title in the bonus colours |
+| `?setup=restore` | your own progress from before the first test setup | |
 
-- **The ending:** open *1. First light* (its bonus target shows, as the
-  level is at par) and fire from the top row, which hits it. It also
-  opens the secret chapter: back on the title screen, *Prism* is at the
-  end of the level list. Run the snippet again to see it once more.
-- **The title screen afterwards** (ALL FOUND! and the prism crystal): add
-  `"first-light":[0],` at the start of `bonuses` before running it.
-- **Clearing it:** *Reset progress* on the title screen.
-- On a phone, use remote debugging (`chrome://inspect` in desktop Chrome
-  for Android).
-- The snippet lists the 45 levels up to *Last light* by `id` and `minShots`
-  (`src/levels/levels.ts`), not the secret chapter's. Add new levels
-  before it to both lists, or level 1's
-  bonus target is not the last one left and the ending doesn't play. The
-  `[0]` is each level's first bonus target, by its index in reading
-  order.
-
-### Seeing every level reach par by hand
-
-The last star (every level at par, no bonus targets yet) plays the "All
-levels at par!" celebration with its hint that there is more to find,
-and the title screen then shows `GOLDEN ★ 0/45`. To see it, set the saved
-progress in the console as above: every level but the first at par, and
-no bonus targets.
-
-```js
-localStorage.setItem("diagonpuzzle.progress", JSON.stringify({
-  version: 1,
-  levels: {"up-and-over":{"bestShots":1},"second-try":{"bestShots":2},"set-the-stage":{"bestShots":2},"down-and-around":{"bestShots":2},"double-take":{"bestShots":2},"encore":{"bestShots":3},"third-time-lucky":{"bestShots":3},"back-and-forth":{"bestShots":3},"two-step":{"bestShots":4},"breakthrough":{"bestShots":3},"trapdoor":{"bestShots":4},"stone-by-stone":{"bestShots":4},"crack-and-double":{"bestShots":3},"rubble-run":{"bestShots":5},"your-move":{"bestShots":1},"hairpin":{"bestShots":2},"double-duty":{"bestShots":3},"clear-the-way":{"bestShots":3},"rebuild":{"bestShots":4},"return-trip":{"bestShots":1},"there-and-back":{"bestShots":2},"ricochet":{"bestShots":3},"mirror-image":{"bestShots":3},"double-back":{"bestShots":4},"glass-house":{"bestShots":2},"clean-break":{"bestShots":3},"glass-echo":{"bestShots":3},"double-glazing":{"bestShots":4},"glass-and-stone":{"bestShots":4},"bolted-down":{"bestShots":2},"cold-steel":{"bestShots":3},"strike-twice":{"bestShots":4},"steel-echo":{"bestShots":3},"true-north":{"bestShots":3},"other-side":{"bestShots":1},"shortcut":{"bestShots":2},"knock-first":{"bestShots":3},"boomerang":{"bestShots":4},"looking-glass":{"bestShots":4},"one-way":{"bestShots":2},"no-way-back":{"bestShots":3},"echo-chamber":{"bestShots":3},"double-crossing":{"bestShots":4},"last-light":{"bestShots":5}},
-  skipped: [],
-  bonuses: {},
-  skipsLeft: 3,
-  skipWaitMs: 0
-}));
-location.reload();
-```
-
-- **The moment:** *Continue* opens *1. First light*; fire from row 4,
-  which completes it at par in one shot and earns the last star. Run the
-  snippet again to see it once more.
-- **The title screen afterwards:** `ALL AT PAR!` and `GOLDEN ★ 0/45` in
-  the header.
-- Like the ending's snippet, it lists the levels from 2 up to *Last
-  light*, not the secret chapter's: add new levels before it here too.
+- For example `https://eisiishai.github.io/diagonpuzzle/?setup=all-bonus`,
+  or `http://localhost:8080/?setup=prism` with `npm run dev`. Any
+  version folder works too (`…/diagonpuzzle/v3.22/?setup=all-par`).
+- The browser asks first, so a link opened by accident changes nothing.
+  The game then takes `?setup=` out of the address (a reload doesn't
+  apply it again) and shows the step left at the bottom of the title
+  screen, in gold: e.g. "Test setup: level 46, par with rows 1, 5, 3, 1,
+  3".
+- Your own progress is kept under another key by the first setup only:
+  further setups don't overwrite it, and `?setup=restore` puts it back.
+  *Reset progress* clears the saved progress but not that copy.
+- The presets are built from `src/levels/levels.ts`
+  (`src/save/testSetup.ts`), so they need no update when levels are
+  added. The steps above name today's levels: the notice on the title
+  screen always shows the current one.
+- Nothing in the game leads to them, unlike the hidden skip (*Controls*
+  in `docs/DESIGN.md`); they are in plain sight in the source, which is
+  fine. They stay in the release build on purpose, for testing on a
+  phone.
 
 ## 3. Commit
 

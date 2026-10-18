@@ -9,7 +9,13 @@ import { bindKeyboard } from "./input/keyboard";
 import { CHAPTERS, LEVELS, chapterRanges, secretLevels } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
 import { GameProgress } from "./save/GameProgress";
-import { MAX_SKIPS, parseProgress, serializeProgress } from "./save/progress";
+import {
+  EMPTY_PROGRESS,
+  MAX_SKIPS,
+  parseProgress,
+  serializeProgress,
+} from "./save/progress";
+import { parseSetup, setupNotice, testSetup } from "./save/testSetup";
 import type { LevelSummary } from "./save/progress";
 import { BackgroundGrid } from "./render/BackgroundGrid";
 import { vignetteTexture } from "./render/glow";
@@ -23,6 +29,8 @@ import type { Scene } from "./scenes/Scene";
 import { TitleScene } from "./scenes/TitleScene";
 
 const PROGRESS_STORAGE_KEY = "progress";
+/** The player's own progress while a test setup replaces it. */
+const BACKUP_STORAGE_KEY = "progress.beforeSetup";
 
 const LEVEL_CHAPTERS = chapterRanges(LEVELS, CHAPTERS);
 const SECRET_LEVELS = secretLevels(LEVEL_CHAPTERS);
@@ -63,6 +71,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
   window.addEventListener("keydown", () => audio.unlock());
   setButtonTapSound(() => audio.play("click"));
 
+  let notice = applyTestSetup();
   const game = new GameProgress(
     LEVEL_SUMMARIES,
     parseProgress(readStorage(PROGRESS_STORAGE_KEY)),
@@ -116,8 +125,10 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
         summaries: game.openLevels,
         progress: game.progress,
         audio,
+        notice,
         onStartLevel: startLevel,
         onResetProgress: () => {
+          notice = undefined;
           game.reset();
           removeStorage(PROGRESS_STORAGE_KEY);
           showTitle();
@@ -208,3 +219,54 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
     }
   });
 })();
+
+/**
+ * A test setup from the page address (`?setup=all-par`, `all-bonus`,
+ * `prism` or `restore`; see src/save/testSetup.ts): after the player
+ * confirms, replaces the saved progress, keeping the player's own under
+ * another key until `?setup=restore` puts it back. The value is taken out
+ * of the address, so a reload doesn't apply it again. Returns the step the
+ * setup leaves, for the title screen.
+ */
+function applyTestSetup(): string | undefined {
+  const url = new URL(window.location.href);
+  const setup = parseSetup(url.searchParams.get("setup"));
+  url.searchParams.delete("setup");
+  window.history.replaceState(null, "", url);
+  if (setup === "restore") {
+    const backup = readStorage(BACKUP_STORAGE_KEY);
+    if (backup === null) {
+      window.alert("There is no progress from before a test setup to restore.");
+    } else if (
+      window.confirm("Restore your progress from before the test setup?")
+    ) {
+      writeStorage(PROGRESS_STORAGE_KEY, backup);
+      removeStorage(BACKUP_STORAGE_KEY);
+    }
+    return undefined;
+  }
+  if (
+    setup === null ||
+    !window.confirm(
+      `Replace your saved progress with the test setup "${setup}"? ` +
+        "Your own progress is kept and comes back with ?setup=restore.",
+    )
+  ) {
+    return undefined;
+  }
+  // Only the first setup keeps a backup: a later one would keep a test
+  // setup's progress instead of the player's.
+  if (readStorage(BACKUP_STORAGE_KEY) === null) {
+    writeStorage(
+      BACKUP_STORAGE_KEY,
+      readStorage(PROGRESS_STORAGE_KEY) ?? serializeProgress(EMPTY_PROGRESS),
+    );
+  }
+  const levels = LEVELS.map((level, i) => ({
+    ...level,
+    secret: SECRET_LEVELS[i],
+  }));
+  const result = testSetup(setup, levels);
+  writeStorage(PROGRESS_STORAGE_KEY, serializeProgress(result.progress));
+  return setupNotice(result);
+}

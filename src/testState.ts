@@ -71,6 +71,8 @@ export interface TitleTestState {
    * secret chapter at par.
    */
   prismTitle: boolean;
+  /** The step a test setup (`?setup=`) left to play, if one was applied. */
+  notice: string | null;
   /** The part of the screen where the scrolling level list shows. */
   listView: Rect;
   /** The list's scroll bar, while it doesn't all fit. */

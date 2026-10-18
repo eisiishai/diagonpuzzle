@@ -84,6 +84,11 @@ export interface TitleSceneOptions {
   summaries: readonly LevelSummary[];
   progress: Progress;
   audio: GameAudio;
+  /**
+   * The step a test setup left to play (see src/save/testSetup.ts), shown
+   * above the version; only after opening the game with `?setup=`.
+   */
+  notice?: string;
   onStartLevel: (index: number) => void;
   onResetProgress: () => void;
 }
@@ -136,6 +141,7 @@ export class TitleScene extends Container implements Scene {
   private readonly detailName: Text;
   private readonly detailScore: Text;
   private readonly version: Text;
+  private readonly notice: Text | null;
   private readonly play: MenuItem;
   private readonly title: Container;
   /**
@@ -331,6 +337,22 @@ export class TitleScene extends Container implements Scene {
     });
     this.version.anchor.set(0.5, 0);
     this.footer.addChild(this.version);
+    this.notice = options.notice
+      ? new Text({
+          text: options.notice,
+          style: textStyle("value", {
+            fontSize: 13,
+            fill: COLORS.star,
+            align: "center",
+            wordWrap: true,
+            wordWrapWidth: PLAY_WIDTH,
+          }),
+        })
+      : null;
+    if (this.notice) {
+      this.notice.anchor.set(0.5, 0);
+      this.footer.addChild(this.notice);
+    }
 
     this.arrange(false);
     this.refresh();
@@ -346,6 +368,7 @@ export class TitleScene extends Container implements Scene {
       ),
       detail: `${this.detailName.text} · ${this.detailScore.text}`,
       prismTitle: this.prismTitle !== null,
+      notice: this.notice?.text ?? null,
       listView: this.levelList.viewBounds(),
       scrollBar: this.levelList.barBounds(),
     };
@@ -562,6 +585,10 @@ export class TitleScene extends Container implements Scene {
     y += 24;
     this.audioControls.y = y;
     y += this.audioControls.height + 24;
+    if (this.notice) {
+      this.notice.y = y;
+      y += this.notice.height + 8;
+    }
     this.version.y = y;
     this.footerHeight = y + this.version.height;
   }
