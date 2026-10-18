@@ -735,6 +735,20 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . @ . . .
     `,
   },
+  {
+    id: "far-corner",
+    name: "Far corner",
+    minShots: 5,
+    playerMirror: "mirrorBackslash",
+    music: "wormhole",
+    grid: String.raw`
+      / / \ . . .
+      \ / O \ . G
+      \ . . # . .
+      . . / . . .
+      . . . O . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {

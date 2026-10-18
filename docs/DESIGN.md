@@ -437,6 +437,7 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 46 | Long game | 5 | The secret chapter's first level: portals with a glass mirror, and a lot of planning (foresight 7: every shot changes mirrors a later one needs). Row 1 turns down at (3,1) onto the glass `\` at (3,3), which turns it right and shatters; (4,3) sends it up and out. Row 5 turns up at (1,5) into the left portal, comes out of the bottom one moving up, climbs column 3 through the glass mirror's gap, and winds right along the top row and down column 5 and out at the bottom, flipping five mirrors. Row 3 runs through the gap, down and right through the middle, and leaves at the end of the bottom row. Row 1 then turns down column 3 through the gap into the bottom portal, out of the left one onto (1,5), which sends it right along the bottom row into the bottom portal a second time; out of the left one, moving right now, it turns up at (4,4) and right at (4,3) and leaves. Row 3 finally turns down at (4,3), right at (4,4), up at (5,4) and right at (5,1) into the goal. Alternative in 6 shots: rows 1, 4, 5, 1, 4, 3. No bonus target (see *Secret chapter*). |
 | 47 | Headwind | 5 | The secret chapter: a fixed mirror with one-way gates and a two-hit goal, the first level to combine fixed mirrors and gates. On the starting board row 2 turns up at (2,2) and right at (2,1) into the `<` gate head-on, which stops it. Row 3 instead turns up at (2,3) and right at (2,2), passes the `>` gate, turns down at (5,2) into the fixed `/` at (5,3), which sends it back left, and (3,3) turns it up and out, flipping four mirrors. Row 4 turns up at (3,4) and right at (3,3) into the same fixed mirror from the left, which turns it up, and (5,2) right and out. Row 2 now turns down at (2,2), right at (2,3), down at (3,3) and right at (3,4) along row 4 into the goal, setting them back. Row 3 makes its first trip again, through the `>` gate and off the fixed mirror, but (3,3) now turns it down and (3,4) left and out; row 2 then takes the same way to the goal for the second hit. Row 5 is empty. Alternative in 6 shots: rows 1, 4, 3, 3, 1, 4. No bonus target (see *Secret chapter*). |
 | 48 | Aftershock | 5 | The secret chapter: breakable walls with a reflector, and the most planning in the game (foresight 8). Row 1 turns down at (2,1) and right at (2,2) into the cracked wall at (4,2), breaking it. Row 4 turns down at (3,4) into the reflector, comes back up into the same mirror, now `/`, which turns it right; (4,4) turns it up column 4 through the broken wall's gap, and (4,1), (2,1) and (2,2) turn it left, down and left out of the board. Row 4 again makes the same trip to the reflector and back, but (4,4), flipped, now turns it down and out, setting itself back. Row 4 a third time climbs column 4 through the gap again, and (4,1), now `/`, turns it right; (5,1) and (5,2) turn it down and right out of the board. Row 1 then runs down and right as at first, along row 2 through the gap, and (5,2) and (5,1), both flipped, turn it up and right into the goal. The second cracked wall, at (5,3), is not on the par route. Alternative in 6 shots: rows 2, 1, 2, 2, 4, 1. No bonus target (see *Secret chapter*). |
+| 49 | Far corner | 5 | The secret chapter: the player's mirror (`\`) with portals, the first level to combine them. Row 1 turns up at (1,1) and leaves, flipping it. Row 1 again turns down at (1,1), right at (1,2), up at (2,2), right at (2,1) and down at (3,1) into the upper portal, and comes out of the lower one at (4,5) moving down, out of the board. With the mirror placed in the bottom right corner at (6,5) (any time before the third shot), row 2 winds through the top left corner the other way, into the upper portal moving right, out of the lower one along the bottom row into the player's mirror, which turns it down and out and flips. Row 1 sets the top left mirrors back without reaching the portal, and row 2 then makes the same trip, where the flipped player's mirror turns it up the right edge into the goal. Alternative in 6 shots: rows 2, 3, 2, the mirror at (6,5), rows 2, 1, 2, the second shot off the `\` at (1,3), added for it. No bonus target (see *Secret chapter*). |
 
 *One way* (41) and *No way back* (42, added 2026-10-17 to start a new
 chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2
@@ -513,6 +514,19 @@ came from `npm run generate -- --breakable 2 --reflectors 1 --shots 5
 and a foresight of 8, the game's highest, above *Long game* (46).
 Breakable walls and reflectors met before in *Ricochet* (23), *Steel
 echo* (34) and *Echo chamber* (43), at par 3.
+
+*Far corner* (49, added 2026-10-18 to bring the player's mirror into
+the secret chapter) came from `npm run generate -- --player-mirror
+backslash --portals --shots 5 --mirrors 7 --walls 1 --tries 20000
+--varied-rows` on a 6×5 board (seed 1, the second board shown): a
+unique shortest solution and a foresight of 6. Of the three boards
+with a unique solution and foresight 6, it is the one whose player's
+mirror the beam meets twice, and before the last shot. Its only
+alternative took 7 shots, which the alternatives test needed about 10
+s to find, so `npm run alternatives -- --level 49 --changes 1` (about 6
+minutes) found the `\` at (1,3), which adds one in 6 shots and keeps
+par and the par solution. Random-play odds 1 in 64,286, though random
+play overstates player-mirror levels.
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --
@@ -684,7 +698,7 @@ from four and six).
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
   36–40 *Portals*, 41–45 *One-way gates*, and the secret chapter,
-  46–48 *Prism*, once every bonus target is found (see *Secret chapter*). Each
+  46–49 *Prism*, once every bonus target is found (see *Secret chapter*). Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one

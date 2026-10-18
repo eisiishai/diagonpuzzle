@@ -297,20 +297,23 @@ player's mirror, the hardest level of the game by odds:
 | 1 in | 25 | 125 | 125 | 625 | 71,918 |
 | Foresight | 2 | 3 | 3 | 3 | 4 |
 
-Levels 46–48, the secret chapter. *Long game* (46, added 2026-10-18):
+Levels 46–49, the secret chapter. *Long game* (46, added 2026-10-18):
 portals with a glass mirror, below *Last light* by odds (it has no
 player's mirror to inflate them) but with the game's highest foresight:
 
-| Level | 46 | 47 | 48 |
-|---|---|---|---|
-| 1 in | 3,125 | 3,125 | 3,125 |
-| Foresight | 7 | 5 | 8 |
+| Level | 46 | 47 | 48 | 49 |
+|---|---|---|---|---|
+| 1 in | 3,125 | 3,125 | 3,125 | 64,286 |
+| Foresight | 7 | 5 | 8 | 6 |
 
 *Headwind* (47, added 2026-10-18) combines a fixed mirror, one-way gates
 and a two-hit goal, none of 46's pieces. *Aftershock* (48, added the
 same day) has two breakable walls and a reflector; its foresight of 8
 is the game's highest. All three sit at the most odds a par-5 level on
-five rows can have, so foresight is what tells them apart.
+five rows can have, so foresight is what tells them apart. *Far corner*
+(49) adds the player's mirror to the chapter, with portals; its odds are
+inflated by random play's mirror placement, as for other player-mirror
+levels.
 
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
@@ -415,18 +418,21 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
     level to combine fixed mirrors and gates
   - [x] A third level, with breakable walls and a reflector:
     *Aftershock* (48, par 5), foresight 8, the game's highest
-  - [ ] Decide how many levels it gets (up to five), and add them, each
-    combining two or more pieces; candidates for the thinnest
-    combinations: the player's mirror with glass or portals, portals
-    with a two-hit goal
-  - [ ] Optional: its own music track (it plays *Wormhole* for now)
+  - [x] A fourth level with the player's mirror, which the chapter
+    lacked, and portals, never combined with it before: *Far corner*
+    (49, par 5), foresight 6
+  - [ ] Decide how many levels it gets (up to five; four so far), and
+    add them, each combining two or more pieces; a candidate for the
+    thinnest combination left: portals with a two-hit goal
+  - [ ] Optional: its own music track (its levels play their pieces'
+    chapters' tracks for now)
 - [ ] Check by playing (or watching testers) whether the step to
   *Rubble run* (15), about 62 times *Crack and double* (14) by odds, is
   too steep, together with the steps to *Rebuild* and *Mirror image*
   below
 - [ ] Optional: fill the thinnest combinations when a level is added
-  or replaced anyway: the player's mirror with glass mirrors or portals,
-  portals with a two-hit goal
+  or replaced anyway: portals with a two-hit goal (the player's mirror
+  met glass in *Last light*, 45, and portals in *Far corner*, 49)
 - [ ] Optional: rename *Flip tricks* (6–10) after what it starts with,
   the two-hit goal. Chapter names are only shown, not saved, so this
   is cosmetic
