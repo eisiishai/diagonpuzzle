@@ -846,9 +846,13 @@ lab page on 2026-10-11:
 
 ### Mutation testing
 
-The 54 mutants that survive `npm run mutation` at v1.21, checked one by
-one: none changes anything a player or the rules could notice. A later
-run that lists others has found something new.
+The 49 mutants of 1163 that survive `npm run mutation` at v3.11
+(2026-10-18; 54 of 926 at v1.21), checked one by one: none changes
+anything a player or the rules could notice. A later run that lists
+others has found something new. The v3.11 run's new survivors got tests
+instead: portals one above the other (finding the partner by its column
+alone passed every test), `boardHas()` on a board where only one row has
+the cell, `FIXED_MIRRORS`, and the texts of three error messages.
 
 - `progress.ts` (17): parse checks that a later check repeats (`typeof
   x === "number"` before `Number.isInteger(x)`, `"x" in data` before
@@ -856,13 +860,11 @@ run that lists others has found something new.
   the object check, `typeof levels` before reading its entries), and
   `best !== undefined` before `earnsStar(best, …)`, false for
   `undefined` anyway. Likewise `GameProgress.ts:92`
-- `solver.ts` (13): the `seen` sets, `frontier.length > 0` and the
-  player-mirror guards only save work; the bonus-hit check's parts
+- `solver.ts` (13): the `seen` set and the player-mirror guards only
+  save work; the bonus-hit check's parts
   repeat each other, as only a bonus cell gives a `bonus` outcome
 - `simulate.ts` (6): the `loop` guard, which can't happen, and the
   board key's separators
-- `board.ts` (5): `isInside()`'s column checks: reading past a row's ends
-  gives `undefined` anyway
 - `LevelSession.ts` (4): `place()`'s player-mirror check, repeated by
   `canPlace()`, and `finishShot()`'s two conditions, which are always
   true or false together

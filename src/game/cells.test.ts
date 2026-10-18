@@ -3,6 +3,7 @@ import { CELL_SYMBOLS, parseLevel } from "../levels/parse";
 import { boardHas } from "./board";
 import {
   CELL_BEHAVIORS,
+  FIXED_MIRRORS,
   GATE_CELLS,
   GATES,
   bounceKind,
@@ -14,7 +15,7 @@ import type { CellType, Direction } from "./types";
 const ALL_CELLS = Object.keys(CELL_SYMBOLS) as CellType[];
 
 describe("cell groups", () => {
-  it("tell mirrors and glass mirrors apart from the other cells", () => {
+  it("tell mirrors, glass and fixed mirrors apart from the other cells", () => {
     expect(ALL_CELLS.filter(isMirror).sort()).toEqual([
       "mirrorBackslash",
       "mirrorSlash",
@@ -23,6 +24,9 @@ describe("cell groups", () => {
       "glassBackslash",
       "glassSlash",
     ]);
+    expect([...FIXED_MIRRORS].sort()).toEqual(
+      ALL_CELLS.filter((cell) => bounceKind(cell) === "fixed").sort(),
+    );
   });
 
   it("name what turns the pellet in each cell that can", () => {
@@ -74,5 +78,7 @@ describe("boardHas", () => {
     expect(boardHas(board, ["glassBackslash", "glassSlash"])).toBe(true);
     expect(boardHas(board, ["reflector"])).toBe(false);
     expect(boardHas(board, [])).toBe(false);
+    // Only one row has the cell.
+    expect(boardHas(parseLevel(". N G\n. . ."), ["glassBackslash"])).toBe(true);
   });
 });

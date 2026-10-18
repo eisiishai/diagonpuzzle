@@ -269,11 +269,22 @@ describe("portals", () => {
     ]);
   });
 
+  it("find their partner in the same column", () => {
+    // Into the portal at (1,0), out of the one below it, on right to the
+    // goal.
+    const grid = String.raw`
+      . O #
+      . O G
+    `;
+    expect(fire(parseLevel(grid), 0).outcome).toBe("goal");
+    expect(cells(grid, 0)).toEqual(["0,0", "1,0", "1,1", "2,1"]);
+  });
+
   it("need a partner", () => {
     const lone = { width: 2, height: 1, cells: [["portal", "goal"]] } as const;
     expect(() =>
       fire({ ...lone, cells: lone.cells.map((row) => [...row]) }, 0),
-    ).toThrow("two portals");
+    ).toThrow("two portals or none, found 1");
   });
 });
 

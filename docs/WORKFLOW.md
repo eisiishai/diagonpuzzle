@@ -336,7 +336,7 @@ reports.
   processor and runs time out, which Stryker counts as killed. Its
   incremental mode can't see which tests changed with this runner, so
   each run is a full one.
-- About 6 minutes, using every processor core: run it in the background,
+- About 11 minutes, using every processor core: run it in the background,
   and not while committing. Never part of `npm run build` or the commit
   checks.
 

@@ -167,7 +167,9 @@ describe("playing moves", () => {
 
   it("refuses a placement on a cell that is not empty", () => {
     expect(tryPlayMoves(board, [place(1, 1), 0])).toBeNull();
-    expect(() => playMoves(board, [place(1, 1), 0])).toThrow();
+    expect(() => playMoves(board, [place(1, 1), 0])).toThrow(
+      "on a cell that is not empty",
+    );
   });
 
   it("tells whether moves complete the level", () => {

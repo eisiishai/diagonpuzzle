@@ -159,7 +159,9 @@ describe("LevelSession starting board", () => {
 
   it("refuses a starting board of another size", () => {
     const session = new LevelSession(parseLevel(". G"));
-    expect(() => session.setStartBoard(parseLevel(". . G"))).toThrow();
+    expect(() => session.setStartBoard(parseLevel(". . G"))).toThrow(
+      "not the same size",
+    );
     expect(() => session.setStartBoard(parseLevel(". G\n. ."))).toThrow();
   });
 });
