@@ -257,6 +257,22 @@ it("gives the secret chapter's levels no bonus targets", () => {
   }
 });
 
+// The secret chapter has no track of its own: each of its levels plays a
+// different earlier chapter's track, and the last plays the first
+// level's, so the game ends on the music it began with.
+it("gives each secret level a different earlier chapter's track", () => {
+  const secret = LEVELS.filter(({ id }) => secretIds.includes(id));
+  const tracks = secret.map(({ music }) => music);
+  const earlier = LEVELS.filter(({ id }) => !secretIds.includes(id)).map(
+    ({ music }) => music,
+  );
+  expect(new Set(tracks).size).toBe(tracks.length);
+  for (const track of tracks) {
+    expect(earlier).toContain(track);
+  }
+  expect(tracks[tracks.length - 1]).toBe(LEVELS[0].music);
+});
+
 it("has unique level ids", () => {
   const ids = LEVELS.map((level) => level.id);
   expect(new Set(ids).size).toBe(ids.length);

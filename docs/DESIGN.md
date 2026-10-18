@@ -438,6 +438,7 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 47 | Headwind | 5 | The secret chapter: a fixed mirror with one-way gates and a two-hit goal, the first level to combine fixed mirrors and gates. On the starting board row 2 turns up at (2,2) and right at (2,1) into the `<` gate head-on, which stops it. Row 3 instead turns up at (2,3) and right at (2,2), passes the `>` gate, turns down at (5,2) into the fixed `/` at (5,3), which sends it back left, and (3,3) turns it up and out, flipping four mirrors. Row 4 turns up at (3,4) and right at (3,3) into the same fixed mirror from the left, which turns it up, and (5,2) right and out. Row 2 now turns down at (2,2), right at (2,3), down at (3,3) and right at (3,4) along row 4 into the goal, setting them back. Row 3 makes its first trip again, through the `>` gate and off the fixed mirror, but (3,3) now turns it down and (3,4) left and out; row 2 then takes the same way to the goal for the second hit. Row 5 is empty. Alternative in 6 shots: rows 1, 4, 3, 3, 1, 4. No bonus target (see *Secret chapter*). |
 | 48 | Aftershock | 5 | The secret chapter: breakable walls with a reflector, and the most planning in the game (foresight 8). Row 1 turns down at (2,1) and right at (2,2) into the cracked wall at (4,2), breaking it. Row 4 turns down at (3,4) into the reflector, comes back up into the same mirror, now `/`, which turns it right; (4,4) turns it up column 4 through the broken wall's gap, and (4,1), (2,1) and (2,2) turn it left, down and left out of the board. Row 4 again makes the same trip to the reflector and back, but (4,4), flipped, now turns it down and out, setting itself back. Row 4 a third time climbs column 4 through the gap again, and (4,1), now `/`, turns it right; (5,1) and (5,2) turn it down and right out of the board. Row 1 then runs down and right as at first, along row 2 through the gap, and (5,2) and (5,1), both flipped, turn it up and right into the goal. The second cracked wall, at (5,3), is not on the par route. Alternative in 6 shots: rows 2, 1, 2, 2, 4, 1. No bonus target (see *Secret chapter*). |
 | 49 | Far corner | 5 | The secret chapter: the player's mirror (`\`) with portals, the first level to combine them. Row 1 turns up at (1,1) and leaves, flipping it. Row 1 again turns down at (1,1), right at (1,2), up at (2,2), right at (2,1) and down at (3,1) into the upper portal, and comes out of the lower one at (4,5) moving down, out of the board. With the mirror placed in the bottom right corner at (6,5) (any time before the third shot), row 2 winds through the top left corner the other way, into the upper portal moving right, out of the lower one along the bottom row into the player's mirror, which turns it down and out and flips. Row 1 sets the top left mirrors back without reaching the portal, and row 2 then makes the same trip, where the flipped player's mirror turns it up the right edge into the goal. Alternative in 6 shots: rows 2, 3, 2, the mirror at (6,5), rows 2, 1, 2, the second shot off the `\` at (1,3), added for it. No bonus target (see *Secret chapter*). |
+| 50 | Full circle | 5 | The secret chapter's last level and the game's: four pieces at once, a glass mirror, a fixed mirror, portals and a two-hit goal, the first level to combine portals with a two-hit goal; it plays the first level's music. Row 1 only shatters the glass `/` in the top left corner, which turns it up and out. Row 1 again runs through the gap and down column 3 into the fixed `/` at (3,3), which turns it left into the left portal; out of the right one moving left, it turns up at (4,5) and left at (4,3) into the same fixed mirror from the right, which turns it down, and (3,4) right along row 4 and out. Row 4 turns down at (1,4) and right at (1,5) along the bottom row, and (4,5) and (4,3), both flipped, turn it up and right into the goal. Row 5 climbs column 1, turns right at (1,4) and up at (3,4) into the fixed mirror from below, which turns it right; (4,3) and (4,5) take it down into the right portal, out of the left one moving right into the fixed mirror a fourth time, which turns it up column 3 and right at (3,1) along the top row and out, setting the mirrors back. Row 4 then makes the same trip to the goal for the second hit. Alternative in 6 shots: rows 1, 1, 1, 4, 1, 4. No bonus target (see *Secret chapter*). |
 
 *One way* (41) and *No way back* (42, added 2026-10-17 to start a new
 chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2
@@ -527,6 +528,16 @@ s to find, so `npm run alternatives -- --level 49 --changes 1` (about 6
 minutes) found the `\` at (1,3), which adds one in 6 shots and keeps
 par and the par solution. Random-play odds 1 in 64,286, though random
 play overstates player-mirror levels.
+
+*Full circle* (50, added 2026-10-18 to end the game with four pieces and
+the missing combination of portals and a two-hit goal, without the
+player's mirror) came from `npm run generate -- --portals --goal-hits 2
+--glass 1 --fixed 1 --shots 5 --mirrors 6 --walls 1 --tries 60000
+--varied-rows` on a 6×5 board (seed 1, the second board shown): a
+unique shortest solution, odds 1 in 3,125 and a foresight of 7. Of the
+four pairs of pieces tried with portals and a two-hit goal, glass and
+fixed mirrors gave the highest foresight (breakable walls with a
+reflector or with glass reached 4, a reflector with a fixed mirror 5).
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --
@@ -698,7 +709,7 @@ from four and six).
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
   36–40 *Portals*, 41–45 *One-way gates*, and the secret chapter,
-  46–49 *Prism*, once every bonus target is found (see *Secret chapter*). Each
+  46–50 *Prism*, once every bonus target is found (see *Secret chapter*). Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one
@@ -987,6 +998,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Levels 31–35 (fixed mirrors) | **Anchor**: pads on Gm9 – E♭maj7 over a bass that stays on G under both chords. Now and then a soft steel tine rings, always the same note (D) from the same place, slightly right: the one thing that doesn't change |
 | Levels 36–40 (portals) | **Wormhole**: pads on C♯m9 – Amaj7. Now and then a soft bell note rings on one side, a faint breath of air follows, and the same note rings again from the other side, unchanged, like a pellet going through a portal |
 | Levels 41–45 (one-way gates) | **Current**: slightly quieter pads on Fm9 – D♭maj7. Now and then a soft breath of air swells and drifts from the left to the right, with a faint high tone on top, always the same way, like air through a valve |
+| Levels 46–50 (secret chapter) | No track of its own: each level plays a different earlier chapter's track, usually one of its pieces' (46 *Wormhole*, 47 *Anchor*, 48 *Return*, 49 *Photon*), and the last, 50, plays *Afterglow*, so the game ends on the music it began with. Every level changes track |
 
 Level music is background to think to: no drums and no tune to follow,
 chords that change only every 8–9 seconds, and small details (plucks,

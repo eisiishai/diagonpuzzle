@@ -740,13 +740,27 @@ export const LEVELS: readonly LevelDefinition[] = [
     name: "Far corner",
     minShots: 5,
     playerMirror: "mirrorBackslash",
-    music: "wormhole",
+    music: "photon",
     grid: String.raw`
       / / \ . . .
       \ / O \ . G
       \ . . # . .
       . . / . . .
       . . . O . .
+    `,
+  },
+  {
+    id: "full-circle",
+    name: "Full circle",
+    minShots: 5,
+    goalHits: 2,
+    music: "afterglow",
+    grid: String.raw`
+      Z . \ . . .
+      . # . . . .
+      O . J \ . G
+      \ . \ . . .
+      \ . . \ O .
     `,
   },
 ];
