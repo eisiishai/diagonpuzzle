@@ -14,6 +14,23 @@ tracks:
 Ordering: finish *Engineering → Next* before starting the next new mechanic,
 since those items make mechanic changes safer to build and test.
 
+## Version 5.0 — complete (2026-10-18)
+
+The fifth major version is a graphics overhaul: the game looked fine
+but wasn't memorable, so the Laser lab art direction gets depth, light
+and moments of its own (*Presentation, third pass*, chosen on visual
+labs 2–4). The board is an optical table with tapped holes, and every
+piece is lab hardware standing on it: mirrors on round mounts that turn
+with them, fixed mirrors on square plates, machined walls, fractured
+stone tiles, portal rings, corner-cube reflectors, a cut crystal for the
+goal and finned laser heads on a rail. The beam lights the lab through a
+faint haze, leaving light on what it touched; each chapter has its own
+room light; reaching the goal sends light back along the shot. The title
+steps down diagonally with its beam bouncing between the words, and the
+buttons are instrument keys with the main action in lit green glass.
+Levels, rules and saves are unchanged. Hints arrived on the way: a text
+hint on every level, and a par shot's first emitter after 2 minutes.
+
 ## Version 4.0 — complete (2026-10-18)
 
 The fourth major version completes the game. A ninth piece, one-way

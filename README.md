@@ -13,6 +13,8 @@ board, and the puzzle is planning shots that set up the next ones.
 - Par and stars for the fewest shots, and a hidden bonus target in every
   level once it's solved at par; players who find them all have something
   more to discover
+- A laser lab drawn in code: an optical table, mirrors on mounts and a
+  beam that lights the room
 - Mouse, touch and keyboard controls; synthesized music and sound effects
 - Progress is saved in the browser
 
