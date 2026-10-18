@@ -41,6 +41,11 @@ function replaced(
     },
   };
 }
+/** The ids of the secret chapter's levels, which have no bonus targets. */
+const secretIds = (() => {
+  const secret = secretLevels(chapterRanges(LEVELS, CHAPTERS));
+  return LEVELS.filter((_, i) => secret[i]).map(({ id }) => id);
+})();
 const idsWith = (...cells: CellType[]) =>
   LEVELS.filter((level) =>
     cells.some((cell) => parseLevel(level.grid).cells.flat().includes(cell)),
@@ -162,8 +167,9 @@ it.each(idsWith(...GATE_CELLS))(
 );
 
 // Their bonus targets need a gate passed too: with every gate a wall, the
-// bonus target is out of reach however many shots are fired.
-it.each(idsWith(...GATE_CELLS))(
+// bonus target is out of reach however many shots are fired. The secret
+// chapter's levels have no bonus targets.
+it.each(idsWith(...GATE_CELLS).filter((id) => !secretIds.includes(id)))(
   "%s needs a one-way gate passed for the bonus target",
   (id) => {
     const { level, board } = replaced(id, [...GATE_CELLS], () => "wall", true);
@@ -244,8 +250,6 @@ describe("chapterRanges", () => {
 // for it: its levels have none of their own, so the game's ending (all
 // bonus targets found) stays where it is.
 it("gives the secret chapter's levels no bonus targets", () => {
-  const secret = secretLevels(chapterRanges(LEVELS, CHAPTERS));
-  const secretIds = LEVELS.filter((_, i) => secret[i]).map(({ id }) => id);
   expect(secretIds.length).toBeGreaterThan(0);
   for (const id of secretIds) {
     const level = LEVELS.find((candidate) => candidate.id === id)!;

@@ -435,6 +435,7 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 44 | Double crossing | 4 | One-way gates with portals and a two-hit goal; the `>` gate stands on the row the left portal sends the pellet along. Row 4 turns down at (2,4) and right at (2,5), and (3,5) sends it out at the bottom, flipping all three. Row 5 turns up at (2,5) and right at (2,4) into the right portal, comes out of the left one, and runs along row 3 through the `>` gate into the goal, flipping the first two back. Row 4 again turns down and right the same way, but (3,5) now turns it up into the side of the `>` gate, which stops it, and so sets (3,5) back; row 5 then makes the same trip through the portals for the second hit. Alternative in 6 shots: rows 4, 5, 5, 5, 5, 5. The bonus target, below the top row, needs a gate passed: rows 1, 4, 4, 1, 4, 4. The `^` gate stops row 1 coming down column 2 head-on, and the last row 4 climbs up through it and turns right and down onto the target. |
 | 45 | Last light | 5 | The finale: one-way gates with the player's mirror (`\`) and a glass mirror; the `v` gate at (1,2) works three ways. Row 3 turns up at (1,3) into it head-on and stops. Row 1 turns down at (1,1) and passes it, the way it points, turns right at (1,3), down at the glass `\` at (3,3), which shatters, right at (3,4) and up at (5,4), and leaves at the top. With the mirror placed at (3,2), row 4 turns up at (3,4), through the glass mirror's gap into the player's mirror, which turns it left into the side of the `v` gate. Row 4 again turns down at (3,4), now flipped, and leaves at the bottom, setting it back; row 4 then climbs through the gap once more, and the player's mirror, now `/`, turns it right along row 2 to the goal. Row 5 runs straight into the `<` gate head-on. Alternatives in 6 shots: e.g. rows 1, 1, 1, the mirror at (3,2), rows 4, 4, 4. The bonus target, in the top right corner, needs the mirror elsewhere and a gate passed: the mirror at (4,3), then rows 4, 4, 1, 1, 3, 1, the last passing the `v` gate down column 1 and turning up at the player's mirror and right at (4,1) onto it. |
 | 46 | Long game | 5 | The secret chapter's first level: portals with a glass mirror, and the most planning in the game (foresight 7: every shot changes mirrors a later one needs). Row 1 turns down at (3,1) onto the glass `\` at (3,3), which turns it right and shatters; (4,3) sends it up and out. Row 5 turns up at (1,5) into the left portal, comes out of the bottom one moving up, climbs column 3 through the glass mirror's gap, and winds right along the top row and down column 5 and out at the bottom, flipping five mirrors. Row 3 runs through the gap, down and right through the middle, and leaves at the end of the bottom row. Row 1 then turns down column 3 through the gap into the bottom portal, out of the left one onto (1,5), which sends it right along the bottom row into the bottom portal a second time; out of the left one, moving right now, it turns up at (4,4) and right at (4,3) and leaves. Row 3 finally turns down at (4,3), right at (4,4), up at (5,4) and right at (5,1) into the goal. Alternative in 6 shots: rows 1, 4, 5, 1, 4, 3. No bonus target (see *Secret chapter*). |
+| 47 | Headwind | 5 | The secret chapter: a fixed mirror with one-way gates and a two-hit goal, the first level to combine fixed mirrors and gates. On the starting board row 2 turns up at (2,2) and right at (2,1) into the `<` gate head-on, which stops it. Row 3 instead turns up at (2,3) and right at (2,2), passes the `>` gate, turns down at (5,2) into the fixed `/` at (5,3), which sends it back left, and (3,3) turns it up and out, flipping four mirrors. Row 4 turns up at (3,4) and right at (3,3) into the same fixed mirror from the left, which turns it up, and (5,2) right and out. Row 2 now turns down at (2,2), right at (2,3), down at (3,3) and right at (3,4) along row 4 into the goal, setting them back. Row 3 makes its first trip again, through the `>` gate and off the fixed mirror, but (3,3) now turns it down and (3,4) left and out; row 2 then takes the same way to the goal for the second hit. Row 5 is empty. Alternative in 6 shots: rows 1, 4, 3, 3, 1, 4. No bonus target (see *Secret chapter*). |
 
 *One way* (41) and *No way back* (42, added 2026-10-17 to start a new
 chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2
@@ -495,6 +496,14 @@ shortest solution with a foresight of 7, above every other level's (the
 highest were 5), and random-play odds 1 in 3,125, the most a par-5 level
 on five rows can have. Portals and glass met before only in *Looking
 glass* (40), at par 4 with foresight 3.
+
+*Headwind* (47, added 2026-10-18 with pieces other than 46's) came from
+`npm run generate -- --fixed 1 --gates 2 --shots 5 --goal-hits 2
+--mirrors 6 --walls 0 --tries 150000 --varied-rows` on a 6×5 board (seed
+1, the second board shown). Fixed mirrors with gates were rare at par 5
+with one goal hit: the best of four searches had two shortest solutions
+and odds of 1 in 1,562. With the two-hit goal, this one has a unique
+shortest solution, odds 1 in 3,125 and a foresight of 5.
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --
@@ -665,8 +674,8 @@ from four and six).
   in `src/levels/levels.ts`, following the music groups): 1–5 *Basics*,
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
-  36–40 *Portals*, 41–45 *One-way gates*, and the secret chapter, 46
-  *Prism*, once every bonus target is found (see *Secret chapter*). Each
+  36–40 *Portals*, 41–45 *One-way gates*, and the secret chapter,
+  46–47 *Prism*, once every bonus target is found (see *Secret chapter*). Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one

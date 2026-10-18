@@ -262,7 +262,7 @@ in the curve and which combinations a chapter has. Random odds
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
 | `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 3 minutes. Run before commits that change the game (see *3. Commit*). |
-| `npm run e2e:full` | The quick set, every level played through, and the desktop tests in WebKit (below). About 9 minutes with 46 levels; each level adds about 10 s. |
+| `npm run e2e:full` | The quick set, every level played through, and the desktop tests in WebKit (below). About 9 minutes with 47 levels; each level adds about 10 s. |
 | `npm run mutation` | Mutation testing of the rules: how well the unit tests check them (below). Minutes; run by hand. |
 | `npm run e2e:coverage` | The full set in Chromium (not WebKit), and which game code it runs in the browser (below). About as long as `e2e:full`. |
 | `npx playwright test --project=webkit` | Only the WebKit part of `e2e:full`: the desktop smoke tests in WebKit, Safari's engine (not Safari itself; not the phone tests, whose swipes need Chromium). About 1.5 minutes. WebKit's sound is sent nowhere, as Chromium is started muted. |

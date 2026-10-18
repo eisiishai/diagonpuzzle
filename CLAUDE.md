@@ -48,7 +48,7 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   about 3 minutes. The pre-commit hook runs it when a commit changes the game
 - `npm run e2e:full` — the quick set plus every level played through
   and the desktop tests in WebKit (Safari's engine), about 9 minutes with
-  46 levels. Run before a release and after changes to drawing, levels
+  47 levels. Run before a release and after changes to drawing, levels
   or block types
 - `npm run mutation` — mutation testing (Stryker) of the rules
   (`src/game/`, `src/save/`, `src/levels/parse.ts`): small changes to the

@@ -708,6 +708,20 @@ export const LEVELS: readonly LevelDefinition[] = [
       / . O . \ .
     `,
   },
+  {
+    id: "headwind",
+    name: "Headwind",
+    minShots: 5,
+    goalHits: 2,
+    music: "anchor",
+    grid: String.raw`
+      . / . < . .
+      . / . > \ .
+      . / \ . J .
+      . . / . . G
+      . . . . . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
