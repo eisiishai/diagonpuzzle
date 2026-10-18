@@ -291,7 +291,12 @@ test("with no skips left, Skip waits until time on levels gives one back", async
   await game.press("2. ");
   await game.waitForLevel(2);
   expect((await game.button("NO SKIPS LEFT")).disabled).toBe(true);
+  // The wait shows as a bar on the button, nearly full.
+  await expect
+    .poll(async () => (await game.level()).skipBar)
+    .toBeGreaterThan(0);
   expect((await game.button("SKIP LEVEL · 1/3")).disabled).toBe(false);
+  expect((await game.level()).skipBar).toBe(0);
 });
 
 test("the hint button shows the level's text hint and starts the wait", async ({
@@ -301,14 +306,19 @@ test("the hint button shows the level's text hint and starts the wait", async ({
   await game.press("PLAY");
   await game.waitForLevel(1);
   expect((await game.level()).hintStage).toBe(0);
+  expect((await game.level()).hintBar).toBe(0);
   await game.press("HINT · H");
-  await game.button("HINT 2 IN ");
+  await expect.poll(async () => (await game.level()).hintStage).toBe(1);
   const level = await game.level();
-  expect(level.hintStage).toBe(1);
+  // The label stays; only the wait bar shows the wait for the second.
+  expect((await game.button("HINT · H")).disabled).toBe(false);
   expect(level.message).toBe(`Hint: ${LEVELS[FIRST].hint}`);
   expect(JSON.parse((await game.storedProgress())!).hints).toHaveProperty(
     LEVELS[FIRST].id,
   );
+  await expect
+    .poll(async () => (await game.level()).hintBar)
+    .toBeGreaterThan(0);
   // H shows it again after a shot cleared the message.
   await game.fire(0, "keyboard");
   await game.page.keyboard.press("h");
@@ -328,8 +338,13 @@ test("the second hint frames the emitter of a par solution's first shot", async 
   await game.open();
   await game.press("PLAY");
   await game.waitForLevel(1);
-  await game.button("HINT 2 IN 0:0");
+  // Nearly full: the bar shows the wait is almost over.
+  await game.button("HINT · H");
+  await expect
+    .poll(async () => (await game.level()).hintBar)
+    .toBeGreaterThan(100);
   await game.press("HINT 2 · H");
+  expect((await game.level()).hintBar).toBe(0);
   const row = solution(FIRST)[0] as number;
   await expect.poll(async () => (await game.level()).hintRow).toBe(row);
   expect((await game.level()).message).toContain("framed emitter");

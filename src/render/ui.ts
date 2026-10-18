@@ -370,3 +370,48 @@ export class AudioControls extends Container {
     this.addChild(music, effects);
   }
 }
+
+/** Inset of a wait bar from its button's sides and bottom edge. */
+const WAIT_BAR_INSET = 8;
+
+/**
+ * A thin, faint bar along the bottom of a button, filling from left to
+ * right while the player waits for what the button will offer (the
+ * second hint, a skip back). Subtle on purpose: nothing else changes
+ * while the player thinks. Redrawn only as it grows by a whole pixel.
+ */
+export class WaitBar extends Graphics {
+  private readonly button: Button;
+  private readonly color: number;
+  private _length = 0;
+
+  constructor(button: Button, color: number) {
+    super();
+    this.button = button;
+    this.color = color;
+    button.addChild(this);
+  }
+
+  /** The bar's length in pixels; 0 while hidden. */
+  get length(): number {
+    return this._length;
+  }
+
+  /** Shows `fraction` of the wait done, 0 to 1; 0 hides the bar. */
+  setProgress(fraction: number): void {
+    const { width, height } = this.button;
+    const full = width - 2 * WAIT_BAR_INSET;
+    const length = Math.round(full * Math.min(1, Math.max(0, fraction)));
+    if (length === this._length) {
+      return;
+    }
+    this._length = length;
+    this.clear();
+    if (length > 0) {
+      this.rect(WAIT_BAR_INSET, height - WAIT_BAR_INSET, length, 2).fill({
+        color: this.color,
+        alpha: 0.4,
+      });
+    }
+  }
+}

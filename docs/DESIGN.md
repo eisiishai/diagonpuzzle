@@ -673,8 +673,12 @@ skips are unchanged.
 - **Hint 2, the first shot.** Opening hint 1 starts a wait of 2 minutes
   on that level's screen (counted like the wait for a skip: the title
   screen and a hidden browser tab don't count), saved per level, so it
-  adds up across visits. Meanwhile the button counts down, *Hint 2 in
-  1:24*; then it reads *Hint 2 · H*, lit until pressed. Hint 2 frames
+  adds up across visits. Meanwhile a thin, faint bar along the bottom of
+  the button fills from left to right; nothing else on the screen changes
+  while the player thinks (a countdown in the label was too distracting,
+  2026-10-18). Then the bar goes and the label reads *Hint 2 · H*, in the
+  button's usual style: the second hint is optional, so nothing urges the
+  player to use it. Hint 2 frames
   the emitter of a par solution's first shot with a pulsing outline (still
   with reduced motion) and says "Hint 2: from the start, fire the framed
   emitter first: it begins a par solution." If the solution places the
@@ -720,7 +724,9 @@ skips are unchanged.
   nothing, so skips can't be farmed. With none left the button reads "No
   skips left" until the player has spent 5 minutes on level screens
   after using the last one (the title screen and a hidden browser tab
-  don't count); then one skip comes back and the button updates. That
+  don't count); then one skip comes back and the button updates.
+  Meanwhile a thin, faint bar along the bottom of the button fills from
+  left to right, as the hint button's does (see *Hints*). That
   time is saved, so it adds up across visits. On levels already completed or skipped, the *Next level*
   button takes its place. Skips left are saved with the progress.
 - **Hidden skip:** Shift+N, or pressing and holding the level name in the

@@ -153,6 +153,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
       gameScene.setSkipsLeft(game.progress.skipsLeft);
     }
     gameScene.setHintWaitLeft(game.hintWaitLeft(levelIndex));
+    gameScene.setSkipWait(game.progress.skipWaitMs);
     if (hintOpened) {
       gameScene.openSecondHint();
     }

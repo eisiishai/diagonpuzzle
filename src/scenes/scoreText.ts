@@ -172,20 +172,3 @@ export function firstShotHintMessage(
     : "from the start, fire the framed emitter first";
   return `Hint 2: ${start}: it begins a par solution.${shotsFired > 0 ? " Restart to try it." : ""}`;
 }
-
-/**
- * The hint button's label: the first hint until it is opened, then the
- * wait for the second (`waitLeftMs`, counted down in whole seconds), then
- * the second.
- */
-export function hintLabel(stage: 0 | 1 | 2, waitLeftMs: number): string {
-  if (stage === 0) {
-    return "HINT · H";
-  }
-  if (stage === 2) {
-    return "HINT 2 · H";
-  }
-  const seconds = Math.max(0, Math.ceil(waitLeftMs / 1000));
-  const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-  return `HINT 2 IN ${clock}`;
-}

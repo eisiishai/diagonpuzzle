@@ -9,7 +9,7 @@ import { MirrorPlacement } from "../game/MirrorPlacement";
 import type { PlacementKey, PlacementResult } from "../game/MirrorPlacement";
 import type { ShotOutcome, ShotResult } from "../game/simulate";
 import type { BonusReport, CompletionReport } from "../save/GameProgress";
-import { earnsStar } from "../save/progress";
+import { HINT_WAIT_MS, SKIP_WAIT_MS, earnsStar } from "../save/progress";
 import type { Board, MirrorType } from "../game/types";
 import type { GameAction } from "../input/keyboard";
 import { BoardSurround } from "../render/BoardSurround";
@@ -18,14 +18,13 @@ import { Celebration } from "../render/Celebration";
 import { fitToScreen } from "../render/fitToScreen";
 import { pathPoints } from "../render/pathPoints";
 import { COLORS, textStyle } from "../render/theme";
-import { AudioControls, Button } from "../render/ui";
+import { AudioControls, Button, WaitBar } from "../render/ui";
 import type { LevelTestState } from "../testState";
 import type { Scene } from "./Scene";
 import {
   STAR,
   completionMessage,
   firstShotHintMessage,
-  hintLabel,
   introMessage,
 } from "./scoreText";
 
@@ -38,8 +37,8 @@ const MESSAGE_HEIGHT = 64;
 /** Narrowest the screen's content gets, whatever the board size. */
 const MIN_SCENE_WIDTH = 600;
 
-/** Wide enough for the hint button's longest label, so it doesn't jump. */
-const HINT_BUTTON_WIDTH = 168;
+/** The hint button's width, fixed so its wait bar keeps one length. */
+const HINT_BUTTON_WIDTH = 140;
 /** How long the Skip button waits for its confirming second press. */
 const SKIP_CONFIRM_MS = 3000;
 const PLACED_MESSAGE = "Mirror placed. It flips when hit, like the others.";
@@ -141,12 +140,12 @@ export class GameScene extends Container implements Scene {
   private hintStage: 0 | 1 | 2;
   /** Time on the level's screen left before the second hint opens. */
   private hintWaitLeftMs: number;
+  /** The wait for the second hint, on the hint button. */
+  private readonly hintBar: WaitBar;
+  /** The wait for a skip back with none left, on the Skip button. */
+  private readonly skipBar: WaitBar;
   /** The hint the message shows now, if any; the next press shows the other. */
   private hintShown: 0 | 1 | 2 = 0;
-  /** The hint button is lit: see updateHintButton(). */
-  private hintLit = false;
-  /** The second hint has been shown in this visit. */
-  private secondHintSeen = false;
   /** Time left for the Skip button's confirming press; 0 when not armed. */
   private skipConfirmMs = 0;
   private skipsLeft: number;
@@ -256,11 +255,13 @@ export class GameScene extends Container implements Scene {
       onTap: () => this.pressSkip(),
     });
     this.skipButton.y = bottomRow;
+    this.skipBar = new WaitBar(this.skipButton, COLORS.dim);
     this.hintButton = new Button({
-      label: hintLabel(this.hintStage, this.hintWaitLeftMs),
+      label: this.hintLabel(),
       width: HINT_BUTTON_WIDTH,
       onTap: () => this.showHint(),
     });
+    this.hintBar = new WaitBar(this.hintButton, COLORS.hint);
     this.updateHintButton();
     this.hintButton.position.set(width - HINT_BUTTON_WIDTH, bottomRow);
     this.showNextButton(false);
@@ -395,6 +396,8 @@ export class GameScene extends Container implements Scene {
       banner: this.celebration.bannerText,
       hintStage: this.hintStage,
       hintRow: boardView.hintRow,
+      hintBar: this.hintBar.length,
+      skipBar: this.skipBar.length,
     };
   }
 
@@ -744,7 +747,6 @@ export class GameScene extends Container implements Scene {
           COLORS.hint,
         );
         this.hintShown = 2;
-        this.secondHintSeen = true;
         this.updateHintButton();
         return;
       }
@@ -754,7 +756,7 @@ export class GameScene extends Container implements Scene {
     this.updateHintButton();
   }
 
-  /** Counts down the wait for the second hint on the hint button. */
+  /** Shows the wait for the second hint on the hint button's bar. */
   setHintWaitLeft(ms: number): void {
     this.hintWaitLeftMs = ms;
     this.updateHintButton();
@@ -766,17 +768,31 @@ export class GameScene extends Container implements Scene {
     this.updateHintButton();
   }
 
+  /**
+   * The hint button's label, which changes only when the second hint
+   * opens, and its wait bar. Nothing else changes while the player thinks,
+   * and nothing urges them to use the second hint (docs/DESIGN.md, Hints).
+   */
   private updateHintButton(): void {
-    const label = hintLabel(this.hintStage, this.hintWaitLeftMs);
+    const label = this.hintLabel();
     if (this.hintButton.label !== label) {
       this.hintButton.setLabel(label);
     }
-    // Lit until the newly opened second hint has been seen.
-    const lit = this.hintStage === 2 && !this.secondHintSeen;
-    if (lit !== this.hintLit) {
-      this.hintLit = lit;
-      this.hintButton.setVariant(lit ? "primary" : "secondary");
-    }
+    this.hintBar.setProgress(
+      this.hintStage === 1 ? 1 - this.hintWaitLeftMs / HINT_WAIT_MS : 0,
+    );
+  }
+
+  private hintLabel(): string {
+    return this.hintStage === 2 ? "HINT 2 · H" : "HINT · H";
+  }
+
+  /**
+   * Shows the wait for a skip back (`waitedMs` of SKIP_WAIT_MS) on the
+   * Skip button's bar while no skips are left.
+   */
+  setSkipWait(waitedMs: number): void {
+    this.skipBar.setProgress(this.skipsLeft <= 0 ? waitedMs / SKIP_WAIT_MS : 0);
   }
 
   /** Updates the Skip button when skips change while playing. */

@@ -57,6 +57,13 @@ export interface LevelTestState {
   banner: string | null;
   /** How far the level's hints are open: 0 none, 1 text, 2 first shot. */
   hintStage: 0 | 1 | 2;
+  /** Length of the hint button's wait bar for the second hint, in pixels. */
+  hintBar: number;
+  /**
+   * Length of the Skip button's wait bar for a skip back, with none left,
+   * in pixels.
+   */
+  skipBar: number;
   /** The row whose emitter the second hint frames, if any. */
   hintRow: number | null;
 }
