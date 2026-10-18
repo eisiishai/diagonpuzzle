@@ -404,8 +404,19 @@ behave about like GitHub:
 CI=1 taskset -c 0-1 npx playwright test --project=desktop --project=phone --project=levels --project=webkit --retries=0
 ```
 
-About 11 minutes; every test must pass with time to spare (the slowest
-took 1.2 min of their 2 min limit).
+About 24 minutes with 50 levels (v3.20, 125 tests). Every test must pass
+with time to spare. The time limit there, 3 minutes for every test
+(`playwright.config.ts`, and the level play-throughs' own in
+`e2e/levels.e2e.ts`), is only for a test that gets stuck: watch the
+slowest tests' times instead, which the list reporter prints after each
+test. At v3.20 the slowest were the level play-throughs, up to 1.4 min
+(*Last light*, 45), and the title screen's list tests, which travel the
+whole level list and grow with it: *follows the arrow keys* about 1.5
+min, and *scrolls with the mouse wheel* 1.1 min once `scrollIntoView()`
+scrolled nearly a view per step instead of half (it took 1.8 min, near
+the 2 min limit of the time). A test nearing 2 minutes, or a total
+growing much faster than the levels added, is the sign to make tests
+faster before the limit is reached.
 
 What is checked only by hand: how drawing, animation and sound look and
 sound, and anything only a real phone shows (such as the GPU line bugs in

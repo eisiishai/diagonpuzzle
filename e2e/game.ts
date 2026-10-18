@@ -29,6 +29,11 @@ import type {
 export type InputMethod = "mouse" | "keyboard" | "touch";
 
 const PROGRESS_KEY = "diagonpuzzle.progress";
+/**
+ * How far scrollIntoView() moves the level list per step, as a share of
+ * its view: most of it, with some overlap so no tile is skipped past.
+ */
+const SCROLL_STEP = 0.9;
 
 /**
  * Each test gets `game`, the game in its page. A console error or uncaught
@@ -301,9 +306,12 @@ export class Game {
         x: view.x + view.width / 2,
         y: view.y + view.height / 2,
       };
+      // Nearly a view at a time, so a long list takes few steps (each is
+      // slow where the browser draws in software, as on GitHub).
       const distance = button.center.y - centre.y;
       const step =
-        Math.sign(distance) * Math.min(Math.abs(distance), view.height / 2);
+        Math.sign(distance) *
+        Math.min(Math.abs(distance), view.height * SCROLL_STEP);
       if (input === "touch") {
         await this.swipe(centre, -step);
       } else {

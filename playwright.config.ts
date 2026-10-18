@@ -18,8 +18,11 @@ export default defineConfig({
   reporter: "list",
   // The longest tests play a level twice and take about 30 s locally,
   // where a trace is recorded for every test. GitHub's machines are about
-  // four times slower: the longest took over 60 s there.
-  timeout: CI ? 120_000 : 60_000,
+  // four times slower: the longest took over 60 s there, and tests that
+  // travel the whole level list grow with it. The limit is only for a
+  // test that gets stuck; watch the slowest tests' times instead (see
+  // docs/WORKFLOW.md, Browser tests as on GitHub).
+  timeout: CI ? 180_000 : 60_000,
   // On GitHub (CI is set) a failed test runs once more, recording a trace.
   retries: CI ? 1 : 0,
   // Shots animate at their normal speed; the longest take a few seconds.
