@@ -399,6 +399,11 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
     to the nearest row, so they reach a short chapter's tiles
   - [x] A first level to try it out: *Long game* (46, par 5), portals
     with a glass mirror, foresight 7 (the highest before was 5)
+  - [x] A rainbow ★ in the level list for its levels at par, which have
+    no bonus targets to turn golden, and its own ending when they are all
+    at par (2026-10-18): *Prism ripple*, rainbow rings, a burst and rain
+    of rainbow stars, a spectrum banner and a sound of six bells sweeping
+    across in stereo. Not from a lab page: tune by eye and ear
   - [ ] Decide how many levels it gets (up to five), and add them, each
     combining two or more pieces; candidates for the thinnest
     combinations: the player's mirror with glass or portals, portals

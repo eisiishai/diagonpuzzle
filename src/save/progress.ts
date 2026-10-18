@@ -313,6 +313,19 @@ export function opensSecretLevels(
   );
 }
 
+/**
+ * True when going from `before` to `after` earned the last missing star of
+ * the secret levels (there are some), so all of them are at par.
+ */
+export function completesSecretPar(
+  before: Progress,
+  after: Progress,
+  levels: readonly LevelSummary[],
+): boolean {
+  const secret = levels.filter((level) => level.secret);
+  return secret.length > 0 && completesAllPar(before, after, secret);
+}
+
 export function serializeProgress(progress: Progress): string {
   return JSON.stringify({
     version: FORMAT_VERSION,

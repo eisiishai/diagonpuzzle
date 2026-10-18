@@ -74,6 +74,27 @@ test("the last star plays the All levels at par celebration", async ({
   expect((await backToTitle(game)).header).toContain("ALL AT PAR!");
 });
 
+test("the secret chapter's last star plays the prism celebration and a prism star", async ({
+  game,
+}) => {
+  const last = LEVELS.length - 1;
+  await game.seedProgress({
+    ...atPar(LEVELS.slice(0, last).map((_, index) => index)),
+    bonuses: allBonuses(),
+  });
+  await game.open();
+  const number = `${last + 1}. `;
+  await game.press(number);
+  await game.waitForLevel(last + 1);
+  await game.play(solution(last), "mouse");
+  await expect
+    .poll(async () => (await game.level()).banner)
+    .toContain("PRISM AT PAR!");
+  const title = await backToTitle(game);
+  expect(title.levels[last].state).toBe("prism");
+  expect(title.header).toContain("ALL AT PAR!");
+});
+
 test("the last bonus target plays the All bonus targets celebration and opens the secret chapter", async ({
   game,
 }) => {

@@ -137,8 +137,16 @@ harder levels with no new pieces, combining several of the earlier ones.
 - **Stars count once it is open.** The level list header and the "All
   levels at par" celebration count the open levels: before the chapter
   opens, every other level; afterwards, its levels too, so `★ 45/46`
-  drops the ALL AT PAR! mark until they are at par, and the last of them
-  at par plays the celebration again.
+  drops the ALL AT PAR! mark until they are at par. Its levels at par show
+  a rainbow ★ in the level list instead of a white one, as they can't
+  turn golden.
+- **Its own ending.** The last of its levels at par plays *Prism ripple*
+  instead of the "All levels at par" celebration: six rings in the bonus
+  colours spread from the goal one after another, a burst of stars in
+  those colours and more of them raining over the screen, and the banner
+  "★ PRISM AT PAR! ★" lit in the bonus colours by a sweeping light, with
+  THANK YOU FOR PLAYING under it; its sound is in *Sound*, *Effects*.
+  With reduced motion nothing rains and the banner is lit at once.
 - *Play* continues to its first level not yet completed once it is open;
   *Next level* on the level before it reads *Back to title* on the visit
   that opens it (the level screen keeps the level count it started with),
@@ -680,7 +688,10 @@ from four and six).
   motion.
 - Each tile shows the level's number and, below it, its state by shape
   and colour: a white ★ for a level completed at par, a gold ★ once its
-  bonus targets are all collected (golden), a green ✓ for completed above
+  bonus targets are all collected (golden), a rainbow ★ for a level of
+  the secret chapter at par (it has no bonus targets; the star is cut
+  into five facets in the bonus gem's colours around a bright core, with
+  a faint light edge), a green ✓ for completed above
   par, a beam-coloured ▶ for unlocked and not yet played, a double chevron
   for skipped, and a lock for locked (dimmed). A line under the chapters
   shows the selected (or hovered) level's numbered name and its score in
@@ -928,6 +939,7 @@ celebrations (final star, bonus targets) keep their full level.
 | Final star | *Synth fanfare*: brassy chords stepping up into a bright chord |
 | Bonus target | A quick glissando of bells up a pentatonic scale, then high sparkles (not from the sound lab) |
 | Last bonus target, the ending | *Prism bells* (finale lab): six bells rising through the music's key made major, one with each ray of the prism fan, then a chord on that major tonic that swells and opens up, with a few high notes. The music rests under it (see Mix) |
+| Secret chapter all at par | *Prism ripple*: the same six bells sweeping from left to right in stereo, one with each rainbow ring, then a quicker run an octave up sweeping back, over a bright chord on that major tonic. The music is lowered, not rested (not from a sound lab) |
 
 ### Music
 

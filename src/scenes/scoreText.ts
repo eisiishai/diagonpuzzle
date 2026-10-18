@@ -33,12 +33,14 @@ function bestText(shots: number, previousBest: number | undefined): string {
 
 /** A level's state in the title screen's level list, shown as an icon. */
 export type LevelRowState =
-  "locked" | "open" | "skipped" | "done" | "star" | "golden";
+  "locked" | "open" | "skipped" | "done" | "star" | "golden" | "prism";
 
 /**
  * A level's row in the title screen's level list: its state (for the icon
  * column), its numbered name and the score text aligned on the right.
  * Golden: all its bonus targets collected (which needs a star first).
+ * Prism: a level of the secret chapter, which has no bonus targets, at
+ * par.
  */
 export function levelListRow(
   number: number,
@@ -48,6 +50,7 @@ export function levelListRow(
   best: number | undefined,
   skipped = false,
   golden = false,
+  secret = false,
 ): { state: LevelRowState; title: string; detail: string } {
   const title = `${number}. ${name}`;
   if (!unlocked) {
@@ -58,7 +61,14 @@ export function levelListRow(
       ? { state: "skipped", title, detail: `skipped · par ${par}` }
       : { state: "open", title, detail: `par ${par}` };
   }
-  const state = golden ? "golden" : earnsStar(best, par) ? "star" : "done";
+  const star = earnsStar(best, par);
+  const state = golden
+    ? "golden"
+    : star && secret
+      ? "prism"
+      : star
+        ? "star"
+        : "done";
   return { state, title, detail: `best ${best} / par ${par}` };
 }
 

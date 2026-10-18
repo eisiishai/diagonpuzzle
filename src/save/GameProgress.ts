@@ -4,6 +4,7 @@ import {
   collectedBonuses,
   completesAllBonuses,
   completesAllPar,
+  completesSecretPar,
   earnsStar,
   hasAllBonuses,
   isCompleted,
@@ -49,6 +50,11 @@ export interface CompletionReport {
    * par (see openLevelCount).
    */
   allLevelsAtPar: boolean;
+  /**
+   * True if this completion earned the last star of the secret chapter:
+   * its levels are all at par (and so is every other level by then).
+   */
+  secretAtPar: boolean;
   /** Skips left after one was given back for this, if one was. */
   skipReturned?: number;
   /**
@@ -136,6 +142,7 @@ export class GameProgress {
       previousBest: result.previousBest,
       skipReturned,
       allLevelsAtPar: completesAllPar(before, this._progress, this.openLevels),
+      secretAtPar: completesSecretPar(before, this._progress, this.levels),
       bonusesShown: this.atPar(index),
     };
   }

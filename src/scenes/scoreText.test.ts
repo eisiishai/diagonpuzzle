@@ -49,6 +49,15 @@ describe("levelListRow", () => {
     expect(row(3, "Second try", 2, true, 2).state).toBe("star");
     expect(row(3, "Second try", 2, true, 2, false, true).state).toBe("golden");
   });
+
+  it("gives the secret chapter's levels a prism star at par", () => {
+    expect(row(46, "Long game", 5, true, 5, false, false, true).state).toBe(
+      "prism",
+    );
+    expect(row(46, "Long game", 5, true, 6, false, false, true).state).toBe(
+      "done",
+    );
+  });
 });
 
 describe("introMessage", () => {

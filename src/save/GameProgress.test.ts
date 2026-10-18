@@ -48,6 +48,7 @@ describe("GameProgress.complete", () => {
       previousBest: undefined,
       skipReturned: 2,
       allLevelsAtPar: false,
+      secretAtPar: false,
       bonusesShown: false,
     });
     expect(game.progress.levels.a?.bestShots).toBe(4);
@@ -66,6 +67,7 @@ describe("GameProgress.complete", () => {
       previousBest: 4,
       skipReturned: undefined,
       allLevelsAtPar: false,
+      secretAtPar: false,
       bonusesShown: true,
     });
     expect(game.progress.skipsLeft).toBe(1);
@@ -165,8 +167,16 @@ describe("GameProgress with a secret chapter", () => {
       levels: { a: { bestShots: 2 }, c: { bestShots: 1 } },
       bonuses: { a: [0, 1], c: [0] },
     });
-    expect(opened.complete(1, 3).allLevelsAtPar).toBe(false);
-    expect(opened.complete(3, 4).allLevelsAtPar).toBe(true);
+    expect(opened.complete(1, 3)).toMatchObject({
+      allLevelsAtPar: false,
+      secretAtPar: false,
+    });
+    expect(opened.complete(3, 5).secretAtPar).toBe(false);
+    expect(opened.complete(3, 4)).toMatchObject({
+      allLevelsAtPar: true,
+      secretAtPar: true,
+    });
+    expect(opened.complete(3, 4).secretAtPar).toBe(false);
   });
 
   it("reports the last star before the secret chapter opens", () => {

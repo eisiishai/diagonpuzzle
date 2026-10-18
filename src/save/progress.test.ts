@@ -20,6 +20,7 @@ import {
   hasFoundAllBonuses,
   openLevelCount,
   opensSecretLevels,
+  completesSecretPar,
   MAX_SKIPS,
   spendSkip,
   returnSkip,
@@ -322,6 +323,21 @@ describe("bonus targets", () => {
     // Without secret levels, all levels are open and none can open.
     expect(openLevelCount(EMPTY_PROGRESS, LEVELS)).toBe(3);
     expect(opensSecretLevels(before, after, LEVELS)).toBe(false);
+  });
+
+  it("detects the last secret level reaching par", () => {
+    const withSecret = [
+      ...LEVELS,
+      { id: "s", minShots: 3, bonusCount: 0, secret: true },
+      { id: "t", minShots: 2, bonusCount: 0, secret: true },
+    ];
+    const one = recordCompletion(EMPTY_PROGRESS, "s", 3).progress;
+    const both = recordCompletion(one, "t", 2).progress;
+    expect(completesSecretPar(EMPTY_PROGRESS, one, withSecret)).toBe(false);
+    expect(completesSecretPar(one, both, withSecret)).toBe(true);
+    expect(completesSecretPar(both, both, withSecret)).toBe(false);
+    // A game without secret levels has none to complete.
+    expect(completesSecretPar(EMPTY_PROGRESS, both, LEVELS)).toBe(false);
   });
 });
 

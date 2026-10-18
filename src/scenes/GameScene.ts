@@ -459,13 +459,18 @@ export class GameScene extends Container implements Scene {
       const { shots } = this.session;
       this.boardView.setSelectedRow(null);
       this.boardView.setPlacing(false);
-      const { previousBest, allLevelsAtPar, skipReturned, bonusesShown } =
-        this.options.onComplete(shots);
+      const {
+        previousBest,
+        allLevelsAtPar,
+        secretAtPar,
+        skipReturned,
+        bonusesShown,
+      } = this.options.onComplete(shots);
       if (bonusesShown && !this.bonusesInPlay) {
         this.bonusesOnRestart = true;
         this.session.setStartBoard(this.options.bonus.board);
       }
-      this.celebrate(result, shots, allLevelsAtPar);
+      this.celebrate(result, shots, allLevelsAtPar, secretAtPar);
       this.showMessage(
         completionMessage(shots, this.options.par, previousBest) +
           this.skipReturnedText(skipReturned),
@@ -502,13 +507,16 @@ export class GameScene extends Container implements Scene {
   }
 
   /**
-   * Sound and effects for reaching the goal: a celebration at par, and a
-   * bigger one when that earned the last star of the game.
+   * Sound and effects for reaching the goal: a celebration at par, a
+   * bigger one when that earned the last star of the game, and the
+   * rainbow one when it was the secret chapter's last (see docs/DESIGN.md,
+   * Secret chapter).
    */
   private celebrate(
     result: ShotResult,
     shots: number,
     allLevelsAtPar: boolean,
+    secretAtPar: boolean,
   ): void {
     const { audio } = this.options;
     if (!allLevelsAtPar && !earnsStar(shots, this.options.par)) {
@@ -517,7 +525,18 @@ export class GameScene extends Container implements Scene {
     }
 
     const { x, y } = this.shotEnd(result);
-    if (allLevelsAtPar) {
+    if (secretAtPar) {
+      audio.play("prismPar");
+      this.celebration.prismCelebration(
+        x,
+        y,
+        CELL_SIZE,
+        this.sceneWidth,
+        this.contentHeight,
+        `${STAR} PRISM AT PAR! ${STAR}`,
+        "THANK YOU FOR PLAYING",
+      );
+    } else if (allLevelsAtPar) {
       audio.play("allPar");
       this.celebration.allParCelebration(
         x,

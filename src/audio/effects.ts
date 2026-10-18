@@ -21,7 +21,8 @@ export type SoundEffect =
   | "par"
   | "allPar"
   | "bonus"
-  | "allBonus";
+  | "allBonus"
+  | "prismPar";
 
 export interface EffectDefinition {
   /** About how long the sound lasts, for limiting overlapping sounds. */
@@ -367,7 +368,67 @@ export const EFFECTS: Record<SoundEffect, EffectDefinition> = {
       );
     },
   },
+  // Every level of the secret chapter at par (Prism ripple): six bells
+  // sweeping from left to right, one with each of the rainbow rings, then
+  // a quicker run an octave up sweeping back, over a bright chord on the
+  // music's key made major. The music is lowered, not rested: the true
+  // ending (allBonus) keeps its silence. Not from a sound lab; tune by ear.
+  prismPar: {
+    seconds: 3.6,
+    important: true,
+    duckSeconds: 3.8,
+    play: (s, dest, t, _pitch, harmony) => {
+      const { chord, bells } = endingNotes(harmony.tonic);
+      const pan = (i: number) => -0.7 + (1.4 * i) / (bells.length - 1);
+      bells.forEach((note, i) =>
+        s.bell({
+          f: midi(note + 12),
+          t: t + i * PRISM_RING_SECONDS,
+          d: 1.2,
+          vol: 0.055,
+          ratio: 3.5,
+          index: 1.1,
+          dest,
+          wet: 0.5,
+          pan: pan(i),
+        }),
+      );
+      const back = t + bells.length * PRISM_RING_SECONDS + 0.1;
+      for (let i = bells.length - 1; i >= 0; i--) {
+        s.tone({
+          f: midi(bells[i] + 24),
+          t: back + (bells.length - 1 - i) * 0.06,
+          d: 0.35,
+          vol: 0.028,
+          dest,
+          wet: 0.6,
+          echo: 0.3,
+          pan: pan(i),
+        });
+      }
+      chord.forEach((note, j) =>
+        s.pad({
+          f: midi(note + 12),
+          t: t + 0.15 + j * 0.05,
+          dur: 3.2,
+          a: 0.5,
+          r: 1.8,
+          vol: 0.028,
+          from: 900,
+          to: 3600,
+          dest,
+          wet: 0.5,
+        }),
+      );
+    },
+  },
 };
+
+/**
+ * Time between the six bells of the secret chapter's par sound; the
+ * rainbow rings expand at the same pace (src/render/Celebration.ts).
+ */
+export const PRISM_RING_SECONDS = 0.1;
 
 /**
  * Time between the ending's six bells; the prism fan's rays appear at the

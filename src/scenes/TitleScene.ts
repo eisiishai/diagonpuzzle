@@ -203,6 +203,7 @@ export class TitleScene extends Container implements Scene {
           progress.levels[level.id]?.bestShots,
           isSkipped(progress, level.id),
           hasAllBonuses(progress, summaries[index]),
+          summaries[index].secret,
         ),
       );
     });
@@ -210,7 +211,10 @@ export class TitleScene extends Container implements Scene {
       const rows = this.levelRows.slice(chapter.start, chapter.end);
       const locked = rows.every((row) => row.state === "locked");
       const stars = rows.filter(
-        (row) => row.state === "star" || row.state === "golden",
+        (row) =>
+          row.state === "star" ||
+          row.state === "golden" ||
+          row.state === "prism",
       ).length;
       const view: ChapterView = {
         number: new Text({
@@ -750,6 +754,36 @@ function levelStateIcon(state: LevelRowState): IconDrawer {
           points.push(Math.cos(angle) * r, Math.sin(angle) * r);
         }
         g.poly(points).fill(state === "golden" ? COLORS.star : COLORS.text);
+        break;
+      }
+      case "prism": {
+        // The star cut into five facets in the bonus gem's colours, its
+        // points around a bright core, like the gem's.
+        const corner = (i: number, r: number) => {
+          const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+          return [Math.cos(angle) * r, Math.sin(angle) * r];
+        };
+        for (let p = 0; p < 5; p++) {
+          g.poly([
+            0,
+            0,
+            ...corner(2 * p - 1, 3.6),
+            ...corner(2 * p, 8.5),
+            ...corner(2 * p + 1, 3.6),
+          ]).fill(BONUS_COLORS[p]);
+        }
+        // A faint light edge, so the pale facets hold up beside a gold star.
+        const outline: number[] = [];
+        for (let i = 0; i < 10; i++) {
+          outline.push(...corner(i, i % 2 ? 3.6 : 8.5));
+        }
+        g.poly(outline).stroke({
+          width: 1,
+          color: COLORS.beamCore,
+          alpha: 0.55,
+          join: "miter",
+        });
+        g.circle(0, 0, 1.7).fill(COLORS.beamCore);
         break;
       }
       case "done":

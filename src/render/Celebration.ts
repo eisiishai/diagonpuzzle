@@ -35,6 +35,13 @@ const FAN_FADE_MS = 1000;
 /** The banner's light sweep: when it starts and how long it takes. */
 const SWEEP_START_MS = 200;
 const SWEEP_MS = 1100;
+/**
+ * The secret chapter's rainbow rings start one after another at the pace
+ * of its sound's bells (PRISM_RING_SECONDS in src/audio/effects.ts), and
+ * spread wider than a par ring.
+ */
+const PRISM_RING_INTERVAL_MS = 100;
+const PRISM_RING_GROWTH = 4.5;
 /** The second line fades in after the banner. */
 const SUBTITLE_DELAY_MS = 900;
 const SUBTITLE_FADE_MS = 600;
@@ -53,7 +60,10 @@ interface Particle {
 
 interface Ring {
   view: Graphics;
+  /** Negative until the ring starts. */
   ageMs: number;
+  /** How much wider than at the start it ends. */
+  growth: number;
 }
 
 interface Banner {
@@ -171,6 +181,36 @@ export class Celebration extends Container {
     this.addSpectrumBanner(width, height, bannerText, subtitle);
   }
 
+  /**
+   * Every level of the secret chapter at par, the last star at (x, y):
+   * rings in the six bonus colours expanding one after another (a rainbow
+   * ripple), a burst of stars in those colours, more of them raining over
+   * the `width` × `height` area, and a banner lit in the bonus colours
+   * with `subtitle` under it. Under reduced motion nothing rains and the
+   * banner is lit at once.
+   */
+  prismCelebration(
+    x: number,
+    y: number,
+    size: number,
+    width: number,
+    height: number,
+    bannerText: string,
+    subtitle: string,
+  ): void {
+    BONUS_COLORS.forEach((color, i) =>
+      this.addRing(x, y, size, color, {
+        delayMs: i * PRISM_RING_INTERVAL_MS,
+        growth: PRISM_RING_GROWTH,
+      }),
+    );
+    this.addBurst(x, y, size * 1.4, 60, BONUS_BURST_COLORS);
+    if (!prefersReducedMotion()) {
+      this.addRain(width, height, size, 120, BONUS_BURST_COLORS);
+    }
+    this.addSpectrumBanner(width, height, bannerText, subtitle);
+  }
+
   /** The banner's text while one shows (for the smoke tests' test hook). */
   get bannerText(): string | null {
     return this.banner?.text ?? null;
@@ -195,8 +235,9 @@ export class Celebration extends Container {
 
     for (const ring of this.rings) {
       ring.ageMs += deltaMs;
-      const t = Math.min(1, ring.ageMs / RING_LIFE_MS);
-      ring.view.scale.set(1 + 2.5 * (1 - (1 - t) ** 3));
+      ring.view.visible = ring.ageMs >= 0;
+      const t = Math.min(1, Math.max(0, ring.ageMs / RING_LIFE_MS));
+      ring.view.scale.set(1 + ring.growth * (1 - (1 - t) ** 3));
       ring.view.alpha = 1 - t;
     }
     this.rings = this.removeExpired(
@@ -310,13 +351,20 @@ export class Celebration extends Container {
     );
   }
 
-  private addRing(x: number, y: number, size: number, color: number): void {
+  private addRing(
+    x: number,
+    y: number,
+    size: number,
+    color: number,
+    { delayMs = 0, growth = 2.5 } = {},
+  ): void {
     const view = new Graphics()
       .circle(0, 0, size * 0.32)
       .stroke({ width: 4, color });
     view.position.set(x, y);
+    view.visible = delayMs <= 0;
     this.addChild(view);
-    this.rings.push({ view, ageMs: 0 });
+    this.rings.push({ view, ageMs: -delayMs, growth });
   }
 
   private addBurst(
