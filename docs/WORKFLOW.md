@@ -36,6 +36,14 @@ sudo env PATH="$PATH" npx playwright install-deps chromium
 sudo apt-get install fonts-liberation fonts-noto-color-emoji fonts-freefont-ttf
 ```
 
+The WebKit tests (`npx playwright test --project=webkit`, optional) need
+WebKit and its own, much larger set of libraries:
+
+```bash
+npx playwright install webkit
+sudo env PATH="$PATH" npx playwright install-deps webkit
+```
+
 Keep the project on the Linux filesystem (in your home folder), not
 under `/mnt/c` or another Windows drive: it is much faster there, and Vite's
 file watching works reliably.
@@ -255,6 +263,7 @@ in the curve and which combinations a chapter has. Random odds
 | `npm run e2e:full` | The quick set plus every level played through. About 7 minutes with 45 levels; each level adds about 10 s. |
 | `npm run mutation` | Mutation testing of the rules: how well the unit tests check them (below). Minutes; run by hand. |
 | `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). A little longer than `e2e:full`. |
+| `npx playwright test --project=webkit` | The desktop smoke tests in WebKit, Safari's engine (not Safari itself; not the phone tests, whose swipes need Chromium). About 1.5 minutes. Optional, by hand; WebKit's sound is sent nowhere, as Chromium is started muted. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
 `npm run build` is the full check. **It runs automatically before every

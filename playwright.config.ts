@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 import { CI } from "./e2e/ci";
 import { COVERAGE } from "./e2e/coverage";
 
+// Node's process, without depending on @types/node.
+declare const process: { env: Record<string, string> };
+
 // Browser smoke tests (e2e/): `npm run e2e` for the quick set (also run
 // before commits that change the game), `npm run e2e:full` adding every
 // level played through, and `npm run screenshots`. See docs/WORKFLOW.md.
@@ -36,6 +39,21 @@ export default defineConfig({
       name: "desktop",
       testIgnore: ["phone.e2e.ts", "levels.e2e.ts", "screenshots.e2e.ts"],
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      // The desktop tests in WebKit, Safari's engine (not Safari itself).
+      // Not phone.e2e.ts: its swipes use Chromium's own input events.
+      name: "webkit",
+      testIgnore: ["phone.e2e.ts", "levels.e2e.ts", "screenshots.e2e.ts"],
+      use: {
+        ...devices["Desktop Safari"],
+        // Chromium is started muted; WebKit has no such switch, so its
+        // sound server is one that doesn't exist (in WSL it would play
+        // through the computer's speakers).
+        launchOptions: {
+          env: { ...process.env, PULSE_SERVER: "unix:/nonexistent" },
+        },
+      },
     },
     {
       name: "levels",
