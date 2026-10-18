@@ -22,7 +22,7 @@ import { vignetteTexture } from "./render/glow";
 import { SceneTransition } from "./render/SceneTransition";
 import { setButtonTapSound } from "./render/ui";
 import type { WipeDirection } from "./render/SceneTransition";
-import { BACKGROUND_CSS, FONT_FACES } from "./render/theme";
+import { BACKGROUND_CSS, CHAPTER_LIGHTS, FONT_FACES } from "./render/theme";
 import { readStorage, removeStorage, writeStorage } from "./save/storage";
 import { GameScene } from "./scenes/GameScene";
 import type { Scene } from "./scenes/Scene";
@@ -177,6 +177,8 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
         levelNumber: index + 1,
         levelCount,
         levelName: level.name,
+        chapterLight:
+          CHAPTER_LIGHTS[LEVEL_CHAPTERS.findIndex(({ end }) => index < end)],
         par: level.minShots,
         goalHits: level.goalHits ?? 1,
         playerMirror: level.playerMirror,

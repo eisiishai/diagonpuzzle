@@ -861,8 +861,8 @@ Colours and fonts are defined once in `src/render/theme.ts`.
 | Role | Colour | Use |
 |---|---|---|
 | Background | `#0a0e18` | Page and screen background |
-| Panel | `#0f1728`, border `#24375a` | Board, buttons |
-| Grid | `#172540` | Grid lines and dots |
+| Panel | `#0f1728`, border `#24375a` | Buttons, emitters |
+| Grid | `#172540` | The background grid behind every screen |
 | Text | `#e6f1ff` | Headings, values |
 | Dim text | `#9fb6d6` | Labels, secondary buttons |
 | Beam | `#ff4d7d`, core `#fff3f6` | Laser beam, selected emitter |
@@ -876,6 +876,9 @@ Colours and fonts are defined once in `src/render/theme.ts`.
 | Idle emitter | `#3b5a86` | Launchers not selected |
 | Hint | `#7fe3ff` | Hint messages, the frame around the emitter hint 2 points at |
 | Marking | `#2f4670`, labels `#6482b0` | Corner ticks and labels around the board |
+| Table | `#131d31` → `#0b1220`, edge `#33496f`, holes `#050810` with rims `#3a4d70` | The optical table under the board |
+| Mount | `#18223a`, edge `#45597f`, screws `#0d1424` | Mirror mounts |
+| Chapter light | `#2c5ea8` `#2a8fb0` `#a0683a` `#2a9a86` `#5f8fd8` `#7cc4e0` `#7a8aa8` `#7a5ad8` `#c08a2a`, then the bonus colours | Each chapter's room light, in chapter order (`CHAPTER_LIGHTS`) |
 
 Text colours keep at least 4.5:1 contrast on the background.
 
@@ -891,14 +894,22 @@ Text colours keep at least 4.5:1 contrast on the background.
 
 - **Emitters** (launchers): rounded boxes with a triangular nozzle; the
   selected one is outlined in the beam colour and glows.
-- **Mirrors**: glass bars with a bright centre line, glowing pale blue.
+- **Board**: an optical table, as in a real laser lab: a dark anodised
+  plate, lighter towards the top left, with a faint brushed grain.
+  Tapped holes at every cell corner mark the cells instead of grid
+  lines (those on the edge sit a little in), four screws hold its
+  corners, and its edge is bevelled.
+- **Mirrors**: a bevelled glass slab on a round steel mount, glowing
+  pale blue: a bright mirrored face along one side, a tinted body and lit
+  ends. The mount is a stepped disc with two adjuster screws across the
+  glass; it turns with the mirror, so a flip reads as a part turning.
 - **Walls**: dark rounded blocks with diagonal hatching, no glow.
-- **Glass mirrors**: a mirror's glass bar broken into three panes with
-  small gaps, slightly fainter, so they read as fragile. They burst into
+- **Glass mirrors**: on the same mount, the slab broken into three panes
+  with small gaps, slightly fainter, so they read as fragile. They burst into
   thin glass shards when hit.
 - **Fixed mirrors**: a matte steel bar with a dull centre line and a
-  dark bolt at each end, without the glass mirrors' glow, so they read as
-  pieces that don't turn.
+  dark bolt at each end, bolted straight to the table without a mount
+  or the glass mirrors' glow, so they read as pieces that don't turn.
 - **Reflectors**: a round glass ring on a dark disc, with the three
   facet lines of a corner cube (a Y) and a bright centre dot, glowing
   pale blue like the mirrors. The beam turns back at the ring.
@@ -928,13 +939,27 @@ Text colours keep at least 4.5:1 contrast on the background.
   beam's colour, brightest in a soft glow around the front. The light
   stays after the shot: green for the goal, gold for a bonus target,
   dimmer for a miss.
+- **Beam light**: the beam lights the lab around it. It is seen through
+  a faint haze, a soft scatter around it, in which specks of dust show
+  only where it crosses them (they drift very slowly, and stay still
+  with reduced motion). The table's holes within ¾ of a cell of the beam
+  catch its colour. What it touched keeps a little of its light until the
+  next shot: a mirror, fixed mirror, reflector or portal it bounced off
+  glows warm in the beam's colour (bright at the hit, settling to 40 % in
+  half a second), and a wall glows along the face it hit.
 - **Surroundings**: a soft vignette darkens the background towards the
   screen's corners (under every screen, never over its text); on level
-  screens a faint blue light sits behind the board, and small corner
+  screens a faint light in the chapter's colour sits behind the board, and small corner
   ticks outside the panel carry quiet labels: grid size (top left), goal
   hits needed (top right), par (bottom left) and level number (bottom
   right, `L07`). They don't glow, and fade in with the panel at level
   start.
+- **Chapter light**: each chapter is a room of the lab with its own
+  light colour (see the palette): on the light behind the board, and,
+  faintly, on the table, its edge and its holes' rims. Pieces keep their
+  own colours. In the secret chapter, Prism, the light behind the board
+  turns slowly through the bonus colours (once every 24 s; still with
+  reduced motion), and the table takes no tint.
 - **Buttons**: rounded rectangles with a thin outline; the primary action
   (*Next level*) is filled with the success colour. The selected or hovered
   button eases in a soft halo (0.12 s) in its accent colour (beam colour,
@@ -944,7 +969,7 @@ Text colours keep at least 4.5:1 contrast on the background.
 ### Light and motion
 
 - Glow comes from a bloom effect on the board: only bright things glow
-  (beam, mirrors, goal, selected emitter); the panel and grid stay dark.
+  (beam, mirrors, goal, selected emitter); the table and its holes stay dark.
 - Mirrors turn 90° in 150 ms when hit; the beam travels about 9 cells a
   second.
 - **Scene transitions** are a beam wipe: a laser line (beam colour, white
@@ -969,20 +994,32 @@ Text colours keep at least 4.5:1 contrast on the background.
   - A breaking wall also shakes the board by up to 2 px, fading out over
     0.22 s.
   - Every goal hit, not only one at par, flashes the crystal and sends out
-    a diamond-shaped ring (0.45 s); par still adds its stars on top. A hit
+    a diamond-shaped ring (0.45 s); par still adds its stars on top.
+  - **Reaching the goal** (the hit that completes the level): green light
+    runs back along the whole path to the emitter (0.45 s, a bright front
+    with a tail), the beam swells and settles (1.6 s) and the light
+    behind the board brightens and fades; as the light reaches the
+    emitter, the emitter flashes green and a soft wave of green spreads
+    from the crystal across the table's holes. With reduced motion only
+    the crystal's flash stays. A hit
     on a bonus target only turns the beam gold, as before.
 - Ambient motion, kept slow and subtle so it never distracts from puzzling:
   the goal crystal breathes (grows about 7 % and brightens, every 2.4 s), the
   selected emitter's glow pulses at the same pace, the crystal under the
   title pulses like the goal, and a faint grid behind every screen drifts
   very slowly down and to the right (1.5 px a second: one grid square in
-  about half a minute). Its lines are one screen pixel wide, on the screen's
+  about half a minute), and the dust in a beam drifts just as slowly. Its lines are one screen pixel wide, on the screen's
   pixel grid, and it moves in whole screen pixels, so it stays crisp without
   shimmering.
-- **Title beam**: as the title screen appears, the beam under the title
-  fires once: it shoots across from the left (0.42 s), the title's glow
-  flares as it passes under it, and the crystal at its end flashes on
-  arrival; then it stays still. (Firing every few seconds was too
+- **Title logo**: the title's two words step down diagonally, PUZZLE
+  starting right of DIAGON and most of a line lower. The title beam runs
+  under DIAGON, turns down at a small mirror between the words, turns
+  again at a second and runs on under PUZZLE to the crystal: the game's
+  own move as its logo.
+- **Title beam**: as the title screen appears, the beam fires once along
+  that path: it shoots from the left (0.56 s), the title's glow flares as
+  it passes under it, and the crystal at its end flashes on arrival; then
+  it stays still. (Firing every few seconds was too
   distracting.) With reduced motion the beam is simply drawn in full.
   Once every bonus target is found, the crystal is the bonus gem, and its
   fan of colours grows out of it as the beam arrives.
@@ -993,7 +1030,8 @@ Text colours keep at least 4.5:1 contrast on the background.
 - When the player's system asks for reduced motion, all ambient motion stops;
   the pieces stay at rest. Screens then change with a plain cut, and the
   board appears without building in. Hits keep their flashes but lose the
-  glint, sparks, shake and the goal's ring.
+  glint, sparks, shake, the goal's ring and the surge and wave on
+  reaching the goal.
 
 ### Readability
 

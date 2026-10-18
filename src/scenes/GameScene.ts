@@ -18,6 +18,7 @@ import { Celebration } from "../render/Celebration";
 import { fitToScreen } from "../render/fitToScreen";
 import { pathPoints } from "../render/pathPoints";
 import { COLORS, textStyle } from "../render/theme";
+import type { ChapterLight } from "../render/theme";
 import { AudioControls, Button, WaitBar } from "../render/ui";
 import type { LevelTestState } from "../testState";
 import type { Scene } from "./Scene";
@@ -72,6 +73,8 @@ export interface GameSceneOptions {
   levelNumber: number;
   levelCount: number;
   levelName: string;
+  /** The level's chapter's light; see CHAPTER_LIGHTS. */
+  chapterLight: ChapterLight;
   /** Shots needed for a star: the level's minimum shot count. */
   par: number;
   /** Goal hits needed to complete the level, each from a separate shot. */
@@ -186,7 +189,9 @@ export class GameScene extends Container implements Scene {
     );
     this.placement = new MirrorPlacement(this.session);
 
-    this.boardView = new BoardView(board, CELL_SIZE, {
+    const tableTint =
+      options.chapterLight === "prism" ? null : options.chapterLight;
+    this.boardView = new BoardView(board, CELL_SIZE, tableTint, {
       onLaunch: (row) => this.fireFrom(row),
       onHover: (row) => this.select(row),
       onCellHover: (position, pointerType) => {
@@ -202,12 +207,16 @@ export class GameScene extends Container implements Scene {
     const width = Math.max(this.boardView.contentWidth, MIN_SCENE_WIDTH);
     this.sceneWidth = width;
     this.boardView.x = Math.round((width - this.boardView.contentWidth) / 2);
-    this.surround = new BoardSurround(this.boardView.panelBounds, {
-      topLeft: `${board.width} × ${board.height}`,
-      topRight: `GOAL ×${options.goalHits}`,
-      bottomLeft: `PAR ${options.par}`,
-      bottomRight: `L${String(levelNumber).padStart(2, "0")}`,
-    });
+    this.surround = new BoardSurround(
+      this.boardView.panelBounds,
+      {
+        topLeft: `${board.width} × ${board.height}`,
+        topRight: `GOAL ×${options.goalHits}`,
+        bottomLeft: `PAR ${options.par}`,
+        bottomRight: `L${String(levelNumber).padStart(2, "0")}`,
+      },
+      options.chapterLight,
+    );
     this.surround.position.copyFrom(this.boardView.position);
 
     // Header: level name and menu on the first row, shots and restart on the
@@ -366,6 +375,7 @@ export class GameScene extends Container implements Scene {
       }
     }
     this.boardView.update(deltaMs);
+    this.surround.update(deltaMs);
     this.surround.alpha = this.boardView.panelAlpha;
     this.celebration.update(deltaMs);
   }
@@ -521,6 +531,8 @@ export class GameScene extends Container implements Scene {
         this.bonusesOnRestart = true;
         this.session.setStartBoard(this.options.bonus.board);
       }
+      this.boardView.playGoalSurge(result);
+      this.surround.flare();
       this.celebrate(result, shots, allLevelsAtPar, secretAtPar);
       // The secret chapter's last star has its own ending; before it
       // opens, every level at par hints at the bonus targets.

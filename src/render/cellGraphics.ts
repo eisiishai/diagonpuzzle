@@ -177,37 +177,105 @@ const CELL_DRAWERS: Record<CellType, CellDrawer> = {
   },
 };
 
-/** A glass bar with a bright centre line, drawn as "\". */
-function drawMirror(g: Graphics, half: number): void {
-  const reach = half * 0.7;
-  g.moveTo(-reach, -reach)
-    .lineTo(reach, reach)
-    .stroke({ width: 7, color: COLORS.glass, cap: "round" })
-    .moveTo(-reach + 2, -reach + 2)
-    .lineTo(reach - 2, reach - 2)
-    .stroke({ width: 1.5, color: COLORS.glassHighlight, cap: "round" });
+/** A mirror mount's radius, and its screws' distance from the centre. */
+const MOUNT_RADIUS = 0.78;
+const MOUNT_SCREW = 0.62;
+/** Half the thickness of a mirror's glass slab. */
+const SLAB_HALF = 0.17;
+
+/**
+ * A round steel mount under a mirror, as on an optics table: a stepped
+ * disc with two adjuster screws across the glass. It turns with the
+ * mirror, so a flip reads as a part turning.
+ */
+function drawMount(g: Graphics, half: number): void {
+  const r = half * MOUNT_RADIUS;
+  g.circle(0, 0, r + 1.5)
+    .fill({ color: 0x000000, alpha: 0.35 })
+    .circle(0, 0, r)
+    .fill(COLORS.mountDark)
+    .stroke({ width: 1.2, color: COLORS.mountEdge })
+    .circle(0, 0, r * 0.8)
+    .fill({ color: COLORS.mountLight, alpha: 0.35 });
+  // Across the glass, which is drawn as "".
+  const screw = (r * MOUNT_SCREW) / Math.SQRT2;
+  for (const k of [-1, 1]) {
+    g.circle(k * screw, -k * screw, half * 0.075)
+      .fill(COLORS.mountScrew)
+      .stroke({ width: 0.9, color: COLORS.mountScrewEdge });
+  }
 }
 
 /**
- * A glass mirror, drawn as "\": the mirror's bar broken into three panes
- * with gaps between them, so it reads as fragile.
+ * A slab of glass along "\" from `from` to `to` (distances along the
+ * diagonal, in pixels from the centre): a bright mirrored face, a tinted
+ * body, a lit outline and bevelled ends. `alpha` dims it.
+ */
+function drawSlab(
+  g: Graphics,
+  half: number,
+  from: number,
+  to: number,
+  alpha = 1,
+): void {
+  const th = half * SLAB_HALF;
+  // Along the glass (a) and across it (b), turned to "\".
+  const at = (a: number, b: number) => [
+    (a - b) / Math.SQRT2,
+    (a + b) / Math.SQRT2,
+  ];
+  const band = (b0: number, b1: number) => [
+    ...at(from, b0),
+    ...at(to, b0),
+    ...at(to, b1),
+    ...at(from, b1),
+  ];
+  g.poly(band(-th, -th * 0.3))
+    .fill({ color: COLORS.glass, alpha: 0.85 * alpha })
+    .poly(band(-th * 0.3, th))
+    .fill({ color: COLORS.glass, alpha: 0.4 * alpha })
+    .poly(band(-th, th))
+    .stroke({
+      width: 1,
+      color: COLORS.glass,
+      alpha: 0.9 * alpha,
+      join: "round",
+    });
+  const face = -th + 1.2;
+  const [x0, y0] = at(from + 2, face);
+  const [x1, y1] = at(to - 2, face);
+  g.moveTo(x0, y0)
+    .lineTo(x1, y1)
+    .stroke({ width: 1.4, color: COLORS.glassHighlight, alpha, cap: "round" });
+  for (const end of [from + 0.8, to - 0.8]) {
+    const [ex0, ey0] = at(end, -th + 1);
+    const [ex1, ey1] = at(end, th - 1);
+    g.moveTo(ex0, ey0).lineTo(ex1, ey1);
+  }
+  g.stroke({ width: 1.5, color: COLORS.glassHighlight, alpha: 0.6 * alpha });
+}
+
+/** A mirror, drawn as "\": a bevelled glass slab on a round mount. */
+function drawMirror(g: Graphics, half: number): void {
+  const length = half * 0.7 * Math.SQRT2;
+  drawMount(g, half);
+  drawSlab(g, half, -length, length);
+}
+
+/**
+ * A glass mirror, drawn as "\": on the same mount, its slab broken into
+ * three panes with gaps between them, so it reads as fragile.
  */
 function drawGlassMirror(g: Graphics, half: number): void {
-  const reach = half * 0.7;
-  const pane = (2 * reach) / 3;
-  const gap = half * 0.09;
+  const length = half * 0.7 * Math.SQRT2;
+  const pane = (2 * length) / 3;
+  const gap = half * 0.09 * Math.SQRT2;
+  drawMount(g, half);
   for (let i = 0; i < 3; i++) {
-    const from = -reach + i * pane + (i > 0 ? gap / 2 : 0);
-    const to = -reach + (i + 1) * pane - (i < 2 ? gap / 2 : 0);
-    g.moveTo(from, from).lineTo(to, to);
+    const from = -length + i * pane + (i > 0 ? gap / 2 : 0);
+    const to = -length + (i + 1) * pane - (i < 2 ? gap / 2 : 0);
+    drawSlab(g, half, from, to, 0.8);
   }
-  g.stroke({ width: 7, color: COLORS.glass, alpha: 0.75 });
-  for (let i = 0; i < 3; i++) {
-    const from = -reach + i * pane + gap;
-    const to = -reach + (i + 1) * pane - gap;
-    g.moveTo(from, from).lineTo(to, to);
-  }
-  g.stroke({ width: 1.5, color: COLORS.glassHighlight, cap: "round" });
 }
 
 /**

@@ -4,12 +4,20 @@ import { cellPositions } from "../game/board";
 import { isGlassMirror, isMirror } from "../game/cells";
 import type { ShotResult } from "../game/simulate";
 import { DIRECTION_DELTAS } from "../game/types";
-import type { Board, CellType, MirrorType, Position } from "../game/types";
+import type {
+  Board,
+  BounceKind,
+  CellType,
+  MirrorType,
+  Position,
+} from "../game/types";
 import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
 import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
 import { BoardEffects } from "./BoardEffects";
 import { drawCell } from "./cellGraphics";
+import { drawTable, tableHoles } from "./opticalTable";
+import { TableLight } from "./TableLight";
 import type { GoalHits } from "./cellGraphics";
 import {
   introCell,
@@ -109,6 +117,8 @@ export class BoardView extends Container {
   /** Pointer events over the board's cells, while placing; see setPlacing(). */
   private cellPointer!: Container;
   private readonly boardEffects: BoardEffects;
+  /** The beam's light on the table's holes and in the air over it. */
+  private readonly tableLight: TableLight;
   private sparkleTimerMs = 0;
   /** Time into a shake of the board, while it shakes. */
   private shakeMs: number | null = null;
@@ -125,7 +135,16 @@ export class BoardView extends Container {
   private introMs: number | null = null;
   private introIgnited = false;
 
-  constructor(board: Board, cellSize: number, handlers: BoardViewHandlers) {
+  /**
+   * `tint` is the chapter's light on the table (see CHAPTER_LIGHTS), or
+   * null for none.
+   */
+  constructor(
+    board: Board,
+    cellSize: number,
+    tint: number | null,
+    handlers: BoardViewHandlers,
+  ) {
     super();
     this.boardWidth = board.width;
     this.boardHeight = board.height;
@@ -133,13 +152,26 @@ export class BoardView extends Container {
     this.cells = board.cells.map((row) => [...row]);
     this.portals = cellPositions(board, (cell) => cell === "portal");
     this.boardEffects = new BoardEffects(cellSize);
+    this.tableLight = new TableLight(
+      cellSize,
+      tableHoles(board.width, board.height, cellSize).map(({ x, y }) => ({
+        x: x + cellSize,
+        y,
+      })),
+      {
+        x: 0,
+        y: 0,
+        width: (board.width + 1) * cellSize,
+        height: board.height * cellSize,
+      },
+    );
     this.filters = [createBloom()];
 
     this.rowHighlight
       .rect(cellSize, 0, board.width * cellSize, cellSize)
       .fill({ color: COLORS.beam, alpha: 0.06 });
     this.rowHighlight.visible = false;
-    this.panel = this.drawGrid();
+    this.panel = this.drawPanel(tint);
     this.animator = new PelletAnimator(cellSize, (x, y) =>
       this.cellCenter(x, y),
     );
@@ -155,6 +187,7 @@ export class BoardView extends Container {
     this.waveLayer.mask = waveMask;
     this.addChild(
       this.panel,
+      this.tableLight.holeLayer,
       this.rowHighlight,
       waveMask,
       this.waveLayer,
@@ -175,6 +208,7 @@ export class BoardView extends Container {
     }
     this.redrawCells();
     this.addChild(
+      this.tableLight.hazeLayer,
       this.boardEffects.lightLayer,
       this.placePreview,
       this.boardEffects.sparkleLayer,
@@ -252,6 +286,25 @@ export class BoardView extends Container {
   }
 
   /**
+   * The level is complete: green light runs back along the finished shot's
+   * path to its emitter, which flashes, and a wave of green spreads from
+   * the goal across the table's holes. Nothing when the player prefers
+   * reduced motion.
+   */
+  playGoalSurge(result: ShotResult): void {
+    const first = result.path[0];
+    const last = result.path[result.path.length - 1];
+    if (!first || !last) {
+      return;
+    }
+    this.animator.playSurge(() => {
+      const emitter = this.cellCenter(-1, first.y);
+      this.boardEffects.addFlash(emitter.x, emitter.y, "emitter");
+      this.tableLight.playWave(this.cellCenter(last.x, last.y), COLORS.success);
+    });
+  }
+
+  /**
    * The game's ending, from the bonus target at board cell (x, y): a ring
    * in the bonus colours spreads over the board, and each piece it passes
    * flashes in the colour passing over it; mirrors make a half turn, so
@@ -277,6 +330,7 @@ export class BoardView extends Container {
     this.turns = [];
     this.placings = [];
     this.boardEffects.clearLight();
+    this.tableLight.clear();
     this.shakeMs = null;
     this.pivot.set(0, 0);
     board.cells.forEach((row, y) =>
@@ -333,6 +387,7 @@ export class BoardView extends Container {
     callbacks: Omit<ShotCallbacks, "onCellChange">,
   ): void {
     this.finishIntro();
+    this.boardEffects.clearResidue();
     this.animator.play(result, {
       ...callbacks,
       onBounce: (bounceNumber, at) => {
@@ -341,6 +396,7 @@ export class BoardView extends Container {
         for (const { x, y } of flashed) {
           const center = this.cellCenter(x, y);
           this.boardEffects.addFlash(center.x, center.y, "mirror");
+          this.leaveLight(x, y, at.bounceKind);
         }
         callbacks.onBounce(bounceNumber, at);
       },
@@ -431,6 +487,7 @@ export class BoardView extends Container {
 
   update(deltaMs: number): void {
     this.animator.update(deltaMs);
+    this.tableLight.update(deltaMs, this.animator.beamLight);
     this.updateWave(deltaMs);
     this.updateTurns(deltaMs);
     this.updatePlacings(deltaMs);
@@ -458,9 +515,33 @@ export class BoardView extends Container {
         last.y - delta.y / 2,
       );
       this.boardEffects.addSparks(impact.x, impact.y, -delta.x, -delta.y);
+      if (last.cell === "wall") {
+        this.boardEffects.addResidue({
+          kind: "face",
+          ...impact,
+          dx: delta.x,
+          dy: delta.y,
+        });
+      }
       if (last.becomes && !prefersReducedMotion()) {
         this.shakeMs = 0;
       }
+    }
+  }
+
+  /**
+   * Leaves the beam's light on the piece at board cell (x, y) that turned
+   * it: along a mirror's glass, a spot on a reflector or portal. A glass
+   * mirror shatters, so it keeps none.
+   */
+  private leaveLight(x: number, y: number, kind: BounceKind | undefined): void {
+    if (kind === "mirror" || kind === "fixed") {
+      this.boardEffects.addResidue({
+        kind: "glass",
+        view: this.cellViews[y][x],
+      });
+    } else if (kind === "reflector" || kind === "portal") {
+      this.boardEffects.addResidue({ kind: "spot", ...this.cellCenter(x, y) });
     }
   }
 
@@ -753,25 +834,11 @@ export class BoardView extends Container {
     };
   }
 
-  private drawGrid(): Graphics {
-    const { boardWidth: width, boardHeight: height, cellSize } = this;
+  /** The optical table under the cells; see drawTable(). */
+  private drawPanel(tint: number | null): Graphics {
     const g = new Graphics();
-    const left = cellSize;
-    const right = (width + 1) * cellSize;
-    const bottom = height * cellSize;
-
-    g.roundRect(left, 0, width * cellSize, bottom, 10).fill(COLORS.panel);
-    for (let x = 1; x < width; x++) {
-      g.moveTo(left + x * cellSize, 0).lineTo(left + x * cellSize, bottom);
-    }
-    for (let y = 1; y < height; y++) {
-      g.moveTo(left, y * cellSize).lineTo(right, y * cellSize);
-    }
-    g.stroke({ width: 1, color: COLORS.grid });
-    g.roundRect(left, 0, width * cellSize, bottom, 10).stroke({
-      width: 1.5,
-      color: COLORS.panelBorder,
-    });
+    g.x = this.cellSize;
+    drawTable(g, this.boardWidth, this.boardHeight, this.cellSize, tint);
     return g;
   }
 

@@ -644,6 +644,37 @@ lab page on 2026-10-11:
   colours, and the title beam ends in the bonus gem, which splits it
   into a small, still fan of the six colours (*Prism crystal*)
 
+### Presentation, third pass: a memorable lab
+
+Planned 2026-10-18. The graphics looked fine but weren't memorable: a
+flat panel with glowing icons could be any game. Option chosen: keep the
+Laser lab direction and give it depth, light and a signature moment.
+Variants on visual lab 2 (an artifact, like the earlier lab pages), all
+chosen on 2026-10-18 and written into `docs/DESIGN.md` as each is built.
+As before, every effect works under reduced motion, follows the polyline
+rule and is checked on a phone. In order:
+
+- [x] Board surface: an optical table, a dark anodised breadboard with
+  tapped holes at the cell corners instead of grid lines, a brushed sheen
+  and four corner screws
+- [x] Mirrors: a bevelled glass slab on a round steel mount with two
+  adjuster screws, turning with it (glass mirrors on the same mount;
+  fixed mirrors stay bolted to the table, without one)
+- [x] Beam light: a faint haze around the beam with dust specks that show
+  only where it crosses them, and lit pieces: mirrors it bounced off stay
+  faintly warm, walls glow where it hit, and the table's holes near it
+  catch its colour
+- [x] Chapter light: each chapter its own room colour, on the light
+  behind the board, the panel's edge and the table; Prism turns slowly
+  through the bonus colours
+- [x] Reaching the goal: green light runs back along the whole path to
+  the emitter, the beam swells and the room brightens, then a soft wave
+  of green spreads from the crystal across the table's holes
+- [x] Title logo: the words step down diagonally, and the title beam
+  bounces off two mirrors between DIAGON and PUZZLE on its way to the
+  crystal
+- [ ] Check every item on a phone
+
 ## Engineering track
 
 ### Next

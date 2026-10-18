@@ -6,7 +6,13 @@ import type { ChapterRange, LevelDefinition } from "../levels/levels";
 import { prefersReducedMotion, pulse } from "../render/ambient";
 import { easeInOutCubic, easeOutCubic } from "../render/easing";
 import { drawCell } from "../render/cellGraphics";
-import { arcPoints } from "../render/polyline";
+import {
+  arcPoints,
+  pathLength,
+  pathUpTo,
+  pointAtDistance,
+} from "../render/polyline";
+import type { Point } from "../render/polyline";
 import { SpectrumText } from "../render/spectrumText";
 import { SCREEN_MARGIN, fitToScreen } from "../render/fitToScreen";
 import { ScrollView } from "../render/ScrollView";
@@ -41,6 +47,14 @@ import { nextMenuItem } from "./menuNavigation";
 import type { MenuDirection } from "./menuNavigation";
 
 const GAME_TITLE = "DIAGON PUZZLE";
+/**
+ * The title's two words step down diagonally: the second starts this far
+ * right of the first and this much of a line lower. The title beam runs
+ * this far under each word.
+ */
+const TITLE_GAP = 44;
+const TITLE_STEP = 0.9;
+const BEAM_BELOW = 10;
 const PLAY_WIDTH = 440;
 /** Level tiles: size, and the gap between them. */
 const TILE_SIZE = 54;
@@ -70,7 +84,7 @@ const DETAIL_HEIGHT = 56;
 /** The title beam fires once, a moment after the title screen appears. */
 const BEAM_FIRE_MS = 400;
 /** Time for the beam to cross, and for the crystal's flash on arrival. */
-const BEAM_TRAVEL_MS = 420;
+const BEAM_TRAVEL_MS = 560;
 const CRYSTAL_FLASH_MS = 500;
 /** The title's glow brightens for this long as the beam passes under it. */
 const TITLE_FLARE_MS = 700;
@@ -143,7 +157,6 @@ export class TitleScene extends Container implements Scene {
   private readonly version: Text;
   private readonly notice: Text | null;
   private readonly play: MenuItem;
-  private readonly title: Container;
   /**
    * The title in the bonus colours once the whole game is done (every
    * bonus target found and the secret chapter at par); its letters light
@@ -172,6 +185,7 @@ export class TitleScene extends Container implements Scene {
         ? new SpectrumText(GAME_TITLE, textStyle("title"))
         : null;
     let title: Container;
+    let words: Text[][];
     if (this.prismTitle) {
       title = this.prismTitle;
       if (prefersReducedMotion()) {
@@ -179,11 +193,19 @@ export class TitleScene extends Container implements Scene {
       } else {
         this.prismTitle.unlit();
       }
+      // Its letters, word by word; the space between them is not drawn.
+      const letters = this.prismTitle.letters.map(({ view }) => view);
+      const space = letters.findIndex((view) => view.text === " ");
+      letters[space].visible = false;
+      words = [letters.slice(0, space), letters.slice(space + 1)];
     } else {
-      const text = new Text({ text: GAME_TITLE, style: textStyle("title") });
-      text.anchor.set(0.5, 0);
-      title = text;
+      title = new Container();
+      words = GAME_TITLE.split(" ").map((word) => [
+        new Text({ text: word, style: textStyle("title") }),
+      ]);
+      title.addChild(...words.flat());
     }
+    const beamPath = stepTitle(words);
     // A white glow suits the many-coloured title better than the beam's.
     this.titleGlow = createGlow(
       this.prismTitle ? COLORS.beamCore : COLORS.beam,
@@ -191,8 +213,7 @@ export class TitleScene extends Container implements Scene {
     );
     title.filters = [this.titleGlow];
     this.addChild(title);
-    this.title = title;
-    this.titleBeam = new TitleBeam(title.width, title.height + 10, allFound);
+    this.titleBeam = new TitleBeam(beamPath, allFound);
     this.titleBeam.draw(prefersReducedMotion() ? 1 : 0);
     this.addChild(this.titleBeam);
 
@@ -482,8 +503,9 @@ export class TitleScene extends Container implements Scene {
       const arrived = cycle - BEAM_TRAVEL_MS;
       const travelled = easeInOutCubic(Math.min(1, cycle / BEAM_TRAVEL_MS));
       if (this.prismTitle) {
-        const half = this.title.width / 2;
-        this.prismTitle.lightUpTo(-half + 2 * half * travelled);
+        // The beam only ever moves right or down, so its x tells which
+        // letters it has passed under.
+        this.prismTitle.lightUpTo(this.titleBeam.frontAt(travelled).x);
         if (arrived >= 0) {
           this.prismTitle.light();
         }
@@ -530,7 +552,7 @@ export class TitleScene extends Container implements Scene {
       return;
     }
     this.narrow = narrow;
-    let y = this.title.height + 10 + 40;
+    let y = this.titleBeam.bottom + 40;
     const centre = (button: Button) => {
       button.position.set(-button.width / 2, y);
       y += button.height;
@@ -716,28 +738,65 @@ function levelListHeader(
 }
 
 /**
- * A short laser beam under the title, ending in a goal crystal: the game's
- * idea in one line. Centred on x = 0 at height `y`. The beam can be drawn
- * part of the way, so it can fire across; the crystal pulses and flashes.
- * Once every bonus target is found (`prism`), the beam ends in the bonus
- * gem instead, which splits it into a small, still fan of the bonus
- * colours.
+ * Lays the title's words out stepping down diagonally, centred on x = 0
+ * with the first word's top at y = 0. Each word is a list of pieces drawn
+ * side by side (the word itself, or a prism title's letters). Returns the
+ * title beam's path: under the first word, down between the words, under
+ * the second to where the crystal sits.
+ */
+function stepTitle(words: Text[][]): Point[] {
+  const width = (pieces: Text[]) =>
+    pieces.reduce((sum, view) => sum + view.width, 0);
+  const height = Math.max(...words.flat().map((view) => view.height));
+  const [first, second] = words;
+  const total = width(first) + TITLE_GAP + width(second);
+  const step = Math.round(height * TITLE_STEP);
+  const place = (pieces: Text[], left: number, top: number) => {
+    let x = left;
+    for (const view of pieces) {
+      view.position.set(x, top);
+      x += view.width;
+    }
+  };
+  const left = -total / 2;
+  place(first, left, 0);
+  place(second, left + width(first) + TITLE_GAP, step);
+  const turn = left + width(first) + TITLE_GAP / 2;
+  const top = height + BEAM_BELOW;
+  return [
+    { x: left, y: top },
+    { x: turn, y: top },
+    { x: turn, y: top + step },
+    { x: total / 2, y: top + step },
+  ];
+}
+
+/**
+ * The title beam, ending in a goal crystal: the game's idea as its logo.
+ * It runs along `path`, turned by a small mirror at each corner, to the
+ * crystal at its end. The beam can be drawn part of the way, so it can
+ * fire across; the crystal pulses and flashes. Once every bonus target is
+ * found (`prism`), the beam ends in the bonus gem instead, which splits
+ * it into a small, still fan of the bonus colours.
  */
 class TitleBeam extends Container {
   readonly crystal: Graphics;
   private readonly beam = new Graphics();
   private readonly fan: Graphics | null;
-  private readonly start: number;
-  private readonly end: number;
-  private readonly y0: number;
+  /** The beam's path, ending where it meets the crystal. */
+  private readonly path: Point[];
+  private readonly length: number;
 
-  constructor(width: number, y: number, prism: boolean) {
+  constructor(path: readonly Point[], prism: boolean) {
     super();
-    const half = width / 2;
     const size = 11;
-    this.start = -half;
-    this.end = half - size * (prism ? 1.6 : 2);
-    this.y0 = y;
+    const end = path[path.length - 1];
+    const crystalX = end.x - size;
+    this.path = [
+      ...path.slice(0, -1),
+      { x: crystalX - size * (prism ? 0.6 : 1), y: end.y },
+    ];
+    this.length = pathLength(this.path);
     this.crystal = new Graphics();
     if (prism) {
       // The gem as on the board, about the crystal's size.
@@ -747,31 +806,68 @@ class TitleBeam extends Container {
         .poly([0, -size, size, 0, 0, size, -size, 0])
         .fill(COLORS.success);
     }
-    this.crystal.position.set(half - size, y);
+    this.crystal.position.set(crystalX, end.y);
     this.fan = prism ? new Graphics() : null;
-    this.fan?.position.set(half - size, y);
-    this.addChild(this.beam, ...(this.fan ? [this.fan] : []), this.crystal);
+    this.fan?.position.set(crystalX, end.y);
+    const mirrors = new Graphics();
+    const reach = 9;
+    for (const corner of path.slice(1, -1)) {
+      // Drawn as "\": it turns the beam from right to down, and back.
+      mirrors
+        .moveTo(corner.x - reach, corner.y - reach)
+        .lineTo(corner.x + reach, corner.y + reach)
+        .stroke({ width: 6, color: COLORS.glass, cap: "round" })
+        .moveTo(corner.x - reach + 1.5, corner.y - reach + 1.5)
+        .lineTo(corner.x + reach - 1.5, corner.y + reach - 1.5)
+        .stroke({ width: 1.4, color: COLORS.glassHighlight, cap: "round" });
+    }
+    this.addChild(
+      this.beam,
+      mirrors,
+      ...(this.fan ? [this.fan] : []),
+      this.crystal,
+    );
     this.filters = [createBloom()];
   }
 
+  /** The bottom of the beam and its crystal, in this container's pixels. */
+  get bottom(): number {
+    return this.crystal.y + 12;
+  }
+
+  /** The beam's front when it has been drawn `fraction` (0–1) of the way. */
+  frontAt(fraction: number): Point {
+    return pointAtDistance(this.path, this.length * fraction);
+  }
+
   /**
-   * Draws the beam from the left up to `fraction` (0–1) of its length, and
-   * the prism's fan grown to `fan` (0–1) of its length.
+   * Draws the beam along its path up to `fraction` (0–1) of its length,
+   * and the prism's fan grown to `fan` (0–1) of its length.
    */
   draw(fraction: number, fan = fraction >= 1 ? 1 : 0): void {
     this.drawFan(fan);
     const g = this.beam.clear();
-    const x = this.start + (this.end - this.start) * fraction;
+    const points = pathUpTo(this.path, this.length * fraction);
     // Nothing until it has length: a line needs two distinct points.
-    if (x - this.start < 0.5) {
+    if (points.length < 2) {
       return;
     }
-    g.moveTo(this.start, this.y0)
-      .lineTo(x, this.y0)
-      .stroke({ width: 10, color: COLORS.beam, alpha: 0.4, cap: "round" })
-      .moveTo(this.start, this.y0)
-      .lineTo(x, this.y0)
-      .stroke({ width: 2, color: COLORS.beamCore, cap: "round" });
+    const line = () => {
+      g.moveTo(points[0].x, points[0].y);
+      for (const p of points.slice(1)) {
+        g.lineTo(p.x, p.y);
+      }
+    };
+    line();
+    g.stroke({
+      width: 10,
+      color: COLORS.beam,
+      alpha: 0.4,
+      cap: "round",
+      join: "round",
+    });
+    line();
+    g.stroke({ width: 2, color: COLORS.beamCore, cap: "round", join: "round" });
   }
 
   private drawFan(fraction: number): void {

@@ -38,10 +38,13 @@ export function vignetteTexture(): Texture {
   ]);
 }
 
-/** A faint blue light, as if the board were lit from behind. */
+/**
+ * A faint light, as if the board were lit from behind: white, for a
+ * sprite to tint in the chapter's light.
+ */
 export function backLightTexture(): Texture {
   return radialTexture("backLight", [
-    [0, "rgba(40, 70, 130, 0.3)"],
-    [1, "rgba(40, 70, 130, 0)"],
+    [0, "rgba(255, 255, 255, 0.45)"],
+    [1, "rgba(255, 255, 255, 0)"],
   ]);
 }

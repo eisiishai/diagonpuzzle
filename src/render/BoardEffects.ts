@@ -5,13 +5,14 @@ import { BONUS_COLORS, COLORS } from "./theme";
 
 /**
  * A short flash of light at a point in pixels: where the beam reflects, a
- * goal crystal hit (which also sends out a diamond ring), or a piece the
- * ending's wave passes over, in `color`.
+ * goal crystal hit (which also sends out a diamond ring), the emitter as
+ * the goal's surge reaches it, or a piece the ending's wave passes over,
+ * in `color`.
  */
 interface Flash {
   x: number;
   y: number;
-  kind: "mirror" | "goal" | "wave";
+  kind: "mirror" | "goal" | "emitter" | "wave";
   color?: number;
   ageMs: number;
 }
@@ -43,6 +44,23 @@ interface Spark {
 const SPARK_COUNT = 5;
 const SPARK_SPEED = 4.5;
 const SPARK_LIFE_MS = 240;
+
+/**
+ * Where beam light stays on a piece the beam touched, until the next shot: along
+ * the glass of a mirror (`view`, following its turn), a spot on a
+ * reflector or portal, or the face of a wall the beam hit, at (x, y)
+ * coming in along (dx, dy).
+ */
+export type ResiduePlace =
+  | { kind: "glass"; view: Graphics }
+  | { kind: "spot"; x: number; y: number }
+  | { kind: "face"; x: number; y: number; dx: number; dy: number };
+
+type Residue = ResiduePlace & { ageMs: number };
+
+/** Residue starts bright and settles to this much over RESIDUE_MS. */
+const RESIDUE_REST = 0.4;
+const RESIDUE_MS = 500;
 
 /** A small twinkle near a bonus target. */
 interface Sparkle {
@@ -80,6 +98,7 @@ export class BoardEffects {
   private flashes: Flash[] = [];
   private glints: Glint[] = [];
   private sparks: Spark[] = [];
+  private residues: Residue[] = [];
   private sparkles: Sparkle[] = [];
   private debris: Debris[] = [];
 
@@ -126,6 +145,19 @@ export class BoardEffects {
         ageMs: 0,
       });
     }
+  }
+
+  /**
+   * Leaves the beam's light on a piece it touched, until clearResidue():
+   * see ResiduePlace.
+   */
+  addResidue(place: ResiduePlace): void {
+    this.residues.push({ ...place, ageMs: 0 });
+  }
+
+  /** Takes the light off every piece, as the next shot starts. */
+  clearResidue(): void {
+    this.residues = [];
   }
 
   /** A four-pointed twinkle at a random spot around a bonus target at (x, y). */
@@ -189,6 +221,7 @@ export class BoardEffects {
     this.flashes = [];
     this.glints = [];
     this.sparks = [];
+    this.residues = [];
     this.lightLayer.clear();
   }
 
@@ -218,7 +251,7 @@ export class BoardEffects {
         });
         return true;
       }
-      const goal = flash.kind === "goal";
+      const goal = flash.kind === "goal" || flash.kind === "emitter";
       const t = flash.ageMs / (goal ? GOAL_FLASH_MS : MIRROR_FLASH_MS);
       if (t >= 1) {
         return false;
@@ -233,7 +266,7 @@ export class BoardEffects {
           color: COLORS.glassHighlight,
           alpha: 0.8 * fade,
         });
-      } else if (!reduced) {
+      } else if (flash.kind === "goal" && !reduced) {
         const r = size * (0.3 + 0.75 * easeOutCubic(t));
         g.poly([x, y - r, x + r, y, x, y + r, x - r, y]).stroke({
           width: 2.5 * (1 - 0.6 * t),
@@ -271,6 +304,8 @@ export class BoardEffects {
       return true;
     });
 
+    this.drawResidues(deltaMs);
+
     const seconds = deltaMs / 1000;
     this.sparks = this.sparks.filter((spark) => {
       spark.ageMs += deltaMs;
@@ -301,6 +336,69 @@ export class BoardEffects {
       }
       return true;
     });
+  }
+
+  private drawResidues(deltaMs: number): void {
+    const g = this.lightLayer;
+    const size = this.cellSize;
+    const reach = (size / 2) * 0.7;
+    this.residues = this.residues.filter(
+      (residue) => !(residue.kind === "glass" && residue.view.destroyed),
+    );
+    for (const residue of this.residues) {
+      residue.ageMs += deltaMs;
+      const amount =
+        RESIDUE_REST +
+        (1 - RESIDUE_REST) * Math.max(0, 1 - residue.ageMs / RESIDUE_MS);
+      if (residue.kind === "glass") {
+        const { view } = residue;
+        const cos = Math.cos(view.rotation);
+        const sin = Math.sin(view.rotation);
+        const end = (k: number) => ({
+          x: view.x + k * cos - k * sin,
+          y: view.y + k * sin + k * cos,
+        });
+        const a = end(-reach);
+        const b = end(reach);
+        g.moveTo(a.x, a.y)
+          .lineTo(b.x, b.y)
+          .stroke({
+            width: size * 0.16,
+            color: COLORS.beam,
+            alpha: 0.22 * amount,
+            cap: "round",
+          })
+          .moveTo(a.x, a.y)
+          .lineTo(b.x, b.y)
+          .stroke({
+            width: 3,
+            color: COLORS.beam,
+            alpha: 0.35 * amount,
+            cap: "round",
+          });
+      } else if (residue.kind === "spot") {
+        g.circle(residue.x, residue.y, size * 0.32).fill({
+          color: COLORS.beam,
+          alpha: 0.12 * amount,
+        });
+      } else {
+        // The wall's face, a little in from the cell's edge.
+        const { dx, dy } = residue;
+        const x = residue.x + dx * size * 0.065;
+        const y = residue.y + dy * size * 0.065;
+        const along = size * 0.33;
+        g.circle(x, y, size * 0.4)
+          .fill({ color: COLORS.beam, alpha: 0.1 * amount })
+          .moveTo(x - dy * along, y - dx * along)
+          .lineTo(x + dy * along, y + dx * along)
+          .stroke({
+            width: 2,
+            color: COLORS.beam,
+            alpha: 0.7 * amount,
+            cap: "round",
+          });
+      }
+    }
   }
 
   /** Sparkles grow and shrink once, turning a little, then disappear. */

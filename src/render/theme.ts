@@ -41,6 +41,25 @@ export const COLORS = {
   /** Corner ticks around the board, and their labels (4.9:1 contrast). */
   marking: 0x2f4670,
   markingText: 0x6482b0,
+  /**
+   * The optical table the board sits on: an anodised plate, lighter at the
+   * top left, with a faint brushed grain, tapped holes and corner screws.
+   */
+  tableLight: 0x131d31,
+  tableDark: 0x0b1220,
+  tableGrain: 0xa0bee6,
+  tableEdge: 0x33496f,
+  tableHole: 0x050810,
+  tableHoleRim: 0x3a4d70,
+  screw: 0x24314b,
+  screwEdge: 0x4a5d82,
+  screwSlot: 0x0b1120,
+  /** Mirror mounts: a round steel disc under the glass, with two screws. */
+  mountLight: 0x33425e,
+  mountDark: 0x18223a,
+  mountEdge: 0x45597f,
+  mountScrew: 0x0d1424,
+  mountScrewEdge: 0x5a6f96,
 } as const;
 
 /**
@@ -50,6 +69,27 @@ export const COLORS = {
 export const BONUS_COLORS = [
   0xff5fd2, 0xffa45c, 0xffe08a, 0x3dffb4, 0x5fd8ff, 0xa98bff,
 ] as const;
+
+/**
+ * Each chapter's room light, in the chapters' order (CHAPTERS in
+ * src/levels/levels.ts): on the light behind the board, the table's edge
+ * and holes. The secret chapter's, "prism", turns slowly through the
+ * bonus colours.
+ */
+export type ChapterLight = number | "prism";
+
+export const CHAPTER_LIGHTS: readonly ChapterLight[] = [
+  0x2c5ea8, // Basics: the lab's blue
+  0x2a8fb0, // Flip tricks: cyan
+  0xa0683a, // Breakable walls: dusty amber
+  0x2a9a86, // Your mirror: teal
+  0x5f8fd8, // Reflectors: pale blue
+  0x7cc4e0, // Glass mirrors: ice
+  0x7a8aa8, // Fixed mirrors: steel
+  0x7a5ad8, // Portals: violet
+  0xc08a2a, // One-way gates: amber
+  "prism", // Prism
+];
 
 /** The same background as a CSS colour, for the page and the renderer. */
 export const BACKGROUND_CSS = "#0a0e18";

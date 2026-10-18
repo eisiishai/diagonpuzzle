@@ -3,7 +3,13 @@ import type { ShotOutcome, ShotResult } from "../game/simulate";
 import type { CellType } from "../game/types";
 import { prefersReducedMotion } from "./ambient";
 import { pathPoints, splitAtJumps } from "./pathPoints";
-import { distinctPoints, pointsAlong } from "./polyline";
+import { easeInOutCubic, easeOutCubic } from "./easing";
+import {
+  distinctPoints,
+  pathLength,
+  pointAtDistance,
+  pointsAlong,
+} from "./polyline";
 import type { PathPoint } from "./pathPoints";
 import { COLORS } from "./theme";
 
@@ -18,6 +24,16 @@ const GHOST_CHEVRON_START = 0.75;
 /** The comet tail behind the moving front: its length in cells and dots. */
 const TAIL_CELLS = 0.75;
 const TAIL_DOTS = 12;
+/**
+ * Reaching the goal: light runs back along the path to the emitter in
+ * SURGE_MS, as a bright front with a tail (in cells and dots), while the
+ * beam swells and then settles over BOOST_MS.
+ */
+const SURGE_MS = 450;
+const SURGE_TAIL_CELLS = 1.4;
+const SURGE_TAIL_DOTS = 14;
+const BOOST_MS = 1600;
+const BOOST = 0.6;
 
 export interface ShotCallbacks {
   /**
@@ -40,6 +56,17 @@ interface PixelPoint {
   y: number;
   /** The path point in board cell coordinates. */
   cell: PathPoint;
+}
+
+/**
+ * The beam as drawn at the moment, for the light it casts around it: its
+ * lines in pixels (one per run between portals), its colour, and its
+ * strength (0–1; a missed shot's beam is dimmer).
+ */
+export interface BeamLight {
+  lines: { x: number; y: number }[][];
+  color: number;
+  strength: number;
 }
 
 /** A point of a drawn line, in pixels; `jump` starts a new line (a portal). */
@@ -85,6 +112,7 @@ export class PelletAnimator extends Container {
   readonly ghost = new Graphics();
   /** Time since the ghost appeared, for its fade-in. */
   private ghostMs = 0;
+  private _beamLight: BeamLight | null = null;
 
   private points: PixelPoint[] = [];
   private outcome: ShotOutcome = "exit";
@@ -95,6 +123,9 @@ export class PelletAnimator extends Container {
   private segmentProgress = 0;
   private bounces = 0;
   private playing = false;
+  /** Light running back along the path; see playSurge(). */
+  private readonly surgeFront = new Graphics();
+  private surge: { ageMs: number; onArrive: () => void } | null = null;
 
   constructor(
     cellSize: number,
@@ -109,11 +140,19 @@ export class PelletAnimator extends Container {
       .circle(0, 0, cellSize * 0.09)
       .fill(COLORS.beamCore);
     this.pellet.visible = false;
-    this.addChild(this.trail, this.pellet);
+    this.addChild(this.trail, this.surgeFront, this.pellet);
   }
 
   get isPlaying(): boolean {
     return this.playing;
+  }
+
+  /**
+   * The beam as drawn now, or null when there is none. A new object each
+   * time the beam changes, so the board can tell when to redraw its light.
+   */
+  get beamLight(): BeamLight | null {
+    return this._beamLight;
   }
 
   play(result: ShotResult, callbacks: ShotCallbacks): void {
@@ -130,6 +169,8 @@ export class PelletAnimator extends Container {
     }
     this.outcome = result.outcome;
     this.callbacks = callbacks;
+    this.surge = null;
+    this.surgeFront.clear();
     this.segment = 0;
     this.segmentProgress = 0;
     this.bounces = 0;
@@ -147,12 +188,29 @@ export class PelletAnimator extends Container {
     this.light.clear();
     this.ghost.clear();
     this.points = [];
+    this._beamLight = null;
+    this.surge = null;
+    this.surgeFront.clear();
+  }
+
+  /**
+   * The finished shot reached the goal: green light runs back along its
+   * path to the emitter, the beam swells and settles, and `onArrive` is
+   * called as the light reaches the emitter. Nothing when the player
+   * prefers reduced motion.
+   */
+  playSurge(onArrive: () => void): void {
+    if (prefersReducedMotion() || this.playing || this.points.length < 2) {
+      return;
+    }
+    this.surge = { ageMs: 0, onArrive };
   }
 
   update(deltaMs: number): void {
     if (this.playing) {
       this.advance((SPEED_CELLS_PER_SECOND * this.cellSize * deltaMs) / 1000);
     }
+    this.updateSurge(deltaMs);
     this.ghostMs += deltaMs;
     const fade = prefersReducedMotion()
       ? 1
@@ -278,6 +336,54 @@ export class PelletAnimator extends Container {
     this.pellet.position.set(head.x, head.y);
   }
 
+  /** Moves the surge's front back along the path and swells the beam. */
+  private updateSurge(deltaMs: number): void {
+    const surge = this.surge;
+    if (!surge) {
+      return;
+    }
+    const before = surge.ageMs;
+    surge.ageMs += deltaMs;
+    const t = surge.ageMs / SURGE_MS;
+    if (before < SURGE_MS && surge.ageMs >= SURGE_MS) {
+      surge.onArrive();
+    }
+    const points = linePoints(this.points);
+    const boost =
+      t < 1
+        ? BOOST * easeOutCubic(t)
+        : BOOST * Math.max(0, 1 - (surge.ageMs - SURGE_MS) / BOOST_MS);
+    this.drawBeam(points, { color: COLORS.success, dimmed: false, boost });
+
+    const g = this.surgeFront.clear();
+    // The front, with its tail behind it towards the goal, fades out over
+    // a little more time after it arrives.
+    const fade = t <= 1 ? 1 : 1 - (t - 1) / 0.6;
+    if (fade > 0) {
+      const total = pathLength(points);
+      const front = total * (1 - easeInOutCubic(Math.min(1, t)));
+      for (let i = SURGE_TAIL_DOTS; i >= 1; i--) {
+        const k = i / SURGE_TAIL_DOTS;
+        const p = pointAtDistance(
+          points,
+          front + k * this.cellSize * SURGE_TAIL_CELLS,
+        );
+        g.circle(p.x, p.y, this.cellSize * (0.22 - 0.12 * k)).fill({
+          color: COLORS.success,
+          alpha: 0.38 * (1 - k) * fade,
+        });
+      }
+      const head = pointAtDistance(points, front);
+      g.circle(head.x, head.y, this.cellSize * 0.25)
+        .fill({ color: COLORS.success, alpha: 0.4 * fade })
+        .circle(head.x, head.y, this.cellSize * 0.1)
+        .fill({ color: 0xffffff, alpha: 0.9 * fade });
+    }
+    if (fade <= 0 && boost <= 0) {
+      this.surge = null;
+    }
+  }
+
   /** A short fading comet tail behind the front, drawn over the beam. */
   private drawTail(): void {
     const g = this.trail;
@@ -325,6 +431,7 @@ export class PelletAnimator extends Container {
   ): void {
     const g = this.light.clear();
     const runs = lines(allPoints);
+    this._beamLight = { lines: runs, color, strength };
     if (runs.length > 0) {
       for (const width of [0.95, 0.5]) {
         for (const points of runs) {
@@ -370,11 +477,15 @@ export class PelletAnimator extends Container {
     this.callbacks?.onFinish();
   }
 
-  /** A coloured band with a thin bright core; dimmed for a missed shot. */
+  /**
+   * A coloured band with a thin bright core; dimmed for a missed shot,
+   * wider and brighter by `boost` (0–1) as the goal's surge passes.
+   */
   private drawBeam(
     allPoints: LinePoint[],
-    style: { color: number; dimmed: boolean },
+    style: { color: number; dimmed: boolean; boost?: number },
   ): void {
+    const boost = style.boost ?? 0;
     const g = this.trail.clear();
     // The moving head can sit exactly on the last corner; lines() leaves
     // out repeated points, which break the stroke on some phone GPUs.
@@ -392,15 +503,15 @@ export class PelletAnimator extends Container {
     };
     path();
     g.stroke({
-      width: this.cellSize * 0.2,
+      width: this.cellSize * (0.2 + 0.2 * boost),
       color: style.color,
-      alpha: style.dimmed ? 0.12 : 0.4,
+      alpha: style.dimmed ? 0.12 : 0.4 + 0.6 * boost,
       cap: "round",
       join: "round",
     });
     path();
     g.stroke({
-      width: 2.5,
+      width: 2.5 + 2.5 * boost,
       color: COLORS.beamCore,
       alpha: style.dimmed ? 0.3 : 1,
       cap: "round",

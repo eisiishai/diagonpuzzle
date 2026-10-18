@@ -1,6 +1,9 @@
 import { Container, Graphics, Sprite, Text } from "pixi.js";
+import { prefersReducedMotion } from "./ambient";
+import { colorCycle } from "./color";
 import { backLightTexture } from "./glow";
-import { COLORS, textStyle } from "./theme";
+import { BONUS_COLORS, COLORS, textStyle } from "./theme";
+import type { ChapterLight } from "./theme";
 
 /** Labels at the board's four corners. */
 export interface CornerLabels {
@@ -14,24 +17,42 @@ export interface CornerLabels {
 const TICK_GAP = 8;
 const TICK_ARM = 12;
 const LABEL_GAP = 5;
+/** The back light at rest, and how long a flare of it takes to fade. */
+const LIGHT_REST = 0.75;
+const FLARE_MS = 1600;
+/** The prism light turns once through the bonus colours in this time. */
+const PRISM_CYCLE_MS = 24000;
 
 /**
- * Quiet surroundings of the board, behind it: a faint light as if the
- * board were lit from behind, and technical corner ticks with small
- * labels. Nothing here glows. See docs/DESIGN.md, Art direction.
+ * Quiet surroundings of the board, behind it: a faint light in the
+ * chapter's colour as if the board were lit from behind, and technical
+ * corner ticks with small labels. Nothing here glows. See docs/DESIGN.md,
+ * Art direction.
  */
 export class BoardSurround extends Container {
+  private readonly light: Sprite;
+  private readonly chapterLight: ChapterLight;
+  private timeMs = 0;
+  /** Time into a flare of the light, while it lasts; see flare(). */
+  private flareMs: number | null = null;
+
   /**
-   * `panel` is the board's panel in this container's coordinates.
+   * `panel` is the board's panel in this container's coordinates, and
+   * `chapterLight` the colour of the light behind it.
    */
   constructor(
     panel: { x: number; y: number; width: number; height: number },
     labels: CornerLabels,
+    chapterLight: ChapterLight,
   ) {
     super();
     this.eventMode = "none";
+    this.chapterLight = chapterLight;
 
     const light = new Sprite(backLightTexture());
+    this.light = light;
+    light.alpha = LIGHT_REST;
+    light.tint = chapterLight === "prism" ? BONUS_COLORS[0] : chapterLight;
     light.anchor.set(0.5);
     light.position.set(panel.x + panel.width / 2, panel.y + panel.height / 2);
     light.width = panel.width * 2;
@@ -71,5 +92,35 @@ export class BoardSurround extends Container {
     label(labels.topRight, right - inset, top, true);
     label(labels.bottomLeft, left + inset, bottom, false);
     label(labels.bottomRight, right - inset, bottom, true);
+  }
+
+  /** The light brightens for a moment and fades back (reaching the goal). */
+  flare(): void {
+    if (!prefersReducedMotion()) {
+      this.flareMs = 0;
+    }
+  }
+
+  /** Fades a flare, and turns the prism light through its colours. */
+  update(deltaMs: number): void {
+    if (prefersReducedMotion()) {
+      return;
+    }
+    this.timeMs += deltaMs;
+    if (this.chapterLight === "prism") {
+      this.light.tint = colorCycle(BONUS_COLORS, this.timeMs, PRISM_CYCLE_MS);
+    }
+    if (this.flareMs !== null) {
+      this.flareMs += deltaMs;
+      const t = this.flareMs / FLARE_MS;
+      if (t >= 1) {
+        this.flareMs = null;
+        this.light.alpha = LIGHT_REST;
+      } else {
+        // Up quickly, then slowly back down.
+        const up = Math.min(1, t * 6);
+        this.light.alpha = LIGHT_REST + (1 - LIGHT_REST) * up * (1 - t);
+      }
+    }
   }
 }
