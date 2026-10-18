@@ -722,6 +722,19 @@ export const LEVELS: readonly LevelDefinition[] = [
       . . . . . .
     `,
   },
+  {
+    id: "aftershock",
+    name: "Aftershock",
+    minShots: 5,
+    music: "return",
+    grid: String.raw`
+      . \ . \ \ G
+      . \ . % \ .
+      . . # . % .
+      . . \ / . .
+      . . @ . . .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
