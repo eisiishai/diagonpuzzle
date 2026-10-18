@@ -36,7 +36,7 @@ sudo env PATH="$PATH" npx playwright install-deps chromium
 sudo apt-get install fonts-liberation fonts-noto-color-emoji fonts-freefont-ttf
 ```
 
-The WebKit tests (`npx playwright test --project=webkit`, optional) need
+`npm run e2e:full` also runs the desktop tests in WebKit, which needs
 WebKit and its own, much larger set of libraries:
 
 ```bash
@@ -260,10 +260,10 @@ in the curve and which combinations a chapter has. Random odds
 | `npm run lint` | ESLint and Prettier formatting |
 | `npm run build` | Lint, TypeScript type check, unit tests, the solutions file, then builds `dist/`. Stops at the first failure. |
 | `npm run e2e` | Quick browser smoke tests (Playwright, headless Chromium): every screen and flow at desktop and phone size. About 3 minutes. Run before commits that change the game (see *3. Commit*). |
-| `npm run e2e:full` | The quick set plus every level played through. About 7 minutes with 45 levels; each level adds about 10 s. |
+| `npm run e2e:full` | The quick set, every level played through, and the desktop tests in WebKit (below). About 9 minutes with 45 levels; each level adds about 10 s. |
 | `npm run mutation` | Mutation testing of the rules: how well the unit tests check them (below). Minutes; run by hand. |
-| `npm run e2e:coverage` | The full set, and which game code it runs in the browser (below). A little longer than `e2e:full`. |
-| `npx playwright test --project=webkit` | The desktop smoke tests in WebKit, Safari's engine (not Safari itself; not the phone tests, whose swipes need Chromium). About 1.5 minutes. Optional, by hand; WebKit's sound is sent nowhere, as Chromium is started muted. |
+| `npm run e2e:coverage` | The full set in Chromium (not WebKit), and which game code it runs in the browser (below). About as long as `e2e:full`. |
+| `npx playwright test --project=webkit` | Only the WebKit part of `e2e:full`: the desktop smoke tests in WebKit, Safari's engine (not Safari itself; not the phone tests, whose swipes need Chromium). About 1.5 minutes. WebKit's sound is sent nowhere, as Chromium is started muted. |
 | `npm run screenshots` | Pictures of the main screens at desktop and phone size, in `screenshots/` (git-ignored). |
 
 `npm run build` is the full check. **It runs automatically before every
@@ -393,7 +393,7 @@ GitHub while it recorded a trace). Two local cores
 behave about like GitHub:
 
 ```bash
-CI=1 taskset -c 0-1 npx playwright test --project=desktop --project=phone --project=levels --retries=0
+CI=1 taskset -c 0-1 npx playwright test --project=desktop --project=phone --project=levels --project=webkit --retries=0
 ```
 
 About 11 minutes; every test must pass with time to spare (the slowest
@@ -679,7 +679,7 @@ Commits and their version tags go to GitHub only when you choose, with
 publishing a GitHub Release for a version tag starts the workflow
 in `.github/workflows/pages.yml`. On GitHub's machines it runs every check
 (`npm run build`) and the full browser set (`npm run e2e:full`, every level
-played through), and only if all pass adds the version folder and the main
+played through, and the desktop tests in WebKit), and only if all pass adds the version folder and the main
 page to the `gh-pages` branch, the same layout as an upload above: older
 version folders stay as snapshots.
 

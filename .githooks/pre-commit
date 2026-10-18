@@ -44,7 +44,7 @@ if ! npm run build --silent >"$log" 2>&1; then
   exit 1
 fi
 
-# The quick browser smoke tests (npm run e2e, under a minute), only when the
+# The quick browser smoke tests (npm run e2e, about 3 minutes), only when the
 # commit changes the game or how it is built: doc-only commits stay fast.
 if git diff --cached --name-only | grep -qE '^(src/|public/|e2e/|index\.html$|vite\.config\.ts$|playwright\.config\.ts$|package(-lock)?\.json$)'; then
   if ! node --input-type=module -e "

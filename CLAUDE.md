@@ -46,18 +46,20 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
 - `npm run e2e` — quick browser smoke tests (Playwright, headless
   Chromium, `e2e/`): every screen and flow at desktop and phone size,
   about 3 minutes. The pre-commit hook runs it when a commit changes the game
-- `npm run e2e:full` — the quick set plus every level played through,
-  about 7 minutes with 45 levels. Run before a release and after changes
-  to drawing, levels or block types
+- `npm run e2e:full` — the quick set plus every level played through
+  and the desktop tests in WebKit (Safari's engine), about 9 minutes with
+  45 levels. Run before a release and after changes to drawing, levels
+  or block types
 - `npm run mutation` — mutation testing (Stryker) of the rules
   (`src/game/`, `src/save/`, `src/levels/parse.ts`): small changes to the
   code that some unit test should notice; report in
   `reports/mutation/mutation.html` (git-ignored). Slow; run by hand now and
   then, in the background
-- `npm run e2e:coverage` — the full browser set with code coverage of the
-  game in the browser: a table of files with uncovered code, and a
-  line-by-line report in `coverage-e2e/index.html` (git-ignored). A little
-  longer than `e2e:full`; run now and then, not with each commit
+- `npm run e2e:coverage` — the full browser set in Chromium (not WebKit)
+  with code coverage of the game in the browser: a table of files with
+  uncovered code, and a line-by-line report in `coverage-e2e/index.html`
+  (git-ignored). About as long as `e2e:full`; run now and then, not with
+  each commit
 - `npm run screenshots` — pictures of the main screens in `screenshots/`
   (git-ignored). Look at them after a visual change; they don't show
   phone-only GPU bugs, so phone checks stay
@@ -81,7 +83,7 @@ Built with PixiJS 8 + Vite + TypeScript (plain PixiJS, no React).
   chooses which. Publishing a Release is outward-facing, so only when the
   user asks. GitHub's machines are much slower than local runs: check
   browser test changes with
-  `CI=1 taskset -c 0-1 npx playwright test --project=desktop --project=phone --project=levels --retries=0`
+  `CI=1 taskset -c 0-1 npx playwright test --project=desktop --project=phone --project=levels --project=webkit --retries=0`
   (`docs/WORKFLOW.md`, *Browser tests as on GitHub*).
 - Deploy to a web host by hand: commit (the `post-commit` hook rebuilds
   `dist/` with the new version; if it says "dist/ not rebuilt", run

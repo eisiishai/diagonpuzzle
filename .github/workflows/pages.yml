@@ -59,9 +59,10 @@ jobs:
       # Lint, type check, unit tests and the production build in dist/.
       - run: npm run build
 
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
 
-      # The quick set and every level played through (npm run e2e:full).
+      # The quick set, every level played through and the desktop tests in
+      # WebKit (npm run e2e:full).
       - run: npm run e2e:full
 
       # Traces of failed browser tests, to open with npx playwright show-trace.

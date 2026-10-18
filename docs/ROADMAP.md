@@ -760,16 +760,18 @@ lab page on 2026-10-11:
   so every test plays through the main page, and one checks that it
   loads everything from the version folder and that the folder's own
   page works too
-- [ ] Smoke tests in WebKit, Safari's engine, which iPhones and iPads
-  use for every browser: the quick set run as a Playwright project with
-  WebKit next to Chromium, desktop and phone (e.g. Playwright's
-  `iPhone 14`). It would catch Safari-only problems with the canvas,
-  touch and Web Audio that Chromium can't show. Needs WebKit and its
-  system libraries installed in WSL (`npx playwright install webkit`,
-  then the apt packages it names: with nvm, `sudo` can't find `npx` for
-  `install-deps`, as in *Setup on a new machine* in `docs/WORKFLOW.md`),
-  and adds to the commit checks' time unless run only by hand.
-  Still not a real iPhone: phone GPU bugs stay a manual check
+- [x] Smoke tests in WebKit, Safari's engine, which iPhones and iPads
+  use for every browser, to catch Safari-only problems with the canvas
+  and Web Audio that Chromium can't show: the desktop tests as the
+  `webkit` Playwright project, in `npm run e2e:full` and so in the
+  GitHub release run, not in the commit checks (about 1.5 minutes).
+  Needs WebKit and its system libraries (*Setup on a new machine* in
+  `docs/WORKFLOW.md`). WebKit has no mute switch, so its sound goes to a
+  sound server that doesn't exist; in WSL it played through the
+  speakers. Still not a real iPhone: phone GPU bugs stay a manual check
+- [ ] Phone smoke tests in WebKit (e.g. Playwright's `iPhone 14`), for
+  touch: `phone.e2e.ts` swipes through Chromium's own input events,
+  which WebKit doesn't have, so it needs another way to swipe
 - [ ] Watch the solver's and `npm run generate`'s run times as placeable
   blocks grow: each placement option multiplies the choices before every
   shot, and the tests check every level with the solver. All tests take
