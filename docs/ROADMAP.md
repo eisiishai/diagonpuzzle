@@ -583,6 +583,12 @@ the polyline rule and is checked on a phone. In suggested order:
 
 ### Game ending
 
+- [x] A hint, once every level is at par, that there is more to find
+  (2026-10-18), without naming the bonus targets: a second line under
+  the "All levels at par!" banner (REPLAY A LEVEL: SOMETHING NEW
+  AWAITS), the same in the message under the board, and `GOLDEN ★ 0/45`
+  in the level list header from then on
+
 The last bonus target is always the end of the game: bonus targets
 appear only once a level is at par, so by then every star is earned.
 Until v1.9 it got the par finale in other colours. Chosen on the finale

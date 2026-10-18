@@ -71,8 +71,10 @@ interface Banner {
   text: string;
   ageMs: number;
   holdMs: number;
-  /** The ending's banner: letters lit by a sweeping light, a second line. */
-  spectrum?: { letters: SpectrumText; light: Graphics; subtitle: Text };
+  /** A quiet second line, fading in after the banner. */
+  subtitle?: Text;
+  /** The endings' banner: letters lit by a sweeping light. */
+  spectrum?: { letters: SpectrumText; light: Graphics };
 }
 
 /** The prism fan: six rays out of the gem at (x, y). */
@@ -140,11 +142,12 @@ export class Celebration extends Container {
     width: number,
     height: number,
     bannerText: string,
+    subtitle?: string,
   ): void {
     this.addRing(x, y, size, COLORS.star);
     this.addBurst(x, y, size * 1.4, 60, BURST_COLORS);
     this.addRain(width, height, size, 140, RAIN_COLORS);
-    this.addBanner(width / 2, height / 2, width, bannerText);
+    this.addBanner(width / 2, height / 2, width, bannerText, subtitle);
   }
 
   /**
@@ -440,9 +443,19 @@ export class Celebration extends Container {
     });
   }
 
-  private addBanner(x: number, y: number, maxWidth: number, text: string) {
+  /**
+   * A banner centred on (x, y), with `subtitle` under it if given; it
+   * stays longer then, so the second line can be read.
+   */
+  private addBanner(
+    x: number,
+    y: number,
+    maxWidth: number,
+    text: string,
+    subtitle?: string,
+  ) {
     this.banner?.view.destroy({ children: true });
-    const view = new Text({
+    const letters = new Text({
       text,
       style: textStyle("title", {
         fontSize: 38,
@@ -454,11 +467,26 @@ export class Celebration extends Container {
         wordWrapWidth: maxWidth,
       }),
     });
-    view.anchor.set(0.5);
+    letters.anchor.set(0.5, 0);
+    const view = new Container();
+    view.addChild(letters);
+    const second = subtitle === undefined ? undefined : subtitleText(subtitle);
+    if (second) {
+      second.y = letters.height + 10;
+      view.addChild(second);
+    }
+    // Centred on the banner block's middle, so it pops from there.
+    view.pivot.set(0, view.height / 2);
     view.position.set(x, y);
     view.scale.set(0);
     this.addChild(view);
-    this.banner = { view, text, ageMs: 0, holdMs: BANNER_HOLD_MS };
+    this.banner = {
+      view,
+      text,
+      ageMs: 0,
+      holdMs: second ? FINALE_BANNER_HOLD_MS : BANNER_HOLD_MS,
+      subtitle: second,
+    };
   }
 
   /**
@@ -483,18 +511,8 @@ export class Celebration extends Container {
       }),
       width - 24,
     );
-    const second = new Text({
-      text: subtitle,
-      style: textStyle("value", {
-        fontSize: 15,
-        letterSpacing: 3,
-        fill: COLORS.text,
-        stroke: { color: COLORS.background, width: 5, join: "round" },
-      }),
-    });
-    second.anchor.set(0.5, 0);
+    const second = subtitleText(subtitle);
     second.y = letters.height + 10;
-    second.alpha = 0;
     const light = new Graphics();
     view.addChild(letters, light, second);
     // Centred on the banner block's middle, so it pops from there.
@@ -512,21 +530,18 @@ export class Celebration extends Container {
       text,
       ageMs: 0,
       holdMs: FINALE_BANNER_HOLD_MS,
-      spectrum: { letters, light, subtitle: second },
+      subtitle: second,
+      spectrum: { letters, light },
     };
   }
 
-  /** The ending's banner: the sweeping light and the second line. */
+  /** The endings' banner: the sweeping light. */
   private updateSpectrum(banner: Banner): void {
     const { spectrum, ageMs } = banner;
     if (!spectrum) {
       return;
     }
-    const { letters, light, subtitle } = spectrum;
-    subtitle.alpha = Math.min(
-      1,
-      Math.max(0, (ageMs - SUBTITLE_DELAY_MS) / SUBTITLE_FADE_MS),
-    );
+    const { letters, light } = spectrum;
     const g = light.clear();
     if (prefersReducedMotion()) {
       return;
@@ -551,6 +566,12 @@ export class Celebration extends Container {
 
   private updateBanner(banner: Banner, deltaMs: number): void {
     banner.ageMs += deltaMs;
+    if (banner.subtitle) {
+      banner.subtitle.alpha = Math.min(
+        1,
+        Math.max(0, (banner.ageMs - SUBTITLE_DELAY_MS) / SUBTITLE_FADE_MS),
+      );
+    }
     this.updateSpectrum(banner);
     const { ageMs, view } = banner;
     if (ageMs < BANNER_POP_MS) {
@@ -583,4 +604,20 @@ export class Celebration extends Container {
       return true;
     });
   }
+}
+
+/** A banner's quiet second line, centred on x = 0; it fades in later. */
+function subtitleText(text: string): Text {
+  const second = new Text({
+    text,
+    style: textStyle("value", {
+      fontSize: 15,
+      letterSpacing: 3,
+      fill: COLORS.text,
+      stroke: { color: COLORS.background, width: 5, join: "round" },
+    }),
+  });
+  second.anchor.set(0.5, 0);
+  second.alpha = 0;
+  return second;
 }

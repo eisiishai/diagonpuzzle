@@ -646,7 +646,8 @@ export class TitleScene extends Container implements Scene {
 /**
  * The level list's header, centred on x = 0: stars earned at par, gold once
  * all are earned, and golden stars (all bonus targets of a level collected)
- * once there is at least one, since bonus targets are a hidden extra.
+ * once there is at least one, or every level is at par (a hint that there
+ * is more), since bonus targets are a hidden extra.
  */
 function levelListHeader(
   progress: Progress,
@@ -663,7 +664,9 @@ function levelListHeader(
   });
   header.addChild(par);
   const golden = goldenStarCount(progress, summaries);
-  if (golden > 0) {
+  // Shown from the first golden star, or as a hint once every level is
+  // at par: there is another kind of star to earn.
+  if (golden > 0 || allAtPar) {
     const goldenText = new Text({
       text: `  ·  GOLDEN ${STAR} ${golden}/${bonusLevelCount(summaries)}`,
       style: textStyle("label", { fill: COLORS.star }),

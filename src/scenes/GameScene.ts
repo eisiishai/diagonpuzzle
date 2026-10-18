@@ -471,8 +471,11 @@ export class GameScene extends Container implements Scene {
         this.session.setStartBoard(this.options.bonus.board);
       }
       this.celebrate(result, shots, allLevelsAtPar, secretAtPar);
+      // The secret chapter's last star has its own ending; before it
+      // opens, every level at par hints at the bonus targets.
+      const hint = allLevelsAtPar && !secretAtPar;
       this.showMessage(
-        completionMessage(shots, this.options.par, previousBest) +
+        completionMessage(shots, this.options.par, previousBest, hint) +
           this.skipReturnedText(skipReturned),
         COLORS.success,
       );
@@ -545,6 +548,7 @@ export class GameScene extends Container implements Scene {
         this.sceneWidth,
         this.contentHeight,
         `${STAR} ALL LEVELS AT PAR! ${STAR}`,
+        "REPLAY A LEVEL: SOMETHING NEW AWAITS",
       );
     } else {
       audio.play("par");

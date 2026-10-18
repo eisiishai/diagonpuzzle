@@ -8,6 +8,12 @@ describe("completionMessage", () => {
     );
   });
 
+  it("hints at replaying levels when every level is at par", () => {
+    expect(completionMessage(1, 1, undefined, true)).toBe(
+      "★ Par! Level complete in 1 shot. Every level is at par! Replay any level: something new awaits there.",
+    );
+  });
+
   it("names the par when above it", () => {
     expect(completionMessage(3, 2, undefined)).toBe(
       "Level complete in 3 shots. Par is 2: try again for a ★. Press Enter to continue.",

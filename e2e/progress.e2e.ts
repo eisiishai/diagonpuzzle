@@ -71,7 +71,11 @@ test("the last star plays the All levels at par celebration", async ({
   await expect
     .poll(async () => (await game.level()).banner)
     .toContain("ALL LEVELS AT PAR!");
-  expect((await backToTitle(game)).header).toContain("ALL AT PAR!");
+  // A hint that there is more, without naming the bonus targets.
+  expect((await game.level()).message).toContain("something new awaits");
+  const { header } = await backToTitle(game);
+  expect(header).toContain("ALL AT PAR!");
+  expect(header).toContain(`GOLDEN ${STAR} 0/${MAIN_LEVELS.length}`);
 });
 
 test("the secret chapter's last star plays the prism celebration and a prism star", async ({

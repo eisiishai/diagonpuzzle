@@ -80,7 +80,8 @@ puzzle on top of the level for players who have mastered it.
   score replaces the best.
 - **Golden star.** Once a level's bonus target is collected, its par star
   turns golden in the level list, which also shows `GOLDEN ★ n/N` (N: levels
-  with a bonus target, currently all of them) once there is at least one. The header shows `BONUS 0/1` while playing a
+  with a bonus target, currently all of them) once there is at least one,
+  or every level is at par, as a hint. The header shows `BONUS 0/1` while playing a
   level whose bonus target has appeared.
 - **Last bonus target of the game: the ending.** Bonus targets appear only
   once a level is at par, so the last one is always the end of the game.
@@ -760,6 +761,14 @@ from four and six).
   screen and an "All levels at par!" banner. That happens once, on the shot
   that earns the last star; once all stars are earned, the level list header
   turns gold and reads "all at par!".
+- **A hint that there is more.** Every level at par is not the end: bonus
+  targets now wait in every level, but nothing names them, so they stay a
+  surprise for players who return to a level. The "All levels at par!"
+  banner has a quiet second line, REPLAY A LEVEL: SOMETHING NEW AWAITS;
+  the message under the board says "Every level is at par! Replay any
+  level: something new awaits there." in place of "Press Enter to
+  continue."; and from then on the level list header shows `GOLDEN ★
+  0/45`, a kind of star not yet seen (see *Bonus targets*).
 - Progress is saved in the browser (localStorage), keyed by each level's
   stable id, so levels can be reordered or added without breaking saves.
   *Reset progress* erases it after a second confirming click or Enter.

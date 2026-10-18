@@ -9,16 +9,30 @@ export function shotCount(shots: number): string {
   return shots === 1 ? "1 shot" : `${shots} shots`;
 }
 
-/** Message shown when a level is completed. */
+/**
+ * The hint that every level at par is not the end: bonus targets now wait
+ * in every level, unnamed so they stay a surprise.
+ */
+export const ALL_PAR_HINT = "Replay any level: something new awaits there.";
+
+/**
+ * Message shown when a level is completed. When it earned the last star
+ * (`allAtPar`), the hint to replay levels takes the place of the
+ * instruction to continue, so the message stays two lines long.
+ */
 export function completionMessage(
   shots: number,
   par: number,
   previousBest: number | undefined,
+  allAtPar = false,
 ): string {
   const result = earnsStar(shots, par)
     ? `${STAR} Par! Level complete in ${shotCount(shots)}.`
     : `Level complete in ${shotCount(shots)}. Par is ${par}: try again for a ${STAR}.`;
-  return `${result}${bestText(shots, previousBest)} Press Enter to continue.`;
+  const next = allAtPar
+    ? `Every level is at par! ${ALL_PAR_HINT}`
+    : "Press Enter to continue.";
+  return `${result}${bestText(shots, previousBest)} ${next}`;
 }
 
 function bestText(shots: number, previousBest: number | undefined): string {

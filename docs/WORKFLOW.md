@@ -448,6 +448,34 @@ location.reload();
   `[0]` is each level's first bonus target, by its index in reading
   order.
 
+### Seeing every level reach par by hand
+
+The last star (every level at par, no bonus targets yet) plays the "All
+levels at par!" celebration with its hint that there is more to find,
+and the title screen then shows `GOLDEN ★ 0/45`. To see it, set the saved
+progress in the console as above: every level but the first at par, and
+no bonus targets.
+
+```js
+localStorage.setItem("diagonpuzzle.progress", JSON.stringify({
+  version: 1,
+  levels: {"up-and-over":{"bestShots":1},"second-try":{"bestShots":2},"set-the-stage":{"bestShots":2},"down-and-around":{"bestShots":2},"double-take":{"bestShots":2},"encore":{"bestShots":3},"third-time-lucky":{"bestShots":3},"back-and-forth":{"bestShots":3},"two-step":{"bestShots":4},"breakthrough":{"bestShots":3},"trapdoor":{"bestShots":4},"stone-by-stone":{"bestShots":4},"crack-and-double":{"bestShots":3},"rubble-run":{"bestShots":5},"your-move":{"bestShots":1},"hairpin":{"bestShots":2},"double-duty":{"bestShots":3},"clear-the-way":{"bestShots":3},"rebuild":{"bestShots":4},"return-trip":{"bestShots":1},"there-and-back":{"bestShots":2},"ricochet":{"bestShots":3},"mirror-image":{"bestShots":3},"double-back":{"bestShots":4},"glass-house":{"bestShots":2},"clean-break":{"bestShots":3},"glass-echo":{"bestShots":3},"double-glazing":{"bestShots":4},"glass-and-stone":{"bestShots":4},"bolted-down":{"bestShots":2},"cold-steel":{"bestShots":3},"strike-twice":{"bestShots":4},"steel-echo":{"bestShots":3},"true-north":{"bestShots":3},"other-side":{"bestShots":1},"shortcut":{"bestShots":2},"knock-first":{"bestShots":3},"boomerang":{"bestShots":4},"looking-glass":{"bestShots":4},"one-way":{"bestShots":2},"no-way-back":{"bestShots":3},"echo-chamber":{"bestShots":3},"double-crossing":{"bestShots":4},"last-light":{"bestShots":5}},
+  skipped: [],
+  bonuses: {},
+  skipsLeft: 3,
+  skipWaitMs: 0
+}));
+location.reload();
+```
+
+- **The moment:** *Continue* opens *1. First light*; fire from row 4,
+  which completes it at par in one shot and earns the last star. Run the
+  snippet again to see it once more.
+- **The title screen afterwards:** `ALL AT PAR!` and `GOLDEN ★ 0/45` in
+  the header.
+- Like the ending's snippet, it lists the levels from 2 up to *Last
+  light*, not the secret chapter's: add new levels before it here too.
+
 ## 3. Commit
 
 ```bash
