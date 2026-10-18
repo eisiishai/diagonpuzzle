@@ -18,6 +18,8 @@ import {
   goldenStarCount,
   completesAllBonuses,
   hasFoundAllBonuses,
+  openLevelCount,
+  opensSecretLevels,
   MAX_SKIPS,
   spendSkip,
   returnSkip,
@@ -304,6 +306,22 @@ describe("bonus targets", () => {
     // A game without bonus targets has none to find.
     const none = [{ id: "x", minShots: 1, bonusCount: 0 }];
     expect(hasFoundAllBonuses(EMPTY_PROGRESS, none)).toBe(false);
+  });
+
+  it("opens the secret levels once every other bonus target is found", () => {
+    const withSecret = [
+      ...LEVELS,
+      { id: "s", minShots: 3, bonusCount: 0, secret: true },
+    ];
+    const before = recordBonus(recordBonus(EMPTY_PROGRESS, "a", 0), "b", 0);
+    const after = recordBonus(before, "b", 1);
+    expect(openLevelCount(before, withSecret)).toBe(3);
+    expect(openLevelCount(after, withSecret)).toBe(4);
+    expect(opensSecretLevels(before, after, withSecret)).toBe(true);
+    expect(opensSecretLevels(after, after, withSecret)).toBe(false);
+    // Without secret levels, all levels are open and none can open.
+    expect(openLevelCount(EMPTY_PROGRESS, LEVELS)).toBe(3);
+    expect(opensSecretLevels(before, after, LEVELS)).toBe(false);
   });
 });
 

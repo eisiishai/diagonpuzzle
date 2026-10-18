@@ -8,6 +8,8 @@ import {
   hasAllBonuses,
   isCompleted,
   isSkipped,
+  openLevelCount,
+  opensSecretLevels,
   recordBonus,
   recordCompletion,
   recordSkip,
@@ -42,7 +44,10 @@ export interface LevelStart {
 export interface CompletionReport {
   /** The level's best shot count before this completion, if any. */
   previousBest?: number;
-  /** True if this completion earned the last star: every level is at par. */
+  /**
+   * True if this completion earned the last star: every open level is at
+   * par (see openLevelCount).
+   */
   allLevelsAtPar: boolean;
   /** Skips left after one was given back for this, if one was. */
   skipReturned?: number;
@@ -60,6 +65,8 @@ export interface BonusReport {
   collected: number;
   /** True if this was the last bonus target of the whole game. */
   allBonuses: boolean;
+  /** True if this hit opened the secret chapter: its levels are now in the game. */
+  secretOpened: boolean;
   /** Skips left after one was given back for this, if one was. */
   skipReturned?: number;
 }
@@ -91,6 +98,19 @@ export class GameProgress {
     return this._progress;
   }
 
+  /**
+   * How many levels, from the first, are in the game now: the secret
+   * chapter's only once every other bonus target is found.
+   */
+  get openLevelCount(): number {
+    return openLevelCount(this._progress, this.levels);
+  }
+
+  /** The levels in the game now, as openLevelCount. */
+  get openLevels(): readonly LevelSummary[] {
+    return this.levels.slice(0, this.openLevelCount);
+  }
+
   levelStart(index: number): LevelStart {
     const { id } = this.levels[index];
     return {
@@ -115,7 +135,7 @@ export class GameProgress {
     return {
       previousBest: result.previousBest,
       skipReturned,
-      allLevelsAtPar: completesAllPar(before, this._progress, this.levels),
+      allLevelsAtPar: completesAllPar(before, this._progress, this.openLevels),
       bonusesShown: this.atPar(index),
     };
   }
@@ -143,6 +163,7 @@ export class GameProgress {
         !hasAllBonuses(before, level) && hasAllBonuses(this._progress, level),
       collected: collectedBonuses(this._progress, level.id).length,
       allBonuses: completesAllBonuses(before, this._progress, this.levels),
+      secretOpened: opensSecretLevels(before, this._progress, this.levels),
     };
   }
 

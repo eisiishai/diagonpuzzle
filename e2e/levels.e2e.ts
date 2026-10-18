@@ -2,7 +2,7 @@ import { placeMirror } from "../src/game/placement";
 import { fire } from "../src/game/simulate";
 import { LEVELS } from "../src/levels/levels";
 import { CI } from "./ci";
-import { expect, solution, startBoard, test } from "./game";
+import { MAIN_LEVELS, expect, solution, startBoard, test } from "./game";
 
 // Every level played by its shortest solution, as on a first visit. This
 // runs the drawing and effects of every block type and shot outcome, which
@@ -45,7 +45,11 @@ LEVELS.forEach((level, index) => {
       shots: level.minShots,
       hits: goalHits,
     });
-    const isLast = number === LEVELS.length;
+    // Before the secret chapter (seedCompleted opens it only for its own
+    // levels), the last level before it is the last in the game.
+    const levelCount =
+      index < MAIN_LEVELS.length ? MAIN_LEVELS.length : LEVELS.length;
+    const isLast = number === levelCount;
     await game.press(isLast ? "BACK TO TITLE" : "NEXT LEVEL");
     if (isLast) {
       await game.waitForScene("title");

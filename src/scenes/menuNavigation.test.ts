@@ -20,6 +20,23 @@ describe("nextMenuItem", () => {
     expect(nextMenuItem(centers, all, 2, "left")).toBe(1);
   });
 
+  it("goes up and down to the nearest row, even a short one off to one side", () => {
+    // A row of three tiles (0-2), a lone tile under the first (3), and a
+    // button (4) under the middle.
+    const rows = [
+      { x: -60, y: 0 },
+      { x: 0, y: 0 },
+      { x: 60, y: 0 },
+      { x: -60, y: 100 },
+      { x: 0, y: 200 },
+    ];
+    const enabled = rows.map(() => true);
+    expect(nextMenuItem(rows, enabled, 2, "down")).toBe(3);
+    expect(nextMenuItem(rows, enabled, 3, "down")).toBe(4);
+    expect(nextMenuItem(rows, enabled, 4, "up")).toBe(3);
+    expect(nextMenuItem(rows, enabled, 3, "up")).toBe(0);
+  });
+
   it("runs left and right on into the neighbouring row", () => {
     expect(nextMenuItem(centers, all, 3, "right")).toBe(4);
     expect(nextMenuItem(centers, all, 4, "left")).toBe(3);

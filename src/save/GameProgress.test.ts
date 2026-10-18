@@ -97,6 +97,7 @@ describe("GameProgress.collectBonus", () => {
       newlyGolden: false,
       collected: 1,
       allBonuses: false,
+      secretOpened: false,
     });
     expect(game.progress.bonuses.a).toEqual([1]);
   });
@@ -110,6 +111,7 @@ describe("GameProgress.collectBonus", () => {
       newlyGolden: false,
       collected: 1,
       allBonuses: false,
+      secretOpened: false,
     });
     expect(game.progress).toBe(before);
   });
@@ -128,6 +130,50 @@ describe("GameProgress.collectBonus", () => {
       allBonuses: true,
     });
     expect(game.collectBonus(2, 0).allBonuses).toBe(false);
+  });
+});
+
+describe("GameProgress with a secret chapter", () => {
+  // Level "s" is secret: in the game only once every bonus target is found.
+  const WITH_SECRET: readonly LevelSummary[] = [
+    ...LEVELS,
+    { id: "s", minShots: 4, bonusCount: 0, secret: true },
+  ];
+  const allAtPar = {
+    levels: { a: { bestShots: 2 }, b: { bestShots: 3 }, c: { bestShots: 1 } },
+  };
+  const newSecretGame = (saved: Partial<Progress> = {}) =>
+    new GameProgress(WITH_SECRET, { ...EMPTY_PROGRESS, ...saved });
+
+  it("leaves the secret levels out until the last bonus target opens them", () => {
+    const game = newSecretGame({ ...allAtPar, bonuses: { a: [0, 1] } });
+    expect(game.openLevelCount).toBe(3);
+    expect(game.openLevels.map(({ id }) => id)).toEqual(["a", "b", "c"]);
+    expect(game.collectBonus(2, 0)).toMatchObject({
+      allBonuses: true,
+      secretOpened: true,
+    });
+    expect(game.openLevelCount).toBe(4);
+    expect(game.collectBonus(2, 0).secretOpened).toBe(false);
+  });
+
+  it("counts the last star among the open levels", () => {
+    const game = newSecretGame({ levels: allAtPar.levels });
+    // Before the secret chapter opens, the other levels are all of them.
+    expect(game.complete(1, 3).allLevelsAtPar).toBe(false);
+    const opened = newSecretGame({
+      levels: { a: { bestShots: 2 }, c: { bestShots: 1 } },
+      bonuses: { a: [0, 1], c: [0] },
+    });
+    expect(opened.complete(1, 3).allLevelsAtPar).toBe(false);
+    expect(opened.complete(3, 4).allLevelsAtPar).toBe(true);
+  });
+
+  it("reports the last star before the secret chapter opens", () => {
+    const game = newSecretGame({
+      levels: { a: { bestShots: 2 }, c: { bestShots: 1 } },
+    });
+    expect(game.complete(1, 3).allLevelsAtPar).toBe(true);
   });
 });
 

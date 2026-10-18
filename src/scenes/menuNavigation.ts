@@ -20,13 +20,14 @@ const STEPS: Record<MenuDirection, MenuPoint> = {
 
 /**
  * The item to move to from item `from` in `direction`: of the enabled
- * items lying that way, the nearest, counting distance sideways three
- * times as much as distance ahead (so down from a tile goes to the tile
- * below rather than one diagonally nearer). Left and right only reach
- * items in the same row (centres at the same height); with nothing
- * that way they step to the previous or next item in list order if it is
- * enabled, so they run on from the end of one row of tiles to the next
- * (but not past a locked level). Returns `from` if there is nowhere to go.
+ * items lying that way, the nearest. Up and down go to the nearest row
+ * that way (centres at about the same height), and in it to the item
+ * nearest sideways, so they never jump over a short row whose tiles are
+ * off to one side. Left and right only reach items in the same row; with
+ * nothing that way they step to the previous or next item in list order
+ * if it is enabled, so they run on from the end of one row of tiles to
+ * the next (but not past a locked level). Returns `from` if there is
+ * nowhere to go.
  */
 export function nextMenuItem(
   centers: readonly MenuPoint[],
@@ -36,8 +37,7 @@ export function nextMenuItem(
 ): number {
   const step = STEPS[direction];
   const origin = centers[from];
-  let best = from;
-  let bestScore = Infinity;
+  const candidates: { index: number; ahead: number; sideways: number }[] = [];
   centers.forEach((center, index) => {
     if (index === from || !enabled[index]) {
       return;
@@ -45,23 +45,29 @@ export function nextMenuItem(
     const dx = center.x - origin.x;
     const dy = center.y - origin.y;
     const ahead = dx * step.x + dy * step.y;
-    if (ahead <= 1) {
-      return;
-    }
     const sideways = Math.abs(dx * step.y + dy * step.x);
-    // Left and right stay in a row; up and down may go to a narrower one.
-    if (step.x !== 0 && sideways > SAME_ROW) {
-      return;
-    }
-    const score = ahead + 3 * sideways;
-    if (score < bestScore) {
-      bestScore = score;
-      best = index;
+    // Left and right stay in a row.
+    if (ahead > 1 && (step.x === 0 || sideways <= SAME_ROW)) {
+      candidates.push({ index, ahead, sideways });
     }
   });
-  const neighbour = from + step.x;
-  if (best === from && step.x !== 0 && enabled[neighbour]) {
-    return neighbour;
+  if (candidates.length === 0) {
+    const neighbour = from + step.x;
+    return step.x !== 0 && enabled[neighbour] ? neighbour : from;
   }
-  return best;
+  const nearestRow = Math.min(...candidates.map(({ ahead }) => ahead));
+  let best = candidates[0];
+  for (const candidate of candidates) {
+    const inRow = candidate.ahead <= nearestRow + SAME_ROW;
+    const bestInRow = best.ahead <= nearestRow + SAME_ROW;
+    if (
+      inRow &&
+      (!bestInRow ||
+        candidate.sideways < best.sideways ||
+        (candidate.sideways === best.sideways && candidate.ahead < best.ahead))
+    ) {
+      best = candidate;
+    }
+  }
+  return best.index;
 }

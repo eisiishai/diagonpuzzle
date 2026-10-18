@@ -1,8 +1,16 @@
-import { bonusPositions } from "../src/game/bonus";
 import { LEVELS } from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import { STAR } from "../src/scenes/scoreText";
-import { atPar, bonusRoute, expect, solution, startBoard, test } from "./game";
+import {
+  MAIN_LEVELS,
+  allBonuses,
+  atPar,
+  bonusRoute,
+  expect,
+  solution,
+  startBoard,
+  test,
+} from "./game";
 import type { Game } from "./game";
 
 // Bonus targets, the once-per-player celebrations, resetting progress and
@@ -10,7 +18,7 @@ import type { Game } from "./game";
 // bonus route take one shot each.
 
 const FIRST = 0;
-const ALL = LEVELS.map((_, index) => index);
+const ALL = MAIN_LEVELS.map((_, index) => index);
 
 async function backToTitle(game: Game) {
   await game.press("MENU");
@@ -48,7 +56,7 @@ test("a bonus target shows after par, on a restart or the next visit, and turns 
 
   const title = await backToTitle(game);
   expect(title.levels[FIRST].state).toBe("golden");
-  expect(title.header).toContain(`GOLDEN ${STAR} 1/${LEVELS.length}`);
+  expect(title.header).toContain(`GOLDEN ${STAR} 1/${MAIN_LEVELS.length}`);
 });
 
 test("the last star plays the All levels at par celebration", async ({
@@ -66,28 +74,37 @@ test("the last star plays the All levels at par celebration", async ({
   expect((await backToTitle(game)).header).toContain("ALL AT PAR!");
 });
 
-test("the last bonus target plays the All bonus targets celebration", async ({
+test("the last bonus target plays the All bonus targets celebration and opens the secret chapter", async ({
   game,
 }) => {
   const bonuses = Object.fromEntries(
-    LEVELS.slice(1).map((level) => [
-      level.id,
-      bonusPositions(parseLevel(level.grid)).map((_, index) => index),
-    ]),
+    Object.entries(allBonuses()).filter(([id]) => id !== LEVELS[FIRST].id),
   );
   await game.seedProgress({ ...atPar(ALL), bonuses });
   await game.open();
+  const before = (await game.state()).title!;
+  expect(before.levels).toHaveLength(MAIN_LEVELS.length);
+  expect(before.chapters[before.chapters.length - 1]).toContain(
+    "ONE-WAY GATES",
+  );
   await game.press("1. ");
   await game.waitForLevel(1);
   await game.play(bonusRoute(FIRST), "mouse");
   await expect
     .poll(async () => (await game.level()).banner)
     .toContain("ALL BONUS TARGETS FOUND!");
+  expect((await game.level()).message).toContain("hidden chapter");
   const title = await backToTitle(game);
-  expect(title.levels.every((level) => level.state === "golden")).toBe(true);
+  const main = title.levels.slice(0, MAIN_LEVELS.length);
+  expect(main.every((level) => level.state === "golden")).toBe(true);
   expect(title.header).toContain(
-    `GOLDEN ${STAR} ${LEVELS.length}/${LEVELS.length}  ·  ALL FOUND!`,
+    `GOLDEN ${STAR} ${MAIN_LEVELS.length}/${MAIN_LEVELS.length}  ·  ALL FOUND!`,
   );
+  // The secret chapter is in the list now, its first level open.
+  expect(title.levels).toHaveLength(LEVELS.length);
+  expect(title.chapters[title.chapters.length - 1]).toContain("PRISM");
+  expect(title.levels[MAIN_LEVELS.length].state).toBe("open");
+  await game.button(`CONTINUE: LEVEL ${MAIN_LEVELS.length + 1}`);
 });
 
 test("Reset progress erases saved progress on its second press", async ({
@@ -104,7 +121,7 @@ test("Reset progress erases saved progress on its second press", async ({
   await game.button("PLAY ▶");
   const { levels } = (await game.state()).title!;
   expect(levels.map((level) => level.state)).toEqual(
-    LEVELS.map((_, index) => (index === 0 ? "open" : "locked")),
+    MAIN_LEVELS.map((_, index) => (index === 0 ? "open" : "locked")),
   );
   expect(await game.storedProgress()).toBeNull();
   expect(await game.labels()).not.toContain("RESET PROGRESS");

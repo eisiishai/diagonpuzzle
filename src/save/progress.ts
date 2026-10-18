@@ -45,6 +45,8 @@ export interface LevelSummary {
   minShots: number;
   /** Number of bonus targets in the level. */
   bonusCount: number;
+  /** In a secret chapter; secret levels come after all the others. */
+  secret?: boolean;
 }
 
 export const EMPTY_PROGRESS: Progress = {
@@ -280,6 +282,34 @@ export function completesAllBonuses(
 ): boolean {
   return (
     !hasFoundAllBonuses(before, levels) && hasFoundAllBonuses(after, levels)
+  );
+}
+
+/**
+ * How many levels, from the first, are in the game for this player: the
+ * secret ones (at the end) only once every bonus target of the others is
+ * found, and from then on.
+ */
+export function openLevelCount(
+  progress: Progress,
+  levels: readonly LevelSummary[],
+): number {
+  const main = levels.filter((level) => !level.secret);
+  return hasFoundAllBonuses(progress, main) ? levels.length : main.length;
+}
+
+/**
+ * True when going from `before` to `after` opened the secret levels (there
+ * are some).
+ */
+export function opensSecretLevels(
+  before: Progress,
+  after: Progress,
+  levels: readonly LevelSummary[],
+): boolean {
+  return (
+    openLevelCount(before, levels) < levels.length &&
+    openLevelCount(after, levels) === levels.length
   );
 }
 

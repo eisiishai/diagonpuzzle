@@ -8,7 +8,12 @@ import { bonusPositions, withBonuses } from "../src/game/bonus";
 import { solveBonusMoves, solveMoves } from "../src/game/solver";
 import type { Move } from "../src/game/solver";
 import type { Board, Position } from "../src/game/types";
-import { LEVELS } from "../src/levels/levels";
+import {
+  CHAPTERS,
+  LEVELS,
+  chapterRanges,
+  secretLevels,
+} from "../src/levels/levels";
 import { parseLevel } from "../src/levels/parse";
 import { EMPTY_PROGRESS, serializeProgress } from "../src/save/progress";
 import type { Progress } from "../src/save/progress";
@@ -47,6 +52,14 @@ export const test = base.extend<{ game: Game }>({
 });
 
 export { expect };
+
+/**
+ * The levels before the secret chapter: the whole level list until every
+ * one of their bonus targets is found.
+ */
+export const MAIN_LEVELS = LEVELS.filter(
+  (_, i) => !secretLevels(chapterRanges(LEVELS, CHAPTERS))[i],
+);
 
 /** Level `index`'s (0-based) starting board on a first visit: no bonus targets. */
 export function startBoard(index: number): Board {
@@ -105,6 +118,19 @@ export function atPar(indices: readonly number[]): Progress {
   };
 }
 
+/**
+ * Every bonus target of the levels before the secret chapter collected,
+ * which opens it.
+ */
+export function allBonuses(): Progress["bonuses"] {
+  return Object.fromEntries(
+    MAIN_LEVELS.map((level) => [
+      level.id,
+      bonusPositions(parseLevel(level.grid)).map((_, index) => index),
+    ]),
+  );
+}
+
 export class Game {
   readonly page: Page;
 
@@ -115,9 +141,16 @@ export class Game {
   /**
    * Starts the page with saved progress in which the first `levels`
    * levels are completed at par, unless the page already has progress.
+   * From all the levels before the secret chapter on, their bonus targets
+   * are all collected too, which opens it.
    */
   async seedCompleted(levels: number): Promise<void> {
-    await this.seedProgress(atPar(LEVELS.slice(0, levels).map((_, i) => i)));
+    const progress = atPar(LEVELS.slice(0, levels).map((_, i) => i));
+    await this.seedProgress(
+      levels < MAIN_LEVELS.length
+        ? progress
+        : { ...progress, bonuses: allBonuses() },
+    );
   }
 
   /** Starts the page with `progress` saved, unless it already has progress. */

@@ -94,8 +94,10 @@ puzzle on top of the level for players who have mastered it.
   - Specks of coloured light drift up the screen instead of falling stars.
   - The banner "★ ALL BONUS TARGETS FOUND! ★" pops in white; a light sweeps
     across it, lighting each letter in a bonus colour, and a quiet second
-    line, THANK YOU FOR PLAYING, fades in under it. It stays about 5 s,
-    longer than the par banner.
+    line, A HIDDEN CHAPTER HAS OPENED (THANK YOU FOR PLAYING in a game
+    without a secret chapter), fades in under it. It stays about 5 s,
+    longer than the par banner. The message under the board adds "A
+    hidden chapter is now in the level list." See *Secret chapter*.
   - With reduced motion the fan stands still, the wave and the drifting
     light are left out and the banner is lit at once.
   - Afterwards the title screen's header adds `ALL FOUND!` in the bonus
@@ -115,6 +117,35 @@ puzzle on top of the level for players who have mastered it.
   the same. Targets sit where they don't block the par solution, and
   their routes mix several rows rather than repeating one; `npm run
   levels` shows the shortest route to each.
+
+## Secret chapter
+
+A last chapter, *Prism*, for players who have found every bonus target:
+harder levels with no new pieces, combining several of the earlier ones.
+
+- **Hidden until every bonus target is found.** Until then the level list
+  doesn't show it at all, not even locked, and nothing in the game
+  mentions it: the header counts, *Continue* and the level numbers in
+  the game's header (`LEVEL 45/45`) are those of the other levels. The
+  last bonus target opens it (its ending says so, see *Bonus targets*),
+  and from then on it stays in the list, its first level unlocked (the
+  level before it is completed at par by then). Nothing new is saved:
+  it opens from the saved bonus targets.
+- **No bonus targets of its own.** The chapter is the reward for the
+  bonus targets, so the game's ending stays on the last of them; a test
+  checks that its levels have none.
+- **Stars count once it is open.** The level list header and the "All
+  levels at par" celebration count the open levels: before the chapter
+  opens, every other level; afterwards, its levels too, so `★ 45/46`
+  drops the ALL AT PAR! mark until they are at par, and the last of them
+  at par plays the celebration again.
+- *Play* continues to its first level not yet completed once it is open;
+  *Next level* on the level before it reads *Back to title* on the visit
+  that opens it (the level screen keeps the level count it started with),
+  so the new chapter is first seen in the level list.
+- Secret chapters are marked `secret` in `CHAPTERS` and must come last
+  (`chapterRanges()` checks it); `openLevelCount()` in
+  `src/save/progress.ts` decides how many levels are in the game.
 
 ## Player-placed mirror
 
@@ -395,6 +426,7 @@ par (level 11's is two above: rows 3, 1, 3, 2, 2); the tests check it, and
 | 43 | Echo chamber | 3 | One-way gates with a reflector and a breakable wall, all three in the first shot. Row 1 turns down at (1,1) into the reflector, comes back up into the same mirror, now `/`, and runs right along the top row through the `>` gate; (5,1) turns it down and (5,3) left along row 3 into the cracked wall at the left edge, breaking it. Row 3 runs through the gap, turns down at (5,3) and left at (5,4) into the side of the `v` gate, which stops it. Row 3 again turns up at (5,3) and right at (5,1), both flipped, into the goal. Without the `v` gate, row 4 would be a second way to set up. Alternatives in 4 shots: rows 1, 1, 1, 3 and rows 3, 3, 3, 3. The bonus target, at the right end of the `v` gate's row, needs a gate passed: rows 1, 1, 3, 1, 3, every row 1 shot running through the `>` gate. |
 | 44 | Double crossing | 4 | One-way gates with portals and a two-hit goal; the `>` gate stands on the row the left portal sends the pellet along. Row 4 turns down at (2,4) and right at (2,5), and (3,5) sends it out at the bottom, flipping all three. Row 5 turns up at (2,5) and right at (2,4) into the right portal, comes out of the left one, and runs along row 3 through the `>` gate into the goal, flipping the first two back. Row 4 again turns down and right the same way, but (3,5) now turns it up into the side of the `>` gate, which stops it, and so sets (3,5) back; row 5 then makes the same trip through the portals for the second hit. Alternative in 6 shots: rows 4, 5, 5, 5, 5, 5. The bonus target, below the top row, needs a gate passed: rows 1, 4, 4, 1, 4, 4. The `^` gate stops row 1 coming down column 2 head-on, and the last row 4 climbs up through it and turns right and down onto the target. |
 | 45 | Last light | 5 | The finale: one-way gates with the player's mirror (`\`) and a glass mirror; the `v` gate at (1,2) works three ways. Row 3 turns up at (1,3) into it head-on and stops. Row 1 turns down at (1,1) and passes it, the way it points, turns right at (1,3), down at the glass `\` at (3,3), which shatters, right at (3,4) and up at (5,4), and leaves at the top. With the mirror placed at (3,2), row 4 turns up at (3,4), through the glass mirror's gap into the player's mirror, which turns it left into the side of the `v` gate. Row 4 again turns down at (3,4), now flipped, and leaves at the bottom, setting it back; row 4 then climbs through the gap once more, and the player's mirror, now `/`, turns it right along row 2 to the goal. Row 5 runs straight into the `<` gate head-on. Alternatives in 6 shots: e.g. rows 1, 1, 1, the mirror at (3,2), rows 4, 4, 4. The bonus target, in the top right corner, needs the mirror elsewhere and a gate passed: the mirror at (4,3), then rows 4, 4, 1, 1, 3, 1, the last passing the `v` gate down column 1 and turning up at the player's mirror and right at (4,1) onto it. |
+| 46 | Long game | 5 | The secret chapter's first level: portals with a glass mirror, and the most planning in the game (foresight 7: every shot changes mirrors a later one needs). Row 1 turns down at (3,1) onto the glass `\` at (3,3), which turns it right and shatters; (4,3) sends it up and out. Row 5 turns up at (1,5) into the left portal, comes out of the bottom one moving up, climbs column 3 through the glass mirror's gap, and winds right along the top row and down column 5 and out at the bottom, flipping five mirrors. Row 3 runs through the gap, down and right through the middle, and leaves at the end of the bottom row. Row 1 then turns down column 3 through the gap into the bottom portal, out of the left one onto (1,5), which sends it right along the bottom row into the bottom portal a second time; out of the left one, moving right now, it turns up at (4,4) and right at (4,3) and leaves. Row 3 finally turns down at (4,3), right at (4,4), up at (5,4) and right at (5,1) into the goal. Alternative in 6 shots: rows 1, 4, 5, 1, 4, 3. No bonus target (see *Secret chapter*). |
 
 *One way* (41) and *No way back* (42, added 2026-10-17 to start a new
 chapter) came from `npm run generate -- --gates 2`: 41 with `--shots 2
@@ -446,6 +478,15 @@ of 6 had none even with two board changes, so this one was chosen,
 although its `v` gate stands on the left edge (2026-10-18). Random-play
 odds 1 in 71,918, the game's highest, though random play overstates
 player-mirror levels; foresight 4.
+
+*Long game* (46, added 2026-10-18 as the first level of the secret
+chapter, to try it out) came from `npm run generate -- --portals --glass
+1 --shots 5 --mirrors 7 --walls 1 --varied-rows --no-repeat --tries
+60000` on a 6×5 board (seed 1, the first board shown): a unique
+shortest solution with a foresight of 7, above every other level's (the
+highest were 5), and random-play odds 1 in 3,125, the most a par-5 level
+on five rows can have. Portals and glass met before only in *Looking
+glass* (40), at par 4 with foresight 3.
 
 *Looking glass* (40, added 2026-10-17 to end the portal chapter with a
 glass mirror and a fixed mirror) came from `npm run generate --
@@ -616,7 +657,8 @@ from four and six).
   in `src/levels/levels.ts`, following the music groups): 1–5 *Basics*,
   6–10 *Flip tricks*, 11–15 *Breakable walls*, 16–20 *Your mirror*,
   21–25 *Reflectors*, 26–30 *Glass mirrors*, 31–35 *Fixed mirrors*,
-  36–40 *Portals*, 41–45 *One-way gates*. Each
+  36–40 *Portals*, 41–45 *One-way gates*, and the secret chapter, 46
+  *Prism*, once every bonus target is found (see *Secret chapter*). Each
   chapter is a row of square level tiles (at most six) with a label: its
   number, name in capitals, and stars earned in it (`★ 3/4`, or
   `locked`). The label sits left of the tiles on a wide screen and on one

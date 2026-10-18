@@ -6,7 +6,7 @@ import { GameAudio } from "./audio/GameAudio";
 import { TITLE_MUSIC } from "./audio/music";
 import { bonusIndexAt, bonusPositions, withBonuses } from "./game/bonus";
 import { bindKeyboard } from "./input/keyboard";
-import { CHAPTERS, LEVELS, chapterRanges } from "./levels/levels";
+import { CHAPTERS, LEVELS, chapterRanges, secretLevels } from "./levels/levels";
 import { parseLevel } from "./levels/parse";
 import { GameProgress } from "./save/GameProgress";
 import { MAX_SKIPS, parseProgress, serializeProgress } from "./save/progress";
@@ -25,10 +25,12 @@ import { TitleScene } from "./scenes/TitleScene";
 const PROGRESS_STORAGE_KEY = "progress";
 
 const LEVEL_CHAPTERS = chapterRanges(LEVELS, CHAPTERS);
-const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
+const SECRET_LEVELS = secretLevels(LEVEL_CHAPTERS);
+const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level, i) => ({
   id: level.id,
   minShots: level.minShots,
   bonusCount: bonusPositions(parseLevel(level.grid)).length,
+  ...(SECRET_LEVELS[i] ? { secret: true } : {}),
 }));
 
 (async () => {
@@ -103,13 +105,15 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
       }
     });
 
+  // The secret chapter is left out of both screens until it opens.
   const showTitle = () =>
     switchTo(() => {
       audio.setMusic(TITLE_MUSIC);
+      const open = game.openLevelCount;
       return new TitleScene({
-        levels: LEVELS,
-        chapters: LEVEL_CHAPTERS,
-        summaries: LEVEL_SUMMARIES,
+        levels: LEVELS.slice(0, open),
+        chapters: LEVEL_CHAPTERS.filter(({ start }) => start < open),
+        summaries: game.openLevels,
         progress: game.progress,
         audio,
         onStartLevel: startLevel,
@@ -134,7 +138,8 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
 
   const startLevel = (index: number) => {
     const level = LEVELS[index];
-    const isLastLevel = index === LEVELS.length - 1;
+    const levelCount = game.openLevelCount;
+    const isLastLevel = index === levelCount - 1;
     const goToNext = () => (isLastLevel ? showTitle() : startLevel(index + 1));
     switchTo(() => {
       audio.setMusic(level.music);
@@ -143,7 +148,7 @@ const LEVEL_SUMMARIES: readonly LevelSummary[] = LEVELS.map((level) => ({
       return new GameScene({
         board: withBonuses(fullBoard, () => start.bonusesShown),
         levelNumber: index + 1,
-        levelCount: LEVELS.length,
+        levelCount,
         levelName: level.name,
         par: level.minShots,
         goalHits: level.goalHits ?? 1,

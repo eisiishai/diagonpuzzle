@@ -541,7 +541,7 @@ export class GameScene extends Container implements Scene {
   private collectBonus(result: ShotResult): void {
     const { audio } = this.options;
     const end = result.path[result.path.length - 1];
-    const { newlyGolden, allBonuses, collected, skipReturned } =
+    const { newlyGolden, allBonuses, secretOpened, collected, skipReturned } =
       this.options.onBonus(end.x, end.y);
     this.bonusesCollected = collected;
     this.updateShots();
@@ -555,7 +555,7 @@ export class GameScene extends Container implements Scene {
         this.sceneWidth,
         this.contentHeight,
         `${STAR} ALL BONUS TARGETS FOUND! ${STAR}`,
-        "THANK YOU FOR PLAYING",
+        secretOpened ? "A HIDDEN CHAPTER HAS OPENED" : "THANK YOU FOR PLAYING",
       );
       this.boardView.playFinaleWave(end.x, end.y);
     } else {
@@ -565,7 +565,9 @@ export class GameScene extends Container implements Scene {
     this.showMessage(
       (newlyGolden
         ? `Bonus target hit! This level's ${STAR} is now golden.`
-        : "Bonus target hit!") + this.skipReturnedText(skipReturned),
+        : "Bonus target hit!") +
+        (secretOpened ? " A hidden chapter is now in the level list." : "") +
+        this.skipReturnedText(skipReturned),
       COLORS.star,
     );
   }

@@ -4,7 +4,7 @@ import { bonusPositions, withBonuses } from "../game/bonus";
 import { GATE_CELLS } from "../game/cells";
 import { eachCompletion, setupRoutes, solve, solveBonus } from "../game/solver";
 import type { Board } from "../game/types";
-import { CHAPTERS, LEVELS, chapterRanges } from "./levels";
+import { CHAPTERS, LEVELS, chapterRanges, secretLevels } from "./levels";
 import type { CellType } from "../game/types";
 import { parseLevel } from "./parse";
 
@@ -215,6 +215,22 @@ describe("chapterRanges", () => {
     expect(() => chapterRanges(levels, named("a", "c", "b"))).toThrow();
   });
 
+  it("marks secret chapters, which must come last", () => {
+    const chapters = [
+      { name: "One", firstLevel: "a" },
+      { name: "Two", firstLevel: "c", secret: true },
+    ];
+    const ranges = chapterRanges(levels, chapters);
+    expect(ranges[1]).toEqual({ name: "Two", start: 2, end: 4, secret: true });
+    expect(secretLevels(ranges)).toEqual([false, false, true, true]);
+    expect(() =>
+      chapterRanges(levels, [
+        { name: "One", firstLevel: "a", secret: true },
+        { name: "Two", firstLevel: "c" },
+      ]),
+    ).toThrow();
+  });
+
   // The title screen shows a chapter's levels as one row of tiles.
   it("splits the game's levels into chapters of 1 to 6 levels", () => {
     for (const { start, end } of chapterRanges(LEVELS, CHAPTERS)) {
@@ -222,6 +238,19 @@ describe("chapterRanges", () => {
       expect(end - start).toBeLessThanOrEqual(6);
     }
   });
+});
+
+// The secret chapter opens with the last bonus target and is the reward
+// for it: its levels have none of their own, so the game's ending (all
+// bonus targets found) stays where it is.
+it("gives the secret chapter's levels no bonus targets", () => {
+  const secret = secretLevels(chapterRanges(LEVELS, CHAPTERS));
+  const secretIds = LEVELS.filter((_, i) => secret[i]).map(({ id }) => id);
+  expect(secretIds.length).toBeGreaterThan(0);
+  for (const id of secretIds) {
+    const level = LEVELS.find((candidate) => candidate.id === id)!;
+    expect(bonusPositions(parseLevel(level.grid)), id).toEqual([]);
+  }
 });
 
 it("has unique level ids", () => {

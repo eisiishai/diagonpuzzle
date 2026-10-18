@@ -692,6 +692,22 @@ export const LEVELS: readonly LevelDefinition[] = [
       . < . . . .
     `,
   },
+  // The secret chapter, shown once every bonus target above is found (see
+  // docs/DESIGN.md, Secret chapter). Harder levels combining earlier
+  // pieces, with no bonus targets of their own.
+  {
+    id: "long-game",
+    name: "Long game",
+    minShots: 5,
+    music: "wormhole",
+    grid: String.raw`
+      . . \ . \ G
+      # . . . . .
+      . . N / . .
+      O . . / / .
+      / . O . \ .
+    `,
+  },
 ];
 
 export interface ChapterDefinition {
@@ -699,6 +715,11 @@ export interface ChapterDefinition {
   name: string;
   /** The id of the chapter's first level; it runs up to the next chapter's. */
   firstLevel: string;
+  /**
+   * Hidden from the level list until every bonus target of the chapters
+   * before it is found. Secret chapters come last.
+   */
+  secret?: boolean;
 }
 
 /**
@@ -716,6 +737,7 @@ export const CHAPTERS: readonly ChapterDefinition[] = [
   { name: "Fixed mirrors", firstLevel: "bolted-down" },
   { name: "Portals", firstLevel: "other-side" },
   { name: "One-way gates", firstLevel: "one-way" },
+  { name: "Prism", firstLevel: "long-game", secret: true },
 ];
 
 /** A chapter's levels: indices `start` up to, not including, `end`. */
@@ -723,12 +745,14 @@ export interface ChapterRange {
   name: string;
   start: number;
   end: number;
+  secret?: boolean;
 }
 
 /**
  * Where each chapter's levels are in `levels`. Throws if a chapter's first
- * level is missing, the first chapter doesn't start at the first level, or
- * the chapters are out of order.
+ * level is missing, the first chapter doesn't start at the first level,
+ * the chapters are out of order, or a secret chapter is followed by one
+ * that isn't.
  */
 export function chapterRanges(
   levels: readonly Pick<LevelDefinition, "id">[],
@@ -749,9 +773,22 @@ export function chapterRanges(
       throw new Error(`Chapter "${chapters[i].name}" is out of order`);
     }
   });
-  return chapters.map(({ name }, i) => ({
+  chapters.forEach(({ name, secret }, i) => {
+    if (i > 0 && chapters[i - 1].secret && !secret) {
+      throw new Error(`Chapter "${name}" comes after a secret chapter`);
+    }
+  });
+  return chapters.map(({ name, secret }, i) => ({
     name,
     start: starts[i],
     end: starts[i + 1] ?? levels.length,
+    ...(secret ? { secret } : {}),
   }));
+}
+
+/** Whether each level, in order, is in a secret chapter. */
+export function secretLevels(chapters: readonly ChapterRange[]): boolean[] {
+  return chapters.flatMap(({ start, end, secret = false }) =>
+    Array.from({ length: end - start }, () => secret),
+  );
 }

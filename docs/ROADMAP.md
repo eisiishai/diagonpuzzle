@@ -297,6 +297,15 @@ player's mirror, the hardest level of the game by odds:
 | 1 in | 25 | 125 | 125 | 625 | 71,918 |
 | Foresight | 2 | 3 | 3 | 3 | 4 |
 
+Level 46, the secret chapter's first (*Long game*, added 2026-10-18):
+portals with a glass mirror, below *Last light* by odds (it has no
+player's mirror to inflate them) but with the game's highest foresight:
+
+| Level | 46 |
+|---|---|
+| 1 in | 3,125 |
+| Foresight | 7 |
+
 Random odds understate how easy level 16 feels (the mirror's cell is easy
 to see) and overstate levels that repeat a row (8, 11).
 
@@ -380,6 +389,21 @@ Review of all 40 levels (2026-10-17, after every chapter got five):
   final chapter of mixed levels using several pieces on larger boards,
   which would also bring every piece back once more. Decide which
   after the difficulty measure is reviewed (Engineering track, *Later*)
+- [ ] A secret chapter, *Prism*, shown only once every bonus target is
+  found: harder levels with no new pieces, combining several earlier
+  ones. Design in `docs/DESIGN.md`, *Secret chapter*
+  - [x] The chapter itself (2026-10-18): hidden from the level list until
+    the last bonus target, which opens it (its ending's second line says
+    A HIDDEN CHAPTER HAS OPENED), stars counted over the open levels,
+    no bonus targets of its own. Up and down on the title screen now go
+    to the nearest row, so they reach a short chapter's tiles
+  - [x] A first level to try it out: *Long game* (46, par 5), portals
+    with a glass mirror, foresight 7 (the highest before was 5)
+  - [ ] Decide how many levels it gets (up to five), and add them, each
+    combining two or more pieces; candidates for the thinnest
+    combinations: the player's mirror with glass or portals, portals
+    with a two-hit goal
+  - [ ] Optional: its own music track (it plays *Wormhole* for now)
 - [ ] Check by playing (or watching testers) whether the step to
   *Rubble run* (15), about 62 times *Crack and double* (14) by odds, is
   too steep, together with the steps to *Rebuild* and *Mirror image*

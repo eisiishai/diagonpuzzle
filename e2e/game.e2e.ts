@@ -1,7 +1,14 @@
 import { fire } from "../src/game/simulate";
 import { CHAPTERS, LEVELS, chapterRanges } from "../src/levels/levels";
 import { EMPTY_PROGRESS, SKIP_WAIT_MS } from "../src/save/progress";
-import { expect, levelIndex, solution, startBoard, test } from "./game";
+import {
+  MAIN_LEVELS,
+  expect,
+  levelIndex,
+  solution,
+  startBoard,
+  test,
+} from "./game";
 import type { Game } from "./game";
 
 // Level indices (0-based) used below.
@@ -33,7 +40,7 @@ test("the main page plays the game from its version folder", async ({
   await game.waitForScene("title");
 });
 
-test("the title screen lists every level, only the first unlocked", async ({
+test("the title screen lists every level but the secret chapter's, only the first unlocked", async ({
   game,
 }) => {
   await game.open();
@@ -41,10 +48,10 @@ test("the title screen lists every level, only the first unlocked", async ({
   expect(buttons[0].label).toBe("PLAY ▶");
   const rows = buttons.filter((button) => /^\d+\. /.test(button.label));
   expect(rows.map((row) => row.label)).toEqual(
-    LEVELS.map((level, index) => `${index + 1}. ${level.name}`),
+    MAIN_LEVELS.map((level, index) => `${index + 1}. ${level.name}`),
   );
   expect(rows.map((row) => row.disabled)).toEqual(
-    LEVELS.map((_, index) => index > 0),
+    MAIN_LEVELS.map((_, index) => index > 0),
   );
 });
 
@@ -82,7 +89,7 @@ test.describe("a level list taller than the screen", () => {
   const lastLabel = `${LAST + 1}. `;
 
   test("opens on the chapter Play starts", async ({ game }) => {
-    await game.seedCompleted(LAST - 1);
+    await game.seedCompleted(LAST);
     await game.open();
     expect((await game.button(lastLabel)).inView).toBe(true);
     expect((await game.button("1. ")).inView).toBe(false);
