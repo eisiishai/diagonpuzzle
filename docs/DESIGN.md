@@ -870,14 +870,18 @@ Colours and fonts are defined once in `src/render/theme.ts`.
 | Success | `#3dffb4` | Goal crystal, completed shots, primary button |
 | Star | `#ffe08a` | Stars, par celebrations, golden stars |
 | Bonus prism | `#ff5fd2` `#ffa45c` `#ffe08a` `#3dffb4` `#5fd8ff` `#a98bff` | Bonus target facets, its sparkles and bursts (the only multicoloured piece) |
-| Wall | `#18233a`, edge `#34466b` | Walls |
-| Stone | `#323846`, edge `#5d6680`, cracks `#0d111b` | Breakable walls |
-| Gate | `#ffb547`, rails `#4a5d82` | One-way gates' arrow and rails |
-| Idle emitter | `#3b5a86` | Launchers not selected |
+| Wall | `#1e2a44` → `#141d30`, edge `#34466b`, hatching `#26365a` | Walls |
+| Stone | `#40485a` and `#323846`, edge `#5d6680`, cracks `#0d111b` | Breakable walls |
+| Gate | `#ffb547`, rails `#6a7d9f` → `#33435f` | One-way gates' chevrons and rails |
+| Emitter | `#26324c` → `#121a2c`, edge `#3a4d70`, light `#2a3a58` | Laser heads not selected |
+| Crystal | `#9dffe0` `#3dffb4` `#1aa877` `#28d394`, table `#c8ffee` | The goal's facets, lit from the top left |
+| Portal | field `#120c2a` → `#2e2068` → `#a98bff`, ripples `#d7c9ff` | Portals |
+| Corner cube | `#a9daf8` `#6fb6ec` `#3f82bd` | Reflectors' facets |
 | Hint | `#7fe3ff` | Hint messages, the frame around the emitter hint 2 points at |
 | Marking | `#2f4670`, labels `#6482b0` | Corner ticks and labels around the board |
 | Table | `#131d31` → `#0b1220`, edge `#33496f`, holes `#050810` with rims `#3a4d70` | The optical table under the board |
-| Mount | `#18223a`, edge `#45597f`, screws `#0d1424` | Mirror mounts |
+| Mount | `#18223a`, edge `#45597f`, screws `#0d1424`, prongs `#7a8aa8` | Round mounts, the emitters' rail |
+| Foot plate | `#1b2436`, edge `#3e4f70` | Fixed mirrors' plates |
 | Chapter light | `#2c5ea8` `#2a8fb0` `#a0683a` `#2a9a86` `#5f8fd8` `#7cc4e0` `#7a8aa8` `#7a5ad8` `#c08a2a`, then the bonus colours | Each chapter's room light, in chapter order (`CHAPTER_LIGHTS`) |
 
 Text colours keep at least 4.5:1 contrast on the background.
@@ -892,8 +896,17 @@ Text colours keep at least 4.5:1 contrast on the background.
 
 ### Shapes
 
-- **Emitters** (launchers): rounded boxes with a triangular nozzle; the
-  selected one is outlined in the beam colour and glows.
+Every piece is lab hardware standing on the optical table: pieces that
+turn or are held stand on round steel mounts, ones that can't turn on a
+square plate, and blocks cast a soft shadow and catch light on their top
+and left edges. Each keeps the sign players know it by.
+
+- **Emitters** (launchers): laser heads pointing right, at the table: a
+  finned body with a small status light, a collar and a nozzle tapering
+  to the aperture on its flat front, where the beam leaves. They sit on
+  a steel rail bolted along the table's edge between the rows. The
+  selected one is outlined in the beam colour and its aperture and light
+  glow.
 - **Board**: an optical table, as in a real laser lab: a dark anodised
   plate, lighter towards the top left, with a faint brushed grain.
   Tapped holes at every cell corner mark the cells instead of grid
@@ -903,36 +916,41 @@ Text colours keep at least 4.5:1 contrast on the background.
   pale blue: a bright mirrored face along one side, a tinted body and lit
   ends. The mount is a stepped disc with two adjuster screws across the
   glass; it turns with the mirror, so a flip reads as a part turning.
-- **Walls**: dark rounded blocks with diagonal hatching, no glow.
+- **Walls**: machined blocks: the diagonal hatching that marks a wall,
+  on a block with bevelled edges, a shadow and two screws, no glow.
 - **Glass mirrors**: on the same mount, the slab broken into three panes
   with small gaps, slightly fainter, so they read as fragile. They burst into
   thin glass shards when hit.
-- **Fixed mirrors**: a matte steel bar with a dull centre line and a
-  dark bolt at each end, bolted straight to the table without a mount
-  or the glass mirrors' glow, so they read as pieces that don't turn.
-- **Reflectors**: a round glass ring on a dark disc, with the three
-  facet lines of a corner cube (a Y) and a bright centre dot, glowing
-  pale blue like the mirrors. The beam turns back at the ring.
-- **Portals**: a violet ring around a dark well, with three curved vanes
-  swirling into a bright centre dot; the vanes turn slowly (they stay
-  still with reduced motion). Violet is used for no other piece, so a level's two
-  portals read as a pair.
-- **One-way gates**: an amber arrow pointing the way the pellet may
-  pass, between two dark rails along its sides, without glow of its own
-  beyond the arrow. Amber is used for no other piece.
-- **Breakable walls**: lighter stone blocks with dark jagged cracks
-  running through them instead of hatching, no glow. When hit, they burst
-  into stone pieces that fall away and fade.
-- **Goal**: a crystal (diamond within a diamond) glowing green. A goal
-  needing several hits has an outlined core that fills from the bottom,
-  a part per hit.
+- **Fixed mirrors**: a matte steel slab on a square foot plate bolted
+  down at its corners, without the glass mirrors' glow: square where
+  turning mirrors are round, so they read as pieces that don't turn.
+- **Reflectors**: a corner cube on a round mount: three glass facets,
+  shaded light, mid and dark, meeting at a bright centre dot, inside a
+  glass rim, glowing pale blue like the mirrors. The beam turns back at
+  the rim.
+- **Portals**: a steel ring bolted to the table round a violet field,
+  dark in the middle, with a bright centre dot; faint rings drift slowly
+  inward over the field, one every 0.9 s (still with reduced motion).
+  Violet is used for no other piece, so a level's two portals read as a
+  pair.
+- **One-way gates**: a glowing amber double chevron pointing the way the
+  pellet may pass, between two steel guide rails bolted at both ends.
+  Amber is used for no other piece.
+- **Breakable walls**: stone tiles already split into five pieces, with
+  dark gaps between them instead of hatching, no glow. When hit, they
+  fall apart into those same pieces, which fly out and fade.
+- **Goal**: a cut crystal glowing green, its four facets lit from the
+  top left round a bright table, held by four prongs on a round mount.
+  On a goal needing several hits the facets are dark green and light up
+  from the bottom, a part per hit.
 - **Mirror preview** (where the player's mirror would go): four corner
   brackets around the cell and the mirror's outline in glass-coloured
   dashes, pulsing gently with the goal's breath; on a cell where it can't
   go, only dim brackets. A placed mirror drops in from slightly larger,
   fading in (220 ms), and then looks like any other mirror.
 - **Bonus target**: a prism gem: a hexagon of six facets, one in each
-  bonus colour, with a white rim and a bright core.
+  bonus colour, with a white rim and a bright core, held by six prongs
+  on a round mount.
 - **Beam**: a glowing coloured band with a thin white core. While it
   travels, its front is a glowing dot with a short fading comet tail
   (about ¾ of a cell), and the panel under its path is faintly lit in the
@@ -1025,7 +1043,7 @@ Text colours keep at least 4.5:1 contrast on the background.
   fan of colours grows out of it as the beam arrives.
 - The bonus target is livelier than the goal, so it is noticed when it
   appears: it turns slowly (once every 9 s, so its colours swirl), pulses
-  faster and deeper (grows 16 % every 1.5 s) and gives off small
+  faster (grows 8 % every 1.5 s) and gives off small
   four-pointed sparkles in its colours.
 - When the player's system asks for reduced motion, all ambient motion stops;
   the pieces stay at rest. Screens then change with a plain cut, and the

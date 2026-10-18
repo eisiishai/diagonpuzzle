@@ -1,23 +1,58 @@
-// The lit part of a multi-hit goal's core: the crystal fills from the
+// The lit part of a multi-hit goal: the crystal's facets light up from the
 // bottom, a part per hit. See docs/DESIGN.md, Shapes.
 
 /**
- * The polygon (flat x, y list) of a diamond of radius `r` centred on (0, 0),
- * filled from its bottom corner up to `fraction` of its height. Empty when
- * nothing is filled; the whole diamond when full. Corners never repeat.
+ * The part of the polygon `points` (flat x, y list) below height `level`
+ * (y grows downwards), as a flat list: empty when none of it is below,
+ * the whole polygon when all of it is. Corners never repeat, so it can be
+ * drawn safely on every GPU (see polyline.ts).
  */
-export function diamondFill(r: number, fraction: number): number[] {
-  if (fraction <= 0) {
-    return [];
+export function polygonBelow(
+  points: readonly number[],
+  level: number,
+): number[] {
+  const result: number[] = [];
+  const push = (x: number, y: number) => {
+    const n = result.length;
+    const repeats =
+      n >= 2 &&
+      Math.abs(result[n - 2] - x) < 1e-9 &&
+      Math.abs(result[n - 1] - y) < 1e-9;
+    if (!repeats) {
+      result.push(x, y);
+    }
+  };
+  const count = points.length / 2;
+  for (let i = 0; i < count; i++) {
+    const ax = points[2 * i];
+    const ay = points[2 * i + 1];
+    const bx = points[(2 * i + 2) % points.length];
+    const by = points[(2 * i + 3) % points.length];
+    const aIn = ay >= level;
+    const bIn = by >= level;
+    if (aIn) {
+      push(ax, ay);
+    }
+    if (aIn !== bIn) {
+      const t = (level - ay) / (by - ay);
+      push(ax + (bx - ax) * t, level);
+    }
   }
-  if (fraction >= 1) {
-    return [0, -r, r, 0, 0, r, -r, 0];
+  // The last corner may repeat the first.
+  if (
+    result.length >= 4 &&
+    Math.abs(result[0] - result[result.length - 2]) < 1e-9 &&
+    Math.abs(result[1] - result[result.length - 1]) < 1e-9
+  ) {
+    result.length -= 2;
   }
-  // The fill line's height (y grows downwards) and half width there.
-  const level = r - 2 * r * fraction;
-  const half = r - Math.abs(level);
-  if (level >= 0) {
-    return [-half, level, half, level, 0, r];
-  }
-  return [-half, level, half, level, r, 0, 0, r, -r, 0];
+  return result.length >= 6 ? result : [];
+}
+
+/**
+ * The level (y) up to which a goal of radius `r` centred on (0, 0) is lit
+ * after `fraction` of its hits: its bottom corner at none, its top at all.
+ */
+export function fillLevel(r: number, fraction: number): number {
+  return r - 2 * r * Math.max(0, Math.min(1, fraction));
 }

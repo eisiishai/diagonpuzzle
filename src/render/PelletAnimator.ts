@@ -4,6 +4,7 @@ import type { CellType } from "../game/types";
 import { prefersReducedMotion } from "./ambient";
 import { pathPoints, splitAtJumps } from "./pathPoints";
 import { easeInOutCubic, easeOutCubic } from "./easing";
+import { NOZZLE_TIP } from "./emitterGraphics";
 import {
   distinctPoints,
   pathLength,
@@ -165,7 +166,7 @@ export class PelletAnimator extends Container {
     }));
     // Start at the emitter's nozzle rather than its centre.
     if (this.points.length > 0) {
-      this.points[0].x += this.cellSize * 0.3;
+      this.points[0].x += this.cellSize * NOZZLE_TIP;
     }
     this.outcome = result.outcome;
     this.callbacks = callbacks;

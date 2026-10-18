@@ -27,16 +27,13 @@ export const COLORS = {
   /** Fixed mirrors: matte steel, duller than the glass of mirrors. */
   steel: 0x8592a8,
   steelHighlight: 0xc3ccda,
-  steelBolt: 0x3a4660,
-  /** Portals: a violet ring, the one piece in this colour. */
+  /** Portals: violet, the one piece in this colour. */
   portal: 0xa98bff,
-  portalCore: 0x1a1236,
-  /** One-way gates: an amber arrow between two rails. */
+  /** One-way gates: amber chevrons, the one piece in this colour. */
   gate: 0xffb547,
-  gateRail: 0x4a5d82,
   /** Hints: their message, and the frame around the emitter they point at. */
   hint: 0x7fe3ff,
-  emitterIdle: 0x3b5a86,
+  /** A selected button's fill. */
   emitterSelected: 0x11223a,
   /** Corner ticks around the board, and their labels (4.9:1 contrast). */
   marking: 0x2f4670,
@@ -60,6 +57,42 @@ export const COLORS = {
   mountEdge: 0x45597f,
   mountScrew: 0x0d1424,
   mountScrewEdge: 0x5a6f96,
+  /** Prongs holding the goal crystal and the bonus gem on their mounts. */
+  prong: 0x7a8aa8,
+  /** Blocks standing on the table: their shadow, and light on their edges. */
+  shadow: 0x000000,
+  bevelLight: 0x96b4e6,
+  /** Walls: a machined block, lighter at the top left. */
+  wallLight: 0x1e2a44,
+  wallDark: 0x141d30,
+  /** Breakable walls: a stone tile split into pieces. */
+  stoneLight: 0x40485a,
+  stoneDark: 0x2a303c,
+  /** The goal crystal's facets (lit from the top left) and its table. */
+  crystalFacets: [0x9dffe0, 0x3dffb4, 0x1aa877, 0x28d394],
+  /** The same facets before a multi-hit goal's hits light them. */
+  crystalFacetsDark: [0x16473a, 0x103a2e, 0x0b2a21, 0x0e3328],
+  crystalTable: 0xc8ffee,
+  /** Portals: a steel ring round a violet field, ripples drifting in. */
+  portalRing: 0x1a2236,
+  portalField: 0x2e2068,
+  portalWell: 0x120c2a,
+  portalRipple: 0xd7c9ff,
+  /** Reflectors: a corner cube's three facets, light, mid and dark. */
+  cubeFacets: [0xa9daf8, 0x6fb6ec, 0x3f82bd],
+  /** One-way gates' steel guide rails, lighter on top. */
+  railLight: 0x6a7d9f,
+  railDark: 0x33435f,
+  /** Fixed mirrors' square foot plate. */
+  footPlate: 0x1b2436,
+  footPlateEdge: 0x3e4f70,
+  /** Emitters: a finned laser head with a lens and a status light. */
+  emitterLight: 0x26324c,
+  emitterDark: 0x121a2c,
+  emitterEdge: 0x3a4d70,
+  emitterFin: 0x0a101e,
+  emitterLens: 0x070b14,
+  emitterLed: 0x2a3a58,
 } as const;
 
 /**

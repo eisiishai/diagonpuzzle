@@ -15,7 +15,8 @@ import { PelletAnimator } from "./PelletAnimator";
 import type { ShotCallbacks } from "./PelletAnimator";
 import { BONUS_PULSE_PERIOD_MS, prefersReducedMotion, pulse } from "./ambient";
 import { BoardEffects } from "./BoardEffects";
-import { drawCell } from "./cellGraphics";
+import { PORTAL_FIELD, drawCell, drawCellBase } from "./cellGraphics";
+import { drawEmitter, drawRail } from "./emitterGraphics";
 import { drawTable, tableHoles } from "./opticalTable";
 import { TableLight } from "./TableLight";
 import type { GoalHits } from "./cellGraphics";
@@ -36,8 +37,9 @@ const MIRROR_PLACE_MS = 220;
 const SPARKLE_INTERVAL_MS = 170;
 /** Turning speed of the bonus gem, in radians per millisecond. */
 const BONUS_SPIN = (2 * Math.PI) / 9000;
-/** Turning speed of portals' vanes (the other way), in radians per millisecond. */
-const PORTAL_SPIN = -(2 * Math.PI) / 6000;
+/** Ripples drift into a portal, one every PORTAL_RIPPLE_MS / 3. */
+const PORTAL_RIPPLE_MS = 2600;
+const PORTAL_RIPPLES = 3;
 
 export interface BoardViewHandlers {
   /** A launcher was clicked or tapped. */
@@ -101,6 +103,12 @@ export class BoardView extends Container {
   private readonly boardHeight: number;
   private readonly cellSize: number;
   private readonly panel: Graphics;
+  /** Mounts under the goal crystal and bonus gems; see drawCellBase(). */
+  private readonly bases = new Graphics();
+  /** Ripples drifting into the portals, over their fields. */
+  private readonly ripples = new Graphics();
+  /** The rail the emitters sit on. */
+  private readonly rail = new Graphics();
   private readonly rowHighlight = new Graphics();
   private readonly cellViews: Graphics[][] = [];
   private readonly cells: CellType[][];
@@ -189,6 +197,7 @@ export class BoardView extends Container {
       this.panel,
       this.tableLight.holeLayer,
       this.rowHighlight,
+      this.bases,
       waveMask,
       this.waveLayer,
       this.animator.ghost,
@@ -207,7 +216,9 @@ export class BoardView extends Container {
       this.cellViews.push(row);
     }
     this.redrawCells();
+    this.drawRipples(0.5);
     this.addChild(
+      this.ripples,
       this.tableLight.hazeLayer,
       this.boardEffects.lightLayer,
       this.placePreview,
@@ -227,7 +238,8 @@ export class BoardView extends Container {
       .stroke({ width: 2.5, color: COLORS.hint });
     this.hintMark.x = cellSize / 2;
     this.hintMark.visible = false;
-    this.addChild(this.hintMark);
+    drawRail(this.rail, cellSize, board.height);
+    this.addChild(this.rail, this.hintMark);
     for (let row = 0; row < board.height; row++) {
       const launcher = this.createLauncher(row, handlers);
       this.launchers.push(launcher);
@@ -558,6 +570,8 @@ export class BoardView extends Container {
     }
     const panelAlpha = introPanelAlpha(t);
     this.panel.alpha = panelAlpha;
+    this.bases.alpha = panelAlpha;
+    this.rail.alpha = panelAlpha;
     this.rowHighlight.alpha = panelAlpha;
     this.launchers.forEach((launcher, row) => {
       const { alpha, offset } = introLauncher(t, row);
@@ -587,6 +601,8 @@ export class BoardView extends Container {
     }
     this.introMs = null;
     this.panel.alpha = 1;
+    this.bases.alpha = 1;
+    this.rail.alpha = 1;
     this.rowHighlight.alpha = 1;
     this.launchers.forEach((launcher) => {
       launcher.alpha = 1;
@@ -620,9 +636,9 @@ export class BoardView extends Container {
 
   /**
    * Goal crystals breathe (grow slightly and glow), and the selected
-   * emitter's glow and the hint's frame pulse. Bonus targets turn, pulse faster and deeper, and
-   * give off sparkles; portals' vanes swirl. Still when the player prefers
-   * reduced motion.
+   * emitter's glow and the hint's frame pulse. Bonus targets turn, pulse
+   * faster, and give off sparkles; ripples drift into the portals. Still
+   * when the player prefers reduced motion.
    */
   private updateAmbient(deltaMs: number): void {
     if (prefersReducedMotion()) {
@@ -643,18 +659,17 @@ export class BoardView extends Container {
           view.scale.set(1 + 0.07 * breath);
           view.alpha = 0.8 + 0.2 * breath;
         } else if (cell === "bonus") {
-          view.scale.set(1 + 0.16 * bonusBreath);
+          view.scale.set(1 + 0.08 * bonusBreath);
           view.alpha = 0.85 + 0.15 * bonusBreath;
           view.rotation = this.ambientMs * BONUS_SPIN;
           if (sparkle) {
             const center = this.cellCenter(x, y);
             this.boardEffects.addSparkle(center.x, center.y);
           }
-        } else if (cell === "portal") {
-          view.rotation = this.ambientMs * PORTAL_SPIN;
         }
       }),
     );
+    this.drawRipples((this.ambientMs / PORTAL_RIPPLE_MS) % 1);
     this.placePreview.alpha = 0.65 + 0.35 * breath;
     this.hintMark.alpha = 0.55 + 0.45 * breath;
     if (this.selectedRow !== null) {
@@ -798,6 +813,41 @@ export class BoardView extends Container {
 
   private redrawCells(): void {
     this.cells.forEach((row, y) => row.forEach((_, x) => this.drawCell(x, y)));
+    this.drawBases();
+  }
+
+  /** The mounts under the goal crystal and bonus gems, as the cells are now. */
+  private drawBases(): void {
+    const g = this.bases.clear();
+    this.cells.forEach((row, y) =>
+      row.forEach((cell, x) => {
+        const center = this.cellCenter(x, y);
+        drawCellBase(g, cell, this.cellSize, center.x, center.y);
+      }),
+    );
+  }
+
+  /**
+   * Rings drifting into each portal's field, `phase` (0–1) of the way
+   * through a ring's journey from the rim to the centre; brightest half
+   * way in.
+   */
+  private drawRipples(phase: number): void {
+    const g = this.ripples.clear();
+    const field = (this.cellSize / 2) * PORTAL_FIELD;
+    for (const { x, y } of this.portals) {
+      const center = this.cellCenter(x, y);
+      for (let i = 0; i < PORTAL_RIPPLES; i++) {
+        const k = 1 - ((i / PORTAL_RIPPLES + phase) % 1);
+        if (k > 0.05) {
+          g.circle(center.x, center.y, field * k).stroke({
+            width: 1.4,
+            color: COLORS.portalRipple,
+            alpha: 0.33 * 4 * k * (1 - k),
+          });
+        }
+      }
+    }
   }
 
   /**
@@ -905,20 +955,8 @@ export class BoardView extends Container {
     return g;
   }
 
-  /** A rounded box with a nozzle; the selected one is lit in the beam colour. */
+  /** A laser head; the selected one is lit in the beam colour. */
   private drawLauncher(g: Graphics, selected: boolean): void {
-    const size = this.cellSize;
-    const w = size * (selected ? 0.62 : 0.56);
-    const h = size * (selected ? 0.52 : 0.46);
-    const r = size * 0.12;
-    g.clear()
-      .roundRect(-w / 2, -h / 2, w, h, 7)
-      .fill(selected ? COLORS.emitterSelected : COLORS.panel)
-      .stroke({
-        width: selected ? 2 : 1.5,
-        color: selected ? COLORS.beam : COLORS.panelBorder,
-      })
-      .poly([-r * 0.6, -r, r * 1.1, 0, -r * 0.6, r])
-      .fill(selected ? COLORS.beam : COLORS.emitterIdle);
+    drawEmitter(g, this.cellSize, selected);
   }
 }

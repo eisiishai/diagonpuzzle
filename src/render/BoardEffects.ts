@@ -1,6 +1,7 @@
 import { Container, Graphics } from "pixi.js";
 import { prefersReducedMotion } from "./ambient";
 import { easeInOutCubic, easeOutCubic } from "./easing";
+import { STONE_PIECES } from "./cellGraphics";
 import { BONUS_COLORS, COLORS } from "./theme";
 
 /**
@@ -184,17 +185,16 @@ export class BoardEffects {
    * away; a glass mirror into thin glass shards.
    */
   addDebris(x: number, y: number, material: "stone" | "glass" = "stone"): void {
+    if (material === "stone") {
+      this.addStonePieces(x, y);
+      return;
+    }
     const size = this.cellSize;
     for (let i = 0; i < 10; i++) {
       const r = size * (0.06 + Math.random() * 0.07);
-      const view =
-        material === "stone"
-          ? new Graphics()
-              .poly([-r, -r * 0.6, r * 0.8, -r, r, r * 0.7, -r * 0.5, r])
-              .fill(i % 3 === 0 ? COLORS.stoneEdge : COLORS.stone)
-          : new Graphics()
-              .poly([-r, -r * 0.25, r, 0, -r * 0.6, r * 0.3])
-              .fill(i % 3 === 0 ? COLORS.glassHighlight : COLORS.glass);
+      const view = new Graphics()
+        .poly([-r, -r * 0.25, r, 0, -r * 0.6, r * 0.3])
+        .fill(i % 3 === 0 ? COLORS.glassHighlight : COLORS.glass);
       view.position.set(
         x + (Math.random() - 0.5) * size * 0.6,
         y + (Math.random() - 0.5) * size * 0.6,
@@ -211,6 +211,34 @@ export class BoardEffects {
         ageMs: 0,
       });
     }
+  }
+
+  /**
+   * A breakable wall centred at (x, y) falls apart into the pieces it is
+   * drawn split into, each flying out from where it was.
+   */
+  private addStonePieces(x: number, y: number): void {
+    const size = this.cellSize;
+    const e = (size / 2) * 0.87;
+    STONE_PIECES.forEach((piece, i) => {
+      const cx = piece.reduce((sum, [px]) => sum + px, 0) / piece.length;
+      const cy = piece.reduce((sum, [, py]) => sum + py, 0) / piece.length;
+      const view = new Graphics()
+        .poly(piece.flatMap(([px, py]) => [(px - cx) * e, (py - cy) * e]))
+        .fill(i % 2 ? COLORS.stone : COLORS.stoneLight)
+        .stroke({ width: 1.2, color: COLORS.stoneCrack, join: "round" });
+      view.position.set(x + cx * e, y + cy * e);
+      const length = Math.hypot(cx, cy) || 1;
+      const speed = size * (1.5 + Math.random() * 1.5);
+      this.debrisLayer.addChild(view);
+      this.debris.push({
+        view,
+        vx: (cx / length) * speed + (Math.random() - 0.5) * size,
+        vy: (cy / length) * speed - size * 1.5,
+        spin: (Math.random() - 0.5) * 8,
+        ageMs: 0,
+      });
+    });
   }
 
   /**

@@ -675,6 +675,31 @@ rule and is checked on a phone. In order:
   crystal
 - [ ] Check every item on a phone
 
+Then the rest of the pieces, brought into the lab as hardware standing
+on the table (visual lab 3, all chosen on 2026-10-18): round mounts for
+pieces that turn or are held, a square plate for ones that can't, and
+each piece keeps the sign players know it by.
+
+- [x] Emitters: finned laser heads with a nozzle tapering to the right
+  (a round lens on the front read as pointing up) and a status light, on
+  a steel rail bolted along the table's edge
+- [x] Goal: a cut crystal held by four prongs on a round mount; a
+  multi-hit goal's facets light up from the bottom
+- [x] Walls: machined blocks, today's hatching with bevelled edges, a
+  shadow and two screws
+- [x] Breakable walls: fractured tiles, already split into five pieces,
+  falling apart into those same pieces
+- [x] Portals: a steel ring bolted to the table round a violet field,
+  with rings drifting slowly inward (instead of the turning vanes)
+- [x] Reflectors: a corner cube on a mount, three shaded glass facets
+- [x] One-way gates: bolted steel guide rails and a glowing amber double
+  chevron
+- [x] Fixed mirrors: a matte steel slab on a square foot plate bolted at
+  its corners
+- [x] Bonus target: the gem held by six prongs on a round mount,
+  pulsing less
+- [ ] Check every piece on a phone
+
 ## Engineering track
 
 ### Next

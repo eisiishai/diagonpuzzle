@@ -31,6 +31,22 @@ npm run dev          # http://localhost:8080
 into `dist/`. `npm install` also turns on the project's git hooks, which run
 these checks before each commit and tag each commit on `main` with a version.
 
+## Troubleshooting
+
+**The game is slow or choppy.** The game draws with the graphics card
+(WebGL), so check that hardware acceleration is turned on in your browser:
+
+- Chrome: *Settings → System → Use graphics acceleration when available*,
+  then relaunch the browser
+- Edge: *Settings → System and performance → Use graphics acceleration
+  when available*, then restart the browser
+- Firefox: *Settings → General → Performance*; untick *Use recommended
+  performance settings* to see *Use hardware acceleration when available*
+- Safari: always on
+
+Without it, the browser draws everything on the processor, which is much
+slower.
+
 ## Documentation
 
 - [docs/DESIGN.md](docs/DESIGN.md) — rules, levels, controls, art direction
