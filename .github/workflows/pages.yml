@@ -32,7 +32,11 @@ jobs:
   release:
     if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The full browser set took 21–29 minutes at v5.0 and was cancelled
+    # at 30 for v5.2: GitHub's machines vary a lot in speed. Playwright
+    # stops a run that fails many tests (maxFailures), so a broken
+    # release still ends sooner.
+    timeout-minutes: 90
     steps:
       # The chosen version, with all history and tags: the build's version
       # comes from git describe.

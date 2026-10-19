@@ -25,6 +25,10 @@ export default defineConfig({
   timeout: CI ? 180_000 : 60_000,
   // On GitHub (CI is set) a failed test runs once more, recording a trace.
   retries: CI ? 1 : 0,
+  // A release that breaks something basic fails most tests, each after
+  // its full time and a retry: on GitHub, stop after ten failures rather
+  // than run into the job's time limit.
+  maxFailures: CI ? 10 : 0,
   // Shots animate at their normal speed; the longest take a few seconds.
   expect: { timeout: CI ? 30_000 : 15_000 },
   use: {

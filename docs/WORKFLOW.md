@@ -437,7 +437,12 @@ min, and *scrolls with the mouse wheel* 1.1 min once `scrollIntoView()`
 scrolled nearly a view per step instead of half (it took 1.8 min, near
 the 2 min limit of the time). A test nearing 2 minutes, or a total
 growing much faster than the levels added, is the sign to make tests
-faster before the limit is reached.
+faster before the limit is reached. The release job on GitHub has 90
+minutes in all (`timeout-minutes` in `.github/workflows/pages.yml`):
+the full set took 21–29 minutes there from v4.0 to v5.0, varying with
+the machine, and v5.2 was cancelled at the earlier 30-minute limit. On
+GitHub, Playwright stops after ten failed tests (`maxFailures`), so a
+release that breaks most tests ends early instead of using up the time.
 
 What is checked only by hand: how drawing, animation and sound look and
 sound, and anything only a real phone shows (such as the GPU line bugs in
