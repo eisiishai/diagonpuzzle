@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The goal crystal, as in the game (src/render/BoardView.ts). -->
+  <rect x="0.6" y="0.6" width="30.8" height="30.8" rx="6.6" fill="#0a0e18" stroke="#24375a" stroke-width="1.2"/>
+  <path d="M16 4.85 27.15 16 16 27.15 4.85 16Z" fill="none" stroke="#3dffb4" stroke-width="2.6" stroke-linejoin="miter"/>
+  <path d="M16 10 22 16 16 22 10 16Z" fill="#3dffb4"/>
+</svg>
