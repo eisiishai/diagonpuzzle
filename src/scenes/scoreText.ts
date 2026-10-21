@@ -154,7 +154,7 @@ export function introMessage(facts: IntroFacts): string {
   if (hasBreakable) {
     return "Cracked walls stop the pellet and break: the next shot passes through.";
   }
-  return "Aim with ↑/↓ and fire with Enter, or click an emitter. Mirrors turn when hit.";
+  return "Aim with ↑/↓ (or W/S) and fire with Enter, or click an emitter. Mirrors turn when hit.";
 }
 
 /**

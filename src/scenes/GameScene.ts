@@ -45,7 +45,7 @@ const SKIP_CONFIRM_MS = 3000;
 const PLACED_MESSAGE = "Mirror placed. It flips when hit, like the others.";
 const TAP_AGAIN_MESSAGE = "Tap the cell again to place your mirror there.";
 const KEYBOARD_PLACE_MESSAGE =
-  "Choose a cell with the arrow keys, then press P or Enter to place your mirror. Esc cancels.";
+  "Choose a cell with the arrow keys (or WASD), then press P or Enter to place your mirror. Esc cancels.";
 
 /** Game actions while choosing the mirror's cell with the keyboard. */
 const PLACEMENT_KEYS: Partial<Record<GameAction, PlacementKey>> = {
