@@ -254,7 +254,7 @@ export class GameScene extends Container implements Scene {
     const bottomRow = this.messageText.y + MESSAGE_HEIGHT;
     const isLastLevel = options.levelNumber === options.levelCount;
     this.nextButton = new Button({
-      label: isLastLevel ? "BACK TO TITLE ▶" : "NEXT LEVEL ▶",
+      label: isLastLevel ? "BACK TO TITLE · N ▶" : "NEXT LEVEL · N ▶",
       variant: "primary",
       onTap: () => options.onNext(),
     });
@@ -354,6 +354,16 @@ export class GameScene extends Container implements Scene {
       case "hint":
         this.options.audio.play("click");
         this.showHint();
+        break;
+      case "nextOrSkip":
+        // N presses whichever of the two buttons is showing.
+        if (this.nextButton.visible) {
+          this.options.audio.play("click");
+          this.options.onNext();
+        } else if (this.skipsLeft > 0) {
+          this.options.audio.play("click");
+          this.pressSkip();
+        }
         break;
       case "skipLevel":
         this.options.onSkip();
@@ -835,7 +845,7 @@ export class GameScene extends Container implements Scene {
     }
     return this.skipConfirmMs > 0
       ? "PRESS AGAIN TO SKIP"
-      : `SKIP LEVEL · ${skipsLeft}/${maxSkips}`;
+      : `SKIP LEVEL · N · ${skipsLeft}/${maxSkips}`;
   }
 
   /** A note for the message when a used skip was given back. */

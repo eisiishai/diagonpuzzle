@@ -706,17 +706,18 @@ skips are unchanged.
   *Music* label for music, **F** or the *Sounds* label for sound effects.
   Both choices are remembered. (Players who had muted all sound before the
   split start with both off.)
-- After completing a level, Enter/Space or the *Next level* button continues.
+- After completing a level, Enter/Space, **N** or the *Next level* button
+  continues.
   After the last level, it returns to the title screen.
   On a level completed or skipped before, the *Next level* button
   (outlined, not filled) is there from the start, so a player going for the bonus target
-  can move on at any time; Enter/Space still fires until the level is
-  completed again.
+  can move on at any time with N or the button; Enter/Space still fires
+  until the level is completed again.
 - **Esc** or the *Menu* label returns to the title screen at any time.
 - **H** or the *Hint* button shows the level's hints (see *Hints*).
-- **Skip button:** *Skip level · 3/3* at the bottom left skips a level
-  not yet completed or skipped, on a second press within 3 seconds ("Press
-  again to skip"), so a stray tap doesn't waste one. The player has 3
+- **Skip button:** *Skip level · N · 3/3* at the bottom left (or **N**)
+  skips a level not yet completed or skipped, on a second press within 3
+  seconds ("Press again to skip"), so a stray tap doesn't waste one. The player has 3
   skips. A skipped level counts as skipped, as with the hidden skip below.
   A used skip is given back (up to 3) the first time a level is completed
   and the first time a bonus target is collected; the message says "Skip

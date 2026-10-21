@@ -10,6 +10,7 @@ export type GameAction =
   | "hint"
   | "toggleMusic"
   | "toggleEffects"
+  | "nextOrSkip"
   | "skipLevel";
 
 const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
@@ -29,9 +30,13 @@ const KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   h: "hint",
   m: "toggleMusic",
   f: "toggleEffects",
+  n: "nextOrSkip",
 };
 
-/** Actions for Shift + key. Shift+N is the hidden level skip. */
+/**
+ * Actions for Shift + key. Shift+N is the hidden level skip; N alone is
+ * the Next level or Skip level button.
+ */
 const SHIFT_KEY_ACTIONS: Partial<Record<string, GameAction>> = {
   n: "skipLevel",
 };
@@ -45,6 +50,7 @@ const NO_REPEAT: ReadonlySet<GameAction> = new Set([
   "hint",
   "toggleMusic",
   "toggleEffects",
+  "nextOrSkip",
   "skipLevel",
 ]);
 

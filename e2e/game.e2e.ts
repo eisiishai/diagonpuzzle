@@ -142,18 +142,21 @@ test.describe("a level list taller than the screen", () => {
     await game.seedCompleted(LEVELS.length);
     await game.open();
     const chapters = chapterRanges(LEVELS, CHAPTERS);
+    // One look at the game's state each: in software drawing every look
+    // waits for a frame, and this test travels the whole list.
     const selected = async () => {
-      const number = Number((await game.state()).title!.detail.split(".")[0]);
-      return { number, tile: await game.button(`${number}. `) };
+      const { title, buttons } = await game.state();
+      const number = Number(title!.detail.split(".")[0]);
+      const tile = buttons.find((b) => b.label.startsWith(`${number}. `));
+      return { number, inView: tile?.inView ?? false };
     };
     // Down from Play steps through the chapters, each scrolled into view.
     for (const chapter of chapters) {
       await game.page.keyboard.press("ArrowDown");
-      const { number, tile } = await selected();
+      const { number } = await selected();
       expect(number).toBeGreaterThan(chapter.start);
       expect(number).toBeLessThanOrEqual(chapter.end);
-      await expect.poll(async () => (await selected()).tile.inView).toBe(true);
-      expect(tile.label).toMatch(/^\d+\. /);
+      await expect.poll(async () => (await selected()).inView).toBe(true);
     }
     // Down again leaves the list for Reset progress.
     await game.page.keyboard.press("ArrowDown");
@@ -243,13 +246,38 @@ test("the Skip button skips on its second press", async ({ game }) => {
   // down, so a machine where each step of the test takes a second still
   // makes it.
   await game.setSpeed(0.1);
-  await game.press("SKIP LEVEL · 3/3");
+  await game.press("SKIP LEVEL · N · 3/3");
   await game.button("PRESS AGAIN TO SKIP");
   expect((await game.level()).number).toBe(1);
   await game.press("PRESS AGAIN TO SKIP");
   await game.setSpeed(1);
   await game.waitForLevel(2);
-  await game.button("SKIP LEVEL · 2/3");
+  await game.button("SKIP LEVEL · N · 2/3");
+});
+
+test("N presses Skip level, and Next level on a completed level", async ({
+  game,
+}) => {
+  await game.seedCompleted(1);
+  await game.open();
+  await game.press("2. ");
+  await game.waitForLevel(2);
+  // Slowed down for the second press, as in the test above.
+  await game.setSpeed(0.1);
+  await game.page.keyboard.press("n");
+  await game.button("PRESS AGAIN TO SKIP");
+  expect((await game.level()).number).toBe(2);
+  await game.page.keyboard.press("n");
+  await game.setSpeed(1);
+  await game.waitForLevel(3);
+
+  await game.press("MENU");
+  await game.waitForScene("title");
+  await game.press("1. ");
+  await game.waitForLevel(1);
+  await game.button("NEXT LEVEL");
+  await game.page.keyboard.press("n");
+  await game.waitForLevel(2);
 });
 
 test("the hidden skip (Shift+N) uses no visible skip", async ({ game }) => {
@@ -258,7 +286,7 @@ test("the hidden skip (Shift+N) uses no visible skip", async ({ game }) => {
   await game.waitForLevel(1);
   await game.page.keyboard.press("Shift+N");
   await game.waitForLevel(2);
-  await game.button("SKIP LEVEL · 3/3");
+  await game.button("SKIP LEVEL · N · 3/3");
 });
 
 test("holding the level's name is the hidden skip too", async ({ game }) => {
@@ -271,7 +299,7 @@ test("holding the level's name is the hidden skip too", async ({ game }) => {
   await game.page.mouse.down();
   await game.waitForLevel(2);
   await game.page.mouse.up();
-  await game.button("SKIP LEVEL · 3/3");
+  await game.button("SKIP LEVEL · N · 3/3");
 });
 
 test("with no skips left, Skip waits until time on levels gives one back", async ({
@@ -295,7 +323,7 @@ test("with no skips left, Skip waits until time on levels gives one back", async
   await expect
     .poll(async () => (await game.level()).skipBar)
     .toBeGreaterThan(0);
-  expect((await game.button("SKIP LEVEL · 1/3")).disabled).toBe(false);
+  expect((await game.button("SKIP LEVEL · N · 1/3")).disabled).toBe(false);
   expect((await game.level()).skipBar).toBe(0);
 });
 

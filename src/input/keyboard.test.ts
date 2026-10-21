@@ -32,9 +32,9 @@ describe("keyAction", () => {
     expect(press("Tab")).toEqual({ used: false });
   });
 
-  it("uses Shift+N for the hidden skip, and N alone for nothing", () => {
+  it("uses Shift+N for the hidden skip, and N alone for Next or Skip", () => {
     expect(press("N", { shiftKey: true }).action).toBe("skipLevel");
-    expect(press("n")).toEqual({ used: false });
+    expect(press("n").action).toBe("nextOrSkip");
   });
 
   it("keeps other keys working with Shift held", () => {
@@ -49,7 +49,7 @@ describe("keyAction", () => {
 
   it("repeats selection while a key is held, but no one-shot action", () => {
     expect(press("ArrowDown", { repeat: true }).action).toBe("selectDown");
-    for (const key of ["Enter", "p", "Escape", "r", "m", "f"]) {
+    for (const key of ["Enter", "p", "Escape", "r", "m", "f", "n"]) {
       expect(press(key, { repeat: true })).toEqual({ used: true });
     }
     expect(press("N", { shiftKey: true, repeat: true })).toEqual({
